@@ -1,4 +1,5 @@
-import { loadRecipes, getRecipeByName, onRecipesChanged } from "./storage.js";
+import { onRecipesChanged } from "./storage.js";
+import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 import { escapeHtml } from "./utils.js";
@@ -80,7 +81,7 @@ function formatNumber(n) {
 }
 
 function populateRecipeSelect() {
-  const recipes = loadRecipes();
+  const recipes = getAllRecipes();
   const currentValue = recipeSelectEl.value;
   recipeSelectEl.innerHTML =
     `<option value="">– Rezept auswählen –</option>` +
@@ -96,7 +97,7 @@ function handleLoadRecipe() {
     alert("Bitte zuerst ein Rezept auswählen.");
     return;
   }
-  const recipe = getRecipeByName(name);
+  const recipe = getRecipe(name);
   if (!recipe) return;
   document.getElementById("batch-name").value = recipe.name;
   document.getElementById("batch-base-portions").value = recipe.basePortions;

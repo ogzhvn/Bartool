@@ -1,7 +1,8 @@
-import { loadRecipes, saveRecipe, deleteRecipe, onRecipesChanged } from "./storage.js";
+import { saveRecipe, deleteRecipe, onRecipesChanged } from "./storage.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
-import { escapeHtml } from "./utils.js";
-import { CLASSIC_RECIPES } from "./classicsData.js";
+import { escapeHtml, formatNumber } from "./utils.js";
+import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
+import { UNIT_LABELS } from "./units.js";
 import { switchTab } from "./tabs.js";
 
 const nameEl = document.getElementById("recipe-name");
@@ -13,6 +14,8 @@ const historyEl = document.getElementById("recipe-history");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
 const searchEl = document.getElementById("recipe-search");
+const sidebarListEl = document.getElementById("recipe-sidebar-list");
+const sidebarSearchEl = document.getElementById("recipe-sidebar-search");
 
 const editor = createIngredientEditor(ingredientsEl);
 
@@ -27,6 +30,7 @@ function resetForm() {
   historyEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
+  renderSidebarList();
 }
 
 function loadIntoForm(recipe) {
@@ -38,6 +42,7 @@ function loadIntoForm(recipe) {
   historyEl.value = recipe.history ?? "";
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
+  renderSidebarList();
 }
 
 function handleSave() {
@@ -53,7 +58,7 @@ function handleSave() {
   }
   const basePortions = parseFloat(basePortionsEl.value) || 1;
 
-  if (editingOriginalName && editingOriginalName !== name) {
+  if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
     deleteRecipe(editingOriginalName);
   }
   saveRecipe({
@@ -66,30 +71,34 @@ function handleSave() {
     history: historyEl.value.trim(),
   });
   editingOriginalName = name;
-  switchTab("recipes");
 }
 
 function handleDelete() {
   if (!editingOriginalName) {
-    alert("Bitte zuerst ein gespeichertes Rezept zum Bearbeiten laden.");
+    alert("Bitte zuerst ein Rezept auswählen.");
+    return;
+  }
+  if (!isCustomRecipe(editingOriginalName)) {
+    alert('Dieses Rezept ist ein Klassiker aus der Bibliothek und wurde noch nicht in deinem Rezeptbuch gespeichert – es gibt nichts zu löschen.');
     return;
   }
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
   deleteRecipe(editingOriginalName);
   resetForm();
-  switchTab("recipes");
 }
 
-function handleImportClassics() {
-  if (!confirm(`${CLASSIC_RECIPES.length} Klassiker-Rezepte ins Rezeptbuch übernehmen? Bereits vorhandene Rezepte mit gleichem Namen werden aktualisiert.`)) {
-    return;
-  }
-  CLASSIC_RECIPES.forEach((recipe) => saveRecipe(recipe));
+function renderIngredientRows(ingredients) {
+  return ingredients
+    .map(
+      (ing) =>
+        `<tr><td>${escapeHtml(ing.name)}</td><td>${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit] ?? escapeHtml(ing.unit)}</td></tr>`
+    )
+    .join("");
 }
 
-function renderList() {
+function renderBrowseList() {
   const query = searchEl.value.trim().toLowerCase();
-  const recipes = loadRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  const recipes = getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
 
   if (recipes.length === 0) {
     listEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
@@ -97,29 +106,60 @@ function renderList() {
   }
   listEl.innerHTML = "";
   recipes.forEach((recipe) => {
-    const item = document.createElement("div");
-    item.className = "saved-item";
-    const details = [recipe.glass, recipe.garnish, recipe.method].filter(Boolean).map(escapeHtml).join(" · ");
+    const metaRows = [
+      ["Glas", recipe.glass],
+      ["Garnitur", recipe.garnish],
+      ["Zubereitung", recipe.method],
+      ["Geschichte", recipe.history],
+    ].filter(([, value]) => value);
+
+    const item = document.createElement("details");
+    item.className = "recipe-item";
     item.innerHTML = `
-      <div class="saved-item-top">
-        <span>${escapeHtml(recipe.name)}</span>
-        <span class="saved-actions">
+      <summary>${escapeHtml(recipe.name)}</summary>
+      <div class="recipe-item-body">
+        <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
+        ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+        <div class="actions">
           <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-          <button type="button" class="btn-secondary delete-btn">Löschen</button>
-        </span>
+          ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+        </div>
       </div>
-      ${details ? `<p class="recipe-details">${details}</p>` : ""}
     `;
-    item.querySelector(".edit-btn").addEventListener("click", () => {
+    item.querySelector(".edit-btn").addEventListener("click", (e) => {
+      e.preventDefault();
       loadIntoForm(recipe);
       switchTab("recipe-edit");
     });
-    item.querySelector(".delete-btn").addEventListener("click", () => {
-      if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
-      if (editingOriginalName === recipe.name) resetForm();
-      deleteRecipe(recipe.name);
-    });
+    const deleteBtn = item.querySelector(".delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
+        if (editingOriginalName === recipe.name) resetForm();
+        deleteRecipe(recipe.name);
+      });
+    }
     listEl.appendChild(item);
+  });
+}
+
+function renderSidebarList() {
+  const query = sidebarSearchEl.value.trim().toLowerCase();
+  const recipes = getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+
+  if (recipes.length === 0) {
+    sidebarListEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
+    return;
+  }
+  sidebarListEl.innerHTML = "";
+  recipes.forEach((recipe) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "recipe-name-btn" + (recipe.name === editingOriginalName ? " active" : "");
+    btn.textContent = recipe.name;
+    btn.addEventListener("click", () => loadIntoForm(recipe));
+    sidebarListEl.appendChild(btn);
   });
 }
 
@@ -129,12 +169,17 @@ export function initRecipes() {
   document.getElementById("recipe-save").addEventListener("click", handleSave);
   document.getElementById("recipe-new").addEventListener("click", resetForm);
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
-  document.getElementById("recipe-import-classics").addEventListener("click", handleImportClassics);
   document.getElementById("recipe-list-new").addEventListener("click", () => {
     resetForm();
     switchTab("recipe-edit");
   });
-  searchEl.addEventListener("input", renderList);
-  onRecipesChanged(renderList);
-  renderList();
+  document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
+  searchEl.addEventListener("input", renderBrowseList);
+  sidebarSearchEl.addEventListener("input", renderSidebarList);
+  onRecipesChanged(() => {
+    renderBrowseList();
+    renderSidebarList();
+  });
+  renderBrowseList();
+  renderSidebarList();
 }

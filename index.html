@@ -85,66 +85,77 @@
       <div id="batch-result" class="result-box" hidden></div>
     </section>
 
-    <!-- RECIPES (list) -->
+    <!-- RECIPES (browse list) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
-      <p class="hint">Alle gespeicherten Rezepte. Im Batching-Tab kannst du sie auswählen und einfügen, zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
+      <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
 
       <div class="actions">
         <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
-        <button type="button" id="recipe-import-classics" class="btn-secondary">50 Klassiker importieren</button>
       </div>
 
       <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
-      <div id="recipe-list" class="saved-list"></div>
+      <div id="recipe-list" class="recipe-accordion"></div>
     </section>
 
-    <!-- RECIPE EDIT (form) -->
+    <!-- RECIPE EDIT (form + sidebar) -->
     <section id="recipe-edit" class="tab-panel">
       <h2>Rezept bearbeiten</h2>
-      <p class="hint">Lege ein neues Rezept an oder bearbeite ein bestehendes (über "Bearbeiten" im Rezepte-Tab geladen).</p>
+      <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
 
-      <div class="field-row">
-        <label>
-          Rezeptname
-          <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
-        </label>
-        <label>
-          Ergibt Portionen (Basis)
-          <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
-        </label>
-      </div>
+      <div class="recipe-edit-layout">
+        <div class="recipe-edit-main">
+          <div class="field-row">
+            <label>
+              Rezeptname
+              <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
+            </label>
+            <label>
+              Ergibt Portionen (Basis)
+              <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
+            </label>
+          </div>
 
-      <h3>Zutaten</h3>
-      <div id="recipe-ingredients" class="ingredient-list"></div>
-      <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+          <h3>Zutaten</h3>
+          <div id="recipe-ingredients" class="ingredient-list"></div>
+          <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
 
-      <h3>Details</h3>
-      <div class="field-row">
-        <label>
-          Zubereitung
-          <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
-        </label>
-      </div>
-      <div class="field-row">
-        <label>
-          Glas
-          <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
-        </label>
-        <label>
-          Garnitur
-          <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
-        </label>
-      </div>
-      <label>
-        Geschichte
-        <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
-      </label>
+          <h3>Details</h3>
+          <div class="field-row">
+            <label>
+              Zubereitung
+              <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              Glas
+              <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
+            </label>
+            <label>
+              Garnitur
+              <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
+            </label>
+          </div>
+          <label>
+            Geschichte
+            <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
+          </label>
 
-      <div class="actions">
-        <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
-        <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
-        <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+          <div class="actions">
+            <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
+            <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
+            <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+          </div>
+        </div>
+
+        <aside class="recipe-edit-sidebar">
+          <div class="actions">
+            <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
+          </div>
+          <input type="text" id="recipe-sidebar-search" placeholder="Suchen…" />
+          <div id="recipe-sidebar-list" class="recipe-name-list"></div>
+        </aside>
       </div>
     </section>
 

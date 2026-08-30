@@ -10,10 +10,6 @@ export function loadRecipes() {
   }
 }
 
-export function getRecipeByName(name) {
-  return loadRecipes().find((r) => r.name === name) ?? null;
-}
-
 export function saveRecipe(recipe) {
   const recipes = loadRecipes();
   const existingIndex = recipes.findIndex((r) => r.name === recipe.name);
