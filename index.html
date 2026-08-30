@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bartool – Rechner für Barkeeper</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>🍸 Bartool</h1>
+    <p class="subtitle">Rechner für die Bar</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="batching" role="tab" aria-selected="true">Batching</button>
+    <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
+    <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
+  </nav>
+
+  <main>
+    <!-- BATCHING -->
+    <section id="batching" class="tab-panel active">
+      <h2>Rezept-Hochrechner (Batching)</h2>
+      <p class="hint">Gib dein Rezept ein und skaliere es auf mehr Portionen oder ein bestimmtes Batch-Volumen.</p>
+
+      <div class="field-row">
+        <label>
+          Rezeptname
+          <input type="text" id="batch-name" placeholder="z. B. Whiskey Sour" />
+        </label>
+        <label>
+          Ergibt Portionen (Basis)
+          <input type="number" id="batch-base-portions" value="1" min="0.01" step="0.01" />
+        </label>
+      </div>
+
+      <h3>Zutaten</h3>
+      <div id="batch-ingredients" class="ingredient-list"></div>
+      <button type="button" id="batch-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+      <h3>Skalieren auf</h3>
+      <div class="field-row">
+        <label class="radio-label">
+          <input type="radio" name="batch-mode" value="portions" checked />
+          Anzahl Portionen
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="batch-mode" value="volume" />
+          Batch-Volumen (ml)
+        </label>
+      </div>
+      <div class="field-row">
+        <label>
+          Ziel-Portionen
+          <input type="number" id="batch-target-portions" value="10" min="0.01" step="0.01" />
+        </label>
+        <label>
+          Ziel-Volumen (ml)
+          <input type="number" id="batch-target-volume" value="1000" min="1" step="1" disabled />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="batch-calculate" class="btn-primary">Berechnen</button>
+        <button type="button" id="batch-save" class="btn-secondary">Rezept speichern</button>
+        <button type="button" id="batch-clear" class="btn-secondary">Zurücksetzen</button>
+      </div>
+
+      <div id="batch-result" class="result-box" hidden></div>
+
+      <h3>Gespeicherte Rezepte</h3>
+      <div id="batch-saved-list" class="saved-list"></div>
+    </section>
+
+    <!-- SUPERJUICE -->
+    <section id="superjuice" class="tab-panel">
+      <h2>Superjuice-Rechner</h2>
+      <p class="hint">Berechnet die Menge an Säuren (und optional Zucker) für einen "Superjuice" auf Basis von frischem Zitrussaft.</p>
+
+      <label>
+        Preset
+        <select id="sj-preset">
+          <option value="lime">Limette (Standard: 1,0 % Zitronensäure / 0,5 % Apfelsäure)</option>
+          <option value="lemon">Zitrone (Standard: 0,6 % Zitronensäure / 0,4 % Apfelsäure)</option>
+          <option value="custom">Eigene Werte</option>
+        </select>
+      </label>
+
+      <div class="field-row">
+        <label>
+          Menge frischer Saft (ml)
+          <input type="number" id="sj-juice-amount" value="1000" min="1" step="1" />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label>
+          Zitronensäure (%)
+          <input type="number" id="sj-citric" value="1.0" min="0" step="0.05" />
+        </label>
+        <label>
+          Apfelsäure (%)
+          <input type="number" id="sj-malic" value="0.5" min="0" step="0.05" />
+        </label>
+      </div>
+      <div class="field-row">
+        <label>
+          Ascorbinsäure / Vit. C (%, optional)
+          <input type="number" id="sj-ascorbic" value="0" min="0" step="0.05" />
+        </label>
+        <label>
+          Zucker (%, optional)
+          <input type="number" id="sj-sugar" value="0" min="0" step="0.5" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="sj-calculate" class="btn-primary">Berechnen</button>
+      </div>
+
+      <div id="sj-result" class="result-box" hidden></div>
+    </section>
+
+    <!-- DILUTION / ABV -->
+    <section id="dilution" class="tab-panel">
+      <h2>Verdünnungs- &amp; ABV-Rechner</h2>
+      <p class="hint">Berechnet den Alkoholgehalt (ABV) eines Drinks vor und nach der Verdünnung durch Eis.</p>
+
+      <h3>Zutaten</h3>
+      <div id="dil-ingredients" class="ingredient-list dil-list"></div>
+      <button type="button" id="dil-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+      <h3>Verdünnung</h3>
+      <div class="field-row">
+        <label class="radio-label">
+          <input type="radio" name="dil-mode" value="percent" checked />
+          % des Endvolumens
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="dil-mode" value="ml" />
+          ml Verdünnung
+        </label>
+      </div>
+      <div class="field-row">
+        <label>
+          Verdünnung (%)
+          <input type="number" id="dil-percent" value="25" min="0" max="95" step="1" />
+        </label>
+        <label>
+          Verdünnung (ml)
+          <input type="number" id="dil-ml" value="30" min="0" step="1" disabled />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="dil-calculate" class="btn-primary">Berechnen</button>
+      </div>
+
+      <div id="dil-result" class="result-box" hidden></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Bartool – lokal im Browser gespeichert, keine Serververbindung nötig.</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
