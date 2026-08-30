@@ -1,69 +1,12 @@
-import { loadRecipes, saveRecipe, deleteRecipe } from "./storage.js";
-
-const UNIT_TO_ML = {
-  ml: 1,
-  cl: 10,
-  oz: 29.5735,
-  bs: 5, // Barlöffel
-  dash: 0.9,
-};
-const NON_VOLUME_UNITS = ["stk", "teile"];
-const UNIT_LABELS = {
-  ml: "ml",
-  cl: "cl",
-  oz: "oz",
-  bs: "BL",
-  dash: "Dash",
-  stk: "Stück",
-  teile: "Teile",
-};
+import { loadRecipes, getRecipeByName, onRecipesChanged } from "./storage.js";
+import { createIngredientEditor } from "./ingredientEditor.js";
+import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 
 const ingredientsEl = document.getElementById("batch-ingredients");
 const resultEl = document.getElementById("batch-result");
-const savedListEl = document.getElementById("batch-saved-list");
+const recipeSelectEl = document.getElementById("batch-recipe-select");
 
-function makeIngredientRow(data = {}) {
-  const row = document.createElement("div");
-  row.className = "ingredient-row";
-  row.innerHTML = `
-    <input class="ing-name" type="text" placeholder="Zutat" value="${data.name ?? ""}" />
-    <input class="ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${data.amount ?? ""}" />
-    <select class="ing-unit">
-      ${Object.entries(UNIT_LABELS)
-        .map(
-          ([val, label]) =>
-            `<option value="${val}" ${data.unit === val ? "selected" : ""}>${label}</option>`
-        )
-        .join("")}
-    </select>
-    <button type="button" class="remove-btn" title="Entfernen">✕</button>
-  `;
-  row.querySelector(".remove-btn").addEventListener("click", () => row.remove());
-  return row;
-}
-
-function addIngredientRow(data) {
-  ingredientsEl.appendChild(makeIngredientRow(data));
-}
-
-function getIngredients() {
-  return [...ingredientsEl.querySelectorAll(".ingredient-row")]
-    .map((row) => ({
-      name: row.querySelector(".ing-name").value.trim(),
-      amount: parseFloat(row.querySelector(".ing-amount").value),
-      unit: row.querySelector(".ing-unit").value,
-    }))
-    .filter((i) => i.name && !Number.isNaN(i.amount) && i.amount > 0);
-}
-
-function setIngredients(list) {
-  ingredientsEl.innerHTML = "";
-  if (!list || list.length === 0) {
-    addIngredientRow();
-    return;
-  }
-  list.forEach(addIngredientRow);
-}
+const editor = createIngredientEditor(ingredientsEl);
 
 function updateModeInputs() {
   const mode = document.querySelector('input[name="batch-mode"]:checked').value;
@@ -72,7 +15,7 @@ function updateModeInputs() {
 }
 
 function calculateScale() {
-  const ingredients = getIngredients();
+  const ingredients = editor.getIngredients();
   if (ingredients.length === 0) {
     resultEl.hidden = false;
     resultEl.innerHTML = `<p class="empty-note">Bitte mindestens eine gültige Zutat eingeben.</p>`;
@@ -134,67 +77,48 @@ function formatNumber(n) {
   return Number(n.toFixed(2)).toString();
 }
 
-function renderSavedRecipes() {
+function populateRecipeSelect() {
   const recipes = loadRecipes();
-  if (recipes.length === 0) {
-    savedListEl.innerHTML = `<p class="empty-note">Noch keine Rezepte gespeichert.</p>`;
-    return;
+  const currentValue = recipeSelectEl.value;
+  recipeSelectEl.innerHTML =
+    `<option value="">– Rezept auswählen –</option>` +
+    recipes.map((r) => `<option value="${r.name}">${r.name}</option>`).join("");
+  if (recipes.some((r) => r.name === currentValue)) {
+    recipeSelectEl.value = currentValue;
   }
-  savedListEl.innerHTML = "";
-  recipes.forEach((recipe) => {
-    const item = document.createElement("div");
-    item.className = "saved-item";
-    item.innerHTML = `
-      <span>${recipe.name}</span>
-      <span class="saved-actions">
-        <button type="button" class="btn-secondary load-btn">Laden</button>
-        <button type="button" class="btn-secondary delete-btn">Löschen</button>
-      </span>
-    `;
-    item.querySelector(".load-btn").addEventListener("click", () => {
-      document.getElementById("batch-name").value = recipe.name;
-      document.getElementById("batch-base-portions").value = recipe.basePortions;
-      setIngredients(recipe.ingredients);
-    });
-    item.querySelector(".delete-btn").addEventListener("click", () => {
-      deleteRecipe(recipe.name);
-      renderSavedRecipes();
-    });
-    savedListEl.appendChild(item);
-  });
 }
 
-function handleSave() {
-  const name = document.getElementById("batch-name").value.trim();
+function handleLoadRecipe() {
+  const name = recipeSelectEl.value;
   if (!name) {
-    alert("Bitte einen Rezeptnamen eingeben, bevor du speicherst.");
+    alert("Bitte zuerst ein Rezept auswählen.");
     return;
   }
-  const ingredients = getIngredients();
-  if (ingredients.length === 0) {
-    alert("Bitte mindestens eine gültige Zutat eingeben.");
-    return;
-  }
-  const basePortions = parseFloat(document.getElementById("batch-base-portions").value) || 1;
-  saveRecipe({ name, basePortions, ingredients });
-  renderSavedRecipes();
+  const recipe = getRecipeByName(name);
+  if (!recipe) return;
+  document.getElementById("batch-name").value = recipe.name;
+  document.getElementById("batch-base-portions").value = recipe.basePortions;
+  editor.setIngredients(recipe.ingredients);
+  resultEl.hidden = true;
 }
 
 function handleClear() {
   document.getElementById("batch-name").value = "";
   document.getElementById("batch-base-portions").value = 1;
-  setIngredients([]);
+  recipeSelectEl.value = "";
+  editor.setIngredients([]);
   resultEl.hidden = true;
 }
 
 export function initBatching() {
-  setIngredients([]);
-  document.getElementById("batch-add-ingredient").addEventListener("click", () => addIngredientRow());
+  editor.setIngredients([]);
+  populateRecipeSelect();
+  onRecipesChanged(populateRecipeSelect);
+  document.getElementById("batch-add-ingredient").addEventListener("click", () => editor.addRow());
+  document.getElementById("batch-load-recipe").addEventListener("click", handleLoadRecipe);
   document.getElementById("batch-calculate").addEventListener("click", calculateScale);
-  document.getElementById("batch-save").addEventListener("click", handleSave);
   document.getElementById("batch-clear").addEventListener("click", handleClear);
   document
     .querySelectorAll('input[name="batch-mode"]')
     .forEach((el) => el.addEventListener("change", updateModeInputs));
-  renderSavedRecipes();
 }

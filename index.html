@@ -14,6 +14,7 @@
 
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="batching" role="tab" aria-selected="true">Batching</button>
+    <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
     <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
     <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
   </nav>
@@ -23,6 +24,18 @@
     <section id="batching" class="tab-panel active">
       <h2>Rezept-Hochrechner (Batching)</h2>
       <p class="hint">Gib dein Rezept ein und skaliere es auf mehr Portionen oder ein bestimmtes Batch-Volumen.</p>
+
+      <div class="field-row">
+        <label>
+          Rezept aus Rezeptbuch laden
+          <select id="batch-recipe-select">
+            <option value="">– Rezept auswählen –</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="batch-load-recipe" class="btn-secondary">Einfügen</button>
+      </div>
 
       <div class="field-row">
         <label>
@@ -63,14 +76,40 @@
 
       <div class="actions">
         <button type="button" id="batch-calculate" class="btn-primary">Berechnen</button>
-        <button type="button" id="batch-save" class="btn-secondary">Rezept speichern</button>
         <button type="button" id="batch-clear" class="btn-secondary">Zurücksetzen</button>
       </div>
 
       <div id="batch-result" class="result-box" hidden></div>
+    </section>
+
+    <!-- RECIPES -->
+    <section id="recipes" class="tab-panel">
+      <h2>Rezeptbuch</h2>
+      <p class="hint">Lege Rezepte an und verwalte sie hier. Im Batching-Tab kannst du sie danach auswählen und einfügen.</p>
+
+      <div class="field-row">
+        <label>
+          Rezeptname
+          <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
+        </label>
+        <label>
+          Ergibt Portionen (Basis)
+          <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
+        </label>
+      </div>
+
+      <h3>Zutaten</h3>
+      <div id="recipe-ingredients" class="ingredient-list"></div>
+      <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+      <div class="actions">
+        <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
+        <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
+        <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+      </div>
 
       <h3>Gespeicherte Rezepte</h3>
-      <div id="batch-saved-list" class="saved-list"></div>
+      <div id="recipe-list" class="saved-list"></div>
     </section>
 
     <!-- SUPERJUICE -->
