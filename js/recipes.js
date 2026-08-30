@@ -1,10 +1,17 @@
 import { loadRecipes, saveRecipe, deleteRecipe, onRecipesChanged } from "./storage.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
+import { escapeHtml } from "./utils.js";
+import { CLASSIC_RECIPES } from "./classicsData.js";
 
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
+const methodEl = document.getElementById("recipe-method");
+const glassEl = document.getElementById("recipe-glass");
+const garnishEl = document.getElementById("recipe-garnish");
+const historyEl = document.getElementById("recipe-history");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
+const searchEl = document.getElementById("recipe-search");
 
 const editor = createIngredientEditor(ingredientsEl);
 
@@ -13,6 +20,10 @@ let editingOriginalName = null;
 function resetForm() {
   nameEl.value = "";
   basePortionsEl.value = 1;
+  methodEl.value = "";
+  glassEl.value = "";
+  garnishEl.value = "";
+  historyEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
 }
@@ -20,6 +31,10 @@ function resetForm() {
 function loadIntoForm(recipe) {
   nameEl.value = recipe.name;
   basePortionsEl.value = recipe.basePortions;
+  methodEl.value = recipe.method ?? "";
+  glassEl.value = recipe.glass ?? "";
+  garnishEl.value = recipe.garnish ?? "";
+  historyEl.value = recipe.history ?? "";
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
 }
@@ -40,7 +55,15 @@ function handleSave() {
   if (editingOriginalName && editingOriginalName !== name) {
     deleteRecipe(editingOriginalName);
   }
-  saveRecipe({ name, basePortions, ingredients });
+  saveRecipe({
+    name,
+    basePortions,
+    ingredients,
+    method: methodEl.value.trim(),
+    glass: glassEl.value.trim(),
+    garnish: garnishEl.value.trim(),
+    history: historyEl.value.trim(),
+  });
   editingOriginalName = name;
 }
 
@@ -54,22 +77,35 @@ function handleDelete() {
   resetForm();
 }
 
+function handleImportClassics() {
+  if (!confirm(`${CLASSIC_RECIPES.length} Klassiker-Rezepte ins Rezeptbuch übernehmen? Bereits vorhandene Rezepte mit gleichem Namen werden aktualisiert.`)) {
+    return;
+  }
+  CLASSIC_RECIPES.forEach((recipe) => saveRecipe(recipe));
+}
+
 function renderList() {
-  const recipes = loadRecipes();
+  const query = searchEl.value.trim().toLowerCase();
+  const recipes = loadRecipes().filter((r) => r.name.toLowerCase().includes(query));
+
   if (recipes.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">Noch keine Rezepte gespeichert.</p>`;
+    listEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
     return;
   }
   listEl.innerHTML = "";
   recipes.forEach((recipe) => {
     const item = document.createElement("div");
     item.className = "saved-item";
+    const details = [recipe.glass, recipe.garnish, recipe.method].filter(Boolean).map(escapeHtml).join(" · ");
     item.innerHTML = `
-      <span>${recipe.name}</span>
-      <span class="saved-actions">
-        <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-        <button type="button" class="btn-secondary delete-btn">Löschen</button>
-      </span>
+      <div class="saved-item-top">
+        <span>${escapeHtml(recipe.name)}</span>
+        <span class="saved-actions">
+          <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
+          <button type="button" class="btn-secondary delete-btn">Löschen</button>
+        </span>
+      </div>
+      ${details ? `<p class="recipe-details">${details}</p>` : ""}
     `;
     item.querySelector(".edit-btn").addEventListener("click", () => loadIntoForm(recipe));
     item.querySelector(".delete-btn").addEventListener("click", () => {
@@ -87,6 +123,8 @@ export function initRecipes() {
   document.getElementById("recipe-save").addEventListener("click", handleSave);
   document.getElementById("recipe-new").addEventListener("click", resetForm);
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
+  document.getElementById("recipe-import-classics").addEventListener("click", handleImportClassics);
+  searchEl.addEventListener("input", renderList);
   onRecipesChanged(renderList);
   renderList();
 }

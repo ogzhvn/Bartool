@@ -1,10 +1,12 @@
 import { loadRecipes, getRecipeByName, onRecipesChanged } from "./storage.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
+import { escapeHtml } from "./utils.js";
 
 const ingredientsEl = document.getElementById("batch-ingredients");
 const resultEl = document.getElementById("batch-result");
 const recipeSelectEl = document.getElementById("batch-recipe-select");
+const recipeInfoEl = document.getElementById("batch-recipe-info");
 
 const editor = createIngredientEditor(ingredientsEl);
 
@@ -62,7 +64,7 @@ function calculateScale() {
         ${scaled
           .map(
             (ing) =>
-              `<tr><td>${ing.name}</td><td>${formatNumber(ing.scaledAmount)} ${UNIT_LABELS[ing.unit]}</td></tr>`
+              `<tr><td>${escapeHtml(ing.name)}</td><td>${formatNumber(ing.scaledAmount)} ${UNIT_LABELS[ing.unit]}</td></tr>`
           )
           .join("")}
       </tbody>
@@ -82,7 +84,7 @@ function populateRecipeSelect() {
   const currentValue = recipeSelectEl.value;
   recipeSelectEl.innerHTML =
     `<option value="">– Rezept auswählen –</option>` +
-    recipes.map((r) => `<option value="${r.name}">${r.name}</option>`).join("");
+    recipes.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join("");
   if (recipes.some((r) => r.name === currentValue)) {
     recipeSelectEl.value = currentValue;
   }
@@ -100,6 +102,25 @@ function handleLoadRecipe() {
   document.getElementById("batch-base-portions").value = recipe.basePortions;
   editor.setIngredients(recipe.ingredients);
   resultEl.hidden = true;
+  renderRecipeInfo(recipe);
+}
+
+function renderRecipeInfo(recipe) {
+  const rows = [
+    ["Glas", recipe.glass],
+    ["Garnitur", recipe.garnish],
+    ["Zubereitung", recipe.method],
+    ["Geschichte", recipe.history],
+  ].filter(([, value]) => value);
+
+  if (rows.length === 0) {
+    recipeInfoEl.hidden = true;
+    return;
+  }
+  recipeInfoEl.hidden = false;
+  recipeInfoEl.innerHTML = rows
+    .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`)
+    .join("");
 }
 
 function handleClear() {
@@ -108,6 +129,7 @@ function handleClear() {
   recipeSelectEl.value = "";
   editor.setIngredients([]);
   resultEl.hidden = true;
+  recipeInfoEl.hidden = true;
 }
 
 export function initBatching() {

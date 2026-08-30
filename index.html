@@ -37,6 +37,8 @@
         <button type="button" id="batch-load-recipe" class="btn-secondary">Einfügen</button>
       </div>
 
+      <div id="batch-recipe-info" class="result-box" hidden></div>
+
       <div class="field-row">
         <label>
           Rezeptname
@@ -102,13 +104,42 @@
       <div id="recipe-ingredients" class="ingredient-list"></div>
       <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
 
+      <h3>Details</h3>
+      <div class="field-row">
+        <label>
+          Zubereitung
+          <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
+        </label>
+      </div>
+      <div class="field-row">
+        <label>
+          Glas
+          <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
+        </label>
+        <label>
+          Garnitur
+          <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
+        </label>
+      </div>
+      <label>
+        Geschichte
+        <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
+      </label>
+
       <div class="actions">
         <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
         <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
         <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
       </div>
 
+      <h3>Klassiker-Bibliothek</h3>
+      <p class="hint">50 bekannte Cocktail-Klassiker inklusive Geschichte, Zubereitung, Glas und Garnitur direkt ins Rezeptbuch übernehmen.</p>
+      <div class="actions">
+        <button type="button" id="recipe-import-classics" class="btn-secondary">50 Klassiker importieren</button>
+      </div>
+
       <h3>Gespeicherte Rezepte</h3>
+      <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
       <div id="recipe-list" class="saved-list"></div>
     </section>
 
