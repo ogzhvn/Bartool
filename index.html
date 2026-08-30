@@ -15,6 +15,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="batching" role="tab" aria-selected="true">Batching</button>
     <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
+    <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false">Rezept bearbeiten</button>
     <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
     <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
   </nav>
@@ -84,10 +85,24 @@
       <div id="batch-result" class="result-box" hidden></div>
     </section>
 
-    <!-- RECIPES -->
+    <!-- RECIPES (list) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
-      <p class="hint">Lege Rezepte an und verwalte sie hier. Im Batching-Tab kannst du sie danach auswählen und einfügen.</p>
+      <p class="hint">Alle gespeicherten Rezepte. Im Batching-Tab kannst du sie auswählen und einfügen, zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
+
+      <div class="actions">
+        <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
+        <button type="button" id="recipe-import-classics" class="btn-secondary">50 Klassiker importieren</button>
+      </div>
+
+      <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
+      <div id="recipe-list" class="saved-list"></div>
+    </section>
+
+    <!-- RECIPE EDIT (form) -->
+    <section id="recipe-edit" class="tab-panel">
+      <h2>Rezept bearbeiten</h2>
+      <p class="hint">Lege ein neues Rezept an oder bearbeite ein bestehendes (über "Bearbeiten" im Rezepte-Tab geladen).</p>
 
       <div class="field-row">
         <label>
@@ -131,16 +146,6 @@
         <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
         <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
       </div>
-
-      <h3>Klassiker-Bibliothek</h3>
-      <p class="hint">50 bekannte Cocktail-Klassiker inklusive Geschichte, Zubereitung, Glas und Garnitur direkt ins Rezeptbuch übernehmen.</p>
-      <div class="actions">
-        <button type="button" id="recipe-import-classics" class="btn-secondary">50 Klassiker importieren</button>
-      </div>
-
-      <h3>Gespeicherte Rezepte</h3>
-      <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
-      <div id="recipe-list" class="saved-list"></div>
     </section>
 
     <!-- SUPERJUICE -->

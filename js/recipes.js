@@ -2,6 +2,7 @@ import { loadRecipes, saveRecipe, deleteRecipe, onRecipesChanged } from "./stora
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { escapeHtml } from "./utils.js";
 import { CLASSIC_RECIPES } from "./classicsData.js";
+import { switchTab } from "./tabs.js";
 
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
@@ -65,6 +66,7 @@ function handleSave() {
     history: historyEl.value.trim(),
   });
   editingOriginalName = name;
+  switchTab("recipes");
 }
 
 function handleDelete() {
@@ -75,6 +77,7 @@ function handleDelete() {
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
   deleteRecipe(editingOriginalName);
   resetForm();
+  switchTab("recipes");
 }
 
 function handleImportClassics() {
@@ -107,7 +110,10 @@ function renderList() {
       </div>
       ${details ? `<p class="recipe-details">${details}</p>` : ""}
     `;
-    item.querySelector(".edit-btn").addEventListener("click", () => loadIntoForm(recipe));
+    item.querySelector(".edit-btn").addEventListener("click", () => {
+      loadIntoForm(recipe);
+      switchTab("recipe-edit");
+    });
     item.querySelector(".delete-btn").addEventListener("click", () => {
       if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
       if (editingOriginalName === recipe.name) resetForm();
@@ -124,6 +130,10 @@ export function initRecipes() {
   document.getElementById("recipe-new").addEventListener("click", resetForm);
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
   document.getElementById("recipe-import-classics").addEventListener("click", handleImportClassics);
+  document.getElementById("recipe-list-new").addEventListener("click", () => {
+    resetForm();
+    switchTab("recipe-edit");
+  });
   searchEl.addEventListener("input", renderList);
   onRecipesChanged(renderList);
   renderList();
