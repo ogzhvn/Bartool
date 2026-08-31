@@ -43,7 +43,17 @@ function calculateScale() {
       resultEl.innerHTML = `<p class="empty-note">Für die Skalierung nach Volumen wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt.</p>`;
       return;
     }
-    factor = targetVolume / baseVolumeMl;
+    // Eine Portionszahl wie "14.35" ist nicht umsetzbar: auf die
+    // nächstkleinere ganze Portion abrunden und die Zutatenmengen dafür
+    // berechnen, statt exakt auf das eingegebene Ziel-Volumen zu skalieren.
+    const rawPortions = basePortions * (targetVolume / baseVolumeMl);
+    const flooredPortions = Math.floor(rawPortions);
+    if (flooredPortions < 1) {
+      resultEl.hidden = false;
+      resultEl.innerHTML = `<p class="empty-note">Das Ziel-Volumen reicht nicht für eine ganze Portion.</p>`;
+      return;
+    }
+    factor = flooredPortions / basePortions;
   }
 
   const scaled = ingredients.map((ing) => ({
@@ -56,9 +66,6 @@ function calculateScale() {
     return toMl ? sum + ing.scaledAmount * toMl : sum;
   }, 0);
   const resultingPortions = basePortions * factor;
-  // Beim Skalieren nach Volumen ist eine Portionszahl wie "14.35" nicht
-  // umsetzbar – auf die nächstkleinere ganze Portion abrunden.
-  const displayPortions = mode === "volume" ? Math.floor(resultingPortions) : resultingPortions;
 
   resultEl.hidden = false;
   resultEl.innerHTML = `
@@ -73,7 +80,7 @@ function calculateScale() {
           .join("")}
       </tbody>
     </table>
-    <p class="summary">Ergibt ca. ${formatNumber(displayPortions)} Portionen${
+    <p class="summary">Ergibt ca. ${formatNumber(resultingPortions)} Portionen${
     totalVolumeMl > 0 ? ` · Gesamtvolumen: ${formatNumber(totalVolumeMl)} ml (${formatNumber(totalVolumeMl / 1000)} l)` : ""
   }</p>
   `;
