@@ -33,6 +33,30 @@ function groupSortIndex(group) {
   return i === -1 ? GROUP_ORDER.length : i;
 }
 
+// Scotch Single Malt regions – kept together and above the other whisky styles
+// instead of falling wherever they land alphabetically (e.g. "Irish Whiskey"
+// would otherwise sort between "Islay" and "Lowland").
+const SCOTCH_SINGLE_MALT_REGIONS = ["Lowland", "Speyside", "Highland", "Islands", "Islay", "Campbeltown"];
+
+const SUBGROUP_ORDER = {
+  Whisky: [
+    "Blended Scotch",
+    ...SCOTCH_SINGLE_MALT_REGIONS,
+    "Bourbon",
+    "Rye",
+    "Irish Whiskey",
+    "Japanischer Whisky",
+    "Kanadischer Whisky",
+  ],
+};
+
+function subgroupSortIndex(group, subGroup) {
+  const order = SUBGROUP_ORDER[group];
+  if (!order) return -1;
+  const i = order.indexOf(subGroup);
+  return i === -1 ? order.length : i;
+}
+
 const nameEl = document.getElementById("product-name");
 const categoryEl = document.getElementById("product-category");
 const groupEl = document.getElementById("product-group");
@@ -135,7 +159,10 @@ function groupProducts(products) {
     .sort(([a], [b]) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de"))
     .map(([groupName, subgroups]) => ({
       groupName,
-      subgroups: [...subgroups.entries()].sort(([a], [b]) => a.localeCompare(b, "de")),
+      subgroups: [...subgroups.entries()].sort(
+        ([a], [b]) =>
+          subgroupSortIndex(groupName, a) - subgroupSortIndex(groupName, b) || a.localeCompare(b, "de")
+      ),
     }));
 }
 
@@ -197,7 +224,16 @@ function renderBrowseList() {
     header.textContent = groupName;
     listEl.appendChild(header);
 
-    subgroups.forEach(([subGroupName, items]) => {
+    subgroups.forEach(([subGroupName, items], i) => {
+      if (groupName === "Whisky" && SCOTCH_SINGLE_MALT_REGIONS.includes(subGroupName)) {
+        const previousSubGroupName = i > 0 ? subgroups[i - 1][0] : null;
+        if (!SCOTCH_SINGLE_MALT_REGIONS.includes(previousSubGroupName)) {
+          const superHeader = document.createElement("h4");
+          superHeader.className = "product-supergroup-header";
+          superHeader.textContent = "Single Malt Scotch";
+          listEl.appendChild(superHeader);
+        }
+      }
       if (subGroupName) {
         const subHeader = document.createElement("h4");
         subHeader.className = "product-subgroup-header";

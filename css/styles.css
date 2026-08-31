@@ -159,6 +159,15 @@ textarea {
   letter-spacing: 0.04em;
 }
 
+.product-supergroup-header {
+  margin: 1.1rem 0 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
 .recipe-edit-layout {
   display: flex;
   gap: 1.5rem;
