@@ -21,10 +21,8 @@ const GROUP_ORDER = [
   "Sirup",
   "Fruchtpüree",
   "Saft",
-  "Frischware & Kräuter",
   "Mixer & Softdrink",
   "Tee & Kaffee",
-  "Bar-Zubehör & Non-Food",
   "Sonstiges",
 ];
 
