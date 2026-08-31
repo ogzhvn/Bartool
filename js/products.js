@@ -16,12 +16,15 @@ const GROUP_ORDER = [
   "Bitters",
   "Absinth",
   "Schaumwein",
+  "Wein",
+  "Bier",
   "Sirup",
   "Fruchtpüree",
   "Saft",
   "Frischware & Kräuter",
   "Mixer & Softdrink",
   "Tee & Kaffee",
+  "Bar-Zubehör & Non-Food",
   "Sonstiges",
 ];
 
