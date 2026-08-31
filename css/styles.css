@@ -308,6 +308,56 @@ textarea {
   width: 100%;
 }
 
+.calc-ingredient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.calc-ingredient-row {
+  display: grid;
+  grid-template-columns: 1.8fr 0.9fr 0.8fr 1fr auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.calc-ingredient-row input,
+.calc-ingredient-row select {
+  width: 100%;
+}
+
+.calc-price-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.calc-cost {
+  font-weight: 600;
+  color: var(--accent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .calc-ingredient-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "name name"
+      "amount unit"
+      "price label"
+      "cost remove";
+  }
+  .calc-ingredient-row .calc-ing-name { grid-area: name; }
+  .calc-ingredient-row .calc-ing-amount { grid-area: amount; }
+  .calc-ingredient-row .calc-ing-unit { grid-area: unit; }
+  .calc-ingredient-row .calc-ing-price { grid-area: price; }
+  .calc-ingredient-row .calc-price-label { grid-area: label; }
+  .calc-ingredient-row .calc-cost { grid-area: cost; }
+  .calc-ingredient-row .remove-btn { grid-area: remove; }
+}
+
 .remove-btn {
   background: none;
   border: 1px solid var(--border);

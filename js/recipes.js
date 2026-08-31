@@ -107,9 +107,14 @@ function renderIngredientRows(ingredients) {
     .join("");
 }
 
+function recipeMatchesQuery(recipe, query) {
+  if (recipe.name.toLowerCase().includes(query)) return true;
+  return recipe.ingredients.some((ing) => ing.name.toLowerCase().includes(query));
+}
+
 function currentFilteredRecipes() {
   const query = searchEl.value.trim().toLowerCase();
-  return getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  return getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
 }
 
 function updateExportBar() {
@@ -185,7 +190,7 @@ function renderBrowseList() {
 
 function renderSidebarList() {
   const query = sidebarSearchEl.value.trim().toLowerCase();
-  const recipes = getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  const recipes = getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
 
   if (recipes.length === 0) {
     sidebarListEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;

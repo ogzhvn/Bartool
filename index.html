@@ -17,7 +17,9 @@
     <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
     <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false">Rezept bearbeiten</button>
     <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
+    <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false">Zuckersirup</button>
     <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
+    <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false">Kalkulation</button>
   </nav>
 
   <main>
@@ -88,13 +90,13 @@
     <!-- RECIPES (browse list) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
-      <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
+      <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"). Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
 
       <div class="actions">
         <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
       </div>
 
-      <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
+      <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
 
       <div class="export-bar">
         <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
@@ -168,7 +170,7 @@
           <div class="actions">
             <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
           </div>
-          <input type="text" id="recipe-sidebar-search" placeholder="Suchen…" />
+          <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
           <div id="recipe-sidebar-list" class="recipe-name-list"></div>
         </aside>
       </div>
@@ -232,6 +234,59 @@
       </div>
     </section>
 
+    <!-- SUGAR SYRUP -->
+    <section id="syrup" class="tab-panel">
+      <h2>Zuckersirup-Rechner</h2>
+      <p class="hint">Berechnet die Zuckermenge für ein Zucker:Wasser-Verhältnis, ausgehend von der gewünschten Wassermenge.</p>
+
+      <label>
+        Verhältnis (Zucker : Wasser)
+        <select id="syrup-preset">
+          <option value="1:1">1:1 (Simple Syrup)</option>
+          <option value="2:1" selected>2:1 (Rich Simple Syrup)</option>
+          <option value="3:2">3:2</option>
+          <option value="1:2">1:2 (dünn)</option>
+          <option value="custom">Eigenes Verhältnis</option>
+        </select>
+      </label>
+
+      <div class="field-row">
+        <label>
+          Zucker-Teile
+          <input type="number" id="syrup-sugar-parts" value="2" min="0.01" step="0.1" />
+        </label>
+        <label>
+          Wasser-Teile
+          <input type="number" id="syrup-water-parts" value="1" min="0.01" step="0.1" />
+        </label>
+      </div>
+
+      <label>
+        Wassermenge
+        <div class="juice-input-row">
+          <input type="number" id="syrup-water-amount" value="500" min="0" step="10" />
+          <span class="unit-suffix">ml</span>
+        </div>
+      </label>
+
+      <div class="juice-cards">
+        <div class="juice-card juice-card-lemon">
+          <div class="juice-card-header">Ergebnis</div>
+          <div class="juice-card-body">
+            <div class="juice-result">
+              <span class="juice-result-label">Zucker benötigt</span>
+              <span class="juice-result-value" id="syrup-sugar-amount">0 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Gesamtgewicht (Wasser + Zucker)</span>
+              <span class="juice-result-value" id="syrup-yield-amount">0 g</span>
+            </div>
+            <p class="hint">Das fertige Sirup-Volumen liegt wegen des gelösten Zuckers etwas unter diesem Gewicht in ml.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- DILUTION / ABV -->
     <section id="dilution" class="tab-panel">
       <h2>Verdünnungs- &amp; ABV-Rechner</h2>
@@ -268,6 +323,48 @@
       </div>
 
       <div id="dil-result" class="result-box" hidden></div>
+    </section>
+
+    <!-- CALCULATION (Wareneinsatz / Verkaufspreis) -->
+    <section id="calculation" class="tab-panel">
+      <h2>Kalkulations-Rechner</h2>
+      <p class="hint">Berechnet den Wareneinsatz eines Rezepts und einen empfohlenen Verkaufspreis anhand der Ziel-Wareneinsatzquote.</p>
+
+      <div class="field-row">
+        <label>
+          Rezept aus Rezeptbuch laden
+          <select id="calc-recipe-select">
+            <option value="">– Rezept auswählen –</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="calc-load-recipe" class="btn-secondary">Einfügen</button>
+      </div>
+
+      <h3>Zutaten</h3>
+      <p class="hint">Preis pro Liter bei ml/cl/oz/BL/Dash, Preis pro Stück bei Stück/Teile.</p>
+      <div id="calc-ingredients" class="calc-ingredient-list"></div>
+      <button type="button" id="calc-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+      <div class="actions">
+        <button type="button" id="calc-calculate" class="btn-primary">Berechnen</button>
+        <button type="button" id="calc-clear" class="btn-secondary">Zurücksetzen</button>
+      </div>
+
+      <h3>Preisziel</h3>
+      <div class="field-row">
+        <label>
+          Ziel-Wareneinsatzquote (%)
+          <input type="number" id="calc-target-quote" value="20" min="1" max="100" step="1" />
+        </label>
+        <label>
+          MwSt.-Satz (%)
+          <input type="number" id="calc-vat" value="19" min="0" max="100" step="1" />
+        </label>
+      </div>
+
+      <div id="calc-result" class="result-box" hidden></div>
     </section>
   </main>
 
