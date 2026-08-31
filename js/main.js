@@ -7,6 +7,7 @@ import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initAromaMatrix } from "./aromaMatrix.js";
+import { initSalesMatrix } from "./salesMatrix.js";
 
 initTabs();
 initRecipes();
@@ -17,3 +18,4 @@ initSyrup();
 initDilution();
 initCalculation();
 initAromaMatrix();
+initSalesMatrix();

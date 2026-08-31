@@ -96,6 +96,31 @@ export function sharedDimensions(profileA, profileB) {
     .sort((x, y) => y.a + y.b - (x.a + x.b));
 }
 
+// Rezepte haben selbst kein gepflegtes Aromaprofil (das gibt es nur an
+// Produkten, siehe 2.1) – hier wird grob eines aus den erkannten Zutaten
+// abgeleitet (einfacher Durchschnitt über alle Zutaten, die auf ein Produkt
+// mit Aromaprofil matchen). Gibt null zurück, wenn keine einzige Zutat
+// zugeordnet werden konnte, statt ein irreführendes Nullprofil zu liefern.
+export function deriveRecipeFlavorProfile(recipe, products) {
+  const matched = recipe.ingredients
+    .map((ing) => products.find((p) => hasFlavorProfile(p) && ing.name.toLowerCase().includes(p.name.toLowerCase())))
+    .filter(Boolean);
+  if (matched.length === 0) return null;
+  const profile = {};
+  FLAVOR_DIMENSIONS.forEach((dim) => {
+    profile[dim] = matched.reduce((sum, p) => sum + (p.flavorProfile[dim] ?? 0), 0) / matched.length;
+  });
+  return profile;
+}
+
+// Verpackt ein beliebiges Aromaprofil (z. B. von deriveRecipeFlavorProfile
+// oder aus manuell angetippten Aroma-Chips) als Pseudo-Produkt, damit
+// compatibilityScore() wiederverwendet werden kann statt eine zweite
+// Score-Funktion zu pflegen.
+export function asFlavorProfileHolder(name, flavorProfile) {
+  return { name, flavorProfile };
+}
+
 // 0-100 Kompatibilitäts-Score zwischen zwei Produkten: 70 % Aromaprofil-
 // Kompatibilität (Kontrast/Übereinstimmung je Dimensionspaar), 30 % Bonus
 // dafür, wie oft beide bereits gemeinsam in einem Rezept stehen. Gibt null

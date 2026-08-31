@@ -33,6 +33,7 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Insights</h3>
         <button class="tab-btn" data-tab="aroma-matrix" role="tab" aria-selected="false">Aromenmatrix</button>
+        <button class="tab-btn" data-tab="sales-matrix" role="tab" aria-selected="false">Verkaufsmatrix</button>
       </div>
     </nav>
 
@@ -562,6 +563,87 @@
       </div>
 
       <div id="aroma-detail" class="aroma-detail" hidden></div>
+    </section>
+
+    <!-- VERKAUFSMATRIX -->
+    <section id="sales-matrix" class="tab-panel">
+      <h2>Verkaufsmatrix</h2>
+      <p class="hint">Unterstützung beim Verkaufen am Tresen – live im Gespräch mit dem Gast oder zum Durchlesen vor der Schicht.</p>
+
+      <div class="sm-top-toggle" role="tablist">
+        <button type="button" class="sm-top-btn active" data-sm-top="live">Live</button>
+        <button type="button" class="sm-top-btn" data-sm-top="prep">Vorbereitung</button>
+      </div>
+
+      <!-- LIVE -->
+      <div id="sm-live" class="sm-top-panel active">
+        <div class="sm-mode-toggle" role="tablist">
+          <button type="button" class="sm-mode-btn active" data-sm-mode="1">Gast-Wunsch</button>
+          <button type="button" class="sm-mode-btn" data-sm-mode="2">Trade-up</button>
+          <button type="button" class="sm-mode-btn" data-sm-mode="3">Spickzettel</button>
+          <button type="button" class="sm-mode-btn" data-sm-mode="4">Cross-Sell</button>
+        </div>
+
+        <!-- Modus 1: Guest-Wunsch -> Empfehlung -->
+        <div id="sm-mode-1" class="sm-mode-panel active">
+          <p class="hint">Aromen antippen (max. 3) – oder unten einen Drink/Spirituose eintippen, den der Gast schon kennt.</p>
+          <div id="sm-flavor-chips" class="sm-flavor-chips"></div>
+          <div class="field-row">
+            <label>
+              Oder: bekannter Drink/Spirituose
+              <input type="text" id="sm-mode1-search" list="sm-lookup-options" placeholder="z. B. Aperol Spritz" />
+            </label>
+          </div>
+          <div id="sm-mode1-results" class="sm-results"></div>
+        </div>
+
+        <!-- Modus 2: Trade-up-Leiter -->
+        <div id="sm-mode-2" class="sm-mode-panel">
+          <p class="hint">Wähle, was der Gast normalerweise bestellt – das Tool zeigt die nächsthöheren Produkte derselben Kategorie.</p>
+          <div class="field-row">
+            <label>
+              Aktuell bestelltes Produkt
+              <input type="text" id="sm-mode2-search" list="sm-product-options" placeholder="Produkt suchen…" />
+            </label>
+          </div>
+          <div id="sm-mode2-results" class="sm-results"></div>
+        </div>
+
+        <!-- Modus 3: Verkaufs-Spickzettel -->
+        <div id="sm-mode-3" class="sm-mode-panel">
+          <div class="field-row">
+            <label>
+              Produkt oder Rezept
+              <input type="text" id="sm-mode3-search" list="sm-lookup-options" placeholder="Name eingeben…" />
+            </label>
+          </div>
+          <div id="sm-mode3-card"></div>
+        </div>
+
+        <!-- Modus 4: Cross-Sell -->
+        <div id="sm-mode-4" class="sm-mode-panel">
+          <p class="hint">Was passt zusätzlich zu dem, was der Gast schon bestellt hat?</p>
+          <div class="field-row">
+            <label>
+              Bestelltes Produkt oder Rezept
+              <input type="text" id="sm-mode4-search" list="sm-lookup-options" placeholder="Name eingeben…" />
+            </label>
+          </div>
+          <div id="sm-mode4-results" class="sm-results"></div>
+        </div>
+      </div>
+
+      <!-- VORBEREITUNG -->
+      <div id="sm-prep" class="sm-top-panel">
+        <div class="field-row">
+          <input type="text" id="sm-prep-search" placeholder="Suchen…" />
+          <button type="button" id="sm-prep-print" class="btn-secondary">Drucken / als PDF sichern</button>
+        </div>
+        <div id="sm-prep-content"></div>
+      </div>
+
+      <datalist id="sm-product-options"></datalist>
+      <datalist id="sm-lookup-options"></datalist>
     </section>
     </main>
   </div>

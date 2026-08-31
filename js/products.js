@@ -206,7 +206,9 @@ function currentFilteredProducts() {
   });
 }
 
-function groupProducts(products) {
+// Exported so other modules (e.g. the Verkaufsmatrix-Vorbereitung view) can
+// group/sort products exactly like "Produktwissen" instead of a second copy.
+export function groupProducts(products) {
   const groups = new Map();
   products.forEach((product) => {
     const groupName = product.group || "Sonstiges";

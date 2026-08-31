@@ -861,3 +861,237 @@ textarea {
   margin: 0 0 0.4rem;
   color: var(--accent);
 }
+
+/* ---------- VERKAUFSMATRIX ---------- */
+
+.sm-top-toggle {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.sm-top-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sm-top-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sm-top-panel {
+  display: none;
+}
+
+.sm-top-panel.active {
+  display: block;
+}
+
+/* Live-Modus: bedient im Stehen mit dem Gast vor sich – große Touch-Ziele,
+   hoher Kontrast, Ergebnis ohne Scrollen. Andere Priorität als die übrigen,
+   eher am Schreibtisch genutzten Tabs. */
+.sm-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.sm-mode-btn {
+  flex: 1 1 140px;
+  min-height: 44px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sm-mode-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--bg-elevated), var(--accent) 12%);
+}
+
+.sm-mode-panel {
+  display: none;
+}
+
+.sm-mode-panel.active {
+  display: block;
+}
+
+.sm-flavor-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.sm-flavor-chip {
+  min-height: 44px;
+  min-width: 44px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.sm-flavor-chip.active {
+  border-color: var(--accent);
+  color: #241c12;
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.sm-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.sm-pitch-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 0.9rem 1.1rem;
+}
+
+.sm-pitch-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.sm-pitch-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.sm-pitch-type,
+.sm-pitch-price {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sm-pitch-line {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sm-cheat-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 1.4rem 1.6rem;
+  margin-top: 1rem;
+}
+
+.sm-cheat-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+.sm-cheat-bullets {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+.sm-cheat-bullets li {
+  margin-bottom: 0.4rem;
+}
+
+/* Vorbereitung: lesbare, vollständige Liste statt schneller Treffer-Auswahl -
+   Tempo ist hier zweitrangig, Vollständigkeit und Scrollen sind in Ordnung. */
+.sm-prep-group {
+  margin-bottom: 1.5rem;
+}
+
+.sm-prep-subgroup {
+  margin-bottom: 0.8rem;
+}
+
+.sm-prep-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) auto;
+  grid-template-areas: "name price" "pitch pitch";
+  gap: 0.1rem 0.8rem;
+  padding: 0.4rem 0.2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sm-prep-row-name {
+  grid-area: name;
+  font-weight: 600;
+}
+
+.sm-prep-row-price {
+  grid-area: price;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.sm-prep-row-pitch {
+  grid-area: pitch;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media print {
+  .app-header,
+  .sidebar,
+  .nav-toggle,
+  .app-footer,
+  .sm-top-toggle,
+  #sm-live,
+  #sm-prep-search,
+  #sm-prep-print {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block !important;
+  }
+
+  main,
+  main:has(#recipe-edit.active),
+  main:has(#product-edit.active) {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .sm-prep-row,
+  .sm-prep-subgroup {
+    break-inside: avoid;
+  }
+}
