@@ -120,6 +120,7 @@ function renderRecipeInfo(recipe) {
   const rows = [
     ["Glas", recipe.glass],
     ["Garnitur", recipe.garnish],
+    ["Eis", recipe.ice],
     ["Zubereitung", recipe.method],
     ["Geschichte", recipe.history],
   ].filter(([, value]) => value);

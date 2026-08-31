@@ -10,6 +10,7 @@ const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
 const glassEl = document.getElementById("recipe-glass");
 const garnishEl = document.getElementById("recipe-garnish");
+const iceEl = document.getElementById("recipe-ice");
 const historyEl = document.getElementById("recipe-history");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
@@ -27,6 +28,7 @@ function resetForm() {
   methodEl.value = "";
   glassEl.value = "";
   garnishEl.value = "";
+  iceEl.value = "";
   historyEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
@@ -39,6 +41,7 @@ function loadIntoForm(recipe) {
   methodEl.value = recipe.method ?? "";
   glassEl.value = recipe.glass ?? "";
   garnishEl.value = recipe.garnish ?? "";
+  iceEl.value = recipe.ice ?? "";
   historyEl.value = recipe.history ?? "";
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
@@ -68,6 +71,7 @@ function handleSave() {
     method: methodEl.value.trim(),
     glass: glassEl.value.trim(),
     garnish: garnishEl.value.trim(),
+    ice: iceEl.value.trim(),
     history: historyEl.value.trim(),
   });
   editingOriginalName = name;
@@ -109,6 +113,7 @@ function renderBrowseList() {
     const metaRows = [
       ["Glas", recipe.glass],
       ["Garnitur", recipe.garnish],
+      ["Eis", recipe.ice],
       ["Zubereitung", recipe.method],
       ["Geschichte", recipe.history],
     ].filter(([, value]) => value);
