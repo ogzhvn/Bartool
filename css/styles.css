@@ -352,6 +352,75 @@ textarea {
   color: var(--accent);
 }
 
+.juice-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.juice-card {
+  flex: 1 1 260px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.juice-card-header {
+  padding: 0.9rem 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+  color: #1b1614;
+}
+
+.juice-card-lime .juice-card-header {
+  background: #8bc866;
+}
+
+.juice-card-lemon .juice-card-header {
+  background: #d9c483;
+}
+
+.juice-card-body {
+  padding: 1.2rem;
+}
+
+.juice-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.juice-input-row input {
+  flex: 1;
+  font-size: 1.1rem;
+}
+
+.juice-input-row .unit-suffix {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.juice-result {
+  margin-top: 1rem;
+}
+
+.juice-result-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.juice-result-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
 .empty-note {
   color: var(--text-muted);
   font-size: 0.9rem;

@@ -162,50 +162,59 @@
     <!-- SUPERJUICE -->
     <section id="superjuice" class="tab-panel">
       <h2>Superjuice-Rechner</h2>
-      <p class="hint">Berechnet die Menge an Säuren (und optional Zucker) für einen "Superjuice" auf Basis von frischem Zitrussaft.</p>
+      <p class="hint">Berechnet Zitronensäure, Apfelsäure und Wasser auf Basis des Schalengewichts (z. B. von übrig gebliebenen Limetten-/Zitronenschalen).</p>
 
-      <label>
-        Preset
-        <select id="sj-preset">
-          <option value="lime">Limette (Standard: 1,0 % Zitronensäure / 0,5 % Apfelsäure)</option>
-          <option value="lemon">Zitrone (Standard: 0,6 % Zitronensäure / 0,4 % Apfelsäure)</option>
-          <option value="custom">Eigene Werte</option>
-        </select>
-      </label>
+      <div class="juice-cards">
+        <div class="juice-card juice-card-lime">
+          <div class="juice-card-header">Lime Super Juice</div>
+          <div class="juice-card-body">
+            <label>
+              Gewicht der Limetten-Schalen eingeben
+              <div class="juice-input-row">
+                <input type="number" id="sj-lime-peel" value="0" min="0" step="1" />
+                <span class="unit-suffix">g</span>
+              </div>
+            </label>
+            <div class="juice-result">
+              <span class="juice-result-label">Zitronensäure</span>
+              <span class="juice-result-value" id="sj-lime-citric">0.00 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Apfelsäure</span>
+              <span class="juice-result-value" id="sj-lime-malic">0.00 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Wasser</span>
+              <span class="juice-result-value" id="sj-lime-water">0 g</span>
+            </div>
+          </div>
+        </div>
 
-      <div class="field-row">
-        <label>
-          Menge frischer Saft (ml)
-          <input type="number" id="sj-juice-amount" value="1000" min="1" step="1" />
-        </label>
+        <div class="juice-card juice-card-lemon">
+          <div class="juice-card-header">Lemon Super Juice</div>
+          <div class="juice-card-body">
+            <label>
+              Gewicht der Zitronen-Schalen eingeben
+              <div class="juice-input-row">
+                <input type="number" id="sj-lemon-peel" value="0" min="0" step="1" />
+                <span class="unit-suffix">g</span>
+              </div>
+            </label>
+            <div class="juice-result">
+              <span class="juice-result-label">Zitronensäure</span>
+              <span class="juice-result-value" id="sj-lemon-citric">0.00 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Apfelsäure</span>
+              <span class="juice-result-value" id="sj-lemon-malic">0.00 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Wasser</span>
+              <span class="juice-result-value" id="sj-lemon-water">0 g</span>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div class="field-row">
-        <label>
-          Zitronensäure (%)
-          <input type="number" id="sj-citric" value="1.0" min="0" step="0.05" />
-        </label>
-        <label>
-          Apfelsäure (%)
-          <input type="number" id="sj-malic" value="0.5" min="0" step="0.05" />
-        </label>
-      </div>
-      <div class="field-row">
-        <label>
-          Ascorbinsäure / Vit. C (%, optional)
-          <input type="number" id="sj-ascorbic" value="0" min="0" step="0.05" />
-        </label>
-        <label>
-          Zucker (%, optional)
-          <input type="number" id="sj-sugar" value="0" min="0" step="0.5" />
-        </label>
-      </div>
-
-      <div class="actions">
-        <button type="button" id="sj-calculate" class="btn-primary">Berechnen</button>
-      </div>
-
-      <div id="sj-result" class="result-box" hidden></div>
     </section>
 
     <!-- DILUTION / ABV -->
