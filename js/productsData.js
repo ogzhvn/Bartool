@@ -7,7 +7,7 @@
 export const PRODUCTS = [
   // ---------- GIN ----------
   {
-    name: "Gin",
+    name: "Gin", group: "Gin", subGroup: "",
     category: "Gin (Basisspirituose) · diverse Herkunft",
     abv: "37,5–47 % vol (markenabhängig)",
     tastingNotes: "Wacholder-dominiert, je nach Botanicals zitrisch, würzig oder floral",
@@ -18,7 +18,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Bombay Gin",
+    name: "Bombay Gin", group: "Gin", subGroup: "",
     category: "London Dry Gin · England",
     abv: "40 % vol",
     tastingNotes: "Zitrus, Koriander, Angelikawurzel, mild und weich",
@@ -29,7 +29,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Bene Dry Gin",
+    name: "Bene Dry Gin", group: "Gin", subGroup: "",
     category: "Dry Gin · Deutschland",
     abv: "42 % vol (bitte gegen Flasche prüfen)",
     tastingNotes: "Klassisch wacholderbetont mit zitrischer Frische",
@@ -40,7 +40,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Tanqueray Gin",
+    name: "Tanqueray Gin", group: "Gin", subGroup: "",
     category: "London Dry Gin · Schottland",
     abv: "43,1 % vol",
     tastingNotes: "Kräftig wacholderbetont, pfeffrig-würzig, trocken",
@@ -51,7 +51,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Tanqueray Sevilla",
+    name: "Tanqueray Sevilla", group: "Gin", subGroup: "",
     category: "Gin mit Orangenaroma · Schottland",
     abv: "41,3 % vol",
     tastingNotes: "Bitterorange, süßlich-fruchtig, dezent würzig",
@@ -62,7 +62,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Tanqueray 0,0% Gin",
+    name: "Tanqueray 0,0% Gin", group: "Gin", subGroup: "",
     category: "Alkoholfreier Gin-Ersatz · Schottland",
     abv: "0,0 % vol",
     tastingNotes: "Wacholder- und Zitrusnoten ohne Alkoholschärfe",
@@ -75,7 +75,7 @@ export const PRODUCTS = [
 
   // ---------- VODKA ----------
   {
-    name: "Wodka",
+    name: "Wodka", group: "Vodka", subGroup: "",
     category: "Vodka (Basisspirituose) · diverse Herkunft",
     abv: "37,5–40 % vol",
     tastingNotes: "Neutral, mild, je nach Basis leicht süßlich (Getreide) oder erdig (Kartoffel)",
@@ -86,7 +86,7 @@ export const PRODUCTS = [
     allergens: "Getreide-Vodkas: destillierter Alkohol gilt meist als glutenfrei, im Zweifel Kartoffel-Vodka wählen",
   },
   {
-    name: "Wodka Zitrone",
+    name: "Wodka Zitrone", group: "Vodka", subGroup: "",
     category: "Aromatisierter Vodka · diverse Herkunft",
     abv: "37,5 % vol",
     tastingNotes: "Zitronig-frisch, leicht süßlich",
@@ -97,7 +97,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Ketel One Vodka",
+    name: "Ketel One Vodka", group: "Vodka", subGroup: "",
     category: "Wheat Vodka · Niederlande",
     abv: "40 % vol",
     tastingNotes: "Sehr weich, leicht süßlich, dezente Getreidenote",
@@ -110,7 +110,7 @@ export const PRODUCTS = [
 
   // ---------- RUM / CACHAÇA ----------
   {
-    name: "Weißer Rum",
+    name: "Weißer Rum", group: "Rum & Cachaça", subGroup: "Weißer Rum",
     category: "White Rum · Karibik",
     abv: "37,5–40 % vol",
     tastingNotes: "Leicht, süßlich, dezente Vanille-/Zuckerrohrnote, mild",
@@ -121,7 +121,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Dunkler Rum",
+    name: "Dunkler Rum", group: "Rum & Cachaça", subGroup: "Dunkler Rum",
     category: "Dark Rum · Karibik",
     abv: "40 % vol",
     tastingNotes: "Karamell, Melasse, Gewürze, holzig-rund",
@@ -132,7 +132,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Goldener Rum",
+    name: "Goldener Rum", group: "Rum & Cachaça", subGroup: "Goldener Rum",
     category: "Gold Rum · Karibik",
     abv: "40 % vol",
     tastingNotes: "Zwischen weißem und dunklem Rum – mild-süß mit leichter Fass-/Vanillenote",
@@ -143,7 +143,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Übernproof-Rum",
+    name: "Übernproof-Rum", group: "Rum & Cachaça", subGroup: "Overproof Rum",
     category: "Overproof Rum · Karibik",
     abv: "63–75,5 % vol",
     tastingNotes: "Sehr intensiv, brennend-scharf, konzentriert fruchtig-melassig",
@@ -154,7 +154,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Havana Club 3",
+    name: "Havana Club 3", group: "Rum & Cachaça", subGroup: "Weißer Rum",
     category: "White Rum · Kuba",
     abv: "40 % vol",
     tastingNotes: "Leicht, trocken, dezent süß mit Zuckerrohrfrische",
@@ -165,7 +165,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Gosling's Rum",
+    name: "Gosling's Rum", group: "Rum & Cachaça", subGroup: "Dunkler Rum",
     category: "Dark Rum (Black Seal) · Bermuda",
     abv: "40 % vol",
     tastingNotes: "Karamell, Melasse, Gewürze, kräftig-rund",
@@ -176,7 +176,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Matusalem Rum 15yo",
+    name: "Matusalem Rum 15yo", group: "Rum & Cachaça", subGroup: "Gereifter Rum (Sipping)",
     category: "Aged Rum (Solera) · Dominikanische Republik",
     abv: "40 % vol",
     tastingNotes: "Komplex, Trockenfrüchte, Karamell, Eiche, weich",
@@ -187,7 +187,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Smith & Cross Rum",
+    name: "Smith & Cross Rum", group: "Rum & Cachaça", subGroup: "Overproof Rum",
     category: "Jamaica Pot Still Rum · Jamaika",
     abv: "57 % vol",
     tastingNotes: "Sehr intensiv, funky, Banane, Gewürze, hoher Esteranteil",
@@ -198,7 +198,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Cachaça",
+    name: "Cachaça", group: "Rum & Cachaça", subGroup: "Cachaça",
     category: "Zuckerrohrbrand · Brasilien",
     abv: "38–40 % vol",
     tastingNotes: "Grasig-frisch, Zuckerrohr pur, leicht erdig",
@@ -211,7 +211,7 @@ export const PRODUCTS = [
 
   // ---------- WHISKY / WHISKEY ----------
   {
-    name: "Bourbon Whiskey",
+    name: "Bourbon Whiskey", group: "Whisky", subGroup: "Bourbon",
     category: "Bourbon Whiskey · USA",
     abv: "40–50 % vol",
     tastingNotes: "Vanille, Karamell, Eiche, süßlich-rund",
@@ -222,7 +222,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Rye Whiskey",
+    name: "Rye Whiskey", group: "Whisky", subGroup: "Rye",
     category: "Rye Whiskey · USA/Kanada",
     abv: "40–50 % vol",
     tastingNotes: "Würzig, pfeffrig, trockener und schärfer als Bourbon",
@@ -233,7 +233,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide (Roggen) – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Blended Scotch Whisky",
+    name: "Blended Scotch Whisky", group: "Whisky", subGroup: "Blended Scotch",
     category: "Blended Scotch · Schottland",
     abv: "40 % vol",
     tastingNotes: "Ausgewogen, mild-rauchig bis fruchtig, je nach Blend",
@@ -244,7 +244,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Rauchiger Islay Whisky",
+    name: "Rauchiger Islay Whisky", group: "Whisky", subGroup: "Single Malt Scotch (Islay)",
     category: "Single Malt Scotch (Islay) · Schottland",
     abv: "40–46 % vol",
     tastingNotes: "Intensiv rauchig-torfig, maritim-salzig, medizinisch",
@@ -255,7 +255,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Irish Whiskey",
+    name: "Irish Whiskey", group: "Whisky", subGroup: "Irish Whiskey",
     category: "Irish Whiskey · Irland",
     abv: "40 % vol",
     tastingNotes: "Weich, leicht süßlich, wenig rauchig, dreifach destilliert",
@@ -266,7 +266,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Bulleit Bourbon",
+    name: "Bulleit Bourbon", group: "Whisky", subGroup: "Bourbon",
     category: "High-Rye Bourbon · USA",
     abv: "45 % vol",
     tastingNotes: "Würzig-pfeffrig für einen Bourbon, Vanille, Eiche",
@@ -277,7 +277,7 @@ export const PRODUCTS = [
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
   },
   {
-    name: "Sazerac Rye",
+    name: "Sazerac Rye", group: "Whisky", subGroup: "Rye",
     category: "Rye Whiskey · USA",
     abv: "45 % vol",
     tastingNotes: "Würzig, kräftig, Anisspuren, trocken",
@@ -290,7 +290,7 @@ export const PRODUCTS = [
 
   // ---------- TEQUILA / MEZCAL ----------
   {
-    name: "Tequila",
+    name: "Tequila", group: "Tequila & Mezcal", subGroup: "Tequila",
     category: "Tequila · Mexiko",
     abv: "38–40 % vol",
     tastingNotes: "Agavig, erdig, je nach Sorte pfeffrig bis fruchtig",
@@ -301,7 +301,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Reposado-Tequila",
+    name: "Reposado-Tequila", group: "Tequila & Mezcal", subGroup: "Tequila",
     category: "Tequila Reposado · Mexiko",
     abv: "38–40 % vol",
     tastingNotes: "Agave plus Vanille, Eiche, leicht rund durch kurze Fassreifung",
@@ -312,7 +312,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Jose Cuervo Tequila",
+    name: "Jose Cuervo Tequila", group: "Tequila & Mezcal", subGroup: "Tequila",
     category: "Tequila · Mexiko",
     abv: "38 % vol",
     tastingNotes: "Mild-agavig, leicht süßlich, unkompliziert",
@@ -323,7 +323,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Mezcal",
+    name: "Mezcal", group: "Tequila & Mezcal", subGroup: "Mezcal",
     category: "Mezcal · Mexiko",
     abv: "40–45 % vol",
     tastingNotes: "Rauchig, erdig-agavig, intensiv",
@@ -334,7 +334,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "San Cosme Mezcal",
+    name: "San Cosme Mezcal", group: "Tequila & Mezcal", subGroup: "Mezcal",
     category: "Mezcal Espadín · Mexiko",
     abv: "40–46 % vol",
     tastingNotes: "Rauchig, agavig, leicht mineralisch",
@@ -347,7 +347,7 @@ export const PRODUCTS = [
 
   // ---------- BRANDY / COGNAC ----------
   {
-    name: "Cognac",
+    name: "Cognac", group: "Brände", subGroup: "Cognac",
     category: "Cognac · Frankreich",
     abv: "40 % vol",
     tastingNotes: "Trockenfrüchte, Vanille, Eiche, elegant-rund",
@@ -358,7 +358,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Hennessy VSOP",
+    name: "Hennessy VSOP", group: "Brände", subGroup: "Cognac",
     category: "Cognac VSOP · Frankreich",
     abv: "40 % vol",
     tastingNotes: "Vanille, getrocknete Früchte, dezente Würze, weich",
@@ -371,7 +371,7 @@ export const PRODUCTS = [
 
   // ---------- LIKÖRE / APERITIFS ----------
   {
-    name: "Amaretto",
+    name: "Amaretto", group: "Liköre & Aperitifs", subGroup: "Steinfrucht-/Mandellikör",
     category: "Mandellikör · Italien",
     abv: "21–28 % vol",
     tastingNotes: "Süß, Marzipan/Mandel, warm-würzig",
@@ -382,7 +382,7 @@ export const PRODUCTS = [
     allergens: "Kann Spuren von Nüssen/Aprikosenkernen enthalten – bei Nussallergie prüfen",
   },
   {
-    name: "Aperol",
+    name: "Aperol", group: "Liköre & Aperitifs", subGroup: "Bitter-Aperitif",
     category: "Bitter-Aperitif · Italien",
     abv: "11 % vol",
     tastingNotes: "Bitterorange, Rhabarber, süß-herb, leicht",
@@ -393,7 +393,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Campari",
+    name: "Campari", group: "Liköre & Aperitifs", subGroup: "Bitter-Aperitif",
     category: "Bitterlikör · Italien",
     abv: "25 % vol",
     tastingNotes: "Kräftig bitter, Bitterorange, Kräuter, intensiv rot",
@@ -404,7 +404,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Cointreau",
+    name: "Cointreau", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
     category: "Orangenlikör (Triple Sec) · Frankreich",
     abv: "40 % vol",
     tastingNotes: "Klar-orangig, süß-herb, kräftig aromatisch",
@@ -415,7 +415,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Grand Marnier",
+    name: "Grand Marnier", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
     category: "Orangenlikör auf Cognac-Basis · Frankreich",
     abv: "40 % vol",
     tastingNotes: "Orange, Vanille, Cognac-Tiefe, kräftig",
@@ -426,7 +426,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Maraschino-Likör",
+    name: "Maraschino-Likör", group: "Liköre & Aperitifs", subGroup: "Steinfrucht-/Mandellikör",
     category: "Kirschlikör · Italien/Kroatien",
     abv: "32 % vol",
     tastingNotes: "Trocken-bittermandelig, Steinobstkern, nicht fruchtig-süß",
@@ -437,7 +437,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Kaffeelikör",
+    name: "Kaffeelikör", group: "Liköre & Aperitifs", subGroup: "Kaffeelikör",
     category: "Kaffeelikör · diverse Herkunft",
     abv: "20–26 % vol",
     tastingNotes: "Kaffee, Röstaromen, süß",
@@ -448,7 +448,7 @@ export const PRODUCTS = [
     allergens: "Enthält Koffein",
   },
   {
-    name: "Kakaolikör (Crème de Cacao)",
+    name: "Kakaolikör (Crème de Cacao)", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
     category: "Kakaolikör · diverse Herkunft",
     abv: "20–24 % vol",
     tastingNotes: "Schokoladig-süß; weiße Variante ohne Farbe, gleiche Kakaonote",
@@ -459,7 +459,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Grüner Crème de Menthe",
+    name: "Grüner Crème de Menthe", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
     category: "Pfefferminzlikör · diverse Herkunft",
     abv: "20–24 % vol",
     tastingNotes: "Intensiv Pfefferminze, süß, kühlend",
@@ -470,7 +470,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Weißer Crème de Menthe",
+    name: "Weißer Crème de Menthe", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
     category: "Pfefferminzlikör · diverse Herkunft",
     abv: "20–24 % vol",
     tastingNotes: "Intensiv Pfefferminze, süß, kühlend, farblos",
@@ -481,7 +481,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Crème de Violette",
+    name: "Crème de Violette", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
     category: "Veilchenlikör · Frankreich",
     abv: "20 % vol",
     tastingNotes: "Floral, veilchenartig, leicht süß",
@@ -492,7 +492,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Orange Curaçao",
+    name: "Orange Curaçao", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
     category: "Orangenlikör · diverse Herkunft",
     abv: "30–40 % vol",
     tastingNotes: "Orangig, etwas kräftiger/dunkler als Triple Sec",
@@ -503,7 +503,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Bénédictine",
+    name: "Bénédictine", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
     category: "Kräuterlikör (DOM) · Frankreich",
     abv: "40 % vol",
     tastingNotes: "Honigsüß, Kräuter, Gewürze, warm-komplex",
@@ -514,7 +514,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Grüner Chartreuse",
+    name: "Grüner Chartreuse", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
     category: "Kräuterlikör · Frankreich",
     abv: "55 % vol",
     tastingNotes: "Sehr intensiv kräuterig-würzig, leicht süß, hochprozentig",
@@ -525,7 +525,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Cherry Heering (Kirschlikör)",
+    name: "Cherry Heering (Kirschlikör)", group: "Liköre & Aperitifs", subGroup: "Fruchtlikör",
     category: "Kirschlikör · Dänemark",
     abv: "24 % vol",
     tastingNotes: "Dunkle Kirsche, süß-herb, weinig-tief",
@@ -536,7 +536,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Helbing Kümmel",
+    name: "Helbing Kümmel", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
     category: "Kümmelbrand · Deutschland",
     abv: "38–40 % vol",
     tastingNotes: "Kräftig kümmelig-würzig, kräuterbitter",
@@ -549,7 +549,7 @@ export const PRODUCTS = [
 
   // ---------- WERMUT / APERITIF-WEIN ----------
   {
-    name: "Roter Wermut",
+    name: "Roter Wermut", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Roter (süßer) Wermut · Italien/Frankreich",
     abv: "16–18 % vol",
     tastingNotes: "Süßlich-würzig, Kräuter, Karamell, weinig",
@@ -560,7 +560,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite (weinbasiert)",
   },
   {
-    name: "Trockener Wermut",
+    name: "Trockener Wermut", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Trockener (weißer) Wermut · Frankreich/Italien",
     abv: "15–18 % vol",
     tastingNotes: "Trocken-kräuterig, leicht bitter, wenig süß",
@@ -571,7 +571,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite (weinbasiert)",
   },
   {
-    name: "Weißer Wermut",
+    name: "Weißer Wermut", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Weißer (Bianco-)Wermut · Italien",
     abv: "15–17 % vol",
     tastingNotes: "Süßlich-blumig, vanillig, milder als roter Wermut",
@@ -582,7 +582,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite (weinbasiert)",
   },
   {
-    name: "Antica Formula",
+    name: "Antica Formula", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Premium roter Wermut (Carpano) · Italien",
     abv: "16,5 % vol",
     tastingNotes: "Intensiv würzig-süß, Vanille, Zimt, sehr komplex",
@@ -593,7 +593,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite (weinbasiert)",
   },
   {
-    name: "Martini Florale",
+    name: "Martini Florale", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Aromatisierter Wermut (floral) · Italien",
     abv: "14,4 % vol",
     tastingNotes: "Blumig, leicht süß, Holunder-/Blütennoten",
@@ -604,7 +604,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite (weinbasiert)",
   },
   {
-    name: "Ramazzotti Rosato",
+    name: "Ramazzotti Rosato", group: "Wermut & Aperitif-Wein", subGroup: "",
     category: "Roséwein-Aperitif · Italien",
     abv: "15 % vol",
     tastingNotes: "Fruchtig-frisch, leichte Kräuterbittere, roséweinartig",
@@ -617,7 +617,7 @@ export const PRODUCTS = [
 
   // ---------- BITTERS ----------
   {
-    name: "Angostura Bitters",
+    name: "Angostura Bitters", group: "Bitters", subGroup: "",
     category: "Aromatische Bitters · Trinidad",
     abv: "44,7 % vol",
     tastingNotes: "Intensiv würzig-bitter, Gewürznelke, Zimt, Enzian",
@@ -628,7 +628,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Peychaud's Bitters",
+    name: "Peychaud's Bitters", group: "Bitters", subGroup: "",
     category: "Aromatische Bitters · USA (New Orleans)",
     abv: "35 % vol",
     tastingNotes: "Anis-/Nelkenbetont, süßer und blumiger als Angostura",
@@ -639,7 +639,7 @@ export const PRODUCTS = [
     allergens: "Keine bekannten",
   },
   {
-    name: "Bitter",
+    name: "Bitter", group: "Bitters", subGroup: "",
     category: "Bitters (nicht näher spezifiziert)",
     abv: "",
     tastingNotes: "Bitter-würzig",
@@ -650,7 +650,7 @@ export const PRODUCTS = [
     allergens: "",
   },
   {
-    name: "Absinth",
+    name: "Absinth", group: "Absinth", subGroup: "",
     category: "Anisspirituose · Frankreich/Schweiz",
     abv: "45–74 % vol",
     tastingNotes: "Sehr intensiv Anis/Wermutkraut, bitter-kräuterig",
@@ -663,7 +663,7 @@ export const PRODUCTS = [
 
   // ---------- SCHAUMWEIN ----------
   {
-    name: "Champagner",
+    name: "Champagner", group: "Schaumwein", subGroup: "",
     category: "Schaumwein (AOC) · Frankreich",
     abv: "12 % vol",
     tastingNotes: "Trocken bis brut, Hefe, Zitrus, feine Perlage",
@@ -674,7 +674,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
   },
   {
-    name: "Prosecco",
+    name: "Prosecco", group: "Schaumwein", subGroup: "",
     category: "Schaumwein (DOC) · Italien",
     abv: "11 % vol",
     tastingNotes: "Fruchtig, leicht süß, weniger komplex als Champagner",
@@ -685,7 +685,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
   },
   {
-    name: "Sekt",
+    name: "Sekt", group: "Schaumwein", subGroup: "",
     category: "Schaumwein · Deutschland",
     abv: "11–12 % vol",
     tastingNotes: "Je nach Herstellung fruchtig bis hefig-trocken",
@@ -696,7 +696,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
   },
   {
-    name: "A-Rosa Sekt",
+    name: "A-Rosa Sekt", group: "Schaumwein", subGroup: "",
     category: "Sekt · Deutschland",
     abv: "11,5 % vol",
     tastingNotes: "Frisch-fruchtig, unkompliziert",
@@ -708,90 +708,90 @@ export const PRODUCTS = [
   },
 
   // ---------- SIRUPE ----------
-  { name: "Zuckersirup", category: "Sirup (Basis) · Eigenherstellung", abv: "", tastingNotes: "Neutral süß", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Honig-Sirup", category: "Sirup · Eigenherstellung", abv: "", tastingNotes: "Honigsüß, rund", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Himbeersirup", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-fruchtig, Himbeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Grenadine", category: "Fruchtsirup (Granatapfel)", abv: "", tastingNotes: "Süß-herb, Granatapfel, tiefrot", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Orgeat-Sirup (Mandelsirup)", category: "Sirup (Mandel)", abv: "", tastingNotes: "Mandelig-süß, Orangenblütennote", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Mandeln (Nussallergie beachten)" },
-  { name: "Holunderblütensirup", category: "Fruchtsirup", abv: "", tastingNotes: "Blumig-süß, Holunderblüte", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Vanille-Sirup", category: "Sirup", abv: "", tastingNotes: "Süß, vanillig-warm", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Hibiskus-Sirup", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-säuerlich, blumig-rot", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Passionsfrucht-Sirup", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-säuerlich, exotisch-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Zimt-Sirup", category: "Sirup", abv: "", tastingNotes: "Warm-würzig, süß", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Agavendicksaft", category: "Süßungsmittel", abv: "", tastingNotes: "Neutral-süß, dünnflüssig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Agavensirup", category: "Süßungsmittel", abv: "", tastingNotes: "Neutral-süß, dünnflüssig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Monin Melone-Sirup", category: "Fruchtsirup (Markenprodukt)", abv: "", tastingNotes: "Süß, Honigmelone", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Honig-Ingwer-Sirup", category: "Sirup · Eigenherstellung", abv: "", tastingNotes: "Süß-scharf, Honig und Ingwer", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Limettensaft-Sirup", category: "Sirup (Cordial)", abv: "", tastingNotes: "Süß-säuerlich, haltbar gemachte Limette", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Apfelsirup", category: "Fruchtsirup", abv: "", tastingNotes: "Süß, Apfel", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Blue Curaçao Sirup", category: "Sirup (alkoholfrei)", abv: "", tastingNotes: "Süß-orangig, kräftig blau", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Zuckersirup", group: "Sirup", subGroup: "", category: "Sirup (Basis) · Eigenherstellung", abv: "", tastingNotes: "Neutral süß", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Honig-Sirup", group: "Sirup", subGroup: "", category: "Sirup · Eigenherstellung", abv: "", tastingNotes: "Honigsüß, rund", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Himbeersirup", group: "Sirup", subGroup: "", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-fruchtig, Himbeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Grenadine", group: "Sirup", subGroup: "", category: "Fruchtsirup (Granatapfel)", abv: "", tastingNotes: "Süß-herb, Granatapfel, tiefrot", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Orgeat-Sirup (Mandelsirup)", group: "Sirup", subGroup: "", category: "Sirup (Mandel)", abv: "", tastingNotes: "Mandelig-süß, Orangenblütennote", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Mandeln (Nussallergie beachten)" },
+  { name: "Holunderblütensirup", group: "Sirup", subGroup: "", category: "Fruchtsirup", abv: "", tastingNotes: "Blumig-süß, Holunderblüte", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Vanille-Sirup", group: "Sirup", subGroup: "", category: "Sirup", abv: "", tastingNotes: "Süß, vanillig-warm", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Hibiskus-Sirup", group: "Sirup", subGroup: "", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-säuerlich, blumig-rot", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Passionsfrucht-Sirup", group: "Sirup", subGroup: "", category: "Fruchtsirup", abv: "", tastingNotes: "Süß-säuerlich, exotisch-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Zimt-Sirup", group: "Sirup", subGroup: "", category: "Sirup", abv: "", tastingNotes: "Warm-würzig, süß", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Agavendicksaft", group: "Sirup", subGroup: "", category: "Süßungsmittel", abv: "", tastingNotes: "Neutral-süß, dünnflüssig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Agavensirup", group: "Sirup", subGroup: "", category: "Süßungsmittel", abv: "", tastingNotes: "Neutral-süß, dünnflüssig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Monin Melone-Sirup", group: "Sirup", subGroup: "", category: "Fruchtsirup (Markenprodukt)", abv: "", tastingNotes: "Süß, Honigmelone", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Honig-Ingwer-Sirup", group: "Sirup", subGroup: "", category: "Sirup · Eigenherstellung", abv: "", tastingNotes: "Süß-scharf, Honig und Ingwer", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Limettensaft-Sirup", group: "Sirup", subGroup: "", category: "Sirup (Cordial)", abv: "", tastingNotes: "Süß-säuerlich, haltbar gemachte Limette", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Apfelsirup", group: "Sirup", subGroup: "", category: "Fruchtsirup", abv: "", tastingNotes: "Süß, Apfel", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Blue Curaçao Sirup", group: "Sirup", subGroup: "", category: "Sirup (alkoholfrei)", abv: "", tastingNotes: "Süß-orangig, kräftig blau", story: "", service: "", alternatives: "", production: "", allergens: "" },
 
   // ---------- PÜREES ----------
-  { name: "Blaubeerenpüree", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-säuerlich, Blaubeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Erdbeer-Püree", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-fruchtig, Erdbeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Mango-Püree", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-tropisch, Mango", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Kiwi-Püree", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-säuerlich, Kiwi", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Kalamansi-Püree", category: "Fruchtpüree (Zitrusfrucht)", abv: "", tastingNotes: "Säuerlich-aromatisch, zwischen Limette und Mandarine", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Weißer Pfirsichpüree", category: "Fruchtpüree", abv: "", tastingNotes: "Süß, weißer Pfirsich", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Boiron Bergamotte-Püree", category: "Fruchtpüree (Markenprodukt)", abv: "", tastingNotes: "Zitrisch-blumig, herb-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Ananas-Oleo-Saccharum", category: "Zucker-Öl-Extrakt · Eigenherstellung", abv: "", tastingNotes: "Süß-fruchtig mit Zitrusschalen-Öl-Aroma", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Blaubeerenpüree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-säuerlich, Blaubeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Erdbeer-Püree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-fruchtig, Erdbeere", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Mango-Püree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-tropisch, Mango", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Kiwi-Püree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree", abv: "", tastingNotes: "Süß-säuerlich, Kiwi", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Kalamansi-Püree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree (Zitrusfrucht)", abv: "", tastingNotes: "Säuerlich-aromatisch, zwischen Limette und Mandarine", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Weißer Pfirsichpüree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree", abv: "", tastingNotes: "Süß, weißer Pfirsich", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Boiron Bergamotte-Püree", group: "Fruchtpüree", subGroup: "", category: "Fruchtpüree (Markenprodukt)", abv: "", tastingNotes: "Zitrisch-blumig, herb-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Ananas-Oleo-Saccharum", group: "Fruchtpüree", subGroup: "", category: "Zucker-Öl-Extrakt · Eigenherstellung", abv: "", tastingNotes: "Süß-fruchtig mit Zitrusschalen-Öl-Aroma", story: "", service: "", alternatives: "", production: "", allergens: "" },
 
   // ---------- SÄFTE ----------
-  { name: "Zitronensaft", category: "Saft (frisch)", abv: "", tastingNotes: "Sauer, frisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Limettensaft", category: "Saft (frisch)", abv: "", tastingNotes: "Sauer, frisch, herb", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Orangensaft", category: "Saft (frisch)", abv: "", tastingNotes: "Süß-säuerlich, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Grapefruitsaft", category: "Saft (frisch)", abv: "", tastingNotes: "Säuerlich-bitter, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Ananassaft", category: "Saft", abv: "", tastingNotes: "Süß-säuerlich, tropisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Cranberrysaft", category: "Saft", abv: "", tastingNotes: "Säuerlich-herb, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Apfelsaft", category: "Saft", abv: "", tastingNotes: "Süß-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Tomatensaft", category: "Saft/Gemüsesaft", abv: "", tastingNotes: "Herzhaft-salzig, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Bananensaft", category: "Saft", abv: "", tastingNotes: "Süß, cremig-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Kirschsaft", category: "Saft", abv: "", tastingNotes: "Süß-säuerlich, Kirsche", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Yuzu", category: "Saft/Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Aromatisch-sauer, zwischen Mandarine und Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Zitronensaft", group: "Saft", subGroup: "", category: "Saft (frisch)", abv: "", tastingNotes: "Sauer, frisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Limettensaft", group: "Saft", subGroup: "", category: "Saft (frisch)", abv: "", tastingNotes: "Sauer, frisch, herb", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Orangensaft", group: "Saft", subGroup: "", category: "Saft (frisch)", abv: "", tastingNotes: "Süß-säuerlich, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Grapefruitsaft", group: "Saft", subGroup: "", category: "Saft (frisch)", abv: "", tastingNotes: "Säuerlich-bitter, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Ananassaft", group: "Saft", subGroup: "", category: "Saft", abv: "", tastingNotes: "Süß-säuerlich, tropisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Cranberrysaft", group: "Saft", subGroup: "", category: "Saft", abv: "", tastingNotes: "Säuerlich-herb, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Apfelsaft", group: "Saft", subGroup: "", category: "Saft", abv: "", tastingNotes: "Süß-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Tomatensaft", group: "Saft", subGroup: "", category: "Saft/Gemüsesaft", abv: "", tastingNotes: "Herzhaft-salzig, fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Bananensaft", group: "Saft", subGroup: "", category: "Saft", abv: "", tastingNotes: "Süß, cremig-fruchtig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Kirschsaft", group: "Saft", subGroup: "", category: "Saft", abv: "", tastingNotes: "Süß-säuerlich, Kirsche", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Yuzu", group: "Saft", subGroup: "", category: "Saft/Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Aromatisch-sauer, zwischen Mandarine und Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
 
   // ---------- FRISCHWARE / KRÄUTER ----------
-  { name: "Zitrone", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Sauer, aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Limette", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Sauer, herb-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Orange", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Süß-säuerlich", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Minzblätter", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Frisch-kühlend, aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Basilikumblätter", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Würzig-frisch, leicht pfeffrig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Limettenblätter", category: "Frischware (Kräuter, Kaffirlimette)", abv: "", tastingNotes: "Intensiv zitrisch-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Thymian", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Würzig-erdig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Gurkenscheiben", category: "Frischware", abv: "", tastingNotes: "Frisch, mild-grün", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Banane", category: "Frischware (Obst)", abv: "", tastingNotes: "Süß, cremig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Kardamomkapseln", category: "Gewürz", abv: "", tastingNotes: "Warm-würzig, zitrisch-scharf", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Zitrone", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Sauer, aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Limette", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Sauer, herb-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Orange", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Zitrusfrucht)", abv: "", tastingNotes: "Süß-säuerlich", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Minzblätter", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Frisch-kühlend, aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Basilikumblätter", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Würzig-frisch, leicht pfeffrig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Limettenblätter", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Kräuter, Kaffirlimette)", abv: "", tastingNotes: "Intensiv zitrisch-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Thymian", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Kräuter)", abv: "", tastingNotes: "Würzig-erdig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Gurkenscheiben", group: "Frischware & Kräuter", subGroup: "", category: "Frischware", abv: "", tastingNotes: "Frisch, mild-grün", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Banane", group: "Frischware & Kräuter", subGroup: "", category: "Frischware (Obst)", abv: "", tastingNotes: "Süß, cremig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Kardamomkapseln", group: "Frischware & Kräuter", subGroup: "", category: "Gewürz", abv: "", tastingNotes: "Warm-würzig, zitrisch-scharf", story: "", service: "", alternatives: "", production: "", allergens: "" },
 
   // ---------- MIXER / SOFTDRINKS ----------
-  { name: "Ginger Beer", category: "Mixer (Ingwerlimonade)", abv: "", tastingNotes: "Scharf-süß, intensiv Ingwer", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Sodawasser", category: "Mixer", abv: "", tastingNotes: "Neutral, spritzig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Cola", category: "Mixer", abv: "", tastingNotes: "Süß, karamellig-würzig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Schweppes Dry Tonic", category: "Mixer (Tonic Water, Markenprodukt)", abv: "", tastingNotes: "Herb-bitter, Chinin", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Bitter Lemon", category: "Mixer", abv: "", tastingNotes: "Bitter-süß, zitronig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Grapefruit-Limonade", category: "Mixer", abv: "", tastingNotes: "Süß-säuerlich, Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Thomas Henry Pink Grapefruit", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Herb-fruchtig, rosa Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Fritz Rhabarber Schorle", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Süß-säuerlich, Rhabarber", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "The Basil Limo", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Erfrischend, Zitrus mit Basilikum", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Mystic Mango", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Süß-tropisch, Mango", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Ginger Beer", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Ingwerlimonade)", abv: "", tastingNotes: "Scharf-süß, intensiv Ingwer", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Sodawasser", group: "Mixer & Softdrink", subGroup: "", category: "Mixer", abv: "", tastingNotes: "Neutral, spritzig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Cola", group: "Mixer & Softdrink", subGroup: "", category: "Mixer", abv: "", tastingNotes: "Süß, karamellig-würzig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Schweppes Dry Tonic", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Tonic Water, Markenprodukt)", abv: "", tastingNotes: "Herb-bitter, Chinin", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Bitter Lemon", group: "Mixer & Softdrink", subGroup: "", category: "Mixer", abv: "", tastingNotes: "Bitter-süß, zitronig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Grapefruit-Limonade", group: "Mixer & Softdrink", subGroup: "", category: "Mixer", abv: "", tastingNotes: "Süß-säuerlich, Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Thomas Henry Pink Grapefruit", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Herb-fruchtig, rosa Grapefruit", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Fritz Rhabarber Schorle", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Süß-säuerlich, Rhabarber", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "The Basil Limo", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Erfrischend, Zitrus mit Basilikum", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Mystic Mango", group: "Mixer & Softdrink", subGroup: "", category: "Mixer (Markenprodukt)", abv: "", tastingNotes: "Süß-tropisch, Mango", story: "", service: "", alternatives: "", production: "", allergens: "" },
 
   // ---------- TEE / KAFFEE ----------
-  { name: "Earl Grey Tee", category: "Tee", abv: "", tastingNotes: "Aromatisch, Bergamotte", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Morgentau Tee", category: "Tee (Hausmischung)", abv: "", tastingNotes: "Aromatisch, je nach Mischung", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Pfirsich Eistee", category: "Getränk (Eistee)", abv: "", tastingNotes: "Süß, Pfirsich", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Frisch gebrühter Espresso", category: "Kaffee", abv: "", tastingNotes: "Röstig-bitter, intensiv", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Koffein" },
-  { name: "Heißer Kaffee", category: "Kaffee", abv: "", tastingNotes: "Röstig, bitter-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Koffein" },
+  { name: "Earl Grey Tee", group: "Tee & Kaffee", subGroup: "", category: "Tee", abv: "", tastingNotes: "Aromatisch, Bergamotte", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Morgentau Tee", group: "Tee & Kaffee", subGroup: "", category: "Tee (Hausmischung)", abv: "", tastingNotes: "Aromatisch, je nach Mischung", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Pfirsich Eistee", group: "Tee & Kaffee", subGroup: "", category: "Getränk (Eistee)", abv: "", tastingNotes: "Süß, Pfirsich", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Frisch gebrühter Espresso", group: "Tee & Kaffee", subGroup: "", category: "Kaffee", abv: "", tastingNotes: "Röstig-bitter, intensiv", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Koffein" },
+  { name: "Heißer Kaffee", group: "Tee & Kaffee", subGroup: "", category: "Kaffee", abv: "", tastingNotes: "Röstig, bitter-aromatisch", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Koffein" },
 
   // ---------- SONSTIGES ----------
-  { name: "Eiweiß", category: "Frischware (Ei)", abv: "", tastingNotes: "Neutral, für Schaum/Textur", story: "", service: "", alternatives: "Aquafaba (veganer Ersatz)", production: "", allergens: "Enthält Ei" },
-  { name: "Sahne", category: "Milchprodukt", abv: "", tastingNotes: "Cremig, mild-süß", story: "", service: "", alternatives: "Milch (weniger cremig)", production: "", allergens: "Enthält Milch/Laktose" },
-  { name: "Schlagsahne", category: "Milchprodukt", abv: "", tastingNotes: "Cremig, mild-süß, aufgeschlagen", story: "", service: "", alternatives: "Sahne", production: "", allergens: "Enthält Milch/Laktose" },
-  { name: "Milch", category: "Milchprodukt", abv: "", tastingNotes: "Mild, cremig", story: "", service: "", alternatives: "Pflanzendrink", production: "", allergens: "Enthält Milch/Laktose" },
-  { name: "Kokoscreme (Coco Lopez)", category: "Milchersatz (Kokos, Markenprodukt)", abv: "", tastingNotes: "Süß-cremig, Kokos", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Olivenlake", category: "Würzflüssigkeit", abv: "", tastingNotes: "Salzig-herb", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Worcestersauce", category: "Würzsauce", abv: "", tastingNotes: "Würzig-salzig, umami", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Fisch (Sardellen)" },
-  { name: "Tabasco", category: "Würzsauce (Chili)", abv: "", tastingNotes: "Scharf-essigsauer", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Citrus-Säure", category: "Säuerungsmittel · Eigenherstellung", abv: "", tastingNotes: "Rein sauer, geschmacksneutral", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Säure-Mischung", category: "Säuerungsmittel · Eigenherstellung", abv: "", tastingNotes: "Sauer, rezepturabhängig", story: "", service: "", alternatives: "", production: "", allergens: "" },
-  { name: "Brauner Zucker", category: "Süßungsmittel", abv: "", tastingNotes: "Süß, leicht karamellig", story: "", service: "", alternatives: "Zuckersirup", production: "", allergens: "" },
-  { name: "Beery Campari-Vermouth-Mix", category: "Haus-Mix · Eigenherstellung", abv: "", tastingNotes: "Bitter-süß, Campari/Wermut-Basis", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
-  { name: "Pre-Mix", category: "Haus-Mix · Eigenherstellung, unspezifisch", abv: "", tastingNotes: "Rezepturabhängig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Eiweiß", group: "Sonstiges", subGroup: "", category: "Frischware (Ei)", abv: "", tastingNotes: "Neutral, für Schaum/Textur", story: "", service: "", alternatives: "Aquafaba (veganer Ersatz)", production: "", allergens: "Enthält Ei" },
+  { name: "Sahne", group: "Sonstiges", subGroup: "", category: "Milchprodukt", abv: "", tastingNotes: "Cremig, mild-süß", story: "", service: "", alternatives: "Milch (weniger cremig)", production: "", allergens: "Enthält Milch/Laktose" },
+  { name: "Schlagsahne", group: "Sonstiges", subGroup: "", category: "Milchprodukt", abv: "", tastingNotes: "Cremig, mild-süß, aufgeschlagen", story: "", service: "", alternatives: "Sahne", production: "", allergens: "Enthält Milch/Laktose" },
+  { name: "Milch", group: "Sonstiges", subGroup: "", category: "Milchprodukt", abv: "", tastingNotes: "Mild, cremig", story: "", service: "", alternatives: "Pflanzendrink", production: "", allergens: "Enthält Milch/Laktose" },
+  { name: "Kokoscreme (Coco Lopez)", group: "Sonstiges", subGroup: "", category: "Milchersatz (Kokos, Markenprodukt)", abv: "", tastingNotes: "Süß-cremig, Kokos", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Olivenlake", group: "Sonstiges", subGroup: "", category: "Würzflüssigkeit", abv: "", tastingNotes: "Salzig-herb", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Worcestersauce", group: "Sonstiges", subGroup: "", category: "Würzsauce", abv: "", tastingNotes: "Würzig-salzig, umami", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Fisch (Sardellen)" },
+  { name: "Tabasco", group: "Sonstiges", subGroup: "", category: "Würzsauce (Chili)", abv: "", tastingNotes: "Scharf-essigsauer", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Citrus-Säure", group: "Sonstiges", subGroup: "", category: "Säuerungsmittel · Eigenherstellung", abv: "", tastingNotes: "Rein sauer, geschmacksneutral", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Säure-Mischung", group: "Sonstiges", subGroup: "", category: "Säuerungsmittel · Eigenherstellung", abv: "", tastingNotes: "Sauer, rezepturabhängig", story: "", service: "", alternatives: "", production: "", allergens: "" },
+  { name: "Brauner Zucker", group: "Sonstiges", subGroup: "", category: "Süßungsmittel", abv: "", tastingNotes: "Süß, leicht karamellig", story: "", service: "", alternatives: "Zuckersirup", production: "", allergens: "" },
+  { name: "Beery Campari-Vermouth-Mix", group: "Sonstiges", subGroup: "", category: "Haus-Mix · Eigenherstellung", abv: "", tastingNotes: "Bitter-süß, Campari/Wermut-Basis", story: "", service: "", alternatives: "", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
+  { name: "Pre-Mix", group: "Sonstiges", subGroup: "", category: "Haus-Mix · Eigenherstellung, unspezifisch", abv: "", tastingNotes: "Rezepturabhängig", story: "", service: "", alternatives: "", production: "", allergens: "" },
 ];

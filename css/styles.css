@@ -128,9 +128,35 @@ textarea {
 }
 
 #recipe-search,
-#recipe-sidebar-search {
+#recipe-sidebar-search,
+#product-sidebar-search {
   width: 100%;
   margin-bottom: 0.8rem;
+}
+
+#product-search {
+  flex: 2 1 220px;
+}
+
+#product-group-filter {
+  flex: 1 1 180px;
+}
+
+.product-group-header {
+  margin: 1.4rem 0 0.4rem;
+  color: var(--accent);
+}
+
+.product-group-header:first-child {
+  margin-top: 0;
+}
+
+.product-subgroup-header {
+  margin: 0.8rem 0 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .recipe-edit-layout {

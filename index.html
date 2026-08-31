@@ -187,7 +187,12 @@
         <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
       </div>
 
-      <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+      <div class="field-row">
+        <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+        <select id="product-group-filter">
+          <option value="">Alle Kategorien</option>
+        </select>
+      </div>
       <div id="product-list" class="recipe-accordion"></div>
     </section>
 
@@ -206,6 +211,18 @@
             <label>
               Kategorie &amp; Herkunft
               <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              Gruppe
+              <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" />
+              <datalist id="product-group-options"></datalist>
+            </label>
+            <label>
+              Untergruppe (optional)
+              <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" />
+              <datalist id="product-subgroup-options"></datalist>
             </label>
           </div>
           <div class="field-row">

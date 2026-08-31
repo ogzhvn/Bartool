@@ -4,8 +4,36 @@ import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./produ
 import { onRecipesChanged } from "./storage.js";
 import { switchTab } from "./tabs.js";
 
+const GROUP_ORDER = [
+  "Gin",
+  "Vodka",
+  "Rum & Cachaça",
+  "Whisky",
+  "Tequila & Mezcal",
+  "Brände",
+  "Liköre & Aperitifs",
+  "Wermut & Aperitif-Wein",
+  "Bitters",
+  "Absinth",
+  "Schaumwein",
+  "Sirup",
+  "Fruchtpüree",
+  "Saft",
+  "Frischware & Kräuter",
+  "Mixer & Softdrink",
+  "Tee & Kaffee",
+  "Sonstiges",
+];
+
+function groupSortIndex(group) {
+  const i = GROUP_ORDER.indexOf(group);
+  return i === -1 ? GROUP_ORDER.length : i;
+}
+
 const nameEl = document.getElementById("product-name");
 const categoryEl = document.getElementById("product-category");
+const groupEl = document.getElementById("product-group");
+const subgroupEl = document.getElementById("product-subgroup");
 const abvEl = document.getElementById("product-abv");
 const tastingNotesEl = document.getElementById("product-tasting-notes");
 const serviceEl = document.getElementById("product-service");
@@ -16,6 +44,9 @@ const allergensEl = document.getElementById("product-allergens");
 
 const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
+const groupFilterEl = document.getElementById("product-group-filter");
+const groupOptionsEl = document.getElementById("product-group-options");
+const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
 const sidebarSearchEl = document.getElementById("product-sidebar-search");
 
@@ -24,6 +55,8 @@ let editingOriginalName = null;
 const FIELDS = [
   ["name", nameEl],
   ["category", categoryEl],
+  ["group", groupEl],
+  ["subGroup", subgroupEl],
   ["abv", abvEl],
   ["tastingNotes", tastingNotesEl],
   ["service", serviceEl],
@@ -76,7 +109,75 @@ function handleDelete() {
 
 function currentFilteredProducts() {
   const query = searchEl.value.trim().toLowerCase();
-  return getAllProducts().filter((p) => p.name.toLowerCase().includes(query) || (p.category ?? "").toLowerCase().includes(query));
+  const groupFilter = groupFilterEl.value;
+  return getAllProducts().filter((p) => {
+    const matchesQuery = p.name.toLowerCase().includes(query) || (p.category ?? "").toLowerCase().includes(query);
+    const matchesGroup = !groupFilter || p.group === groupFilter;
+    return matchesQuery && matchesGroup;
+  });
+}
+
+function groupProducts(products) {
+  const groups = new Map();
+  products.forEach((product) => {
+    const groupName = product.group || "Sonstiges";
+    if (!groups.has(groupName)) groups.set(groupName, new Map());
+    const subgroups = groups.get(groupName);
+    const subGroupName = product.subGroup || "";
+    if (!subgroups.has(subGroupName)) subgroups.set(subGroupName, []);
+    subgroups.get(subGroupName).push(product);
+  });
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de"))
+    .map(([groupName, subgroups]) => ({
+      groupName,
+      subgroups: [...subgroups.entries()].sort(([a], [b]) => a.localeCompare(b, "de")),
+    }));
+}
+
+function renderProductItem(product) {
+  const metaRows = [
+    ["Kategorie & Herkunft", product.category],
+    ["Alkoholgehalt", product.abv],
+    ["Tasting Notes", product.tastingNotes],
+    ["Serviervorschlag", product.service],
+    ["Alternativen", product.alternatives],
+    ["Story", product.story],
+    ["Herstellung", product.production],
+    ["Allergene", product.allergens],
+  ].filter(([, value]) => value);
+
+  const usedIn = getRecipesUsingProduct(product.name);
+
+  const item = document.createElement("details");
+  item.className = "recipe-item";
+  item.innerHTML = `
+    <summary>${escapeHtml(product.name)}</summary>
+    <div class="recipe-item-body">
+      ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+      ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
+      <div class="actions">
+        <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
+        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+      </div>
+    </div>
+  `;
+  item.querySelector(".edit-btn").addEventListener("click", (e) => {
+    e.preventDefault();
+    loadIntoForm(product);
+    switchTab("product-edit");
+  });
+  const deleteBtn = item.querySelector(".delete-btn");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
+      if (editingOriginalName === product.name) resetForm();
+      deleteProduct(product.name);
+    });
+  }
+  return item;
 }
 
 function renderBrowseList() {
@@ -87,48 +188,23 @@ function renderBrowseList() {
     return;
   }
   listEl.innerHTML = "";
-  products.forEach((product) => {
-    const metaRows = [
-      ["Kategorie & Herkunft", product.category],
-      ["Alkoholgehalt", product.abv],
-      ["Tasting Notes", product.tastingNotes],
-      ["Serviervorschlag", product.service],
-      ["Alternativen", product.alternatives],
-      ["Story", product.story],
-      ["Herstellung", product.production],
-      ["Allergene", product.allergens],
-    ].filter(([, value]) => value);
+  groupProducts(products).forEach(({ groupName, subgroups }) => {
+    const header = document.createElement("h3");
+    header.className = "product-group-header";
+    header.textContent = groupName;
+    listEl.appendChild(header);
 
-    const usedIn = getRecipesUsingProduct(product.name);
-
-    const item = document.createElement("details");
-    item.className = "recipe-item";
-    item.innerHTML = `
-      <summary>${escapeHtml(product.name)}</summary>
-      <div class="recipe-item-body">
-        ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
-        ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
-        <div class="actions">
-          <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-          ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-        </div>
-      </div>
-    `;
-    item.querySelector(".edit-btn").addEventListener("click", (e) => {
-      e.preventDefault();
-      loadIntoForm(product);
-      switchTab("product-edit");
+    subgroups.forEach(([subGroupName, items]) => {
+      if (subGroupName) {
+        const subHeader = document.createElement("h4");
+        subHeader.className = "product-subgroup-header";
+        subHeader.textContent = subGroupName;
+        listEl.appendChild(subHeader);
+      }
+      items
+        .sort((a, b) => a.name.localeCompare(b.name, "de"))
+        .forEach((product) => listEl.appendChild(renderProductItem(product)));
     });
-    const deleteBtn = item.querySelector(".delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
-        if (editingOriginalName === product.name) resetForm();
-        deleteProduct(product.name);
-      });
-    }
-    listEl.appendChild(item);
   });
 }
 
@@ -151,6 +227,25 @@ function renderSidebarList() {
   });
 }
 
+function populateGroupFilter() {
+  const groups = [...new Set(getAllProducts().map((p) => p.group).filter(Boolean))].sort(
+    (a, b) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de")
+  );
+  const currentValue = groupFilterEl.value;
+  groupFilterEl.innerHTML =
+    `<option value="">Alle Kategorien</option>` +
+    groups.map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+  if (groups.includes(currentValue)) groupFilterEl.value = currentValue;
+}
+
+function populateDatalists() {
+  const products = getAllProducts();
+  const groups = [...new Set(products.map((p) => p.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  const subgroups = [...new Set(products.map((p) => p.subGroup).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  groupOptionsEl.innerHTML = groups.map((g) => `<option value="${escapeHtml(g)}"></option>`).join("");
+  subgroupOptionsEl.innerHTML = subgroups.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
+}
+
 export function initProducts() {
   document.getElementById("product-save").addEventListener("click", handleSave);
   document.getElementById("product-new").addEventListener("click", resetForm);
@@ -161,14 +256,19 @@ export function initProducts() {
   });
   document.getElementById("product-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
+  groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
   onProductsChanged(() => {
+    populateGroupFilter();
+    populateDatalists();
     renderBrowseList();
     renderSidebarList();
   });
   // "Verwendet in" (used in) cross-references the recipe book, so refresh
   // the browse list when recipes change too.
   onRecipesChanged(renderBrowseList);
+  populateGroupFilter();
+  populateDatalists();
   renderBrowseList();
   renderSidebarList();
 }
