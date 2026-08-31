@@ -16,6 +16,8 @@
     <button class="tab-btn active" data-tab="batching" role="tab" aria-selected="true">Batching</button>
     <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
     <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false">Rezept bearbeiten</button>
+    <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
+    <button class="tab-btn" data-tab="product-edit" role="tab" aria-selected="false">Produkt bearbeiten</button>
     <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
     <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false">Zuckersirup</button>
     <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
@@ -172,6 +174,92 @@
           </div>
           <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
           <div id="recipe-sidebar-list" class="recipe-name-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PRODUCTS (browse list) -->
+    <section id="products" class="tab-panel">
+      <h2>Produktwissen</h2>
+      <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
+
+      <div class="actions">
+        <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
+      </div>
+
+      <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+      <div id="product-list" class="recipe-accordion"></div>
+    </section>
+
+    <!-- PRODUCT EDIT (form + sidebar) -->
+    <section id="product-edit" class="tab-panel">
+      <h2>Produkt bearbeiten</h2>
+      <p class="hint">Wähle rechts ein Produkt zum Bearbeiten aus oder leg links ein neues an.</p>
+
+      <div class="recipe-edit-layout">
+        <div class="recipe-edit-main">
+          <div class="field-row">
+            <label>
+              Produktname
+              <input type="text" id="product-name" placeholder="z. B. Campari" />
+            </label>
+            <label>
+              Kategorie &amp; Herkunft
+              <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              Alkoholgehalt (% vol)
+              <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
+            </label>
+          </div>
+
+          <h3>Geschmack</h3>
+          <label>
+            Tasting Notes / Geschmacksprofil
+            <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
+          </label>
+
+          <h3>Service</h3>
+          <div class="field-row">
+            <label>
+              Serviervorschlag
+              <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" />
+            </label>
+            <label>
+              Alternativen/Substitute
+              <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" />
+            </label>
+          </div>
+
+          <h3>Wissen &amp; Verkauf</h3>
+          <label>
+            Story / Geschichte / Verkaufsargumente
+            <textarea id="product-story" rows="3" placeholder="Kurze Geschichte und Erzähl-Fakten für Gäste"></textarea>
+          </label>
+          <label>
+            Besonderheiten der Herstellung
+            <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" />
+          </label>
+          <label>
+            Allergene/Unverträglichkeiten
+            <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" />
+          </label>
+
+          <div class="actions">
+            <button type="button" id="product-save" class="btn-primary">Speichern</button>
+            <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
+            <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+          </div>
+        </div>
+
+        <aside class="recipe-edit-sidebar">
+          <div class="actions">
+            <button type="button" id="product-sidebar-new" class="btn-secondary">+ Neu</button>
+          </div>
+          <input type="text" id="product-sidebar-search" placeholder="Suchen…" />
+          <div id="product-sidebar-list" class="recipe-name-list"></div>
         </aside>
       </div>
     </section>

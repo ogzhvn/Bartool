@@ -1,5 +1,7 @@
 const RECIPES_KEY = "bartool.batchRecipes";
 const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
+const PRODUCTS_KEY = "bartool.customProducts";
+const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
 
 export function loadRecipes() {
   try {
@@ -34,4 +36,37 @@ export function deleteRecipe(name) {
 
 export function onRecipesChanged(callback) {
   window.addEventListener(RECIPES_UPDATED_EVENT, callback);
+}
+
+export function loadProducts() {
+  try {
+    const raw = localStorage.getItem(PRODUCTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((p) => p && typeof p.name === "string");
+  } catch {
+    return [];
+  }
+}
+
+export function saveProduct(product) {
+  const products = loadProducts();
+  const existingIndex = products.findIndex((p) => p.name === product.name);
+  if (existingIndex >= 0) {
+    products[existingIndex] = product;
+  } else {
+    products.push(product);
+  }
+  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+  window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
+}
+
+export function deleteProduct(name) {
+  const products = loadProducts().filter((p) => p.name !== name);
+  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+  window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
+}
+
+export function onProductsChanged(callback) {
+  window.addEventListener(PRODUCTS_UPDATED_EVENT, callback);
 }
