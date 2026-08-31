@@ -1,0 +1,110 @@
+import { getAllRecipes } from "./recipeLibrary.js";
+
+export const FLAVOR_DIMENSIONS = [
+  "suess",
+  "sauer",
+  "bitter",
+  "herbKraeuterig",
+  "fruchtig",
+  "wuerzigScharf",
+  "floral",
+  "rauchig",
+];
+
+export const FLAVOR_LABELS = {
+  suess: "Süß",
+  sauer: "Sauer",
+  bitter: "Bitter",
+  herbKraeuterig: "Herb/Kräuterig",
+  fruchtig: "Fruchtig",
+  wuerzigScharf: "Würzig/Scharf",
+  floral: "Floral",
+  rauchig: "Rauchig",
+};
+
+// Handkuratierte Gewichtung zwischen den Aroma-Dimensionen (0 = passt kaum,
+// 1 = passt sehr gut) statt reiner Kosinus-Ähnlichkeit: manche Paarungen
+// funktionieren durch Kontrast (z. B. süß x sauer), andere durch
+// Übereinstimmung (z. B. fruchtig x fruchtig). Nur die obere Hälfte wird
+// gepflegt, weight() spiegelt sie symmetrisch.
+const DIMENSION_WEIGHTS = {
+  suess: { suess: 0.5, sauer: 1.0, bitter: 0.9, herbKraeuterig: 0.7, fruchtig: 0.8, wuerzigScharf: 0.6, floral: 0.7, rauchig: 0.6 },
+  sauer: { sauer: 0.3, bitter: 0.7, herbKraeuterig: 0.7, fruchtig: 0.9, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5 },
+  bitter: { bitter: 0.4, herbKraeuterig: 0.8, fruchtig: 0.7, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5 },
+  herbKraeuterig: { herbKraeuterig: 0.6, fruchtig: 0.6, wuerzigScharf: 0.7, floral: 0.7, rauchig: 0.5 },
+  fruchtig: { fruchtig: 0.8, wuerzigScharf: 0.7, floral: 0.8, rauchig: 0.3 },
+  wuerzigScharf: { wuerzigScharf: 0.5, floral: 0.5, rauchig: 0.6 },
+  floral: { floral: 0.5, rauchig: 0.3 },
+  rauchig: { rauchig: 0.5 },
+};
+
+function weight(dimA, dimB) {
+  return DIMENSION_WEIGHTS[dimA]?.[dimB] ?? DIMENSION_WEIGHTS[dimB]?.[dimA] ?? 0;
+}
+
+// A product "hat" ein Aromaprofil nur, wenn mindestens eine Dimension > 0
+// ist – ein leeres/fehlendes Profil gilt als unbekannt statt als "passt zu
+// nichts" gewertet zu werden.
+export function hasFlavorProfile(product) {
+  const profile = product?.flavorProfile;
+  if (!profile) return false;
+  return FLAVOR_DIMENSIONS.some((dim) => (profile[dim] ?? 0) > 0);
+}
+
+function profileCompatibility(profileA, profileB) {
+  let raw = 0;
+  let normA = 0;
+  let normB = 0;
+  for (const dimA of FLAVOR_DIMENSIONS) {
+    const a = profileA[dimA] ?? 0;
+    normA += a * a;
+    for (const dimB of FLAVOR_DIMENSIONS) {
+      raw += a * (profileB[dimB] ?? 0) * weight(dimA, dimB);
+    }
+  }
+  for (const dimB of FLAVOR_DIMENSIONS) {
+    const b = profileB[dimB] ?? 0;
+    normB += b * b;
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return Math.max(0, Math.min(1, raw / (Math.sqrt(normA) * Math.sqrt(normB))));
+}
+
+function recipeUsesIngredient(recipe, productName) {
+  const needle = productName.trim().toLowerCase();
+  if (!needle) return false;
+  return recipe.ingredients.some((ing) => ing.name.toLowerCase().includes(needle));
+}
+
+// Wie oft zwei Produkte bereits gemeinsam in einem Rezept vorkommen, als
+// 0..1-Bonus gedeckelt bei 2 gemeinsamen Rezepten – die Rezeptdatenbank ist
+// zu klein, um das stärker zu gewichten.
+function coOccurrenceScore(nameA, nameB, recipes) {
+  const count = recipes.filter((r) => recipeUsesIngredient(r, nameA) && recipeUsesIngredient(r, nameB)).length;
+  return Math.min(1, count / 2);
+}
+
+export function recipesUsingBoth(nameA, nameB, recipes = getAllRecipes()) {
+  return recipes.filter((r) => recipeUsesIngredient(r, nameA) && recipeUsesIngredient(r, nameB));
+}
+
+// Aroma-Dimensionen, in denen beide Produkte vertreten sind, absteigend nach
+// kombinierter Intensität – für die Detailansicht ("warum passen die?").
+export function sharedDimensions(profileA, profileB) {
+  return FLAVOR_DIMENSIONS.filter((dim) => (profileA[dim] ?? 0) > 0 && (profileB[dim] ?? 0) > 0)
+    .map((dim) => ({ dim, label: FLAVOR_LABELS[dim], a: profileA[dim], b: profileB[dim] }))
+    .sort((x, y) => y.a + y.b - (x.a + x.b));
+}
+
+// 0-100 Kompatibilitäts-Score zwischen zwei Produkten: 70 % Aromaprofil-
+// Kompatibilität (Kontrast/Übereinstimmung je Dimensionspaar), 30 % Bonus
+// dafür, wie oft beide bereits gemeinsam in einem Rezept stehen. Gibt null
+// zurück, wenn eines der beiden Produkte kein (bekanntes) Aromaprofil hat,
+// statt es fälschlich als "passt schlecht" zu werten.
+export function compatibilityScore(productA, productB, recipes = getAllRecipes()) {
+  if (!productA || !productB || productA.name === productB.name) return null;
+  if (!hasFlavorProfile(productA) || !hasFlavorProfile(productB)) return null;
+  const profileScore = profileCompatibility(productA.flavorProfile, productB.flavorProfile);
+  const coScore = coOccurrenceScore(productA.name, productB.name, recipes);
+  return Math.round((0.7 * profileScore + 0.3 * coScore) * 100);
+}

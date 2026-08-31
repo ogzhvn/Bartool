@@ -30,6 +30,10 @@
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
         <button class="tab-btn" data-tab="product-edit" role="tab" aria-selected="false">Produkt bearbeiten</button>
       </div>
+      <div class="sidebar-group">
+        <h3 class="sidebar-group-title">Insights</h3>
+        <button class="tab-btn" data-tab="aroma-matrix" role="tab" aria-selected="false">Aromenmatrix</button>
+      </div>
     </nav>
 
     <main>
@@ -523,6 +527,41 @@
       </div>
 
       <div id="calc-result" class="result-box" hidden></div>
+    </section>
+
+    <!-- AROMENMATRIX -->
+    <section id="aroma-matrix" class="tab-panel">
+      <h2>Aromenmatrix</h2>
+      <p class="hint">Zeigt, welche Produkte geschmacklich gut zueinander passen – auf Basis von Aromaprofil und bereits gemeinsam verwendeten Zutaten in den Rezepten. Nur Produkte mit gepflegtem Aromaprofil (im Produktformular) werden berücksichtigt.</p>
+
+      <div class="aroma-mode-toggle" role="tablist">
+        <button type="button" class="aroma-mode-btn active" data-mode="list">Liste</button>
+        <button type="button" class="aroma-mode-btn" data-mode="grid">Volles Raster</button>
+      </div>
+
+      <div id="aroma-list-mode" class="aroma-mode-panel active">
+        <div class="field-row">
+          <label>
+            Zutat(en) wählen (max. 3)
+            <input type="text" id="aroma-search" list="aroma-search-options" placeholder="Produkt suchen und Enter drücken…" />
+            <datalist id="aroma-search-options"></datalist>
+          </label>
+        </div>
+        <div id="aroma-chips" class="aroma-chips"></div>
+        <div id="aroma-results" class="aroma-results"></div>
+      </div>
+
+      <div id="aroma-grid-mode" class="aroma-mode-panel">
+        <div class="field-row">
+          <label>
+            Produktgruppe
+            <select id="aroma-grid-group"></select>
+          </label>
+        </div>
+        <div id="aroma-grid-wrapper" class="aroma-grid-wrapper"></div>
+      </div>
+
+      <div id="aroma-detail" class="aroma-detail" hidden></div>
     </section>
     </main>
   </div>

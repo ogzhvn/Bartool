@@ -5,7 +5,9 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { switchTab } from "./tabs.js";
 
-const GROUP_ORDER = [
+// Exported so other modules (Aromenmatrix, Verkaufsmatrix, Empfehlungen) can
+// sort/group products the same way instead of maintaining a second copy.
+export const GROUP_ORDER = [
   "Gin",
   "Vodka",
   "Rum & Cachaça",
@@ -27,7 +29,7 @@ const GROUP_ORDER = [
   "Sonstiges",
 ];
 
-function groupSortIndex(group) {
+export function groupSortIndex(group) {
   const i = GROUP_ORDER.indexOf(group);
   return i === -1 ? GROUP_ORDER.length : i;
 }
