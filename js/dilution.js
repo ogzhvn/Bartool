@@ -1,3 +1,5 @@
+import { formatNumber } from "./utils.js";
+
 const ingredientsEl = document.getElementById("dil-ingredients");
 const resultEl = document.getElementById("dil-result");
 
@@ -32,10 +34,6 @@ function updateModeInputs() {
   const mode = document.querySelector('input[name="dil-mode"]:checked').value;
   document.getElementById("dil-percent").disabled = mode !== "percent";
   document.getElementById("dil-ml").disabled = mode !== "ml";
-}
-
-function formatNumber(n) {
-  return Number(n.toFixed(2)).toString();
 }
 
 function calculate() {

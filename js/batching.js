@@ -2,7 +2,7 @@ import { onRecipesChanged } from "./storage.js";
 import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
-import { escapeHtml } from "./utils.js";
+import { escapeHtml, formatNumber } from "./utils.js";
 
 const ingredientsEl = document.getElementById("batch-ingredients");
 const resultEl = document.getElementById("batch-result");
@@ -84,10 +84,6 @@ function calculateScale() {
     totalVolumeMl > 0 ? ` · Gesamtvolumen: ${formatNumber(totalVolumeMl)} ml (${formatNumber(totalVolumeMl / 1000)} l)` : ""
   }</p>
   `;
-}
-
-function formatNumber(n) {
-  return Number(n.toFixed(2)).toString();
 }
 
 function populateRecipeSelect() {
