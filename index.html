@@ -160,6 +160,14 @@
             Geschichte
             <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
           </label>
+          <label>
+            Kurzer Pitch (zum Nachsprechen im Service)
+            <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" />
+          </label>
+          <label>
+            Passt gut zu (Produkte/Rezepte, kommagetrennt)
+            <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" />
+          </label>
 
           <div class="actions">
             <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
@@ -238,6 +246,34 @@
             <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
           </label>
 
+          <h3>Aromaprofil</h3>
+          <p class="hint">Grobe Einschätzung 0 (nicht vorhanden) bis 5 (sehr ausgeprägt) – Grundlage für Aromenmatrix &amp; Empfehlungen.</p>
+          <div class="flavor-profile-grid">
+            <label>Süß <input type="range" id="product-flavor-suess" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Sauer <input type="range" id="product-flavor-sauer" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Bitter <input type="range" id="product-flavor-bitter" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Herb/Kräuterig <input type="range" id="product-flavor-herbKraeuterig" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Fruchtig <input type="range" id="product-flavor-fruchtig" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Würzig/Scharf <input type="range" id="product-flavor-wuerzigScharf" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Floral <input type="range" id="product-flavor-floral" min="0" max="5" step="1" value="0" /><output></output></label>
+            <label>Rauchig <input type="range" id="product-flavor-rauchig" min="0" max="5" step="1" value="0" /><output></output></label>
+          </div>
+
+          <h3>Einkauf</h3>
+          <div class="field-row">
+            <label>
+              Einkaufspreis
+              <input type="number" id="product-price-value" min="0" step="0.01" placeholder="0,00" />
+            </label>
+            <label>
+              Einheit
+              <select id="product-price-unit">
+                <option value="liter">€ / Liter</option>
+                <option value="stueck">€ / Stück</option>
+              </select>
+            </label>
+          </div>
+
           <h3>Service</h3>
           <div class="field-row">
             <label>
@@ -263,6 +299,15 @@
             Allergene/Unverträglichkeiten
             <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" />
           </label>
+          <label>
+            Kurzer Pitch (zum Nachsprechen im Service)
+            <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" />
+          </label>
+          <label>
+            Passt gut zu (Produkte/Rezepte, kommagetrennt)
+            <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" />
+          </label>
+          <datalist id="pairs-with-options"></datalist>
 
           <div class="actions">
             <button type="button" id="product-save" class="btn-primary">Speichern</button>

@@ -321,6 +321,30 @@ textarea {
   margin-bottom: 1rem;
 }
 
+.flavor-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.flavor-profile-grid label {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr 1.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.flavor-profile-grid input[type="range"] {
+  width: 100%;
+}
+
+.flavor-profile-grid output {
+  text-align: right;
+  color: var(--text-muted);
+}
+
 .ingredient-list {
   display: flex;
   flex-direction: column;

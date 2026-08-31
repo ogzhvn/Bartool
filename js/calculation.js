@@ -1,27 +1,14 @@
 import { onRecipesChanged } from "./storage.js";
 import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
-import { UNIT_LABELS, UNIT_TO_ML } from "./units.js";
+import { UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
+import { priceLabelFor, ingredientCost, priceForIngredient } from "./costing.js";
 
 const ingredientsEl = document.getElementById("calc-ingredients");
 const recipeSelectEl = document.getElementById("calc-recipe-select");
 const resultEl = document.getElementById("calc-result");
 const targetQuoteEl = document.getElementById("calc-target-quote");
 const vatEl = document.getElementById("calc-vat");
-
-const VOLUME_UNITS = new Set(Object.keys(UNIT_TO_ML));
-
-function priceLabelFor(unit) {
-  return VOLUME_UNITS.has(unit) ? "€ / Liter" : "€ / Stück";
-}
-
-function ingredientCost(amount, unit, price) {
-  if (VOLUME_UNITS.has(unit)) {
-    const ml = amount * (UNIT_TO_ML[unit] ?? 1);
-    return (ml / 1000) * price;
-  }
-  return amount * price;
-}
 
 function formatEuro(n) {
   return `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -44,6 +31,7 @@ function makeRow(data = {}) {
     <button type="button" class="remove-btn" title="Entfernen">✕</button>
   `;
 
+  const nameEl = row.querySelector(".calc-ing-name");
   const amountEl = row.querySelector(".calc-ing-amount");
   const unitEl = row.querySelector(".calc-ing-unit");
   const priceEl = row.querySelector(".calc-ing-price");
@@ -57,6 +45,17 @@ function makeRow(data = {}) {
     costEl.textContent = formatEuro(ingredientCost(amount, unitEl.value, price));
   }
   [amountEl, unitEl, priceEl].forEach((el) => el.addEventListener("input", updateRow));
+  // Autofill the price from the product catalog when a known ingredient name
+  // is entered, but only while the field is still empty – never overwrite a
+  // price the user already typed or adjusted.
+  nameEl.addEventListener("blur", () => {
+    if (priceEl.value) return;
+    const price = priceForIngredient(nameEl.value.trim());
+    if (price !== null) {
+      priceEl.value = price;
+      updateRow();
+    }
+  });
   updateRow();
 
   row.querySelector(".remove-btn").addEventListener("click", () => row.remove());
@@ -145,7 +144,9 @@ function handleLoadRecipe() {
   const recipe = getRecipe(name);
   if (!recipe) return;
   ingredientsEl.innerHTML = "";
-  recipe.ingredients.forEach((ing) => addRow({ name: ing.name, amount: ing.amount, unit: ing.unit }));
+  recipe.ingredients.forEach((ing) =>
+    addRow({ name: ing.name, amount: ing.amount, unit: ing.unit, price: priceForIngredient(ing.name) ?? "" })
+  );
   resultEl.hidden = true;
 }
 

@@ -1,6 +1,7 @@
 import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
+import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { switchTab } from "./tabs.js";
 
@@ -66,6 +67,54 @@ const alternativesEl = document.getElementById("product-alternatives");
 const storyEl = document.getElementById("product-story");
 const productionEl = document.getElementById("product-production");
 const allergensEl = document.getElementById("product-allergens");
+const priceValueEl = document.getElementById("product-price-value");
+const priceUnitEl = document.getElementById("product-price-unit");
+const quickPitchEl = document.getElementById("product-quick-pitch");
+const pairsWithEl = document.getElementById("product-pairs-with");
+const pairsWithOptionsEl = document.getElementById("pairs-with-options");
+
+const FLAVOR_DIMENSIONS = ["suess", "sauer", "bitter", "herbKraeuterig", "fruchtig", "wuerzigScharf", "floral", "rauchig"];
+const flavorEls = Object.fromEntries(
+  FLAVOR_DIMENSIONS.map((dim) => [dim, document.getElementById(`product-flavor-${dim}`)])
+);
+
+function updateFlavorOutputs() {
+  FLAVOR_DIMENSIONS.forEach((dim) => {
+    const el = flavorEls[dim];
+    el.nextElementSibling.textContent = el.value;
+  });
+}
+
+function resetFlavorProfile() {
+  FLAVOR_DIMENSIONS.forEach((dim) => (flavorEls[dim].value = 0));
+  updateFlavorOutputs();
+}
+
+function loadFlavorProfileIntoForm(product) {
+  const profile = product.flavorProfile;
+  FLAVOR_DIMENSIONS.forEach((dim) => (flavorEls[dim].value = profile?.[dim] ?? 0));
+  updateFlavorOutputs();
+}
+
+// Returns null (not an all-zero object) when every dimension is 0, so an
+// untouched/"unknown" profile doesn't get treated as a real (if faint) one.
+function collectFlavorProfileFromForm() {
+  const profile = {};
+  let anyNonZero = false;
+  FLAVOR_DIMENSIONS.forEach((dim) => {
+    const value = parseInt(flavorEls[dim].value, 10) || 0;
+    profile[dim] = value;
+    if (value > 0) anyNonZero = true;
+  });
+  return anyNonZero ? profile : null;
+}
+
+function parsePairsWith(value) {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
@@ -89,16 +138,24 @@ const FIELDS = [
   ["story", storyEl],
   ["production", productionEl],
   ["allergens", allergensEl],
+  ["quickPitch", quickPitchEl],
+  ["priceUnit", priceUnitEl],
 ];
 
 function resetForm() {
-  FIELDS.forEach(([, el]) => (el.value = ""));
+  FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
+  priceValueEl.value = "";
+  pairsWithEl.value = "";
+  resetFlavorProfile();
   editingOriginalName = null;
   renderSidebarList();
 }
 
 function loadIntoForm(product) {
-  FIELDS.forEach(([key, el]) => (el.value = product[key] ?? ""));
+  FIELDS.forEach(([key, el]) => (el.value = product[key] ?? (key === "priceUnit" ? "liter" : "")));
+  priceValueEl.value = product.priceValue || "";
+  pairsWithEl.value = (product.pairsWith ?? []).join(", ");
+  loadFlavorProfileIntoForm(product);
   editingOriginalName = product.name;
   renderSidebarList();
 }
@@ -114,6 +171,11 @@ function handleSave() {
   }
   const product = {};
   FIELDS.forEach(([key, el]) => (product[key] = key === "name" ? name : el.value.trim()));
+  product.priceValue = parseFloat(priceValueEl.value) || 0;
+  const pairsWith = parsePairsWith(pairsWithEl.value);
+  if (pairsWith.length > 0) product.pairsWith = pairsWith;
+  const flavorProfile = collectFlavorProfileFromForm();
+  if (flavorProfile) product.flavorProfile = flavorProfile;
   saveProduct(product);
   editingOriginalName = name;
 }
@@ -164,16 +226,44 @@ function groupProducts(products) {
     }));
 }
 
+const FLAVOR_LABELS = {
+  suess: "Süß",
+  sauer: "Sauer",
+  bitter: "Bitter",
+  herbKraeuterig: "Herb/Kräuterig",
+  fruchtig: "Fruchtig",
+  wuerzigScharf: "Würzig/Scharf",
+  floral: "Floral",
+  rauchig: "Rauchig",
+};
+
+function formatFlavorProfile(profile) {
+  if (!profile) return "";
+  return FLAVOR_DIMENSIONS.filter((dim) => profile[dim] > 0)
+    .map((dim) => `${FLAVOR_LABELS[dim]} ${profile[dim]}`)
+    .join(" · ");
+}
+
+function formatPrice(product) {
+  if (!product.priceValue) return "";
+  const unitLabel = product.priceUnit === "stueck" ? "Stück" : "Liter";
+  return `${product.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${unitLabel}`;
+}
+
 function renderProductItem(product) {
   const metaRows = [
     ["Kategorie & Herkunft", product.category],
     ["Alkoholgehalt", product.abv],
     ["Tasting Notes", product.tastingNotes],
+    ["Aromaprofil", formatFlavorProfile(product.flavorProfile)],
     ["Serviervorschlag", product.service],
     ["Alternativen", product.alternatives],
     ["Story", product.story],
     ["Herstellung", product.production],
     ["Allergene", product.allergens],
+    ["Einkaufspreis", formatPrice(product)],
+    ["Kurzer Pitch", product.quickPitch],
+    ["Passt gut zu", (product.pairsWith ?? []).join(", ")],
   ].filter(([, value]) => value);
 
   const usedIn = getRecipesUsingProduct(product.name);
@@ -283,6 +373,15 @@ function populateDatalists() {
   subgroupOptionsEl.innerHTML = subgroups.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
 }
 
+// Shared by the "Passt gut zu" fields on both the product and the recipe edit
+// form (index.html references the same <datalist id="pairs-with-options">).
+function populatePairsWithOptions() {
+  const names = [...new Set([...getAllProducts().map((p) => p.name), ...getAllRecipes().map((r) => r.name)])].sort(
+    (a, b) => a.localeCompare(b, "de")
+  );
+  pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
+}
+
 export function initProducts() {
   document.getElementById("product-save").addEventListener("click", handleSave);
   document.getElementById("product-new").addEventListener("click", resetForm);
@@ -295,17 +394,24 @@ export function initProducts() {
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
+  FLAVOR_DIMENSIONS.forEach((dim) => flavorEls[dim].addEventListener("input", updateFlavorOutputs));
+  updateFlavorOutputs();
   onProductsChanged(() => {
     populateGroupFilter();
     populateDatalists();
+    populatePairsWithOptions();
     renderBrowseList();
     renderSidebarList();
   });
   // "Verwendet in" (used in) cross-references the recipe book, so refresh
   // the browse list when recipes change too.
-  onRecipesChanged(renderBrowseList);
+  onRecipesChanged(() => {
+    populatePairsWithOptions();
+    renderBrowseList();
+  });
   populateGroupFilter();
   populateDatalists();
+  populatePairsWithOptions();
   renderBrowseList();
   renderSidebarList();
 }
