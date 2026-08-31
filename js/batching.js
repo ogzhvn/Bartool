@@ -56,6 +56,9 @@ function calculateScale() {
     return toMl ? sum + ing.scaledAmount * toMl : sum;
   }, 0);
   const resultingPortions = basePortions * factor;
+  // Beim Skalieren nach Volumen ist eine Portionszahl wie "14.35" nicht
+  // umsetzbar – auf die nächstkleinere ganze Portion abrunden.
+  const displayPortions = mode === "volume" ? Math.floor(resultingPortions) : resultingPortions;
 
   resultEl.hidden = false;
   resultEl.innerHTML = `
@@ -70,7 +73,7 @@ function calculateScale() {
           .join("")}
       </tbody>
     </table>
-    <p class="summary">Ergibt ca. ${formatNumber(resultingPortions)} Portionen${
+    <p class="summary">Ergibt ca. ${formatNumber(displayPortions)} Portionen${
     totalVolumeMl > 0 ? ` · Gesamtvolumen: ${formatNumber(totalVolumeMl)} ml (${formatNumber(totalVolumeMl / 1000)} l)` : ""
   }</p>
   `;
