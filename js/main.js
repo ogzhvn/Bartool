@@ -8,6 +8,7 @@ import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initAromaMatrix } from "./aromaMatrix.js";
 import { initSalesMatrix } from "./salesMatrix.js";
+import { initRecommendations } from "./recommendations.js";
 
 initTabs();
 initRecipes();
@@ -19,3 +20,4 @@ initDilution();
 initCalculation();
 initAromaMatrix();
 initSalesMatrix();
+initRecommendations();

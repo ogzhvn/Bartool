@@ -122,7 +122,8 @@ main {
 }
 
 main:has(#recipe-edit.active),
-main:has(#product-edit.active) {
+main:has(#product-edit.active),
+main:has(#recommendations.active) {
   max-width: 1080px;
 }
 
@@ -151,7 +152,8 @@ main:has(#product-edit.active) {
 
   main,
   main:has(#recipe-edit.active),
-  main:has(#product-edit.active) {
+  main:has(#product-edit.active),
+  main:has(#recommendations.active) {
     max-width: 100%;
   }
 }
@@ -1094,4 +1096,76 @@ textarea {
   .sm-prep-subgroup {
     break-inside: avoid;
   }
+}
+
+/* ---------- EMPFEHLUNGEN ---------- */
+
+.rec-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.rec-mode-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.rec-mode-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rec-mode-main,
+.rec-mode-sidebar {
+  display: none;
+}
+
+.rec-mode-main.active,
+.rec-mode-sidebar.active {
+  display: block;
+}
+
+.rec-mode-main h3 {
+  margin: 1.4rem 0 0.6rem;
+}
+
+.rec-mode-main h3:first-child {
+  margin-top: 0;
+}
+
+.rec-checklist-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.rec-checklist-item input {
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.rec-margin-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.rec-margin-toggle input {
+  accent-color: var(--accent);
 }

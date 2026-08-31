@@ -34,6 +34,7 @@
         <h3 class="sidebar-group-title">Insights</h3>
         <button class="tab-btn" data-tab="aroma-matrix" role="tab" aria-selected="false">Aromenmatrix</button>
         <button class="tab-btn" data-tab="sales-matrix" role="tab" aria-selected="false">Verkaufsmatrix</button>
+        <button class="tab-btn" data-tab="recommendations" role="tab" aria-selected="false">Empfehlungen</button>
       </div>
     </nav>
 
@@ -644,6 +645,48 @@
 
       <datalist id="sm-product-options"></datalist>
       <datalist id="sm-lookup-options"></datalist>
+    </section>
+
+    <!-- EMPFEHLUNGEN -->
+    <section id="recommendations" class="tab-panel">
+      <h2>Empfehlungen</h2>
+      <p class="hint">Was lässt sich aus dem Bestand mixen – und welche anderen Rezepte passen zu einem, das schon gut läuft?</p>
+
+      <div class="rec-mode-toggle" role="tablist">
+        <button type="button" class="rec-mode-btn active" data-rec-mode="a">Was kann ich aus meinem Bestand machen?</button>
+        <button type="button" class="rec-mode-btn" data-rec-mode="b">Ähnlich wie …</button>
+      </div>
+
+      <div class="recipe-edit-layout">
+        <div class="recipe-edit-main">
+          <div id="rec-mode-a-main" class="rec-mode-main active">
+            <div id="rec-a-results"></div>
+          </div>
+          <div id="rec-mode-b-main" class="rec-mode-main">
+            <p class="hint" id="rec-b-hint">Wähle rechts ein Rezept aus.</p>
+            <label class="rec-margin-toggle">
+              <input type="checkbox" id="rec-b-margin-toggle" />
+              Margenstarke Vorschläge bevorzugen
+            </label>
+            <div id="rec-b-results"></div>
+          </div>
+        </div>
+
+        <aside class="recipe-edit-sidebar">
+          <div id="rec-mode-a-sidebar" class="rec-mode-sidebar active">
+            <div class="actions">
+              <button type="button" id="rec-a-select-all" class="btn-secondary">Alle auswählen</button>
+              <button type="button" id="rec-a-select-none" class="btn-secondary">Keine auswählen</button>
+            </div>
+            <input type="text" id="rec-a-search" placeholder="Produkt suchen…" />
+            <div id="rec-a-checklist" class="recipe-name-list"></div>
+          </div>
+          <div id="rec-mode-b-sidebar" class="rec-mode-sidebar">
+            <input type="text" id="rec-b-search" placeholder="Rezept suchen…" />
+            <div id="rec-b-list" class="recipe-name-list"></div>
+          </div>
+        </aside>
+      </div>
     </section>
     </main>
   </div>

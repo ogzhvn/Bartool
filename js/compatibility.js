@@ -96,15 +96,21 @@ export function sharedDimensions(profileA, profileB) {
     .sort((x, y) => y.a + y.b - (x.a + x.b));
 }
 
+// Ordnet eine Rezeptzutat dem passenden Produkt mit Aromaprofil zu (per
+// Namens-Teilstring, dasselbe Muster wie überall sonst in der App, z. B.
+// getRecipesUsingProduct). Gibt null zurück, wenn keins gefunden wird.
+export function resolveIngredientProduct(ingredientName, products) {
+  const name = ingredientName.toLowerCase();
+  return products.find((p) => hasFlavorProfile(p) && name.includes(p.name.toLowerCase())) ?? null;
+}
+
 // Rezepte haben selbst kein gepflegtes Aromaprofil (das gibt es nur an
 // Produkten, siehe 2.1) – hier wird grob eines aus den erkannten Zutaten
 // abgeleitet (einfacher Durchschnitt über alle Zutaten, die auf ein Produkt
 // mit Aromaprofil matchen). Gibt null zurück, wenn keine einzige Zutat
 // zugeordnet werden konnte, statt ein irreführendes Nullprofil zu liefern.
 export function deriveRecipeFlavorProfile(recipe, products) {
-  const matched = recipe.ingredients
-    .map((ing) => products.find((p) => hasFlavorProfile(p) && ing.name.toLowerCase().includes(p.name.toLowerCase())))
-    .filter(Boolean);
+  const matched = recipe.ingredients.map((ing) => resolveIngredientProduct(ing.name, products)).filter(Boolean);
   if (matched.length === 0) return null;
   const profile = {};
   FLAVOR_DIMENSIONS.forEach((dim) => {
