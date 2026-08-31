@@ -8,6 +8,11 @@
   --accent-hover: #eab654;
   --danger: #c0564a;
   --radius: 8px;
+  --radius-lg: 14px;
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.35);
+  /* Aromenmatrix-Heatmap: kühl/entsättigt (wenig Kompatibilität) bis warm/--accent (viel Kompatibilität) */
+  --heat-low: #3a5f68;
+  --heat-high: var(--accent);
 }
 
 * {
@@ -23,6 +28,7 @@ body {
 }
 
 .app-header {
+  position: relative;
   padding: 1.5rem 1rem 0.5rem;
   text-align: center;
 }
@@ -37,31 +43,79 @@ body {
   color: var(--text-muted);
 }
 
-.tabs {
+.nav-toggle {
+  display: none;
+  position: absolute;
+  left: 1rem;
+  top: 1.4rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+
+.app-layout {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 1rem 1rem 0;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.sidebar {
+  flex: 0 0 220px;
+  width: 220px;
+  padding: 1.5rem 0.75rem 2rem;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+}
+
+.sidebar-group {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-group-title {
+  margin: 0 0 0.4rem;
+  padding: 0 0.6rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
 .tab-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
   background: none;
   border: none;
+  border-left: 3px solid transparent;
   color: var(--text-muted);
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.tab-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
 }
 
 .tab-btn.active {
   color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--bg-elevated);
 }
 
 main {
+  flex: 1 1 auto;
+  min-width: 0;
   max-width: 720px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
@@ -70,6 +124,36 @@ main {
 main:has(#recipe-edit.active),
 main:has(#product-edit.active) {
   max-width: 1080px;
+}
+
+@media (max-width: 700px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .app-layout {
+    display: block;
+  }
+
+  .sidebar {
+    position: static;
+    width: auto;
+    flex: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem;
+    display: none;
+  }
+
+  .sidebar.open {
+    display: block;
+  }
+
+  main,
+  main:has(#recipe-edit.active),
+  main:has(#product-edit.active) {
+    max-width: 100%;
+  }
 }
 
 .tab-panel {
