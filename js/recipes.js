@@ -4,6 +4,7 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { switchTab } from "./tabs.js";
+import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
@@ -17,10 +18,16 @@ const ingredientsEl = document.getElementById("recipe-ingredients");
 const searchEl = document.getElementById("recipe-search");
 const sidebarListEl = document.getElementById("recipe-sidebar-list");
 const sidebarSearchEl = document.getElementById("recipe-sidebar-search");
+const selectedCountEl = document.getElementById("recipe-selected-count");
+const selectAllBtn = document.getElementById("recipe-select-all");
+const selectNoneBtn = document.getElementById("recipe-select-none");
+const exportExcelBtn = document.getElementById("recipe-export-excel");
+const exportWordBtn = document.getElementById("recipe-export-word");
 
 const editor = createIngredientEditor(ingredientsEl);
 
 let editingOriginalName = null;
+const selectedNames = new Set();
 
 function resetForm() {
   nameEl.value = "";
@@ -100,12 +107,23 @@ function renderIngredientRows(ingredients) {
     .join("");
 }
 
-function renderBrowseList() {
+function currentFilteredRecipes() {
   const query = searchEl.value.trim().toLowerCase();
-  const recipes = getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  return getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+}
+
+function updateExportBar() {
+  selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
+  exportExcelBtn.disabled = selectedNames.size === 0;
+  exportWordBtn.disabled = selectedNames.size === 0;
+}
+
+function renderBrowseList() {
+  const recipes = currentFilteredRecipes();
 
   if (recipes.length === 0) {
     listEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
+    updateExportBar();
     return;
   }
   listEl.innerHTML = "";
@@ -121,7 +139,12 @@ function renderBrowseList() {
     const item = document.createElement("details");
     item.className = "recipe-item";
     item.innerHTML = `
-      <summary>${escapeHtml(recipe.name)}</summary>
+      <summary>
+        <span class="recipe-item-title">
+          <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
+          ${escapeHtml(recipe.name)}
+        </span>
+      </summary>
       <div class="recipe-item-body">
         <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
         ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
@@ -131,6 +154,16 @@ function renderBrowseList() {
         </div>
       </div>
     `;
+    const checkbox = item.querySelector(".recipe-select-checkbox");
+    checkbox.addEventListener("click", (e) => e.stopPropagation());
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        selectedNames.add(recipe.name);
+      } else {
+        selectedNames.delete(recipe.name);
+      }
+      updateExportBar();
+    });
     item.querySelector(".edit-btn").addEventListener("click", (e) => {
       e.preventDefault();
       loadIntoForm(recipe);
@@ -147,6 +180,7 @@ function renderBrowseList() {
     }
     listEl.appendChild(item);
   });
+  updateExportBar();
 }
 
 function renderSidebarList() {
@@ -181,6 +215,22 @@ export function initRecipes() {
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
+  selectAllBtn.addEventListener("click", () => {
+    currentFilteredRecipes().forEach((r) => selectedNames.add(r.name));
+    renderBrowseList();
+  });
+  selectNoneBtn.addEventListener("click", () => {
+    selectedNames.clear();
+    renderBrowseList();
+  });
+  exportExcelBtn.addEventListener("click", () => {
+    const recipes = getAllRecipes().filter((r) => selectedNames.has(r.name));
+    if (recipes.length > 0) exportRecipesToExcel(recipes);
+  });
+  exportWordBtn.addEventListener("click", () => {
+    const recipes = getAllRecipes().filter((r) => selectedNames.has(r.name));
+    if (recipes.length > 0) exportRecipesToWord(recipes);
+  });
   onRecipesChanged(() => {
     renderBrowseList();
     renderSidebarList();

@@ -211,6 +211,34 @@ textarea {
   align-items: center;
 }
 
+.recipe-item-title {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.recipe-select-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.export-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.export-count {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-right: 0.2rem;
+}
+
 .recipe-item summary::-webkit-details-marker {
   display: none;
 }

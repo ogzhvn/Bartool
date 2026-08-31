@@ -95,6 +95,15 @@
       </div>
 
       <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
+
+      <div class="export-bar">
+        <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
+        <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
+        <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
+        <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
+        <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+      </div>
+
       <div id="recipe-list" class="recipe-accordion"></div>
     </section>
 
@@ -266,6 +275,8 @@
     <p>Bartool – lokal im Browser gespeichert, keine Serververbindung nötig.</p>
   </footer>
 
+  <!-- Nur für den Excel-Export im Rezepte-Tab benötigt -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
