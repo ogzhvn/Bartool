@@ -4,7 +4,11 @@ const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 export function loadRecipes() {
   try {
     const raw = localStorage.getItem(RECIPES_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    // Drop malformed entries (e.g. from an older data shape) so one bad
+    // record can't break rendering for every recipe.
+    return parsed.filter((r) => r && typeof r.name === "string" && Array.isArray(r.ingredients));
   } catch {
     return [];
   }
