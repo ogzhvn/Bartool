@@ -70,3 +70,26 @@ export function deleteProduct(name) {
 export function onProductsChanged(callback) {
   window.addEventListener(PRODUCTS_UPDATED_EVENT, callback);
 }
+
+const INVENTORY_KEY = "bartool.inventory";
+const INVENTORY_UPDATED_EVENT = "bartool:inventory-updated";
+
+// Gespeicherte Bar-Inventur für die Bestands-Empfehlungen: die Namen der
+// Produkte, die aktuell als vorrätig markiert sind. Startet bewusst leer -
+// eine echte Inventur baut man sich einmal auf, statt anzunehmen, dass
+// standardmäßig alles vorrätig ist.
+export function loadInventory() {
+  try {
+    const raw = localStorage.getItem(INVENTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((n) => typeof n === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveInventory(inStockNames) {
+  localStorage.setItem(INVENTORY_KEY, JSON.stringify([...inStockNames]));
+  window.dispatchEvent(new CustomEvent(INVENTORY_UPDATED_EVENT));
+}

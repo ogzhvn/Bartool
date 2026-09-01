@@ -63,23 +63,36 @@ export function hasFlavorProfile(product) {
   return FLAVOR_DIMENSIONS.some((dim) => (profile[dim] ?? 0) > 0);
 }
 
-function profileCompatibility(profileA, profileB) {
+// Gewichtete Bilinearform zweier Profile über die Gewichtungstabelle -
+// wie ein Skalarprodukt, nur dass "Ähnlichkeit" zwischen zwei Dimensionen
+// erst über weight() definiert wird statt nur bei identischen Dimensionen
+// ungleich null zu sein.
+function weightedDot(profileA, profileB) {
   let raw = 0;
-  let normA = 0;
-  let normB = 0;
   for (const dimA of FLAVOR_DIMENSIONS) {
     const a = profileA[dimA] ?? 0;
-    normA += a * a;
+    if (a === 0) continue;
     for (const dimB of FLAVOR_DIMENSIONS) {
-      raw += a * (profileB[dimB] ?? 0) * weight(dimA, dimB);
+      const b = profileB[dimB] ?? 0;
+      if (b === 0) continue;
+      raw += a * b * weight(dimA, dimB);
     }
   }
-  for (const dimB of FLAVOR_DIMENSIONS) {
-    const b = profileB[dimB] ?? 0;
-    normB += b * b;
-  }
+  return raw;
+}
+
+// Generalisierte Kosinus-Ähnlichkeit bezüglich der Gewichtungstabelle:
+// cross(A,B) / sqrt(cross(A,A) * cross(B,B)) statt einer Normierung über
+// die schlichten euklidischen Normen von A und B. Letzteres läuft bei
+// mehreren gleichzeitig befüllten Dimensionen (Cauchy-Schwarz über die
+// Kreuzsumme) fast immer gegen die Kappung bei 1 - hier bleibt der Wert
+// tatsächlich innerhalb [-1, 1] und streut entsprechend der Profile.
+function profileCompatibility(profileA, profileB) {
+  const cross = weightedDot(profileA, profileB);
+  const normA = Math.sqrt(weightedDot(profileA, profileA));
+  const normB = Math.sqrt(weightedDot(profileB, profileB));
   if (normA === 0 || normB === 0) return 0;
-  return Math.max(0, Math.min(1, raw / (Math.sqrt(normA) * Math.sqrt(normB))));
+  return Math.max(0, Math.min(1, cross / (normA * normB)));
 }
 
 function recipeUsesIngredient(recipe, productName) {

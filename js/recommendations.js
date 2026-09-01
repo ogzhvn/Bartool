@@ -1,15 +1,36 @@
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { onProductsChanged, onRecipesChanged } from "./storage.js";
+import { onProductsChanged, onRecipesChanged, loadInventory, saveInventory } from "./storage.js";
 import { escapeHtml } from "./utils.js";
-import { compatibilityScore, resolveIngredientProduct } from "./compatibility.js";
+import { hasFlavorProfile, compatibilityScore, resolveIngredientProduct, deriveRecipeFlavorProfile, asFlavorProfileHolder } from "./compatibility.js";
 import { calculateRecipeCost } from "./costing.js";
 
 const RESULTS_PAGE_SIZE = 20;
 
+// Produktgruppen, die als eigenständig "verkaufbar" für Cross-Sell-Vorschläge
+// gelten (Spirituosen pur, Wein/Bier/Schaumwein) - Mixer, Sirupe, Säfte,
+// Tee/Kaffee & Sonstiges sind Zutaten, keine Dinge, die man einem Gast
+// zusätzlich empfiehlt (z. B. kein "dazu passt gut: Agavendicksaft").
+const SELLABLE_GROUPS = new Set([
+  "Gin",
+  "Vodka",
+  "Rum & Cachaça",
+  "Whisky",
+  "Tequila & Mezcal",
+  "Brände",
+  "Liköre & Aperitifs",
+  "Wermut & Aperitif-Wein",
+  "Bitters",
+  "Absinth",
+  "Schaumwein",
+  "Wein",
+  "Bier",
+]);
+
 const modeButtons = document.querySelectorAll(".rec-mode-btn");
 const modeAMainEl = document.getElementById("rec-mode-a-main");
 const modeBMainEl = document.getElementById("rec-mode-b-main");
+const modeCMainEl = document.getElementById("rec-mode-c-main");
 const modeASidebarEl = document.getElementById("rec-mode-a-sidebar");
 const modeBSidebarEl = document.getElementById("rec-mode-b-sidebar");
 
@@ -18,6 +39,7 @@ const aSelectNoneBtn = document.getElementById("rec-a-select-none");
 const aSearchEl = document.getElementById("rec-a-search");
 const aChecklistEl = document.getElementById("rec-a-checklist");
 const aResultsEl = document.getElementById("rec-a-results");
+const aMarginToggleEl = document.getElementById("rec-a-margin-toggle");
 
 const bSearchEl = document.getElementById("rec-b-search");
 const bListEl = document.getElementById("rec-b-list");
@@ -25,12 +47,13 @@ const bHintEl = document.getElementById("rec-b-hint");
 const bMarginToggleEl = document.getElementById("rec-b-margin-toggle");
 const bResultsEl = document.getElementById("rec-b-results");
 
-// Kein persistenter Lagerbestand (bewusst so gewünscht) - die Checkliste ist
-// reiner Sitzungszustand. Default: alles vorrätig, hier werden nur die
-// Ausnahmen (gerade nicht vorrätig) gemerkt, damit neu hinzukommende
-// Produkte automatisch als vorrätig gelten statt manuell nachgepflegt werden
-// zu müssen.
-let uncheckedProducts = new Set();
+const cSearchEl = document.getElementById("rec-c-search");
+const cOptionsEl = document.getElementById("rec-c-options");
+const cResultsEl = document.getElementById("rec-c-results");
+
+// Persistente Bar-Inventur (storage.js) statt reinem Sitzungszustand - eine
+// echte Inventur soll über Besuche hinweg erhalten bleiben.
+let inStock = loadInventory();
 let selectedRecipeName = null;
 let showAllModeB = false;
 
@@ -39,7 +62,7 @@ function formatEuro(n) {
 }
 
 function isChecked(name) {
-  return !uncheckedProducts.has(name);
+  return inStock.has(name);
 }
 
 // Alltägliche Frischware (Limette, Minze, Zitrone zum Auspressen usw.) wird
@@ -75,17 +98,55 @@ function ingredientAvailable(ingredient, availableProducts) {
   return availableProducts.some((p) => name.includes(p.name.toLowerCase()));
 }
 
+function firstSentence(text) {
+  if (!text) return "";
+  const match = text.match(/^[^.!?]*[.!?]/);
+  return (match ? match[0] : text).trim();
+}
+
+// Ein Produkt oder Rezept hat quickPitch oft noch nicht gepflegt - solange
+// greift ein Fallback auf die erste Aussage aus Story/Tasting Notes bzw.
+// Geschichte, statt eine leere Zeile anzuzeigen.
+function pitchLineFor(item) {
+  if (item.quickPitch) return item.quickPitch;
+  const fallback = item.story || item.tastingNotes || item.history || "";
+  return firstSentence(fallback) || "(Keine Kurzbeschreibung hinterlegt)";
+}
+
+function pitchCard(type, item) {
+  return `
+    <div class="sm-pitch-card">
+      <div class="sm-pitch-head">
+        <span class="sm-pitch-name">${escapeHtml(item.name)}</span>
+        <span class="sm-pitch-type">${type === "product" ? "Produkt" : "Cocktail"}</span>
+      </div>
+      <p class="sm-pitch-line">${escapeHtml(pitchLineFor(item))}</p>
+    </div>
+  `;
+}
+
+function lookupByName(name, products = getAllProducts(), recipes = getAllRecipes()) {
+  const needle = name.trim().toLowerCase();
+  if (!needle) return null;
+  const product = products.find((p) => p.name.toLowerCase() === needle);
+  if (product) return { type: "product", item: product };
+  const recipe = recipes.find((r) => r.name.toLowerCase() === needle);
+  if (recipe) return { type: "recipe", item: recipe };
+  return null;
+}
+
 // ---------- Mode toggle ----------
 
 function setMode(mode) {
   modeButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.recMode === mode));
   modeAMainEl.classList.toggle("active", mode === "a");
   modeBMainEl.classList.toggle("active", mode === "b");
+  modeCMainEl.classList.toggle("active", mode === "c");
   modeASidebarEl.classList.toggle("active", mode === "a");
   modeBSidebarEl.classList.toggle("active", mode === "b");
 }
 
-// ---------- Modus A: Was kann ich aus meinem Bestand machen? ----------
+// ---------- Modus A: Aus meinem Bestand ----------
 
 function renderChecklist() {
   const query = aSearchEl.value.trim().toLowerCase();
@@ -102,8 +163,9 @@ function renderChecklist() {
     .join("");
   aChecklistEl.querySelectorAll("input[type=checkbox]").forEach((cb) => {
     cb.addEventListener("change", () => {
-      if (cb.checked) uncheckedProducts.delete(cb.dataset.name);
-      else uncheckedProducts.add(cb.dataset.name);
+      if (cb.checked) inStock.add(cb.dataset.name);
+      else inStock.delete(cb.dataset.name);
+      saveInventory(inStock);
       renderModeAResults();
     });
   });
@@ -122,19 +184,37 @@ function renderModeAResults() {
     if (missing.length === 0) full.push(recipe);
     else if (missing.length === 1) missingOne.push({ recipe, missing: missing[0] });
   });
-  full.sort((a, b) => a.name.localeCompare(b.name, "de"));
+
+  let fullEntries = full.map((r) => ({ recipe: r, cost: null }));
+  if (aMarginToggleEl.checked) {
+    fullEntries = fullEntries.map(({ recipe }) => {
+      const cost = calculateRecipeCost(recipe);
+      return { recipe, cost: cost.allPricesKnown ? cost.total : null };
+    });
+    // Günstigerer Wareneinsatz = mehr Marge bei gleichem Verkaufspreis -
+    // Rezepte ohne Preisdaten landen hinten statt die Sortierung zu verfälschen.
+    fullEntries.sort((a, b) => {
+      if (a.cost === null && b.cost === null) return a.recipe.name.localeCompare(b.recipe.name, "de");
+      if (a.cost === null) return 1;
+      if (b.cost === null) return -1;
+      return a.cost - b.cost;
+    });
+  } else {
+    fullEntries.sort((a, b) => a.recipe.name.localeCompare(b.recipe.name, "de"));
+  }
   missingOne.sort((a, b) => a.recipe.name.localeCompare(b.recipe.name, "de"));
 
   aResultsEl.innerHTML = `
-    <h3>✓ Kannst du sofort machen (${full.length})</h3>
+    <h3>✓ Kannst du sofort machen (${fullEntries.length})</h3>
     ${
-      full.length === 0
-        ? `<p class="empty-note">Mit dem aktuell markierten Bestand ist noch kein Rezept komplett abgedeckt.</p>`
-        : `<div class="sm-results">${full
+      fullEntries.length === 0
+        ? `<p class="empty-note">Mit der aktuell markierten Inventur ist noch kein Rezept komplett abgedeckt.</p>`
+        : `<div class="sm-results">${fullEntries
             .map(
-              (r) => `
+              ({ recipe, cost }) => `
             <div class="sm-pitch-card">
-              <span class="sm-pitch-name">${escapeHtml(r.name)}</span>
+              <span class="sm-pitch-name">${escapeHtml(recipe.name)}</span>
+              ${cost != null ? `<span class="sm-pitch-type">Wareneinsatz ${formatEuro(cost)}</span>` : ""}
             </div>
           `
             )
@@ -287,39 +367,141 @@ function renderModeBResults() {
   }
 }
 
+// ---------- Modus C: Cross-Sell ----------
+
+function isSellableProduct(product) {
+  return SELLABLE_GROUPS.has(product.group);
+}
+
+function renderModeCResults() {
+  const name = cSearchEl.value.trim();
+  if (!name) {
+    cResultsEl.innerHTML = `<p class="empty-note">Wähle oben, was der Gast bestellt hat.</p>`;
+    return;
+  }
+  const products = getAllProducts();
+  const recipes = getAllRecipes();
+  const found = lookupByName(name, products, recipes);
+  if (!found) {
+    cResultsEl.innerHTML = `<p class="empty-note">Kein Produkt oder Rezept mit diesem Namen gefunden.</p>`;
+    return;
+  }
+  const { type, item } = found;
+
+  // (a) manuell gepflegtes "Passt gut zu" ist immer genauer als jede Heuristik.
+  if (item.pairsWith && item.pairsWith.length > 0) {
+    const entries = item.pairsWith.map((n) => lookupByName(n, products, recipes)).filter(Boolean);
+    cResultsEl.innerHTML =
+      entries.length > 0
+        ? entries.map(({ type: t, item: i }) => pitchCard(t, i)).join("")
+        : `<p class="empty-note">Die hinterlegten "Passt gut zu"-Namen wurden nicht gefunden.</p>`;
+    return;
+  }
+
+  // (b) algorithmischer Fallback: compatibilityScore, aber nur gegen andere
+  // verkaufbare Spirituosen/Wein/Bier/Schaumwein und Cocktails - Mixer,
+  // Sirupe, Säfte, Tee/Kaffee sind Zutaten, keine Cross-Sell-Vorschläge.
+  let holder;
+  if (type === "product") {
+    if (!hasFlavorProfile(item)) {
+      cResultsEl.innerHTML = `<p class="empty-note">Für "${escapeHtml(item.name)}" ist weder "Passt gut zu" noch ein Aromaprofil hinterlegt.</p>`;
+      return;
+    }
+    holder = item;
+  } else {
+    const derived = deriveRecipeFlavorProfile(item, products);
+    if (!derived) {
+      cResultsEl.innerHTML = `<p class="empty-note">Für "${escapeHtml(item.name)}" ist weder "Passt gut zu" noch ein ableitbares Aromaprofil hinterlegt.</p>`;
+      return;
+    }
+    holder = asFlavorProfileHolder(item.name, derived);
+  }
+
+  const productCandidates = products
+    .filter(isSellableProduct)
+    .filter(hasFlavorProfile)
+    .filter((p) => p.name !== item.name)
+    .filter((p) => type !== "product" || p.group !== item.group)
+    .map((p) => ({ type: "product", item: p, holder: p }));
+
+  const recipeCandidates = recipes
+    .filter((r) => r.name !== item.name)
+    .map((r) => {
+      const derived = deriveRecipeFlavorProfile(r, products);
+      return derived ? { type: "recipe", item: r, holder: asFlavorProfileHolder(r.name, derived) } : null;
+    })
+    .filter(Boolean);
+
+  const scored = [...productCandidates, ...recipeCandidates]
+    .map((c) => ({ ...c, score: compatibilityScore(holder, c.holder) }))
+    .filter((c) => c.score !== null)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
+  cResultsEl.innerHTML =
+    scored.length === 0
+      ? `<p class="empty-note">Keine passenden Vorschläge gefunden.</p>`
+      : scored.map(({ type: t, item: i }) => pitchCard(t, i)).join("");
+}
+
+function populateModeCOptions() {
+  const products = getAllProducts();
+  const recipes = getAllRecipes();
+  const names = [...new Set([...products.map((p) => p.name), ...recipes.map((r) => r.name)])].sort((a, b) =>
+    a.localeCompare(b, "de")
+  );
+  cOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
+}
+
 // ---------- Init ----------
 
 export function initRecommendations() {
   modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.recMode)));
 
   aSelectAllBtn.addEventListener("click", () => {
-    uncheckedProducts.clear();
+    inStock = new Set(getAllProducts().map((p) => p.name));
+    saveInventory(inStock);
     renderChecklist();
     renderModeAResults();
   });
   aSelectNoneBtn.addEventListener("click", () => {
-    uncheckedProducts = new Set(getAllProducts().map((p) => p.name));
+    inStock = new Set();
+    saveInventory(inStock);
     renderChecklist();
     renderModeAResults();
   });
   aSearchEl.addEventListener("input", renderChecklist);
+  aMarginToggleEl.addEventListener("change", renderModeAResults);
 
   bSearchEl.addEventListener("input", renderRecipeSidebarList);
   bMarginToggleEl.addEventListener("change", renderModeBResults);
+
+  cSearchEl.addEventListener("change", renderModeCResults);
+  cSearchEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      renderModeCResults();
+    }
+  });
 
   onProductsChanged(() => {
     renderChecklist();
     renderModeAResults();
     renderModeBResults();
+    populateModeCOptions();
+    renderModeCResults();
   });
   onRecipesChanged(() => {
     renderModeAResults();
     renderRecipeSidebarList();
     renderModeBResults();
+    populateModeCOptions();
+    renderModeCResults();
   });
 
   renderChecklist();
   renderModeAResults();
   renderRecipeSidebarList();
   renderModeBResults();
+  populateModeCOptions();
 }
