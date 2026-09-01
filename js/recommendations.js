@@ -42,7 +42,35 @@ function isChecked(name) {
   return !uncheckedProducts.has(name);
 }
 
+// Alltägliche Frischware (Limette, Minze, Zitrone zum Auspressen usw.) wird
+// bewusst nicht als Katalogprodukt geführt (Wunsch des Barbesitzers), gilt
+// hier aber immer als vorhanden, damit Rezepte mit solchen Zutaten nicht
+// pauschal als "nicht machbar" gelten. Exakter Abgleich auf den um
+// Klammerzusätze bereinigten Namen, damit z. B. "Zitronensaft" (ein echtes,
+// im Bestand gepflegtes Produkt) nicht versehentlich mit erfasst wird.
+const FRESH_STAPLES = [
+  "limette",
+  "limettenblätter",
+  "zitrone",
+  "minzblätter",
+  "banane",
+  "gurkenscheiben",
+  "basilikumblätter",
+  "thymian",
+  "kardamomkapseln",
+  "orange",
+];
+
+function isFreshStaple(ingredientName) {
+  const base = ingredientName
+    .toLowerCase()
+    .replace(/\(.*?\)/g, "")
+    .trim();
+  return FRESH_STAPLES.includes(base);
+}
+
 function ingredientAvailable(ingredient, availableProducts) {
+  if (isFreshStaple(ingredient.name)) return true;
   const name = ingredient.name.toLowerCase();
   return availableProducts.some((p) => name.includes(p.name.toLowerCase()));
 }
