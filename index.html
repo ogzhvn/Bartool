@@ -26,7 +26,6 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
         <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
-        <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false">Rezept bearbeiten</button>
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
         <button class="tab-btn" data-tab="product-edit" role="tab" aria-selected="false">Produkt bearbeiten</button>
       </div>
@@ -97,100 +96,106 @@
       <div id="batch-result" class="result-box" hidden></div>
     </section>
 
-    <!-- RECIPES (browse list) -->
+    <!-- RECIPES (browse list + edit, in one tab) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
-      <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"). Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
 
-      <div class="actions">
-        <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
-      </div>
+      <!-- List view -->
+      <div id="recipes-list-view" class="recipe-subview active">
+        <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin").</p>
 
-      <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
-
-      <div class="export-bar">
-        <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
-        <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
-        <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
-        <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
-        <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
-      </div>
-
-      <div id="recipe-list" class="recipe-accordion"></div>
-    </section>
-
-    <!-- RECIPE EDIT (form + sidebar) -->
-    <section id="recipe-edit" class="tab-panel">
-      <h2>Rezept bearbeiten</h2>
-      <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
-
-      <div class="recipe-edit-layout">
-        <div class="recipe-edit-main">
-          <div class="field-row">
-            <label>
-              Rezeptname
-              <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
-            </label>
-            <label>
-              Ergibt Portionen (Basis)
-              <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
-            </label>
-          </div>
-
-          <h3>Zutaten</h3>
-          <div id="recipe-ingredients" class="ingredient-list"></div>
-          <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
-
-          <h3>Details</h3>
-          <div class="field-row">
-            <label>
-              Zubereitung
-              <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Glas
-              <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
-            </label>
-            <label>
-              Garnitur
-              <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Eis
-              <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" />
-            </label>
-          </div>
-          <label>
-            Geschichte
-            <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
-          </label>
-          <label>
-            Kurzer Pitch (zum Nachsprechen im Service)
-            <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" />
-          </label>
-          <label>
-            Passt gut zu (Produkte/Rezepte, kommagetrennt)
-            <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" />
-          </label>
-
-          <div class="actions">
-            <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
-            <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
-            <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
-          </div>
+        <div class="actions">
+          <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
         </div>
 
-        <aside class="recipe-edit-sidebar">
-          <div class="actions">
-            <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
+        <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
+
+        <div class="export-bar">
+          <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
+          <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
+          <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
+          <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
+          <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+        </div>
+
+        <div id="recipe-list" class="recipe-accordion"></div>
+      </div>
+
+      <!-- Edit view (form + sidebar) -->
+      <div id="recipes-edit-view" class="recipe-subview">
+        <div class="actions">
+          <button type="button" id="recipe-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+        </div>
+        <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
+
+        <div class="recipe-edit-layout">
+          <div class="recipe-edit-main">
+            <div class="field-row">
+              <label>
+                Rezeptname
+                <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
+              </label>
+              <label>
+                Ergibt Portionen (Basis)
+                <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
+              </label>
+            </div>
+
+            <h3>Zutaten</h3>
+            <div id="recipe-ingredients" class="ingredient-list"></div>
+            <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+            <h3>Details</h3>
+            <div class="field-row">
+              <label>
+                Zubereitung
+                <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Glas
+                <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
+              </label>
+              <label>
+                Garnitur
+                <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Eis
+                <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" />
+              </label>
+            </div>
+            <label>
+              Geschichte
+              <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
+            </label>
+            <label>
+              Kurzer Pitch (zum Nachsprechen im Service)
+              <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" />
+            </label>
+            <label>
+              Passt gut zu (Produkte/Rezepte, kommagetrennt)
+              <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" />
+            </label>
+
+            <div class="actions">
+              <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
+              <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
+              <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+            </div>
           </div>
-          <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
-          <div id="recipe-sidebar-list" class="recipe-name-list"></div>
-        </aside>
+
+          <aside class="recipe-edit-sidebar">
+            <div class="actions">
+              <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
+            </div>
+            <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
+            <div id="recipe-sidebar-list" class="recipe-name-list"></div>
+          </aside>
+        </div>
       </div>
     </section>
 

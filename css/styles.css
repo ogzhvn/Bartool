@@ -118,9 +118,8 @@ main {
   padding: 1.5rem 1rem 3rem;
 }
 
-main:has(#recipe-edit.active),
-main:has(#product-edit.active),
-main:has(#recommendations.active) {
+main:has(#recipes-edit-view.active),
+main:has(#product-edit.active) {
   max-width: 1080px;
 }
 
@@ -148,9 +147,8 @@ main:has(#recommendations.active) {
   }
 
   main,
-  main:has(#recipe-edit.active),
-  main:has(#product-edit.active),
-  main:has(#recommendations.active) {
+  main:has(#recipes-edit-view.active),
+  main:has(#product-edit.active) {
     max-width: 100%;
   }
 }
@@ -160,6 +158,14 @@ main:has(#recommendations.active) {
 }
 
 .tab-panel.active {
+  display: block;
+}
+
+.recipe-subview {
+  display: none;
+}
+
+.recipe-subview.active {
   display: block;
 }
 

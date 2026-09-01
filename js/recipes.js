@@ -3,9 +3,10 @@ import { createIngredientEditor } from "./ingredientEditor.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
-import { switchTab } from "./tabs.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 
+const listViewEl = document.getElementById("recipes-list-view");
+const editViewEl = document.getElementById("recipes-edit-view");
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
@@ -30,6 +31,16 @@ const editor = createIngredientEditor(ingredientsEl);
 
 let editingOriginalName = null;
 const selectedNames = new Set();
+
+function showListView() {
+  listViewEl.classList.add("active");
+  editViewEl.classList.remove("active");
+}
+
+function showEditView() {
+  editViewEl.classList.add("active");
+  listViewEl.classList.remove("active");
+}
 
 function parsePairsWith(value) {
   return value
@@ -113,6 +124,7 @@ function handleDelete() {
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
   deleteRecipe(editingOriginalName);
   resetForm();
+  showListView();
 }
 
 function renderIngredientRows(ingredients) {
@@ -191,7 +203,7 @@ function renderBrowseList() {
     item.querySelector(".edit-btn").addEventListener("click", (e) => {
       e.preventDefault();
       loadIntoForm(recipe);
-      switchTab("recipe-edit");
+      showEditView();
     });
     const deleteBtn = item.querySelector(".delete-btn");
     if (deleteBtn) {
@@ -234,8 +246,9 @@ export function initRecipes() {
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
   document.getElementById("recipe-list-new").addEventListener("click", () => {
     resetForm();
-    switchTab("recipe-edit");
+    showEditView();
   });
+  document.getElementById("recipe-back-to-list").addEventListener("click", showListView);
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
