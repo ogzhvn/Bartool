@@ -30,10 +30,6 @@
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
         <button class="tab-btn" data-tab="product-edit" role="tab" aria-selected="false">Produkt bearbeiten</button>
       </div>
-      <div class="sidebar-group">
-        <h3 class="sidebar-group-title">Insights</h3>
-        <button class="tab-btn" data-tab="recommendations" role="tab" aria-selected="false">Empfehlungen</button>
-      </div>
     </nav>
 
     <main>
@@ -257,23 +253,6 @@
             Tasting Notes / Geschmacksprofil
             <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
           </label>
-
-          <h3>Aromaprofil</h3>
-          <p class="hint">Grobe Einschätzung 0 (nicht vorhanden) bis 10 (sehr ausgeprägt) – Grundlage für Aromenmatrix &amp; Empfehlungen.</p>
-          <div class="flavor-profile-grid">
-            <label>Süß <input type="range" id="product-flavor-suess" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Sauer <input type="range" id="product-flavor-sauer" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Bitter <input type="range" id="product-flavor-bitter" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Herb/Kräuterig <input type="range" id="product-flavor-herbKraeuterig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Fruchtig <input type="range" id="product-flavor-fruchtig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Würzig/Scharf <input type="range" id="product-flavor-wuerzigScharf" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Floral <input type="range" id="product-flavor-floral" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Rauchig <input type="range" id="product-flavor-rauchig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Erdig/Holzig <input type="range" id="product-flavor-erdigHolzig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Nussig <input type="range" id="product-flavor-nussig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Cremig <input type="range" id="product-flavor-cremig" min="0" max="10" step="1" value="0" /><output></output></label>
-            <label>Salzig/Mineralisch <input type="range" id="product-flavor-salzigMineralisch" min="0" max="10" step="1" value="0" /><output></output></label>
-          </div>
 
           <h3>Einkauf</h3>
           <div class="field-row">
@@ -533,64 +512,6 @@
       <div id="calc-result" class="result-box" hidden></div>
     </section>
 
-    <!-- EMPFEHLUNGEN -->
-    <section id="recommendations" class="tab-panel">
-      <h2>Empfehlungen</h2>
-      <p class="hint">Was lässt sich aus dem Bestand mixen, welche anderen Rezepte passen zu einem, das schon gut läuft – und was empfiehlst du zusätzlich zu einer Bestellung?</p>
-
-      <div class="rec-mode-toggle" role="tablist">
-        <button type="button" class="rec-mode-btn active" data-rec-mode="a">Aus meinem Bestand</button>
-        <button type="button" class="rec-mode-btn" data-rec-mode="b">Ähnlich wie …</button>
-        <button type="button" class="rec-mode-btn" data-rec-mode="c">Cross-Sell</button>
-      </div>
-
-      <div class="recipe-edit-layout">
-        <div class="recipe-edit-main">
-          <div id="rec-mode-a-main" class="rec-mode-main active">
-            <p class="hint">Basiert auf deiner gespeicherten Inventur rechts – einmal ankreuzen, was vorrätig ist, bleibt gespeichert.</p>
-            <label class="rec-margin-toggle">
-              <input type="checkbox" id="rec-a-margin-toggle" />
-              Margenstarke Vorschläge bevorzugen
-            </label>
-            <div id="rec-a-results"></div>
-          </div>
-          <div id="rec-mode-b-main" class="rec-mode-main">
-            <p class="hint" id="rec-b-hint">Wähle rechts ein Rezept aus.</p>
-            <label class="rec-margin-toggle">
-              <input type="checkbox" id="rec-b-margin-toggle" />
-              Margenstarke Vorschläge bevorzugen
-            </label>
-            <div id="rec-b-results"></div>
-          </div>
-          <div id="rec-mode-c-main" class="rec-mode-main">
-            <p class="hint">Was hat der Gast bestellt – dazu passend werden weitere Spirituosen, Wein/Bier/Schaumwein oder Cocktails vorgeschlagen (keine Mixer/Sirupe).</p>
-            <div class="field-row">
-              <label>
-                Bestelltes Produkt oder Rezept
-                <input type="text" id="rec-c-search" list="rec-c-options" placeholder="Name eingeben…" />
-              </label>
-            </div>
-            <div id="rec-c-results"></div>
-            <datalist id="rec-c-options"></datalist>
-          </div>
-        </div>
-
-        <aside class="recipe-edit-sidebar">
-          <div id="rec-mode-a-sidebar" class="rec-mode-sidebar active">
-            <div class="actions">
-              <button type="button" id="rec-a-select-all" class="btn-secondary">Alle auswählen</button>
-              <button type="button" id="rec-a-select-none" class="btn-secondary">Keine auswählen</button>
-            </div>
-            <input type="text" id="rec-a-search" placeholder="Produkt suchen…" />
-            <div id="rec-a-checklist" class="recipe-name-list"></div>
-          </div>
-          <div id="rec-mode-b-sidebar" class="rec-mode-sidebar">
-            <input type="text" id="rec-b-search" placeholder="Rezept suchen…" />
-            <div id="rec-b-list" class="recipe-name-list"></div>
-          </div>
-        </aside>
-      </div>
-    </section>
     </main>
   </div>
 

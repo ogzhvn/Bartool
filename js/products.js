@@ -5,9 +5,7 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { switchTab } from "./tabs.js";
 
-// Exported so other modules (Aromenmatrix, Verkaufsmatrix, Empfehlungen) can
-// sort/group products the same way instead of maintaining a second copy.
-export const GROUP_ORDER = [
+const GROUP_ORDER = [
   "Gin",
   "Vodka",
   "Rum & Cachaça",
@@ -75,42 +73,6 @@ const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
 
-const FLAVOR_DIMENSIONS = ["suess", "sauer", "bitter", "herbKraeuterig", "fruchtig", "wuerzigScharf", "floral", "rauchig", "erdigHolzig", "nussig", "cremig", "salzigMineralisch"];
-const flavorEls = Object.fromEntries(
-  FLAVOR_DIMENSIONS.map((dim) => [dim, document.getElementById(`product-flavor-${dim}`)])
-);
-
-function updateFlavorOutputs() {
-  FLAVOR_DIMENSIONS.forEach((dim) => {
-    const el = flavorEls[dim];
-    el.nextElementSibling.textContent = el.value;
-  });
-}
-
-function resetFlavorProfile() {
-  FLAVOR_DIMENSIONS.forEach((dim) => (flavorEls[dim].value = 0));
-  updateFlavorOutputs();
-}
-
-function loadFlavorProfileIntoForm(product) {
-  const profile = product.flavorProfile;
-  FLAVOR_DIMENSIONS.forEach((dim) => (flavorEls[dim].value = profile?.[dim] ?? 0));
-  updateFlavorOutputs();
-}
-
-// Returns null (not an all-zero object) when every dimension is 0, so an
-// untouched/"unknown" profile doesn't get treated as a real (if faint) one.
-function collectFlavorProfileFromForm() {
-  const profile = {};
-  let anyNonZero = false;
-  FLAVOR_DIMENSIONS.forEach((dim) => {
-    const value = parseInt(flavorEls[dim].value, 10) || 0;
-    profile[dim] = value;
-    if (value > 0) anyNonZero = true;
-  });
-  return anyNonZero ? profile : null;
-}
-
 function parsePairsWith(value) {
   return value
     .split(",")
@@ -148,7 +110,6 @@ function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
   priceValueEl.value = "";
   pairsWithEl.value = "";
-  resetFlavorProfile();
   editingOriginalName = null;
   renderSidebarList();
 }
@@ -157,7 +118,6 @@ function loadIntoForm(product) {
   FIELDS.forEach(([key, el]) => (el.value = product[key] ?? (key === "priceUnit" ? "liter" : "")));
   priceValueEl.value = product.priceValue || "";
   pairsWithEl.value = (product.pairsWith ?? []).join(", ");
-  loadFlavorProfileIntoForm(product);
   editingOriginalName = product.name;
   renderSidebarList();
 }
@@ -176,8 +136,6 @@ function handleSave() {
   product.priceValue = parseFloat(priceValueEl.value) || 0;
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
-  const flavorProfile = collectFlavorProfileFromForm();
-  if (flavorProfile) product.flavorProfile = flavorProfile;
   saveProduct(product);
   editingOriginalName = name;
 }
@@ -230,28 +188,6 @@ export function groupProducts(products) {
     }));
 }
 
-const FLAVOR_LABELS = {
-  suess: "Süß",
-  sauer: "Sauer",
-  bitter: "Bitter",
-  herbKraeuterig: "Herb/Kräuterig",
-  fruchtig: "Fruchtig",
-  wuerzigScharf: "Würzig/Scharf",
-  floral: "Floral",
-  rauchig: "Rauchig",
-  erdigHolzig: "Erdig/Holzig",
-  nussig: "Nussig",
-  cremig: "Cremig",
-  salzigMineralisch: "Salzig/Mineralisch",
-};
-
-function formatFlavorProfile(profile) {
-  if (!profile) return "";
-  return FLAVOR_DIMENSIONS.filter((dim) => profile[dim] > 0)
-    .map((dim) => `${FLAVOR_LABELS[dim]} ${profile[dim]}`)
-    .join(" · ");
-}
-
 function formatPrice(product) {
   if (!product.priceValue) return "";
   const unitLabel = product.priceUnit === "stueck" ? "Stück" : "Liter";
@@ -263,7 +199,6 @@ function renderProductItem(product) {
     ["Kategorie & Herkunft", product.category],
     ["Alkoholgehalt", product.abv],
     ["Tasting Notes", product.tastingNotes],
-    ["Aromaprofil", formatFlavorProfile(product.flavorProfile)],
     ["Serviervorschlag", product.service],
     ["Alternativen", product.alternatives],
     ["Story", product.story],
@@ -402,8 +337,6 @@ export function initProducts() {
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
-  FLAVOR_DIMENSIONS.forEach((dim) => flavorEls[dim].addEventListener("input", updateFlavorOutputs));
-  updateFlavorOutputs();
   onProductsChanged(() => {
     populateGroupFilter();
     populateDatalists();
