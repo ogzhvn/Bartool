@@ -1,6 +1,6 @@
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { onProductsChanged, onRecipesChanged, loadInventory, saveInventory } from "./storage.js";
+import { onProductsChanged, onRecipesChanged, loadOutOfStock, saveOutOfStock } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { calculateRecipeCost } from "./costing.js";
 
@@ -31,8 +31,9 @@ const cOptionsEl = document.getElementById("rec-c-options");
 const cResultsEl = document.getElementById("rec-c-results");
 
 // Persistente Bar-Inventur (storage.js) statt reinem Sitzungszustand - eine
-// echte Inventur soll über Besuche hinweg erhalten bleiben.
-let inStock = loadInventory();
+// echte Inventur soll über Besuche hinweg erhalten bleiben. Gespeichert wird
+// die Ausnahme (nicht vorrätig), Standard ist vorrätig - siehe storage.js.
+let outOfStock = loadOutOfStock();
 let selectedRecipeName = null;
 let showAllModeB = false;
 
@@ -41,7 +42,7 @@ function formatEuro(n) {
 }
 
 function isChecked(name) {
-  return inStock.has(name);
+  return !outOfStock.has(name);
 }
 
 // Alltägliche Frischware (Limette, Minze, Zitrone zum Auspressen usw.) wird
@@ -142,9 +143,9 @@ function renderChecklist() {
     .join("");
   aChecklistEl.querySelectorAll("input[type=checkbox]").forEach((cb) => {
     cb.addEventListener("change", () => {
-      if (cb.checked) inStock.add(cb.dataset.name);
-      else inStock.delete(cb.dataset.name);
-      saveInventory(inStock);
+      if (cb.checked) outOfStock.delete(cb.dataset.name);
+      else outOfStock.add(cb.dataset.name);
+      saveOutOfStock(outOfStock);
       renderModeAResults();
     });
   });
@@ -269,10 +270,18 @@ function renderModeBResults() {
   }
   bHintEl.hidden = true;
 
-  const scored = recipes
-    .filter((r) => r.name !== reference.name)
-    .map((r) => ({ recipe: r, score: Math.round(ingredientOverlapScore(reference, r) * 100), curated: isCuratedPair(reference, r) }))
-    .sort((x, y) => (y.curated ? 1 : 0) - (x.curated ? 1 : 0) || y.score - x.score);
+  // Kuratierte Treffer und die nach Zutaten-Überschneidung sortierte Liste
+  // werden bewusst in zwei getrennten Abschnitten gezeigt statt in einer
+  // gemeinsamen, nach Score sortierten Liste - sonst kann ein kuratierter
+  // Treffer mit niedrigerer Zutaten-Überschneidung über einem nicht
+  // kuratierten mit höherer stehen, was wie eine kaputte Sortierung aussieht.
+  const others = recipes.filter((r) => r.name !== reference.name);
+  const curatedRecipes = others.filter((r) => isCuratedPair(reference, r));
+  const overlapCandidates = others.filter((r) => !isCuratedPair(reference, r));
+
+  const scored = overlapCandidates
+    .map((r) => ({ recipe: r, score: Math.round(ingredientOverlapScore(reference, r) * 100) }))
+    .sort((x, y) => y.score - x.score);
 
   const visible = showAllModeB ? scored : scored.slice(0, RESULTS_PAGE_SIZE);
   const hiddenCount = scored.length - visible.length;
@@ -294,16 +303,21 @@ function renderModeBResults() {
     });
   }
 
-  const cardsHtml =
+  const curatedHtml =
+    curatedRecipes.length === 0
+      ? ""
+      : `<h3>Kuratiert</h3><div class="sm-results">${curatedRecipes.map((r) => pitchCard("recipe", r)).join("")}</div>`;
+
+  const overlapCardsHtml =
     entries.length === 0
-      ? `<p class="empty-note">Keine anderen Rezepte gefunden.</p>`
+      ? `<p class="empty-note">Keine weiteren Rezepte mit gemeinsamen Zutaten gefunden.</p>`
       : entries
           .map(
-            ({ recipe, score, curated, cost }) => `
+            ({ recipe, score, cost }) => `
           <div class="sm-pitch-card">
             <div class="sm-pitch-head">
               <span class="sm-pitch-name">${escapeHtml(recipe.name)}</span>
-              <span class="sm-pitch-type">${curated ? "Kuratiert · " : ""}${score}% Zutaten-Überschneidung${cost != null ? ` · Wareneinsatz ${formatEuro(cost)}` : ""}</span>
+              <span class="sm-pitch-type">${score}% Zutaten-Überschneidung${cost != null ? ` · Wareneinsatz ${formatEuro(cost)}` : ""}</span>
             </div>
           </div>
         `
@@ -317,7 +331,7 @@ function renderModeBResults() {
         ? `<button type="button" class="btn-secondary rec-b-more" data-collapse="1">Weniger anzeigen</button>`
         : "";
 
-  bResultsEl.innerHTML = `<div class="sm-results">${cardsHtml}</div>${moreHtml}`;
+  bResultsEl.innerHTML = `${curatedHtml}<h3>Nach Zutaten-Überschneidung</h3><div class="sm-results">${overlapCardsHtml}</div>${moreHtml}`;
   const moreBtn = bResultsEl.querySelector(".rec-b-more");
   if (moreBtn) {
     moreBtn.addEventListener("click", () => {
@@ -374,14 +388,14 @@ export function initRecommendations() {
   modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.recMode)));
 
   aSelectAllBtn.addEventListener("click", () => {
-    inStock = new Set(getAllProducts().map((p) => p.name));
-    saveInventory(inStock);
+    outOfStock = new Set();
+    saveOutOfStock(outOfStock);
     renderChecklist();
     renderModeAResults();
   });
   aSelectNoneBtn.addEventListener("click", () => {
-    inStock = new Set();
-    saveInventory(inStock);
+    outOfStock = new Set(getAllProducts().map((p) => p.name));
+    saveOutOfStock(outOfStock);
     renderChecklist();
     renderModeAResults();
   });

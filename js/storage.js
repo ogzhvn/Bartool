@@ -71,14 +71,16 @@ export function onProductsChanged(callback) {
   window.addEventListener(PRODUCTS_UPDATED_EVENT, callback);
 }
 
-const INVENTORY_KEY = "bartool.inventory";
+const INVENTORY_KEY = "bartool.inventoryOutOfStock";
 const INVENTORY_UPDATED_EVENT = "bartool:inventory-updated";
 
-// Gespeicherte Bar-Inventur für die Bestands-Empfehlungen: die Namen der
-// Produkte, die aktuell als vorrätig markiert sind. Startet bewusst leer -
-// eine echte Inventur baut man sich einmal auf, statt anzunehmen, dass
-// standardmäßig alles vorrätig ist.
-export function loadInventory() {
+// Gespeicherte Bar-Inventur für die Bestands-Empfehlungen: gespeichert wird
+// bewusst die Ausnahme (was NICHT vorrätig ist), nicht die vollständige
+// Liste - eine Bar führt fast alles, Inventur besteht praktisch nur aus dem
+// Abhaken der paar Dinge, die gerade fehlen. Ein neues/unbekanntes Produkt
+// gilt automatisch als vorrätig, sonst wäre die Liste beim ersten Öffnen
+// leer und "Kannst du sofort machen" würde fälschlich nichts zeigen.
+export function loadOutOfStock() {
   try {
     const raw = localStorage.getItem(INVENTORY_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -89,7 +91,7 @@ export function loadInventory() {
   }
 }
 
-export function saveInventory(inStockNames) {
-  localStorage.setItem(INVENTORY_KEY, JSON.stringify([...inStockNames]));
+export function saveOutOfStock(outOfStockNames) {
+  localStorage.setItem(INVENTORY_KEY, JSON.stringify([...outOfStockNames]));
   window.dispatchEvent(new CustomEvent(INVENTORY_UPDATED_EVENT));
 }
