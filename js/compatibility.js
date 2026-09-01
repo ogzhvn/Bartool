@@ -63,36 +63,35 @@ export function hasFlavorProfile(product) {
   return FLAVOR_DIMENSIONS.some((dim) => (profile[dim] ?? 0) > 0);
 }
 
-// Gewichtete Bilinearform zweier Profile über die Gewichtungstabelle -
-// wie ein Skalarprodukt, nur dass "Ähnlichkeit" zwischen zwei Dimensionen
-// erst über weight() definiert wird statt nur bei identischen Dimensionen
-// ungleich null zu sein.
-function weightedDot(profileA, profileB) {
+// Intensitätsgewichteter Durchschnitt der paarweisen Dimensions-Gewichte:
+// für jedes Paar (Dimension aus A, Dimension aus B) zählt weight(dimA,dimB),
+// gewichtet mit a_i * b_j, geteilt durch die Summe aller a_i * b_j. Das ist
+// KEINE Kosinus-Ähnlichkeit (die würde über Cauchy-Schwarz eine positiv-
+// semidefinite Gewichtungsmatrix voraussetzen - hier aber bewusst nicht
+// gegeben, da Kontrastpaare wie süß↔bitter absichtlich höher gewichtet
+// sind als z. B. süß↔süß, s. DIMENSION_WEIGHTS). Da jedes weight() ≤ 1 ist,
+// bleibt das Ergebnis rein durch die Konstruktion (nicht nur per Kappung)
+// innerhalb [0, 1] und bricht nicht wie eine schlecht normierte Kosinus-
+// Variante bei mehreren befüllten Dimensionen fast immer auf 1 durch.
+function profileCompatibility(profileA, profileB) {
   let raw = 0;
+  let sumA = 0;
+  let sumB = 0;
   for (const dimA of FLAVOR_DIMENSIONS) {
     const a = profileA[dimA] ?? 0;
     if (a === 0) continue;
+    sumA += a;
     for (const dimB of FLAVOR_DIMENSIONS) {
       const b = profileB[dimB] ?? 0;
       if (b === 0) continue;
       raw += a * b * weight(dimA, dimB);
     }
   }
-  return raw;
-}
-
-// Generalisierte Kosinus-Ähnlichkeit bezüglich der Gewichtungstabelle:
-// cross(A,B) / sqrt(cross(A,A) * cross(B,B)) statt einer Normierung über
-// die schlichten euklidischen Normen von A und B. Letzteres läuft bei
-// mehreren gleichzeitig befüllten Dimensionen (Cauchy-Schwarz über die
-// Kreuzsumme) fast immer gegen die Kappung bei 1 - hier bleibt der Wert
-// tatsächlich innerhalb [-1, 1] und streut entsprechend der Profile.
-function profileCompatibility(profileA, profileB) {
-  const cross = weightedDot(profileA, profileB);
-  const normA = Math.sqrt(weightedDot(profileA, profileA));
-  const normB = Math.sqrt(weightedDot(profileB, profileB));
-  if (normA === 0 || normB === 0) return 0;
-  return Math.max(0, Math.min(1, cross / (normA * normB)));
+  for (const dimB of FLAVOR_DIMENSIONS) {
+    sumB += profileB[dimB] ?? 0;
+  }
+  if (sumA === 0 || sumB === 0) return 0;
+  return Math.max(0, Math.min(1, raw / (sumA * sumB)));
 }
 
 function recipeUsesIngredient(recipe, productName) {
