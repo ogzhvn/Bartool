@@ -1,4 +1,5 @@
 import { initTabs } from "./tabs.js";
+import { initHome } from "./home.js";
 import { initBatching } from "./batching.js";
 import { initRecipes } from "./recipes.js";
 import { initProducts } from "./products.js";
@@ -30,6 +31,7 @@ async function bootstrapAppOnce() {
   appInitialized = true;
   await Promise.all([initRecipeSync(), initProductSync()]);
   initTabs();
+  initHome();
   initRecipes();
   initBatching();
   initProducts();

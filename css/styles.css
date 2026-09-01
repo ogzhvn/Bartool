@@ -14,6 +14,14 @@
   box-sizing: border-box;
 }
 
+/* Sorgt dafür, dass das hidden-Attribut immer gewinnt, auch bei Elementen
+   deren Klasse selbst schon "display: flex" o. Ä. setzt (z. B. .auth-screen,
+   .header-user, .tool-card) – sonst überschreibt die Klassenregel das
+   per JS gesetzte hidden und Login-Gate/Rollen-Sichtbarkeit greifen nicht. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -459,6 +467,84 @@ textarea {
   color: var(--text-muted);
   font-size: 0.8rem;
   padding: 1rem;
+}
+
+.home-hero {
+  margin-bottom: 1.5rem;
+}
+
+.home-hero h2 {
+  font-size: 1.6rem;
+}
+
+.home-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.stat-tile {
+  flex: 1 1 140px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.tool-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.tool-card-icon {
+  font-size: 1.6rem;
+}
+
+.tool-card-title {
+  font-weight: 700;
+}
+
+.tool-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .header-user {
