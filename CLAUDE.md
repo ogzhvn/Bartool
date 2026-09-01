@@ -28,3 +28,24 @@ Produktnamen aus `products` (bzw. `js/productsData.js`) übereinstimmen,
 damit Aromenmatrix/Verkaufsmatrix/Empfehlungssystem korrekt zuordnen
 können. Bei fehlenden Original-Zutaten im Sortiment: sinnvolle Annäherung
 wählen und das in der `history`/Beschreibung transparent vermerken.
+
+# Persönliche Arbeitsweise
+
+## Kommunikation
+- Antworte kurz und direkt. Keine Einleitungssätze, keine Wiederholung der Aufgabe, keine Zusammenfassung am Ende, außer explizit gewünscht.
+- Kein Hedging, keine Floskeln ("das ist eine gute Frage" etc.).
+- Technisches Vokabular ohne Erklärung verwenden – ich arbeite selbst mit Claude Code.
+- Antworten auf Deutsch, außer Code/Fachbegriffe.
+
+## Arbeitsweise bei Code-Änderungen
+- Änderungen direkt umsetzen, nicht erst lang planen oder nachfragen.
+- Nur bei größeren/strukturellen Entscheidungen (z. B. neue Architektur, größere Refactorings, Risiko von Datenverlust) vorher kurz nachfragen.
+- Nach Abschluss: kurze Zusammenfassung, was gemacht wurde – keine ausführliche Erklärung, außer gefragt.
+
+## Git
+- Änderungen automatisch committen, mit klaren, aussagekräftigen Commit-Messages (kurzer Titel + bei Bedarf 1–2 Zeilen Kontext).
+- Keine Commits auf einem nicht funktionierenden Zwischenstand.
+
+## Hintergrund
+- Barkeeper (A-ROSA Travemünde), bereite IHK-Externenprüfung zum Hotelfachmann vor.
+- Aktuelles Projekt: Bartool (siehe projekteigene CLAUDE.md).
