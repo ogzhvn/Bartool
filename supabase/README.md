@@ -57,8 +57,13 @@ Konten selbst schon Admin-Rechte voraussetzt:
 
    ```sql
    insert into public.profiles (id, email, role)
-   values ('<user-id-aus-schritt-1>', 'deine@email.de', 'admin');
+   values ('<user-id-aus-schritt-1>', 'deine@email.de', 'admin')
+   on conflict (id) do update set role = 'admin', email = excluded.email;
    ```
+
+   Das `on conflict` sorgt dafür, dass der Befehl auch dann funktioniert
+   (bzw. keinen Fehler wirft), wenn die Zeile aus einem vorherigen Versuch
+   schon existiert.
 
 Danach in Bartool mit diesem Konto einloggen. Weitere Konten (Admin oder
 Mitarbeiter) lassen sich ab jetzt bequem über den Tab **Admin** in der App
