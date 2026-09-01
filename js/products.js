@@ -3,6 +3,7 @@ import { escapeHtml } from "./utils.js";
 import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
+import { isAdmin } from "./auth.js";
 
 const GROUP_ORDER = [
   "Gin",
@@ -133,25 +134,30 @@ function loadIntoForm(product) {
   renderSidebarList();
 }
 
-function handleSave() {
+async function handleSave() {
   const name = nameEl.value.trim();
   if (!name) {
     alert("Bitte einen Produktnamen eingeben.");
     return;
-  }
-  if (editingOriginalName && editingOriginalName !== name && isCustomProduct(editingOriginalName)) {
-    deleteProduct(editingOriginalName);
   }
   const product = {};
   FIELDS.forEach(([key, el]) => (product[key] = key === "name" ? name : el.value.trim()));
   product.priceValue = parseFloat(priceValueEl.value) || 0;
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
-  saveProduct(product);
-  editingOriginalName = name;
+
+  try {
+    if (editingOriginalName && editingOriginalName !== name && isCustomProduct(editingOriginalName)) {
+      await deleteProduct(editingOriginalName);
+    }
+    await saveProduct(product);
+    editingOriginalName = name;
+  } catch (error) {
+    alert("Produkt konnte nicht gespeichert werden: " + error.message);
+  }
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingOriginalName) {
     alert("Bitte zuerst ein Produkt auswählen.");
     return;
@@ -161,9 +167,13 @@ function handleDelete() {
     return;
   }
   if (!confirm(`Produkt "${editingOriginalName}" wirklich löschen?`)) return;
-  deleteProduct(editingOriginalName);
-  resetForm();
-  showListView();
+  try {
+    await deleteProduct(editingOriginalName);
+    resetForm();
+    showListView();
+  } catch (error) {
+    alert("Produkt konnte nicht gelöscht werden: " + error.message);
+  }
 }
 
 function currentFilteredProducts() {
@@ -228,24 +238,35 @@ function renderProductItem(product) {
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
-      <div class="actions">
+      ${
+        isAdmin()
+          ? `<div class="actions">
         <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
         ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-      </div>
+      </div>`
+          : ""
+      }
     </div>
   `;
-  item.querySelector(".edit-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    loadIntoForm(product);
-    showEditView();
-  });
+  const editBtn = item.querySelector(".edit-btn");
+  if (editBtn) {
+    editBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      loadIntoForm(product);
+      showEditView();
+    });
+  }
   const deleteBtn = item.querySelector(".delete-btn");
   if (deleteBtn) {
-    deleteBtn.addEventListener("click", (e) => {
+    deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
-      if (editingOriginalName === product.name) resetForm();
-      deleteProduct(product.name);
+      try {
+        if (editingOriginalName === product.name) resetForm();
+        await deleteProduct(product.name);
+      } catch (error) {
+        alert("Produkt konnte nicht gelöscht werden: " + error.message);
+      }
     });
   }
   return item;

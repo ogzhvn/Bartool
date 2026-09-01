@@ -4,6 +4,7 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
+import { isAdmin } from "./auth.js";
 
 const listViewEl = document.getElementById("recipes-list-view");
 const editViewEl = document.getElementById("recipes-edit-view");
@@ -79,7 +80,7 @@ function loadIntoForm(recipe) {
   renderSidebarList();
 }
 
-function handleSave() {
+async function handleSave() {
   const name = nameEl.value.trim();
   if (!name) {
     alert("Bitte einen Rezeptnamen eingeben.");
@@ -92,27 +93,31 @@ function handleSave() {
   }
   const basePortions = parseFloat(basePortionsEl.value) || 1;
 
-  if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
-    deleteRecipe(editingOriginalName);
+  try {
+    if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
+      await deleteRecipe(editingOriginalName);
+    }
+    const recipe = {
+      name,
+      basePortions,
+      ingredients,
+      method: methodEl.value.trim(),
+      glass: glassEl.value.trim(),
+      garnish: garnishEl.value.trim(),
+      ice: iceEl.value.trim(),
+      history: historyEl.value.trim(),
+      quickPitch: quickPitchEl.value.trim(),
+    };
+    const pairsWith = parsePairsWith(pairsWithEl.value);
+    if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
+    await saveRecipe(recipe);
+    editingOriginalName = name;
+  } catch (error) {
+    alert("Rezept konnte nicht gespeichert werden: " + error.message);
   }
-  const recipe = {
-    name,
-    basePortions,
-    ingredients,
-    method: methodEl.value.trim(),
-    glass: glassEl.value.trim(),
-    garnish: garnishEl.value.trim(),
-    ice: iceEl.value.trim(),
-    history: historyEl.value.trim(),
-    quickPitch: quickPitchEl.value.trim(),
-  };
-  const pairsWith = parsePairsWith(pairsWithEl.value);
-  if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
-  saveRecipe(recipe);
-  editingOriginalName = name;
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingOriginalName) {
     alert("Bitte zuerst ein Rezept auswählen.");
     return;
@@ -122,9 +127,13 @@ function handleDelete() {
     return;
   }
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
-  deleteRecipe(editingOriginalName);
-  resetForm();
-  showListView();
+  try {
+    await deleteRecipe(editingOriginalName);
+    resetForm();
+    showListView();
+  } catch (error) {
+    alert("Rezept konnte nicht gelöscht werden: " + error.message);
+  }
 }
 
 function renderIngredientRows(ingredients) {
@@ -184,10 +193,14 @@ function renderBrowseList() {
       <div class="recipe-item-body">
         <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
         ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
-        <div class="actions">
+        ${
+          isAdmin()
+            ? `<div class="actions">
           <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
           ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-        </div>
+        </div>`
+            : ""
+        }
       </div>
     `;
     const checkbox = item.querySelector(".recipe-select-checkbox");
@@ -200,18 +213,25 @@ function renderBrowseList() {
       }
       updateExportBar();
     });
-    item.querySelector(".edit-btn").addEventListener("click", (e) => {
-      e.preventDefault();
-      loadIntoForm(recipe);
-      showEditView();
-    });
+    const editBtn = item.querySelector(".edit-btn");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        loadIntoForm(recipe);
+        showEditView();
+      });
+    }
     const deleteBtn = item.querySelector(".delete-btn");
     if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
+      deleteBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
-        if (editingOriginalName === recipe.name) resetForm();
-        deleteRecipe(recipe.name);
+        try {
+          if (editingOriginalName === recipe.name) resetForm();
+          await deleteRecipe(recipe.name);
+        } catch (error) {
+          alert("Rezept konnte nicht gelöscht werden: " + error.message);
+        }
       });
     }
     listEl.appendChild(item);
