@@ -119,7 +119,7 @@ main {
 }
 
 main:has(#recipes-edit-view.active),
-main:has(#product-edit.active) {
+main:has(#products-edit-view.active) {
   max-width: 1080px;
 }
 
@@ -148,7 +148,7 @@ main:has(#product-edit.active) {
 
   main,
   main:has(#recipes-edit-view.active),
-  main:has(#product-edit.active) {
+  main:has(#products-edit-view.active) {
     max-width: 100%;
   }
 }

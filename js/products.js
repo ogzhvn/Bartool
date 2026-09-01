@@ -3,7 +3,6 @@ import { escapeHtml } from "./utils.js";
 import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
-import { switchTab } from "./tabs.js";
 
 const GROUP_ORDER = [
   "Gin",
@@ -27,7 +26,7 @@ const GROUP_ORDER = [
   "Sonstiges",
 ];
 
-export function groupSortIndex(group) {
+function groupSortIndex(group) {
   const i = GROUP_ORDER.indexOf(group);
   return i === -1 ? GROUP_ORDER.length : i;
 }
@@ -80,6 +79,8 @@ function parsePairsWith(value) {
     .filter(Boolean);
 }
 
+const listViewEl = document.getElementById("products-list-view");
+const editViewEl = document.getElementById("products-edit-view");
 const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
 const groupFilterEl = document.getElementById("product-group-filter");
@@ -89,6 +90,16 @@ const sidebarListEl = document.getElementById("product-sidebar-list");
 const sidebarSearchEl = document.getElementById("product-sidebar-search");
 
 let editingOriginalName = null;
+
+function showListView() {
+  listViewEl.classList.add("active");
+  editViewEl.classList.remove("active");
+}
+
+function showEditView() {
+  editViewEl.classList.add("active");
+  listViewEl.classList.remove("active");
+}
 
 const FIELDS = [
   ["name", nameEl],
@@ -152,6 +163,7 @@ function handleDelete() {
   if (!confirm(`Produkt "${editingOriginalName}" wirklich löschen?`)) return;
   deleteProduct(editingOriginalName);
   resetForm();
+  showListView();
 }
 
 function currentFilteredProducts() {
@@ -164,9 +176,7 @@ function currentFilteredProducts() {
   });
 }
 
-// Exported so other modules (e.g. the Verkaufsmatrix-Vorbereitung view) can
-// group/sort products exactly like "Produktwissen" instead of a second copy.
-export function groupProducts(products) {
+function groupProducts(products) {
   const groups = new Map();
   products.forEach((product) => {
     const groupName = product.group || "Sonstiges";
@@ -227,7 +237,7 @@ function renderProductItem(product) {
   item.querySelector(".edit-btn").addEventListener("click", (e) => {
     e.preventDefault();
     loadIntoForm(product);
-    switchTab("product-edit");
+    showEditView();
   });
   const deleteBtn = item.querySelector(".delete-btn");
   if (deleteBtn) {
@@ -331,8 +341,9 @@ export function initProducts() {
   document.getElementById("product-delete").addEventListener("click", handleDelete);
   document.getElementById("product-list-new").addEventListener("click", () => {
     resetForm();
-    switchTab("product-edit");
+    showEditView();
   });
+  document.getElementById("product-back-to-list").addEventListener("click", showListView);
   document.getElementById("product-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);

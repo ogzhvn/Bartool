@@ -27,7 +27,6 @@
         <h3 class="sidebar-group-title">Bibliothek</h3>
         <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
-        <button class="tab-btn" data-tab="product-edit" role="tab" aria-selected="false">Produkt bearbeiten</button>
       </div>
     </nav>
 
@@ -199,130 +198,136 @@
       </div>
     </section>
 
-    <!-- PRODUCTS (browse list) -->
+    <!-- PRODUCTS (browse list + edit, in one tab) -->
     <section id="products" class="tab-panel">
       <h2>Produktwissen</h2>
-      <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
 
-      <div class="actions">
-        <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
-      </div>
+      <!-- List view -->
+      <div id="products-list-view" class="recipe-subview active">
+        <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
 
-      <div class="field-row">
-        <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
-        <select id="product-group-filter">
-          <option value="">Alle Kategorien</option>
-        </select>
-      </div>
-      <div id="product-list" class="recipe-accordion"></div>
-    </section>
-
-    <!-- PRODUCT EDIT (form + sidebar) -->
-    <section id="product-edit" class="tab-panel">
-      <h2>Produkt bearbeiten</h2>
-      <p class="hint">Wähle rechts ein Produkt zum Bearbeiten aus oder leg links ein neues an.</p>
-
-      <div class="recipe-edit-layout">
-        <div class="recipe-edit-main">
-          <div class="field-row">
-            <label>
-              Produktname
-              <input type="text" id="product-name" placeholder="z. B. Campari" />
-            </label>
-            <label>
-              Kategorie &amp; Herkunft
-              <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Gruppe
-              <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" />
-              <datalist id="product-group-options"></datalist>
-            </label>
-            <label>
-              Untergruppe (optional)
-              <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" />
-              <datalist id="product-subgroup-options"></datalist>
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Alkoholgehalt (% vol)
-              <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
-            </label>
-          </div>
-
-          <h3>Geschmack</h3>
-          <label>
-            Tasting Notes / Geschmacksprofil
-            <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
-          </label>
-
-          <h3>Einkauf</h3>
-          <div class="field-row">
-            <label>
-              Einkaufspreis
-              <input type="number" id="product-price-value" min="0" step="0.01" placeholder="0,00" />
-            </label>
-            <label>
-              Einheit
-              <select id="product-price-unit">
-                <option value="liter">€ / Liter</option>
-                <option value="stueck">€ / Stück</option>
-              </select>
-            </label>
-          </div>
-
-          <h3>Service</h3>
-          <div class="field-row">
-            <label>
-              Serviervorschlag
-              <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" />
-            </label>
-            <label>
-              Alternativen/Substitute
-              <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" />
-            </label>
-          </div>
-
-          <h3>Wissen &amp; Verkauf</h3>
-          <label>
-            Story / Geschichte / Verkaufsargumente
-            <textarea id="product-story" rows="3" placeholder="Kurze Geschichte und Erzähl-Fakten für Gäste"></textarea>
-          </label>
-          <label>
-            Besonderheiten der Herstellung
-            <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" />
-          </label>
-          <label>
-            Allergene/Unverträglichkeiten
-            <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" />
-          </label>
-          <label>
-            Kurzer Pitch (zum Nachsprechen im Service)
-            <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" />
-          </label>
-          <label>
-            Passt gut zu (Produkte/Rezepte, kommagetrennt)
-            <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" />
-          </label>
-          <datalist id="pairs-with-options"></datalist>
-
-          <div class="actions">
-            <button type="button" id="product-save" class="btn-primary">Speichern</button>
-            <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
-            <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
-          </div>
+        <div class="actions">
+          <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
         </div>
 
-        <aside class="recipe-edit-sidebar">
-          <div class="actions">
-            <button type="button" id="product-sidebar-new" class="btn-secondary">+ Neu</button>
+        <div class="field-row">
+          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+          <select id="product-group-filter">
+            <option value="">Alle Kategorien</option>
+          </select>
+        </div>
+        <div id="product-list" class="recipe-accordion"></div>
+      </div>
+
+      <!-- Edit view (form + sidebar) -->
+      <div id="products-edit-view" class="recipe-subview">
+        <div class="actions">
+          <button type="button" id="product-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+        </div>
+        <p class="hint">Wähle rechts ein Produkt zum Bearbeiten aus oder leg links ein neues an.</p>
+
+        <div class="recipe-edit-layout">
+          <div class="recipe-edit-main">
+            <div class="field-row">
+              <label>
+                Produktname
+                <input type="text" id="product-name" placeholder="z. B. Campari" />
+              </label>
+              <label>
+                Kategorie &amp; Herkunft
+                <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Gruppe
+                <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" />
+                <datalist id="product-group-options"></datalist>
+              </label>
+              <label>
+                Untergruppe (optional)
+                <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" />
+                <datalist id="product-subgroup-options"></datalist>
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Alkoholgehalt (% vol)
+                <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
+              </label>
+            </div>
+
+            <h3>Geschmack</h3>
+            <label>
+              Tasting Notes / Geschmacksprofil
+              <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
+            </label>
+
+            <h3>Einkauf</h3>
+            <div class="field-row">
+              <label>
+                Einkaufspreis
+                <input type="number" id="product-price-value" min="0" step="0.01" placeholder="0,00" />
+              </label>
+              <label>
+                Einheit
+                <select id="product-price-unit">
+                  <option value="liter">€ / Liter</option>
+                  <option value="stueck">€ / Stück</option>
+                </select>
+              </label>
+            </div>
+
+            <h3>Service</h3>
+            <div class="field-row">
+              <label>
+                Serviervorschlag
+                <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" />
+              </label>
+              <label>
+                Alternativen/Substitute
+                <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" />
+              </label>
+            </div>
+
+            <h3>Wissen &amp; Verkauf</h3>
+            <label>
+              Story / Geschichte / Verkaufsargumente
+              <textarea id="product-story" rows="3" placeholder="Kurze Geschichte und Erzähl-Fakten für Gäste"></textarea>
+            </label>
+            <label>
+              Besonderheiten der Herstellung
+              <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" />
+            </label>
+            <label>
+              Allergene/Unverträglichkeiten
+              <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" />
+            </label>
+            <label>
+              Kurzer Pitch (zum Nachsprechen im Service)
+              <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" />
+            </label>
+            <label>
+              Passt gut zu (Produkte/Rezepte, kommagetrennt)
+              <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" />
+            </label>
+            <datalist id="pairs-with-options"></datalist>
+
+            <div class="actions">
+              <button type="button" id="product-save" class="btn-primary">Speichern</button>
+              <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
+              <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+            </div>
           </div>
-          <input type="text" id="product-sidebar-search" placeholder="Suchen…" />
-          <div id="product-sidebar-list" class="recipe-name-list"></div>
-        </aside>
+
+          <aside class="recipe-edit-sidebar">
+            <div class="actions">
+              <button type="button" id="product-sidebar-new" class="btn-secondary">+ Neu</button>
+            </div>
+            <input type="text" id="product-sidebar-search" placeholder="Suchen…" />
+            <div id="product-sidebar-list" class="recipe-name-list"></div>
+          </aside>
+        </div>
       </div>
     </section>
 
