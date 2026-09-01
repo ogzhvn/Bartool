@@ -1,6 +1,9 @@
 -- Bartool – Supabase-Schema
 --
--- Im Supabase-Dashboard unter "SQL Editor" ausführen (einmalig pro Projekt).
+-- Im Supabase-Dashboard unter "SQL Editor" ausführen. Das Skript ist
+-- gefahrlos mehrfach ausführbar (z. B. nach einem Abbruch mittendrin) –
+-- bestehende Tabellen/Daten werden dabei nicht angetastet, nur fehlende
+-- Objekte werden ergänzt bzw. Policies/Trigger neu gesetzt.
 -- Siehe supabase/README.md für die komplette Setup-Anleitung inkl. erstem
 -- Admin-Konto und Deployment der Edge Function.
 
@@ -10,9 +13,16 @@ create extension if not exists pgcrypto;
 -- Rollen & Profile
 -- ---------------------------------------------------------------------
 
-create type public.user_role as enum ('admin', 'mitarbeiter');
+do $$
+begin
+  if not exists (
+    select 1 from pg_type where typname = 'user_role' and typnamespace = 'public'::regnamespace
+  ) then
+    create type public.user_role as enum ('admin', 'mitarbeiter');
+  end if;
+end $$;
 
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   display_name text,
@@ -37,6 +47,7 @@ as $$
   );
 $$;
 
+drop policy if exists "profiles: read own or admin reads all" on public.profiles;
 create policy "profiles: read own or admin reads all"
   on public.profiles for select
   using (id = auth.uid() or public.is_admin());
@@ -44,6 +55,7 @@ create policy "profiles: read own or admin reads all"
 -- Anlegen/Ändern/Löschen von Konten läuft über die admin-users Edge
 -- Function (Service-Role) bzw. – für reine Rollenänderungen – direkt vom
 -- Admin-Panel aus (per Update, ebenfalls nur für Admins erlaubt).
+drop policy if exists "profiles: admin manages all" on public.profiles;
 create policy "profiles: admin manages all"
   on public.profiles for all
   using (public.is_admin())
@@ -67,7 +79,7 @@ $$;
 -- Rezepte
 -- ---------------------------------------------------------------------
 
-create table public.recipes (
+create table if not exists public.recipes (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   base_portions numeric not null default 1,
@@ -83,16 +95,19 @@ create table public.recipes (
 
 alter table public.recipes enable row level security;
 
+drop trigger if exists recipes_set_updated_at on public.recipes;
 create trigger recipes_set_updated_at
   before update on public.recipes
   for each row execute function public.set_updated_at();
 
 -- Jeder eingeloggte Nutzer (Admin oder Mitarbeiter) darf lesen.
+drop policy if exists "recipes: any authenticated user can read" on public.recipes;
 create policy "recipes: any authenticated user can read"
   on public.recipes for select
   using (auth.role() = 'authenticated');
 
 -- Nur Admins dürfen anlegen/ändern/löschen.
+drop policy if exists "recipes: admin write" on public.recipes;
 create policy "recipes: admin write"
   on public.recipes for all
   using (public.is_admin())
@@ -102,7 +117,7 @@ create policy "recipes: admin write"
 -- Produkte
 -- ---------------------------------------------------------------------
 
-create table public.products (
+create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   category text,
@@ -115,14 +130,17 @@ create table public.products (
 
 alter table public.products enable row level security;
 
+drop trigger if exists products_set_updated_at on public.products;
 create trigger products_set_updated_at
   before update on public.products
   for each row execute function public.set_updated_at();
 
+drop policy if exists "products: any authenticated user can read" on public.products;
 create policy "products: any authenticated user can read"
   on public.products for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "products: admin write" on public.products;
 create policy "products: admin write"
   on public.products for all
   using (public.is_admin())
@@ -132,5 +150,16 @@ create policy "products: admin write"
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
 -- ---------------------------------------------------------------------
 
-alter publication supabase_realtime add table public.recipes;
-alter publication supabase_realtime add table public.products;
+do $$
+begin
+  alter publication supabase_realtime add table public.recipes;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.products;
+exception
+  when duplicate_object then null;
+end $$;
