@@ -22,6 +22,8 @@ function toRecipeRecord(recipe) {
     garnish: recipe.garnish || null,
     ice: recipe.ice || null,
     history: recipe.history || null,
+    quick_pitch: recipe.quickPitch || null,
+    pairs_with: recipe.pairsWith ?? null,
   };
 }
 
@@ -35,6 +37,8 @@ function fromRecipeRow(row) {
     garnish: row.garnish ?? "",
     ice: row.ice ?? "",
     history: row.history ?? "",
+    quickPitch: row.quick_pitch ?? "",
+    pairsWith: row.pairs_with ?? [],
   };
 }
 
@@ -88,9 +92,19 @@ function toProductRecord(product) {
   return {
     name: product.name,
     category: product.category || null,
-    unit: product.unit || null,
-    price: product.price === "" || product.price == null ? null : Number(product.price),
-    note: product.note || null,
+    group_name: product.group || null,
+    sub_group: product.subGroup || null,
+    abv: product.abv || null,
+    tasting_notes: product.tastingNotes || null,
+    service: product.service || null,
+    alternatives: product.alternatives || null,
+    story: product.story || null,
+    production: product.production || null,
+    allergens: product.allergens || null,
+    price_value: product.priceValue === "" || product.priceValue == null ? null : Number(product.priceValue),
+    price_unit: product.priceUnit || null,
+    quick_pitch: product.quickPitch || null,
+    pairs_with: product.pairsWith ?? null,
   };
 }
 
@@ -99,9 +113,19 @@ function fromProductRow(row) {
     id: row.id,
     name: row.name,
     category: row.category ?? "",
-    unit: row.unit ?? "",
-    price: row.price ?? "",
-    note: row.note ?? "",
+    group: row.group_name ?? "",
+    subGroup: row.sub_group ?? "",
+    abv: row.abv ?? "",
+    tastingNotes: row.tasting_notes ?? "",
+    service: row.service ?? "",
+    alternatives: row.alternatives ?? "",
+    story: row.story ?? "",
+    production: row.production ?? "",
+    allergens: row.allergens ?? "",
+    priceValue: row.price_value ?? "",
+    priceUnit: row.price_unit ?? "liter",
+    quickPitch: row.quick_pitch ?? "",
+    pairsWith: row.pairs_with ?? [],
   };
 }
 

@@ -104,9 +104,14 @@ create table if not exists public.recipes (
   garnish text,
   ice text,
   history text,
+  quick_pitch text,
+  pairs_with jsonb,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
+
+alter table public.recipes add column if not exists quick_pitch text;
+alter table public.recipes add column if not exists pairs_with jsonb;
 
 alter table public.recipes enable row level security;
 
@@ -136,12 +141,43 @@ create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   category text,
+  -- "unit", "price" und "note" stammen aus der ursprünglichen, einfachen
+  -- Produktverwaltung und werden vom Produktwissen-Katalog unten nicht mehr
+  -- befüllt. Sie bleiben unangetastet stehen, damit bereits gespeicherte
+  -- Daten nicht verloren gehen.
   unit text,
   price numeric,
   note text,
+  group_name text,
+  sub_group text,
+  abv text,
+  tasting_notes text,
+  service text,
+  alternatives text,
+  story text,
+  production text,
+  allergens text,
+  price_value numeric,
+  price_unit text,
+  quick_pitch text,
+  pairs_with jsonb,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
+
+alter table public.products add column if not exists group_name text;
+alter table public.products add column if not exists sub_group text;
+alter table public.products add column if not exists abv text;
+alter table public.products add column if not exists tasting_notes text;
+alter table public.products add column if not exists service text;
+alter table public.products add column if not exists alternatives text;
+alter table public.products add column if not exists story text;
+alter table public.products add column if not exists production text;
+alter table public.products add column if not exists allergens text;
+alter table public.products add column if not exists price_value numeric;
+alter table public.products add column if not exists price_unit text;
+alter table public.products add column if not exists quick_pitch text;
+alter table public.products add column if not exists pairs_with jsonb;
 
 alter table public.products enable row level security;
 

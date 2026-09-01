@@ -4,7 +4,9 @@ import { initBatching } from "./batching.js";
 import { initRecipes } from "./recipes.js";
 import { initProducts } from "./products.js";
 import { initSuperjuice } from "./superjuice.js";
+import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
+import { initCalculation } from "./calculation.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin } from "./auth.js";
@@ -36,7 +38,9 @@ async function bootstrapAppOnce() {
   initBatching();
   initProducts();
   initSuperjuice();
+  initSyrup();
   initDilution();
+  initCalculation();
   initAdminPanel();
 }
 

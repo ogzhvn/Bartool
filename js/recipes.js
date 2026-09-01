@@ -3,10 +3,11 @@ import { createIngredientEditor } from "./ingredientEditor.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
-import { switchTab } from "./tabs.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
 
+const listViewEl = document.getElementById("recipes-list-view");
+const editViewEl = document.getElementById("recipes-edit-view");
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
@@ -14,6 +15,8 @@ const glassEl = document.getElementById("recipe-glass");
 const garnishEl = document.getElementById("recipe-garnish");
 const iceEl = document.getElementById("recipe-ice");
 const historyEl = document.getElementById("recipe-history");
+const quickPitchEl = document.getElementById("recipe-quick-pitch");
+const pairsWithEl = document.getElementById("recipe-pairs-with");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
 const searchEl = document.getElementById("recipe-search");
@@ -30,6 +33,23 @@ const editor = createIngredientEditor(ingredientsEl);
 let editingOriginalName = null;
 const selectedNames = new Set();
 
+function showListView() {
+  listViewEl.classList.add("active");
+  editViewEl.classList.remove("active");
+}
+
+function showEditView() {
+  editViewEl.classList.add("active");
+  listViewEl.classList.remove("active");
+}
+
+function parsePairsWith(value) {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function resetForm() {
   nameEl.value = "";
   basePortionsEl.value = 1;
@@ -38,6 +58,8 @@ function resetForm() {
   garnishEl.value = "";
   iceEl.value = "";
   historyEl.value = "";
+  quickPitchEl.value = "";
+  pairsWithEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
   renderSidebarList();
@@ -51,6 +73,8 @@ function loadIntoForm(recipe) {
   garnishEl.value = recipe.garnish ?? "";
   iceEl.value = recipe.ice ?? "";
   historyEl.value = recipe.history ?? "";
+  quickPitchEl.value = recipe.quickPitch ?? "";
+  pairsWithEl.value = (recipe.pairsWith ?? []).join(", ");
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
   renderSidebarList();
@@ -73,7 +97,7 @@ async function handleSave() {
     if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
       await deleteRecipe(editingOriginalName);
     }
-    await saveRecipe({
+    const recipe = {
       name,
       basePortions,
       ingredients,
@@ -82,7 +106,11 @@ async function handleSave() {
       garnish: garnishEl.value.trim(),
       ice: iceEl.value.trim(),
       history: historyEl.value.trim(),
-    });
+      quickPitch: quickPitchEl.value.trim(),
+    };
+    const pairsWith = parsePairsWith(pairsWithEl.value);
+    if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
+    await saveRecipe(recipe);
     editingOriginalName = name;
   } catch (error) {
     alert("Rezept konnte nicht gespeichert werden: " + error.message);
@@ -102,6 +130,7 @@ async function handleDelete() {
   try {
     await deleteRecipe(editingOriginalName);
     resetForm();
+    showListView();
   } catch (error) {
     alert("Rezept konnte nicht gelöscht werden: " + error.message);
   }
@@ -116,9 +145,14 @@ function renderIngredientRows(ingredients) {
     .join("");
 }
 
+function recipeMatchesQuery(recipe, query) {
+  if (recipe.name.toLowerCase().includes(query)) return true;
+  return recipe.ingredients.some((ing) => ing.name.toLowerCase().includes(query));
+}
+
 function currentFilteredRecipes() {
   const query = searchEl.value.trim().toLowerCase();
-  return getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  return getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
 }
 
 function updateExportBar() {
@@ -143,6 +177,8 @@ function renderBrowseList() {
       ["Eis", recipe.ice],
       ["Zubereitung", recipe.method],
       ["Geschichte", recipe.history],
+      ["Kurzer Pitch", recipe.quickPitch],
+      ["Passt gut zu", (recipe.pairsWith ?? []).join(", ")],
     ].filter(([, value]) => value);
 
     const item = document.createElement("details");
@@ -182,7 +218,7 @@ function renderBrowseList() {
       editBtn.addEventListener("click", (e) => {
         e.preventDefault();
         loadIntoForm(recipe);
-        switchTab("recipe-edit");
+        showEditView();
       });
     }
     const deleteBtn = item.querySelector(".delete-btn");
@@ -205,7 +241,7 @@ function renderBrowseList() {
 
 function renderSidebarList() {
   const query = sidebarSearchEl.value.trim().toLowerCase();
-  const recipes = getAllRecipes().filter((r) => r.name.toLowerCase().includes(query));
+  const recipes = getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
 
   if (recipes.length === 0) {
     sidebarListEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
@@ -230,8 +266,9 @@ export function initRecipes() {
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
   document.getElementById("recipe-list-new").addEventListener("click", () => {
     resetForm();
-    switchTab("recipe-edit");
+    showEditView();
   });
+  document.getElementById("recipe-back-to-list").addEventListener("click", showListView);
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);

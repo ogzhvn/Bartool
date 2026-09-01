@@ -8,6 +8,8 @@
   --accent-hover: #eab654;
   --danger: #c0564a;
   --radius: 8px;
+  --radius-lg: 14px;
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -31,6 +33,7 @@ body {
 }
 
 .app-header {
+  position: relative;
   padding: 1.5rem 1rem 0.5rem;
   text-align: center;
 }
@@ -45,38 +48,117 @@ body {
   color: var(--text-muted);
 }
 
-.tabs {
+.nav-toggle {
+  display: none;
+  position: absolute;
+  left: 1rem;
+  top: 1.4rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+
+.app-layout {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 1rem 1rem 0;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.sidebar {
+  flex: 0 0 220px;
+  width: 220px;
+  padding: 1.5rem 0.75rem 2rem;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+}
+
+.sidebar-group {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-group-title {
+  margin: 0 0 0.4rem;
+  padding: 0 0.6rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
 .tab-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
   background: none;
   border: none;
+  border-left: 3px solid transparent;
   color: var(--text-muted);
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.tab-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
 }
 
 .tab-btn.active {
   color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--bg-elevated);
 }
 
 main {
+  flex: 1 1 auto;
+  min-width: 0;
   max-width: 720px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 }
 
-main:has(#recipe-edit.active) {
+main:has(#recipes-edit-view.active),
+main:has(#products-edit-view.active) {
   max-width: 1080px;
+}
+
+@media (max-width: 700px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .app-layout {
+    display: block;
+  }
+
+  .sidebar {
+    position: static;
+    width: auto;
+    flex: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem;
+    display: none;
+  }
+
+  .sidebar.open {
+    display: block;
+  }
+
+  main,
+  main:has(#recipes-edit-view.active),
+  main:has(#products-edit-view.active) {
+    max-width: 100%;
+  }
 }
 
 .tab-panel {
@@ -84,6 +166,14 @@ main:has(#recipe-edit.active) {
 }
 
 .tab-panel.active {
+  display: block;
+}
+
+.recipe-subview {
+  display: none;
+}
+
+.recipe-subview.active {
   display: block;
 }
 
@@ -135,9 +225,44 @@ textarea {
 }
 
 #recipe-search,
-#recipe-sidebar-search {
+#recipe-sidebar-search,
+#product-sidebar-search {
   width: 100%;
   margin-bottom: 0.8rem;
+}
+
+#product-search {
+  flex: 2 1 220px;
+}
+
+#product-group-filter {
+  flex: 1 1 180px;
+}
+
+.product-group-header {
+  margin: 1.4rem 0 0.4rem;
+  color: var(--accent);
+}
+
+.product-group-header:first-child {
+  margin-top: 0;
+}
+
+.product-subgroup-header {
+  margin: 0.8rem 0 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.product-supergroup-header {
+  margin: 1.1rem 0 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .recipe-edit-layout {
@@ -314,6 +439,56 @@ textarea {
 .ingredient-row input,
 .ingredient-row select {
   width: 100%;
+}
+
+.calc-ingredient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.calc-ingredient-row {
+  display: grid;
+  grid-template-columns: 1.8fr 0.9fr 0.8fr 1fr auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.calc-ingredient-row input,
+.calc-ingredient-row select {
+  width: 100%;
+}
+
+.calc-price-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.calc-cost {
+  font-weight: 600;
+  color: var(--accent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .calc-ingredient-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "name name"
+      "amount unit"
+      "price label"
+      "cost remove";
+  }
+  .calc-ingredient-row .calc-ing-name { grid-area: name; }
+  .calc-ingredient-row .calc-ing-amount { grid-area: amount; }
+  .calc-ingredient-row .calc-ing-unit { grid-area: unit; }
+  .calc-ingredient-row .calc-ing-price { grid-area: price; }
+  .calc-ingredient-row .calc-price-label { grid-area: label; }
+  .calc-ingredient-row .calc-cost { grid-area: cost; }
+  .calc-ingredient-row .remove-btn { grid-area: remove; }
 }
 
 .remove-btn {
@@ -618,3 +793,4 @@ textarea {
   .ingredient-row .ing-unit { grid-area: unit; }
   .ingredient-row .remove-btn { grid-area: remove; }
 }
+

@@ -8,6 +8,7 @@
 </head>
 <body>
   <header class="app-header">
+    <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar">☰</button>
     <h1>🍸 Bartool</h1>
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
@@ -37,18 +38,31 @@
   </section>
 
   <div id="app-shell" hidden>
-  <nav class="tabs" role="tablist">
-    <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true">Start</button>
-    <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false">Batching</button>
-    <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
-    <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false" data-admin-only>Rezept bearbeiten</button>
-    <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produkte</button>
-    <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
-    <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
-    <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false" data-admin-only>Admin</button>
-  </nav>
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar" role="tablist">
+      <div class="sidebar-group">
+        <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true">Start</button>
+      </div>
+      <div class="sidebar-group">
+        <h3 class="sidebar-group-title">Rechner</h3>
+        <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false">Batching</button>
+        <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
+        <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false">Zuckersirup</button>
+        <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
+        <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false">Kalkulation</button>
+      </div>
+      <div class="sidebar-group">
+        <h3 class="sidebar-group-title">Bibliothek</h3>
+        <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
+        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
+      </div>
+      <div class="sidebar-group" data-admin-only>
+        <h3 class="sidebar-group-title">Verwaltung</h3>
+        <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false">Admin</button>
+      </div>
+    </nav>
 
-  <main>
+    <main>
     <!-- START / DASHBOARD -->
     <section id="home" class="tab-panel active">
       <div class="home-hero">
@@ -72,7 +86,7 @@
         </button>
         <button type="button" class="tool-card" data-tab="products">
           <span class="tool-card-icon" aria-hidden="true">🍾</span>
-          <span class="tool-card-title">Produkte</span>
+          <span class="tool-card-title">Produktwissen</span>
           <span class="tool-card-desc">Getränke- und Zutatenkatalog der Bar</span>
         </button>
         <button type="button" class="tool-card" data-tab="superjuice">
@@ -80,15 +94,20 @@
           <span class="tool-card-title">Superjuice</span>
           <span class="tool-card-desc">Säuremengen für Superjuice aus Schalengewicht berechnen</span>
         </button>
+        <button type="button" class="tool-card" data-tab="syrup">
+          <span class="tool-card-icon" aria-hidden="true">🍯</span>
+          <span class="tool-card-title">Zuckersirup</span>
+          <span class="tool-card-desc">Zuckermenge für ein Zucker:Wasser-Verhältnis berechnen</span>
+        </button>
         <button type="button" class="tool-card" data-tab="dilution">
           <span class="tool-card-icon" aria-hidden="true">💧</span>
           <span class="tool-card-title">Verdünnung &amp; ABV</span>
           <span class="tool-card-desc">Alkoholgehalt vor und nach Verdünnung durch Eis berechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="recipe-edit" data-admin-only>
-          <span class="tool-card-icon" aria-hidden="true">✏️</span>
-          <span class="tool-card-title">Rezept bearbeiten</span>
-          <span class="tool-card-desc">Neues Rezept anlegen oder bestehendes ändern</span>
+        <button type="button" class="tool-card" data-tab="calculation">
+          <span class="tool-card-icon" aria-hidden="true">💶</span>
+          <span class="tool-card-title">Kalkulation</span>
+          <span class="tool-card-desc">Wareneinsatz und Verkaufspreis eines Rezepts berechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="admin" data-admin-only>
           <span class="tool-card-icon" aria-hidden="true">🔑</span>
@@ -162,136 +181,240 @@
       <div id="batch-result" class="result-box" hidden></div>
     </section>
 
-    <!-- RECIPES (browse list) -->
+    <!-- RECIPES (browse list + edit, in one tab) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
-      <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
 
-      <div class="actions" data-admin-only>
-        <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
-      </div>
+      <!-- List view -->
+      <div id="recipes-list-view" class="recipe-subview active">
+        <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin").</p>
 
-      <input type="text" id="recipe-search" placeholder="Rezepte durchsuchen…" />
-
-      <div class="export-bar">
-        <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
-        <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
-        <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
-        <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
-        <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
-      </div>
-
-      <div id="recipe-list" class="recipe-accordion"></div>
-    </section>
-
-    <!-- RECIPE EDIT (form + sidebar) -->
-    <section id="recipe-edit" class="tab-panel" data-admin-only>
-      <h2>Rezept bearbeiten</h2>
-      <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
-
-      <div class="recipe-edit-layout">
-        <div class="recipe-edit-main">
-          <div class="field-row">
-            <label>
-              Rezeptname
-              <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
-            </label>
-            <label>
-              Ergibt Portionen (Basis)
-              <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
-            </label>
-          </div>
-
-          <h3>Zutaten</h3>
-          <div id="recipe-ingredients" class="ingredient-list"></div>
-          <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
-
-          <h3>Details</h3>
-          <div class="field-row">
-            <label>
-              Zubereitung
-              <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Glas
-              <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
-            </label>
-            <label>
-              Garnitur
-              <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label>
-              Eis
-              <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" />
-            </label>
-          </div>
-          <label>
-            Geschichte
-            <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
-          </label>
-
-          <div class="actions">
-            <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
-            <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
-            <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
-          </div>
+        <div class="actions" data-admin-only>
+          <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
         </div>
 
-        <aside class="recipe-edit-sidebar">
-          <div class="actions">
-            <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
-          </div>
-          <input type="text" id="recipe-sidebar-search" placeholder="Suchen…" />
-          <div id="recipe-sidebar-list" class="recipe-name-list"></div>
-        </aside>
+        <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
+
+        <div class="export-bar">
+          <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
+          <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
+          <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
+          <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
+          <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+        </div>
+
+        <div id="recipe-list" class="recipe-accordion"></div>
       </div>
-    </section>
 
-    <!-- PRODUCTS -->
-    <section id="products" class="tab-panel">
-      <h2>Produkte</h2>
-      <p class="hint">Getränke- und Zutatenkatalog. Bearbeiten können nur Admins, alle eingeloggten Nutzer können lesen.</p>
-
-      <div data-admin-only>
-        <h3>Produkt anlegen / bearbeiten</h3>
-        <div class="field-row">
-          <label>
-            Name
-            <input type="text" id="product-name" placeholder="z. B. Aperol" />
-          </label>
-          <label>
-            Kategorie
-            <input type="text" id="product-category" placeholder="z. B. Likör" />
-          </label>
-        </div>
-        <div class="field-row">
-          <label>
-            Einheit
-            <input type="text" id="product-unit" placeholder="z. B. Flasche 0,7 l" />
-          </label>
-          <label>
-            Preis
-            <input type="number" id="product-price" min="0" step="0.01" />
-          </label>
-        </div>
-        <label>
-          Notiz
-          <textarea id="product-note" rows="2" placeholder="z. B. Lieferant, Lagerort"></textarea>
-        </label>
+      <!-- Edit view (form + sidebar) -->
+      <div id="recipes-edit-view" class="recipe-subview">
         <div class="actions">
-          <button type="button" id="product-save" class="btn-primary">Speichern</button>
-          <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
-          <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+          <button type="button" id="recipe-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+        </div>
+        <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
+
+        <div class="recipe-edit-layout">
+          <div class="recipe-edit-main">
+            <div class="field-row">
+              <label>
+                Rezeptname
+                <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" />
+              </label>
+              <label>
+                Ergibt Portionen (Basis)
+                <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
+              </label>
+            </div>
+
+            <h3>Zutaten</h3>
+            <div id="recipe-ingredients" class="ingredient-list"></div>
+            <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+            <h3>Details</h3>
+            <div class="field-row">
+              <label>
+                Zubereitung
+                <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Glas
+                <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" />
+              </label>
+              <label>
+                Garnitur
+                <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Eis
+                <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" />
+              </label>
+            </div>
+            <label>
+              Geschichte
+              <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)"></textarea>
+            </label>
+            <label>
+              Kurzer Pitch (zum Nachsprechen im Service)
+              <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" />
+            </label>
+            <label>
+              Passt gut zu (Produkte/Rezepte, kommagetrennt)
+              <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" />
+            </label>
+
+            <div class="actions">
+              <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
+              <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
+              <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+            </div>
+          </div>
+
+          <aside class="recipe-edit-sidebar">
+            <div class="actions">
+              <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
+            </div>
+            <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
+            <div id="recipe-sidebar-list" class="recipe-name-list"></div>
+          </aside>
         </div>
       </div>
+    </section>
 
-      <h3>Produktliste</h3>
-      <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
-      <div id="product-list"></div>
+    <!-- PRODUCTS (browse list + edit, in one tab) -->
+    <section id="products" class="tab-panel">
+      <h2>Produktwissen</h2>
+
+      <!-- List view -->
+      <div id="products-list-view" class="recipe-subview active">
+        <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
+
+        <div class="actions" data-admin-only>
+          <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
+        </div>
+
+        <div class="field-row">
+          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+          <select id="product-group-filter">
+            <option value="">Alle Kategorien</option>
+          </select>
+        </div>
+        <div id="product-list" class="recipe-accordion"></div>
+      </div>
+
+      <!-- Edit view (form + sidebar) -->
+      <div id="products-edit-view" class="recipe-subview">
+        <div class="actions">
+          <button type="button" id="product-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+        </div>
+        <p class="hint">Wähle rechts ein Produkt zum Bearbeiten aus oder leg links ein neues an.</p>
+
+        <div class="recipe-edit-layout">
+          <div class="recipe-edit-main">
+            <div class="field-row">
+              <label>
+                Produktname
+                <input type="text" id="product-name" placeholder="z. B. Campari" />
+              </label>
+              <label>
+                Kategorie &amp; Herkunft
+                <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Gruppe
+                <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" />
+                <datalist id="product-group-options"></datalist>
+              </label>
+              <label>
+                Untergruppe (optional)
+                <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" />
+                <datalist id="product-subgroup-options"></datalist>
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Alkoholgehalt (% vol)
+                <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
+              </label>
+            </div>
+
+            <h3>Geschmack</h3>
+            <label>
+              Tasting Notes / Geschmacksprofil
+              <textarea id="product-tasting-notes" rows="2" placeholder="z. B. Bitterorange, Kräuter, intensiv rot"></textarea>
+            </label>
+
+            <h3>Einkauf</h3>
+            <div class="field-row">
+              <label>
+                Einkaufspreis
+                <input type="number" id="product-price-value" min="0" step="0.01" placeholder="0,00" />
+              </label>
+              <label>
+                Einheit
+                <select id="product-price-unit">
+                  <option value="liter">€ / Liter</option>
+                  <option value="stueck">€ / Stück</option>
+                </select>
+              </label>
+            </div>
+
+            <h3>Service</h3>
+            <div class="field-row">
+              <label>
+                Serviervorschlag
+                <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" />
+              </label>
+              <label>
+                Alternativen/Substitute
+                <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" />
+              </label>
+            </div>
+
+            <h3>Wissen &amp; Verkauf</h3>
+            <label>
+              Story / Geschichte / Verkaufsargumente
+              <textarea id="product-story" rows="3" placeholder="Kurze Geschichte und Erzähl-Fakten für Gäste"></textarea>
+            </label>
+            <label>
+              Besonderheiten der Herstellung
+              <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" />
+            </label>
+            <label>
+              Allergene/Unverträglichkeiten
+              <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" />
+            </label>
+            <label>
+              Kurzer Pitch (zum Nachsprechen im Service)
+              <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" />
+            </label>
+            <label>
+              Passt gut zu (Produkte/Rezepte, kommagetrennt)
+              <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" />
+            </label>
+            <datalist id="pairs-with-options"></datalist>
+
+            <div class="actions">
+              <button type="button" id="product-save" class="btn-primary">Speichern</button>
+              <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
+              <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+            </div>
+          </div>
+
+          <aside class="recipe-edit-sidebar">
+            <div class="actions">
+              <button type="button" id="product-sidebar-new" class="btn-secondary">+ Neu</button>
+            </div>
+            <input type="text" id="product-sidebar-search" placeholder="Suchen…" />
+            <div id="product-sidebar-list" class="recipe-name-list"></div>
+          </aside>
+        </div>
+      </div>
     </section>
 
     <!-- SUPERJUICE -->
@@ -352,6 +475,59 @@
       </div>
     </section>
 
+    <!-- SUGAR SYRUP -->
+    <section id="syrup" class="tab-panel">
+      <h2>Zuckersirup-Rechner</h2>
+      <p class="hint">Berechnet die Zuckermenge für ein Zucker:Wasser-Verhältnis, ausgehend von der gewünschten Wassermenge.</p>
+
+      <label>
+        Verhältnis (Zucker : Wasser)
+        <select id="syrup-preset">
+          <option value="1:1">1:1 (Simple Syrup)</option>
+          <option value="2:1" selected>2:1 (Rich Simple Syrup)</option>
+          <option value="3:2">3:2</option>
+          <option value="1:2">1:2 (dünn)</option>
+          <option value="custom">Eigenes Verhältnis</option>
+        </select>
+      </label>
+
+      <div class="field-row">
+        <label>
+          Zucker-Teile
+          <input type="number" id="syrup-sugar-parts" value="2" min="0.01" step="0.1" />
+        </label>
+        <label>
+          Wasser-Teile
+          <input type="number" id="syrup-water-parts" value="1" min="0.01" step="0.1" />
+        </label>
+      </div>
+
+      <label>
+        Wassermenge
+        <div class="juice-input-row">
+          <input type="number" id="syrup-water-amount" value="500" min="0" step="10" />
+          <span class="unit-suffix">ml</span>
+        </div>
+      </label>
+
+      <div class="juice-cards">
+        <div class="juice-card juice-card-lemon">
+          <div class="juice-card-header">Ergebnis</div>
+          <div class="juice-card-body">
+            <div class="juice-result">
+              <span class="juice-result-label">Zucker benötigt</span>
+              <span class="juice-result-value" id="syrup-sugar-amount">0 g</span>
+            </div>
+            <div class="juice-result">
+              <span class="juice-result-label">Gesamtgewicht (Wasser + Zucker)</span>
+              <span class="juice-result-value" id="syrup-yield-amount">0 g</span>
+            </div>
+            <p class="hint">Das fertige Sirup-Volumen liegt wegen des gelösten Zuckers etwas unter diesem Gewicht in ml.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- DILUTION / ABV -->
     <section id="dilution" class="tab-panel">
       <h2>Verdünnungs- &amp; ABV-Rechner</h2>
@@ -388,6 +564,48 @@
       </div>
 
       <div id="dil-result" class="result-box" hidden></div>
+    </section>
+
+    <!-- CALCULATION (Wareneinsatz / Verkaufspreis) -->
+    <section id="calculation" class="tab-panel">
+      <h2>Kalkulations-Rechner</h2>
+      <p class="hint">Berechnet den Wareneinsatz eines Rezepts und einen empfohlenen Verkaufspreis anhand der Ziel-Wareneinsatzquote.</p>
+
+      <div class="field-row">
+        <label>
+          Rezept aus Rezeptbuch laden
+          <select id="calc-recipe-select">
+            <option value="">– Rezept auswählen –</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="calc-load-recipe" class="btn-secondary">Einfügen</button>
+      </div>
+
+      <h3>Zutaten</h3>
+      <p class="hint">Preis pro Liter bei ml/cl/oz/BL/Dash, Preis pro Stück bei Stück/Teile.</p>
+      <div id="calc-ingredients" class="calc-ingredient-list"></div>
+      <button type="button" id="calc-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+
+      <div class="actions">
+        <button type="button" id="calc-calculate" class="btn-primary">Berechnen</button>
+        <button type="button" id="calc-clear" class="btn-secondary">Zurücksetzen</button>
+      </div>
+
+      <h3>Preisziel</h3>
+      <div class="field-row">
+        <label>
+          Ziel-Wareneinsatzquote (%)
+          <input type="number" id="calc-target-quote" value="20" min="1" max="100" step="1" />
+        </label>
+        <label>
+          MwSt.-Satz (%)
+          <input type="number" id="calc-vat" value="19" min="0" max="100" step="1" />
+        </label>
+      </div>
+
+      <div id="calc-result" class="result-box" hidden></div>
     </section>
 
     <!-- ADMIN -->
@@ -429,7 +647,9 @@
       <h3>Konten</h3>
       <div id="admin-employee-list"></div>
     </section>
-  </main>
+
+    </main>
+  </div>
   </div>
 
   <footer class="app-footer">
