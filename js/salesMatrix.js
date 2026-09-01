@@ -182,7 +182,7 @@ function renderMode1Results() {
     }
   } else if (selectedFlavors.length > 0) {
     const profile = {};
-    FLAVOR_DIMENSIONS.forEach((dim) => (profile[dim] = selectedFlavors.includes(dim) ? 5 : 0));
+    FLAVOR_DIMENSIONS.forEach((dim) => (profile[dim] = selectedFlavors.includes(dim) ? 10 : 0));
     referenceHolder = asFlavorProfileHolder("__wunsch__", profile);
   } else {
     mode1ResultsEl.innerHTML = `<p class="empty-note">Aromen antippen oder einen bekannten Drink eingeben.</p>`;

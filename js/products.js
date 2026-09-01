@@ -75,7 +75,7 @@ const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
 
-const FLAVOR_DIMENSIONS = ["suess", "sauer", "bitter", "herbKraeuterig", "fruchtig", "wuerzigScharf", "floral", "rauchig"];
+const FLAVOR_DIMENSIONS = ["suess", "sauer", "bitter", "herbKraeuterig", "fruchtig", "wuerzigScharf", "floral", "rauchig", "erdigHolzig", "nussig", "cremig", "salzigMineralisch"];
 const flavorEls = Object.fromEntries(
   FLAVOR_DIMENSIONS.map((dim) => [dim, document.getElementById(`product-flavor-${dim}`)])
 );
@@ -239,6 +239,10 @@ const FLAVOR_LABELS = {
   wuerzigScharf: "Würzig/Scharf",
   floral: "Floral",
   rauchig: "Rauchig",
+  erdigHolzig: "Erdig/Holzig",
+  nussig: "Nussig",
+  cremig: "Cremig",
+  salzigMineralisch: "Salzig/Mineralisch",
 };
 
 function formatFlavorProfile(profile) {

@@ -9,6 +9,10 @@ export const FLAVOR_DIMENSIONS = [
   "wuerzigScharf",
   "floral",
   "rauchig",
+  "erdigHolzig",
+  "nussig",
+  "cremig",
+  "salzigMineralisch",
 ];
 
 export const FLAVOR_LABELS = {
@@ -20,6 +24,10 @@ export const FLAVOR_LABELS = {
   wuerzigScharf: "Würzig/Scharf",
   floral: "Floral",
   rauchig: "Rauchig",
+  erdigHolzig: "Erdig/Holzig",
+  nussig: "Nussig",
+  cremig: "Cremig",
+  salzigMineralisch: "Salzig/Mineralisch",
 };
 
 // Handkuratierte Gewichtung zwischen den Aroma-Dimensionen (0 = passt kaum,
@@ -28,14 +36,18 @@ export const FLAVOR_LABELS = {
 // Übereinstimmung (z. B. fruchtig x fruchtig). Nur die obere Hälfte wird
 // gepflegt, weight() spiegelt sie symmetrisch.
 const DIMENSION_WEIGHTS = {
-  suess: { suess: 0.5, sauer: 1.0, bitter: 0.9, herbKraeuterig: 0.7, fruchtig: 0.8, wuerzigScharf: 0.6, floral: 0.7, rauchig: 0.6 },
-  sauer: { sauer: 0.3, bitter: 0.7, herbKraeuterig: 0.7, fruchtig: 0.9, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5 },
-  bitter: { bitter: 0.4, herbKraeuterig: 0.8, fruchtig: 0.7, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5 },
-  herbKraeuterig: { herbKraeuterig: 0.6, fruchtig: 0.6, wuerzigScharf: 0.7, floral: 0.7, rauchig: 0.5 },
-  fruchtig: { fruchtig: 0.8, wuerzigScharf: 0.7, floral: 0.8, rauchig: 0.3 },
-  wuerzigScharf: { wuerzigScharf: 0.5, floral: 0.5, rauchig: 0.6 },
-  floral: { floral: 0.5, rauchig: 0.3 },
-  rauchig: { rauchig: 0.5 },
+  suess: { suess: 0.5, sauer: 1.0, bitter: 0.9, herbKraeuterig: 0.7, fruchtig: 0.8, wuerzigScharf: 0.6, floral: 0.7, rauchig: 0.6, erdigHolzig: 0.6, nussig: 0.8, cremig: 0.8, salzigMineralisch: 0.9 },
+  sauer: { sauer: 0.3, bitter: 0.7, herbKraeuterig: 0.7, fruchtig: 0.9, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5, erdigHolzig: 0.4, nussig: 0.5, cremig: 0.5, salzigMineralisch: 0.6 },
+  bitter: { bitter: 0.4, herbKraeuterig: 0.8, fruchtig: 0.7, wuerzigScharf: 0.6, floral: 0.6, rauchig: 0.5, erdigHolzig: 0.6, nussig: 0.6, cremig: 0.6, salzigMineralisch: 0.5 },
+  herbKraeuterig: { herbKraeuterig: 0.6, fruchtig: 0.6, wuerzigScharf: 0.7, floral: 0.7, rauchig: 0.5, erdigHolzig: 0.7, nussig: 0.5, cremig: 0.4, salzigMineralisch: 0.6 },
+  fruchtig: { fruchtig: 0.8, wuerzigScharf: 0.7, floral: 0.8, rauchig: 0.3, erdigHolzig: 0.4, nussig: 0.6, cremig: 0.7, salzigMineralisch: 0.5 },
+  wuerzigScharf: { wuerzigScharf: 0.5, floral: 0.5, rauchig: 0.6, erdigHolzig: 0.6, nussig: 0.5, cremig: 0.5, salzigMineralisch: 0.6 },
+  floral: { floral: 0.5, rauchig: 0.3, erdigHolzig: 0.3, nussig: 0.4, cremig: 0.5, salzigMineralisch: 0.4 },
+  rauchig: { rauchig: 0.5, erdigHolzig: 0.7, nussig: 0.5, cremig: 0.4, salzigMineralisch: 0.7 },
+  erdigHolzig: { erdigHolzig: 0.5, nussig: 0.7, cremig: 0.4, salzigMineralisch: 0.6 },
+  nussig: { nussig: 0.5, cremig: 0.7, salzigMineralisch: 0.5 },
+  cremig: { cremig: 0.4, salzigMineralisch: 0.5 },
+  salzigMineralisch: { salzigMineralisch: 0.3 },
 };
 
 function weight(dimA, dimB) {

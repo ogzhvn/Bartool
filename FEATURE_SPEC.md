@@ -24,7 +24,7 @@ Neues optionales Feld an jedem Produkt-Objekt (`js/productsData.js` sowie das nu
 
 ```js
 flavorProfile: {
-  suess: 0,      // 0–5
+  suess: 0,      // 0–10
   sauer: 0,
   bitter: 0,
   herbKraeuterig: 0,
@@ -32,13 +32,17 @@ flavorProfile: {
   wuerzigScharf: 0,
   floral: 0,
   rauchig: 0,
+  erdigHolzig: 0,
+  nussig: 0,
+  cremig: 0,
+  salzigMineralisch: 0,
 }
 ```
 
 Erweiterungen:
-- `js/products.js`: `FIELDS` um die 8 Dimensionen ergänzen (Zahlen-/Range-Inputs 0–5), analog zum bestehenden Muster mit `nameEl`/`categoryEl` etc.
-- `index.html`, Abschnitt „Produkt bearbeiten": neuer Bereich „Aromaprofil" mit 8 kompakten Reglern.
-- **Migration der ~150 mitgelieferten Produkte in `productsData.js`:** Diese haben noch kein `flavorProfile`. Einmaliges Skript/Prompt an Claude Code: aus dem bestehenden Freitext `tastingNotes` je Produkt ein Startprofil ableiten (Keyword-Mapping, z. B. „Zitrus/frisch" → sauer+fruchtig hoch, „Wacholder/Kräuter" → herbKraeuterig hoch, „süß/Vanille" → suess hoch, „Bitterlikör" → bitter hoch, „rauchig/Torf" → rauchig hoch, „Rose/Blüten" → floral hoch, „pfeffrig/würzig" → wuerzigScharf hoch). Ergebnis ist ein grober Startwert, keine Wahrheit – Nutzer korrigiert später von Hand über das Formular.
+- `js/products.js`: `FIELDS` um die 12 Dimensionen ergänzen (Zahlen-/Range-Inputs 0–10), analog zum bestehenden Muster mit `nameEl`/`categoryEl` etc.
+- `index.html`, Abschnitt „Produkt bearbeiten": neuer Bereich „Aromaprofil" mit 12 kompakten Reglern.
+- **Migration der ~150 mitgelieferten Produkte in `productsData.js`:** Diese haben noch kein `flavorProfile`. Einmaliges Skript/Prompt an Claude Code: aus dem bestehenden Freitext `tastingNotes` je Produkt ein Startprofil ableiten (Keyword-Mapping, z. B. „Zitrus/frisch" → sauer+fruchtig hoch, „Wacholder/Kräuter" → herbKraeuterig hoch, „süß/Vanille" → suess hoch, „Bitterlikör" → bitter hoch, „rauchig/Torf" → rauchig hoch, „Rose/Blüten" → floral hoch, „pfeffrig/würzig" → wuerzigScharf hoch, „Eiche/Fass" → erdigHolzig hoch, „Mandel/Nuss" → nussig hoch, „Sahne/Kokos" → cremig hoch, „Meersalz/mineralisch" → salzigMineralisch hoch). Ergebnis ist ein grober Startwert, keine Wahrheit – Nutzer korrigiert später von Hand über das Formular. Stand nach der Erweiterung auf die feinere 0–10-Skala und die vier zusätzlichen Dimensionen: 304 von 309 Produkten haben ein (neu berechnetes) Profil.
 - Produkte ohne (oder mit komplett leerem) `flavorProfile` gelten als „unbekannt" und werden aus Matrix-Berechnung und Empfehlungssystem ausgeschlossen statt fälschlich als „passt schlecht" gewertet.
 
 ### 2.2 Produkt: Einkaufspreis (`priceValue` / `priceUnit`)
