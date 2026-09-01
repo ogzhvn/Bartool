@@ -32,10 +32,20 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
--- Security-definer-Funktion, damit die Policies auf profiles nicht in eine
--- Rekursion laufen (eine Policy auf profiles darf profiles sonst nicht
--- direkt per RLS-geschützter Query abfragen).
-create or replace function public.is_admin()
+-- is_admin() lebt bewusst in einem eigenen, nicht von PostgREST exponierten
+-- Schema statt in "public": Funktionen in "public" werden automatisch als
+-- /rest/v1/rpc/<name>-Endpunkt exposed, auch SECURITY DEFINER-Funktionen.
+-- In "private" bleibt sie trotzdem ganz normal in RLS-Policies nutzbar
+-- (Postgres wertet Policies serverseitig aus, unabhängig vom PostgREST-
+-- Schema-Exposure), ist aber nicht mehr direkt von außen aufrufbar.
+create schema if not exists private;
+
+-- Alte Version aus "public" entfernen, falls aus einem früheren Setup noch
+-- vorhanden (cascade räumt die alten, darauf verweisenden Policies mit weg –
+-- die werden weiter unten ohnehin neu angelegt).
+drop function if exists public.is_admin() cascade;
+
+create or replace function private.is_admin()
 returns boolean
 language sql
 security definer
@@ -47,10 +57,14 @@ as $$
   );
 $$;
 
+grant usage on schema private to authenticated;
+revoke all on function private.is_admin() from public;
+grant execute on function private.is_admin() to authenticated;
+
 drop policy if exists "profiles: read own or admin reads all" on public.profiles;
 create policy "profiles: read own or admin reads all"
   on public.profiles for select
-  using (id = auth.uid() or public.is_admin());
+  using (id = auth.uid() or private.is_admin());
 
 -- Anlegen/Ändern/Löschen von Konten läuft über die admin-users Edge
 -- Function (Service-Role) bzw. – für reine Rollenänderungen – direkt vom
@@ -58,8 +72,8 @@ create policy "profiles: read own or admin reads all"
 drop policy if exists "profiles: admin manages all" on public.profiles;
 create policy "profiles: admin manages all"
   on public.profiles for all
-  using (public.is_admin())
-  with check (public.is_admin());
+  using (private.is_admin())
+  with check (private.is_admin());
 
 -- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
@@ -68,6 +82,7 @@ create policy "profiles: admin manages all"
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -110,8 +125,8 @@ create policy "recipes: any authenticated user can read"
 drop policy if exists "recipes: admin write" on public.recipes;
 create policy "recipes: admin write"
   on public.recipes for all
-  using (public.is_admin())
-  with check (public.is_admin());
+  using (private.is_admin())
+  with check (private.is_admin());
 
 -- ---------------------------------------------------------------------
 -- Produkte
@@ -143,8 +158,8 @@ create policy "products: any authenticated user can read"
 drop policy if exists "products: admin write" on public.products;
 create policy "products: admin write"
   on public.products for all
-  using (public.is_admin())
-  with check (public.is_admin());
+  using (private.is_admin())
+  with check (private.is_admin());
 
 -- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen

@@ -22,7 +22,9 @@ Im Supabase-Dashboard unter **SQL Editor** den Inhalt von
 - `recipes` / `products` – die eigentlichen Daten, per Row Level Security
   so abgesichert, dass jeder eingeloggte Nutzer lesen, aber nur Admins
   schreiben dürfen
-- eine `is_admin()`-Hilfsfunktion, die die Policies benutzen
+- eine `private.is_admin()`-Hilfsfunktion, die die Policies benutzen (bewusst
+  in einem eigenen, nicht öffentlich per REST-API aufrufbaren Schema statt in
+  `public`)
 
 ## 3. Edge Function deployen
 
@@ -68,6 +70,16 @@ Konten selbst schon Admin-Rechte voraussetzt:
 Danach in Bartool mit diesem Konto einloggen. Weitere Konten (Admin oder
 Mitarbeiter) lassen sich ab jetzt bequem über den Tab **Admin** in der App
 anlegen.
+
+## 6. Sicherheits-Check (empfohlen)
+
+Nach dem Einspielen des Schemas im Dashboard unter **Advisors → Security**
+nachsehen. Eine Warnung lässt sich nicht per SQL beheben und sollte manuell
+aktiviert werden:
+
+- **Leaked Password Protection**: unter **Authentication → Policies**
+  (bzw. **Auth → Settings**) aktivieren – prüft neue Passwörter gegen
+  HaveIBeenPwned, kostenlos und ohne Nachteile.
 
 ## Rollen
 
