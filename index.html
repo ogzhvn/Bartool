@@ -10,14 +10,41 @@
   <header class="app-header">
     <h1>🍸 Bartool</h1>
     <p class="subtitle">Rechner für die Bar</p>
+    <div id="header-user" class="header-user" hidden>
+      <span id="current-user-info"></span>
+      <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
+    </div>
   </header>
 
+  <!-- LOGIN -->
+  <section id="auth-screen" class="auth-screen">
+    <form id="login-form" class="auth-form">
+      <h2>Anmelden</h2>
+      <p class="hint">Zugang erhältst du von deinem Bartool-Admin.</p>
+      <label>
+        E-Mail
+        <input type="email" id="login-email" autocomplete="username" required />
+      </label>
+      <label>
+        Passwort
+        <input type="password" id="login-password" autocomplete="current-password" required />
+      </label>
+      <div id="login-error" class="error-note" hidden></div>
+      <div class="actions">
+        <button type="submit" class="btn-primary">Anmelden</button>
+      </div>
+    </form>
+  </section>
+
+  <div id="app-shell" hidden>
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="batching" role="tab" aria-selected="true">Batching</button>
     <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
-    <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false">Rezept bearbeiten</button>
+    <button class="tab-btn" data-tab="recipe-edit" role="tab" aria-selected="false" data-admin-only>Rezept bearbeiten</button>
+    <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produkte</button>
     <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
     <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
+    <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false" data-admin-only>Admin</button>
   </nav>
 
   <main>
@@ -90,7 +117,7 @@
       <h2>Rezeptbuch</h2>
       <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Zum Anlegen oder Bearbeiten geht es über den Tab "Rezept bearbeiten".</p>
 
-      <div class="actions">
+      <div class="actions" data-admin-only>
         <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
       </div>
 
@@ -108,7 +135,7 @@
     </section>
 
     <!-- RECIPE EDIT (form + sidebar) -->
-    <section id="recipe-edit" class="tab-panel">
+    <section id="recipe-edit" class="tab-panel" data-admin-only>
       <h2>Rezept bearbeiten</h2>
       <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
 
@@ -172,6 +199,49 @@
           <div id="recipe-sidebar-list" class="recipe-name-list"></div>
         </aside>
       </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section id="products" class="tab-panel">
+      <h2>Produkte</h2>
+      <p class="hint">Getränke- und Zutatenkatalog. Bearbeiten können nur Admins, alle eingeloggten Nutzer können lesen.</p>
+
+      <div data-admin-only>
+        <h3>Produkt anlegen / bearbeiten</h3>
+        <div class="field-row">
+          <label>
+            Name
+            <input type="text" id="product-name" placeholder="z. B. Aperol" />
+          </label>
+          <label>
+            Kategorie
+            <input type="text" id="product-category" placeholder="z. B. Likör" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Einheit
+            <input type="text" id="product-unit" placeholder="z. B. Flasche 0,7 l" />
+          </label>
+          <label>
+            Preis
+            <input type="number" id="product-price" min="0" step="0.01" />
+          </label>
+        </div>
+        <label>
+          Notiz
+          <textarea id="product-note" rows="2" placeholder="z. B. Lieferant, Lagerort"></textarea>
+        </label>
+        <div class="actions">
+          <button type="button" id="product-save" class="btn-primary">Speichern</button>
+          <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
+          <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+        </div>
+      </div>
+
+      <h3>Produktliste</h3>
+      <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+      <div id="product-list"></div>
     </section>
 
     <!-- SUPERJUICE -->
@@ -269,14 +339,57 @@
 
       <div id="dil-result" class="result-box" hidden></div>
     </section>
+
+    <!-- ADMIN -->
+    <section id="admin" class="tab-panel" data-admin-only>
+      <h2>Admin</h2>
+      <p class="hint">Mitarbeiterkonten anlegen und verwalten. Rezepte und Produkte bearbeitest du in den jeweiligen Tabs.</p>
+
+      <h3>Konto anlegen</h3>
+      <form id="admin-create-form">
+        <div class="field-row">
+          <label>
+            E-Mail
+            <input type="email" id="admin-new-email" required />
+          </label>
+          <label>
+            Name
+            <input type="text" id="admin-new-name" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Passwort (temporär)
+            <input type="password" id="admin-new-password" minlength="8" required />
+          </label>
+          <label>
+            Rolle
+            <select id="admin-new-role">
+              <option value="mitarbeiter">Mitarbeiter</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+        </div>
+        <div id="admin-create-error" class="error-note" hidden></div>
+        <div class="actions">
+          <button type="submit" class="btn-primary">Konto anlegen</button>
+        </div>
+      </form>
+
+      <h3>Konten</h3>
+      <div id="admin-employee-list"></div>
+    </section>
   </main>
+  </div>
 
   <footer class="app-footer">
-    <p>Bartool – lokal im Browser gespeichert, keine Serververbindung nötig.</p>
+    <p>Bartool – Rezepte &amp; Produkte liegen zentral in Supabase, Zugriff nur mit Login.</p>
   </footer>
 
   <!-- Nur für den Excel-Export im Rezepte-Tab benötigt -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Supabase-Client (Auth, Datenbank, Realtime, Edge Functions) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

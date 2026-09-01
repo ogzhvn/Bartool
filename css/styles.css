@@ -461,6 +461,64 @@ textarea {
   padding: 1rem;
 }
 
+.header-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-screen {
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 340px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.auth-form h2 {
+  margin: 0;
+}
+
+.error-note {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+#product-list table,
+#admin-employee-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.6rem;
+}
+
+#product-list th,
+#product-list td,
+#admin-employee-list th,
+#admin-employee-list td {
+  text-align: left;
+  padding: 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+#admin-employee-list select {
+  padding: 0.35rem 0.4rem;
+}
+
 @media (max-width: 480px) {
   .ingredient-row {
     grid-template-columns: 1fr 1fr;

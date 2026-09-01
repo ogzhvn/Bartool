@@ -5,6 +5,7 @@ import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { switchTab } from "./tabs.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
+import { isAdmin } from "./auth.js";
 
 const nameEl = document.getElementById("recipe-name");
 const basePortionsEl = document.getElementById("recipe-base-portions");
@@ -55,7 +56,7 @@ function loadIntoForm(recipe) {
   renderSidebarList();
 }
 
-function handleSave() {
+async function handleSave() {
   const name = nameEl.value.trim();
   if (!name) {
     alert("Bitte einen Rezeptnamen eingeben.");
@@ -68,23 +69,27 @@ function handleSave() {
   }
   const basePortions = parseFloat(basePortionsEl.value) || 1;
 
-  if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
-    deleteRecipe(editingOriginalName);
+  try {
+    if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
+      await deleteRecipe(editingOriginalName);
+    }
+    await saveRecipe({
+      name,
+      basePortions,
+      ingredients,
+      method: methodEl.value.trim(),
+      glass: glassEl.value.trim(),
+      garnish: garnishEl.value.trim(),
+      ice: iceEl.value.trim(),
+      history: historyEl.value.trim(),
+    });
+    editingOriginalName = name;
+  } catch (error) {
+    alert("Rezept konnte nicht gespeichert werden: " + error.message);
   }
-  saveRecipe({
-    name,
-    basePortions,
-    ingredients,
-    method: methodEl.value.trim(),
-    glass: glassEl.value.trim(),
-    garnish: garnishEl.value.trim(),
-    ice: iceEl.value.trim(),
-    history: historyEl.value.trim(),
-  });
-  editingOriginalName = name;
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingOriginalName) {
     alert("Bitte zuerst ein Rezept auswählen.");
     return;
@@ -94,8 +99,12 @@ function handleDelete() {
     return;
   }
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
-  deleteRecipe(editingOriginalName);
-  resetForm();
+  try {
+    await deleteRecipe(editingOriginalName);
+    resetForm();
+  } catch (error) {
+    alert("Rezept konnte nicht gelöscht werden: " + error.message);
+  }
 }
 
 function renderIngredientRows(ingredients) {
@@ -148,10 +157,14 @@ function renderBrowseList() {
       <div class="recipe-item-body">
         <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
         ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
-        <div class="actions">
+        ${
+          isAdmin()
+            ? `<div class="actions">
           <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
           ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-        </div>
+        </div>`
+            : ""
+        }
       </div>
     `;
     const checkbox = item.querySelector(".recipe-select-checkbox");
@@ -164,18 +177,25 @@ function renderBrowseList() {
       }
       updateExportBar();
     });
-    item.querySelector(".edit-btn").addEventListener("click", (e) => {
-      e.preventDefault();
-      loadIntoForm(recipe);
-      switchTab("recipe-edit");
-    });
+    const editBtn = item.querySelector(".edit-btn");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        loadIntoForm(recipe);
+        switchTab("recipe-edit");
+      });
+    }
     const deleteBtn = item.querySelector(".delete-btn");
     if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
+      deleteBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
-        if (editingOriginalName === recipe.name) resetForm();
-        deleteRecipe(recipe.name);
+        try {
+          if (editingOriginalName === recipe.name) resetForm();
+          await deleteRecipe(recipe.name);
+        } catch (error) {
+          alert("Rezept konnte nicht gelöscht werden: " + error.message);
+        }
       });
     }
     listEl.appendChild(item);
