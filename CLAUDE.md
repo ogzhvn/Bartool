@@ -1,5 +1,25 @@
 # Bartool – Hinweise für Claude Code
 
+## Was ist das
+Bar-Operations-Tool: Batching-, ABV- und Dilution-Rechner. Frontend als self-contained HTML/JS, dark-themed. Backend: Supabase (Postgres).
+
+## Einsatzkontext
+- Läuft gleichwertig auf Handy/Tablet hinterm Tresen und auf Desktop/Laptop – UI muss auf beiden gut bedienbar sein (Touch-Targets, responsives Layout).
+- Wird im laufenden Barbetrieb genutzt: schnelle Ladezeit, robust gegen Fehleingaben.
+
+## Datenhaltung
+- Backend: Supabase (Postgres). Eingaben, Werte und eigene Rezepte werden dauerhaft in der Datenbank gespeichert.
+- Frontend verbindet sich nur mit SUPABASE_URL + anon/public Key. Service-Role-Key und DB-Passwort gehören niemals in den Client-Code.
+- Row Level Security ist für alle Tabellen aktiv.
+- Claude Code hat über MCP direkten Zugriff auf das Supabase-Projekt (project_ref-gescoped). Für Schema-Änderungen die MCP-Verbindung nutzen, keine ungescopten Rohzugriffe.
+
+## Skills
+Eigene Claude Code Skills existieren für: Cocktail-Batch-Math, UI-Design, Recipe Export/Print (Details siehe jeweilige .skill-Dateien im Projekt).
+
+## Konventionen
+- Frontend als Einzeldatei-Ansatz beibehalten, sofern nicht explizit anders gewünscht.
+- Dark Theme als Standard-Look nicht ohne Rückfrage ändern.
+
 ## Daten: Rezepte & Produkte gehören in Supabase
 
 Wichtige Nutzervorgabe: **Neue Rezepte und Produkte sollen immer in die
