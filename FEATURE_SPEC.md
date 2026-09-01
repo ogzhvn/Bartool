@@ -1,5 +1,7 @@
 # Bartool – Feature-Spezifikation: Aromenmatrix, Verkaufsmatrix, Empfehlungssystem, Redesign
 
+**Historisches Planungsdokument, nicht mehr aktueller Stand:** Die hier beschriebene Aromenmatrix (Score-Algorithmus `compatibilityScore()`) und die Verkaufsmatrix wurden inzwischen wieder entfernt – der Score klebte bei fast allen Produktpaaren am selben Wert, und ein einzelner 0–100-Score suggerierte mehr Präzision, als die aus Tasting Notes abgeleiteten Aromaprofile hergeben. Cross-Sell und "Ähnlich wie …" (im Empfehlungen-Tab) laufen jetzt auf rein manuell kuratiertem `pairsWith` bzw. echter Zutaten-Überlappung, ohne Aroma-Score-Fallback. Der Rest dieser Datei bleibt als Kontext stehen, beschreibt aber nicht mehr den Ist-Zustand.
+
 Diese Spec ist so geschrieben, dass sie direkt an Claude Code übergeben werden kann. Sie basiert auf dem tatsächlichen Ist-Zustand des Repos (Stand: geklont von `github.com/ogzhvn/Bartool`, statisches HTML/CSS/JS ohne Build-Schritt, ein JS-Modul pro Feature unter `js/`, `localStorage` als einzige Datenhaltung, Tabs über `tabs.js` + `data-tab`/`.tab-panel`).
 
 ## 0. Wie diese Spec zu benutzen ist

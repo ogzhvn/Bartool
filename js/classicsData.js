@@ -20,6 +20,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenzeste",
     history: "Der Old Fashioned gilt als einer der ältesten benannten Cocktails und geht auf die ursprüngliche Definition von 'Cocktail' aus dem frühen 19. Jahrhundert zurück: Spirituose, Zucker, Bitters und Wasser. Der Name entstand, weil Gäste Ende des 19. Jahrhunderts genau diese schlichte, 'altmodische' Zubereitung gegenüber neumodischen Cocktails einforderten. Populär wurde er unter anderem im Pendennis Club in Louisville, Kentucky. Bis heute gilt er als Inbegriff des klassischen Whiskey-Cocktails.",
+    pairsWith: ["Manhattan", "Sazerac", "Boulevardier"],
   },
   {
     name: "Manhattan",
@@ -33,6 +34,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale (Martini-Glas)",
     garnish: "Cocktailkirsche",
     history: "Der Manhattan entstand vermutlich in den 1870er- oder 1880er-Jahren in New York und ist nach dem Stadtteil benannt, in dem er das Licht der Bar-Welt erblickte. Eine bekannte, wenn auch unbelegte Legende schreibt seine Erfindung einem Bankett im Manhattan Club zu Ehren eines Präsidentschaftskandidaten zu. Die Kombination aus Whiskey, süßem Wermut und Bitters setzte den Standard für unzählige spätere Whiskey-Cocktails. Heute zählt er zu den meistbestellten klassischen Cocktails weltweit.",
+    pairsWith: ["Old Fashioned", "Sazerac", "Boulevardier"],
   },
   {
     name: "Whiskey Sour",
@@ -47,6 +49,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler oder Cocktailschale",
     garnish: "Angostura-Tupfen, Cocktailkirsche",
     history: "Sour-Cocktails aus Spirituose, Zitrussaft und Zucker gehören zu den ältesten Cocktail-Familien und wurden bereits Mitte des 19. Jahrhunderts von Seeleuten getrunken, die Zitrussaft gegen Skorbut mitführten. Der Whiskey Sour selbst taucht erstmals 1862 in einem gedruckten Rezept auf. Die Variante mit Eiweiß, die dem Drink seine charakteristische cremige Textur gibt, setzte sich erst später durch. Er gilt bis heute als Blaupause für unzählige andere Sours.",
+    pairsWith: ["Penicillin"],
   },
   {
     name: "Sazerac",
@@ -61,6 +64,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Zitronenzeste (nur abreiben, nicht ins Glas)",
     history: "Der Sazerac aus New Orleans gilt vielen als der erste amerikanische Cocktail überhaupt und wurde ursprünglich mit Cognac statt Whiskey zubereitet. Benannt ist er nach der Sazerac-de-Forge-et-Fils-Cognac-Marke, die im gleichnamigen Sazerac Coffee House ausgeschenkt wurde. Als die Reblaus-Plage Ende des 19. Jahrhunderts europäische Weinberge zerstörte, wechselten Barkeeper auf amerikanischen Rye Whiskey. Louisiana erklärte den Sazerac später offiziell zum Signature-Cocktail von New Orleans. Klassisch wird der Sazerac mit Peychaud's Bitters zubereitet, die aktuell nicht im Sortiment geführt werden – hier ersetzt durch Angostura Bitters.",
+    pairsWith: ["Old Fashioned", "Manhattan", "Boulevardier"],
   },
   {
     name: "Mint Julep",
@@ -74,6 +78,7 @@ export const CLASSIC_RECIPES = [
     glass: "Julep-Becher (Metallbecher)",
     garnish: "Großer Minzstrauß",
     history: "Der Mint Julep hat seine Wurzeln im amerikanischen Süden des 18. Jahrhunderts, wo er ursprünglich mit Rum oder Cognac zubereitet wurde, bevor sich Bourbon durchsetzte. Weltberühmt wurde er als offizieller Cocktail des Kentucky Derby, wo jährlich hunderttausende Becher ausgeschenkt werden. Der klassische Metallbecher beschlägt durch das zerstoßene Eis von außen mit Raureif, was zur zeremoniellen Wirkung beiträgt. Er gehört zu den ältesten bekannten Cocktail-Rezepten Amerikas.",
+    pairsWith: ["Old Fashioned", "Manhattan", "Sazerac"],
   },
   {
     name: "Boulevardier",
@@ -87,6 +92,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenzeste",
     history: "Der Boulevardier ist im Grunde ein Negroni mit Whiskey statt Gin und entstand vermutlich in den 1920er-Jahren im Paris der amerikanischen Expat-Szene. Erstmals schriftlich erwähnt wurde er 1927 in Harry McElhones Buch 'Barflies and Cocktails', benannt nach einer Pariser Zeitschrift. Jahrzehntelang eher ein Geheimtipp, erlebte er im Zuge der Craft-Cocktail-Bewegung der 2000er-Jahre eine große Renaissance. Heute zählt er zu den festen Klassikern jeder gut sortierten Whiskey-Bar.",
+    pairsWith: ["Old Fashioned", "Manhattan", "Sazerac"],
   },
   {
     name: "Penicillin",
@@ -101,6 +107,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Kandierter Ingwer",
     history: "Der Penicillin wurde 2005 von Sam Ross in der New Yorker Bar Milk & Honey erfunden und zählt zu den einflussreichsten modernen Cocktails überhaupt. Der Name spielt scherzhaft darauf an, dass Ingwer, Honig und Zitrone traditionell als Hausmittel gegen Erkältungen gelten. Der rauchige Islay-Whisky-Floater sorgt für ein intensives Aroma, das sich beim Trinken mit der süß-scharfen Basis verbindet. Er gilt als einer der meistkopierten Signature-Drinks des frühen 21. Jahrhunderts.",
+    pairsWith: ["Whiskey Sour"],
   },
   {
     name: "Irish Coffee",
@@ -115,6 +122,7 @@ export const CLASSIC_RECIPES = [
     glass: "Irish-Coffee-Glas",
     garnish: "Sahneschicht, optional Muskatnuss",
     history: "Der Irish Coffee wurde in den 1940er-Jahren von Chefkoch Joe Sheridan im Flughafenrestaurant von Foynes in Irland erfunden, um frierenden Passagieren einzuheizen. In den 1950er-Jahren brachte der Reisejournalist Stanton Delaplane das Rezept in die Buena Vista Bar in San Francisco, von wo aus es sich in den USA verbreitete. Entscheidend ist die leicht geschlagene, kalte Sahne, die auf dem heißen, gesüßten Kaffee-Whiskey schwimmen bleibt. Er gilt bis heute als der bekannteste heiße Cocktail überhaupt.",
+    pairsWith: ["White Russian", "Brandy Alexander", "Grasshopper"],
   },
   {
     name: "Martini",
@@ -127,6 +135,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale (Martini-Glas)",
     garnish: "Olive oder Zitronenzeste",
     history: "Der Martini ist einer der bekanntesten Cocktails überhaupt, seine genaue Herkunft ist jedoch umstritten – Theorien reichen von einer Stadt namens Martinez in Kalifornien bis zur Wermut-Marke Martini & Rossi. Ursprünglich deutlich süßer, wurde er im Laufe des 20. Jahrhunderts zunehmend trockener, bis hin zum fast wermutlosen 'Extra Dry Martini'. James Bonds Vorliebe für den 'geschüttelt, nicht gerührt'-Martini machte den Drink weltberühmt, obwohl Puristen das Schütteln bis heute ablehnen. Er gilt als Inbegriff des eleganten, minimalistischen Cocktails.",
+    pairsWith: ["Dirty Martini", "Martinez", "Negroni"],
   },
   {
     name: "Dirty Martini",
@@ -140,6 +149,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Oliven",
     history: "Der Dirty Martini ist eine Abwandlung des klassischen Martini, bei der etwas salziger Olivenlake hinzugefügt wird, was dem Drink seine namensgebende trübe ('dirty') Optik verleiht. Er entstand vermutlich um 1900 in New York, wurde aber erst deutlich später populär. Verschiedene Anekdoten schreiben seine Erfindung unterschiedlichen Barkeepern zu, ein eindeutiger Ursprung ist nicht belegt. Heute ist er vor allem bei Gästen beliebt, die eine kräftigere, herzhaftere Variante des klassischen Martini bevorzugen.",
+    pairsWith: ["Martini", "Martinez", "Negroni"],
   },
   {
     name: "Negroni",
@@ -153,6 +163,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenzeste",
     history: "Der Negroni soll 1919 in Florenz entstanden sein, als Graf Camillo Negroni seinen Barkeeper bat, seinem gewohnten Americano mehr Wumms zu verleihen, indem Soda durch Gin ersetzt wurde. Ob diese Geschichte historisch exakt stimmt, ist umstritten, doch der Name blieb bis heute mit dem Drink verbunden. Die perfekte Drittelung aus Gin, Wermut und Campari machte ihn zu einem der ausbalanciertesten Aperitif-Cocktails überhaupt. In den letzten Jahren erlebte er weltweit eine regelrechte Renaissance.",
+    pairsWith: ["Martini", "Dirty Martini", "Martinez"],
   },
   {
     name: "Gimlet",
@@ -165,6 +176,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Limettenscheibe",
     history: "Der Gimlet geht auf die britische Marine des 19. Jahrhunderts zurück, wo Matrosen Gin mit haltbarem Limettensaft-Cordial mischten, um Skorbut vorzubeugen. Der Name wird oft mit Marine-Chirurg Sir Thomas Gimlette in Verbindung gebracht. Raymond Chandlers Roman 'The Long Goodbye' machte den Drink 1953 zusätzlich literarisch berühmt. Bis heute wird diskutiert, ob ein klassischer Gimlet mit gesüßtem Limettencordial oder frischem Limettensaft zubereitet werden sollte.",
+    pairsWith: ["Tom Collins", "Aviation", "Last Word"],
   },
   {
     name: "Tom Collins",
@@ -179,6 +191,7 @@ export const CLASSIC_RECIPES = [
     glass: "Collins-Glas",
     garnish: "Zitronenscheibe, Cocktailkirsche",
     history: "Der Tom Collins geht auf die 'Collins'-Familie von Gin-Punsches zurück, die im 19. Jahrhundert in England und den USA populär waren. In den USA verbreitete sich ab den 1870er-Jahren ein Scherz namens 'Tom-Collins-Streich', bei dem Leuten erzählt wurde, ein gewisser Tom Collins habe schlecht über sie geredet – der Name blieb am Drink hängen. Die erfrischende Kombination aus Gin, Zitrus, Zucker und Soda machte ihn zu einem Sommer-Klassiker rund um die Welt. Heute ist er einer der bekanntesten Long Drinks der Cocktailgeschichte.",
+    pairsWith: ["Gimlet", "Aviation", "Last Word"],
   },
   {
     name: "Aviation",
@@ -193,6 +206,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Cocktailkirsche",
     history: "Der Aviation wurde erstmals 1916 in Hugo Enslins Barbuch 'Recipes for Mixed Drinks' veröffentlicht, kurz nach den Anfangsjahren der zivilen Luftfahrt, worauf sich der Name bezieht. Crème de Violette verleiht ihm einen zarten Lavendelton, der optisch an einen wolkenverhangenen Himmel erinnert. Über Jahrzehnte geriet die Zutat in den USA in Vergessenheit, weshalb viele spätere Rezepte ohne sie auskamen. Erst mit ihrer Wiederverfügbarkeit ab den 2000er-Jahren erlebte der klassische Aviation eine Wiederentdeckung.",
+    pairsWith: ["Gimlet", "Tom Collins", "Last Word"],
   },
   {
     name: "Last Word",
@@ -207,6 +221,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "ohne",
     history: "Der Last Word entstand vermutlich in den 1910er- oder 1920er-Jahren im Detroit Athletic Club und geriet danach für Jahrzehnte fast in Vergessenheit. Wiederentdeckt wurde er erst 2004 vom Seattle-Bartender Murray Stenson, der damit einen landesweiten Trend auslöste. Seine strikte Gleichteile-Formel aus Gin, Chartreuse, Maraschino und Limette wurde zur Blaupause für zahlreiche moderne Cocktail-Variationen. Heute gilt er als Paradebeispiel für die Wiederbelebung vergessener Klassiker der Craft-Cocktail-Bewegung.",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "French 75",
@@ -221,6 +236,7 @@ export const CLASSIC_RECIPES = [
     glass: "Champagnerflöte",
     garnish: "Zitronenzeste",
     history: "Der French 75 wurde nach dem französischen 75-mm-Feldgeschütz aus dem Ersten Weltkrieg benannt, weil sein 'Kick' angeblich ebenso durchschlagend war. Erstmals erwähnt wurde er um 1915, als Vorbild diente er später der berühmten Harry's New York Bar in Paris. Die Kombination aus Gin-Sour und Champagner macht ihn zu einem der elegantesten Drinks der klassischen Cocktailkarte. Bis heute ist er ein beliebter Aperitif- und Feierabend-Cocktail zu festlichen Anlässen.",
+    pairsWith: ["Singapore Sling"],
   },
   {
     name: "Singapore Sling",
@@ -239,6 +255,7 @@ export const CLASSIC_RECIPES = [
     glass: "Hurricane-Glas oder Longdrinkglas",
     garnish: "Ananasspalte, Cocktailkirsche",
     history: "Der Singapore Sling wurde um 1915 von Barkeeper Ngiam Tong Boon in der Long Bar des Raffles Hotel in Singapur kreiert. Ursprünglich als Damen-Drink gedacht, der wie harmloser Fruchtsaft aussah, tatsächlich aber recht alkoholstark war, wurde er schnell zum Symbol für exotischen Kolonial-Chic. Im Laufe der Jahrzehnte kursierten stark abweichende Rezeptvarianten, bis das Raffles Hotel in den 1970er-Jahren eine offizielle Version festlegte. Heute ist er einer der bekanntesten Signature-Cocktails der Welt.",
+    pairsWith: ["French 75"],
   },
   {
     name: "Bee's Knees",
@@ -252,6 +269,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Zitronenzeste",
     history: "Der Bee's Knees entstand während der amerikanischen Prohibition (1920–1933), als Honig verwendet wurde, um schlecht destillierten 'Bathtub Gin' erträglicher zu machen. Der Name ist ein damals populärer Slangausdruck für 'das Beste vom Besten'. Die klare Struktur aus Gin, Zitrone und Honig machte ihn zu einem der beliebtesten Sours seiner Zeit. Er diente später auch als direkte Inspiration für moderne Klassiker wie den Gold Rush.",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Daiquiri",
@@ -265,6 +283,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Limettenzeste",
     history: "Der Daiquiri ist nach einer Mine und einem Strand nahe Santiago de Cuba benannt und wurde Ende des 19. Jahrhunderts von amerikanischen Ingenieuren dort kreiert. Weltberühmt wurde er später durch die Bar El Floridita in Havanna und ihren Stammgast Ernest Hemingway. In seiner klassischen, einfachen Form aus nur drei Zutaten gilt er als Musterbeispiel für die Balance zwischen süß, sauer und stark. Aus ihm entwickelten sich unzählige Varianten, vom gefrorenen Frucht-Daiquiri bis zum Hemingway Daiquiri.",
+    pairsWith: ["Mojito", "Cuba Libre", "Hemingway Daiquiri"],
   },
   {
     name: "Mojito",
@@ -280,6 +299,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas oder Tumbler",
     garnish: "Minzstrauß",
     history: "Der Mojito stammt aus Kuba, seine Ursprünge werden teils bis ins 16. Jahrhundert zu einem ähnlichen Getränk namens 'El Draque' zurückverfolgt, das mit dem Piraten Sir Francis Drake in Verbindung gebracht wird. In moderner Form etablierte er sich im 20. Jahrhundert in Havannas Bars, allen voran der Bodeguita del Medio. Auch hier soll Ernest Hemingway als prominenter Stammgast zur weltweiten Bekanntheit beigetragen haben. Die Kombination aus frischer Minze, Limette und Rum machte ihn zu einem der meistverkauften Cocktails weltweit.",
+    pairsWith: ["Daiquiri", "Cuba Libre", "Hemingway Daiquiri"],
   },
   {
     name: "Piña Colada",
@@ -293,6 +313,7 @@ export const CLASSIC_RECIPES = [
     glass: "Hurricane-Glas",
     garnish: "Ananasspalte, Cocktailkirsche",
     history: "Die Piña Colada gilt als Nationalgetränk Puerto Ricos und wurde 1954 von Barkeeper Ramón 'Monchito' Marrero im Caribe Hilton Hotel in San Juan kreiert. Der Durchbruch gelang, als die kurz zuvor erfundene Kokoscreme-Marke Coco Lopez die cremige Textur ermöglichte. Der Name bedeutet übersetzt 'gesiebte Ananas' und bezieht sich auf den frischen Ananassaft als Basiszutat. Sie zählt bis heute zu den bekanntesten Tiki- und Urlaubscocktails der Welt.",
+    pairsWith: ["Mai Tai", "Zombie", "Dark 'n' Stormy"],
   },
   {
     name: "Mai Tai",
@@ -308,6 +329,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler oder Tiki-Becher",
     garnish: "Minzzweig, Limettenschale",
     history: "Der Mai Tai wurde 1944 von Victor 'Trader Vic' Bergeron in Oakland, Kalifornien, kreiert, der als Gründungsvater der amerikanischen Tiki-Kultur gilt. Der Legende nach probierte eine tahitianische Freundin den ersten Drink und rief begeistert 'Maita'i roa a'e!', tahitianisch für 'aus dem Reich der Besten' – daher der Name. Über Jahrzehnte stritten sich Trader Vic und sein Konkurrent Don the Beachcomber öffentlich darüber, wer den Drink erfunden hatte. Der Mai Tai gilt bis heute als der Inbegriff des amerikanischen Tiki-Cocktails.",
+    pairsWith: ["Piña Colada", "Zombie", "Dark 'n' Stormy"],
   },
   {
     name: "Dark 'n' Stormy",
@@ -321,6 +343,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limettenspalte",
     history: "Der Dark 'n' Stormy stammt von den Bermudas und ist eng mit der dortigen Rum-Destillerie Gosling's verbunden, deren dunkler Black-Seal-Rum traditionell dafür verwendet wird. Der Name spielt auf die stürmisch-dunklen Wolken über dem Atlantik an, an die die Farbe des Drinks erinnert. Gosling's ließ sich den Namen sogar als eingetragene Marke schützen. Er gilt als Nationalgetränk der Bermudas und international als erfrischender Sommer-Highball.",
+    pairsWith: ["Piña Colada", "Mai Tai", "Zombie"],
   },
   {
     name: "Cuba Libre",
@@ -334,6 +357,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limettenspalte",
     history: "Der Cuba Libre entstand vermutlich kurz nach 1900 in Havanna, als amerikanische Coca-Cola nach Kuba importiert wurde und auf einheimischen Rum traf. Der Name bedeutet 'freies Kuba' und bezieht sich auf den kubanischen Unabhängigkeitskrieg gegen Spanien. Eine bekannte Anekdote erzählt, ein amerikanischer Soldat habe mit dem Drink in der Hand auf 'Cuba libre!' angestoßen. Als simple, wirkungsvolle Kombination aus Rum und Cola gilt er als Urvater unzähliger Rum-Cola-Longdrinks weltweit.",
+    pairsWith: ["Daiquiri", "Mojito", "Hemingway Daiquiri"],
   },
   {
     name: "Hemingway Daiquiri",
@@ -348,6 +372,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Limettenzeste",
     history: "Der Hemingway Daiquiri, auch 'Papa Doble' genannt, wurde für den Schriftsteller Ernest Hemingway in seiner Stammbar El Floridita in Havanna kreiert. Da Hemingway unter Diabetes litt, ließ er sich seinen Daiquiri ohne zugesetzten Zucker, dafür mit doppelter Rum-Menge sowie Grapefruit und Maraschino zubereiten. Barkeeper Constantino Ribalaigua Vert perfektionierte diese persönliche Variante, die bald auch andere Gäste bestellten. Sie gilt als eine der bekanntesten literarisch inspirierten Cocktail-Legenden der Barwelt.",
+    pairsWith: ["Daiquiri", "Mojito", "Cuba Libre"],
   },
   {
     name: "Zombie",
@@ -366,6 +391,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tiki-Becher oder Hurricane-Glas",
     garnish: "Minzzweig, Ananasblatt",
     history: "Der Zombie wurde in den 1930er-Jahren von Don the Beachcomber in Hollywood erfunden und gilt als einer der Gründungsdrinks der amerikanischen Tiki-Bewegung. Der Legende nach servierte er ihn einem Geschäftsmann als Kater-Notfallmittel vor einer wichtigen Reise, mit angeblich verheerender Wirkung. Um sein Erfolgsrezept geheim zu halten, mischte Don seine Sirupe unter Codenamen und ließ Zutaten in verschlüsselten Flaschen liefern. Wegen seines hohen Alkoholgehalts gilt er bis heute als einer der stärksten klassischen Cocktails.",
+    pairsWith: ["Piña Colada", "Mai Tai", "Dark 'n' Stormy"],
   },
   {
     name: "Caipirinha",
@@ -379,6 +405,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Limettenstück",
     history: "Die Caipirinha ist Brasiliens Nationalgetränk, ihre genaue Herkunft liegt im Dunkeln, Theorien reichen von Zuckerrohrplantagen des 19. Jahrhunderts bis zu Hausmitteln gegen die spanische Grippe 1918. Ihr Name leitet sich vom portugiesischen Wort 'caipira' ab, das ursprünglich abwertend für Landbewohner stand. Basis ist Cachaça, ein aus frischem Zuckerrohrsaft destillierter brasilianischer Brand, der sie geschmacklich vom Rum unterscheidet. International wurde sie vor allem durch brasilianische Tourismuswerbung und Fußball-Weltmeisterschaften bekannt.",
+    pairsWith: ["Daiquiri", "Mojito", "Cuba Libre"],
   },
   {
     name: "Margarita",
@@ -392,6 +419,7 @@ export const CLASSIC_RECIPES = [
     glass: "Margarita-Glas",
     garnish: "Salzrand, Limettenscheibe",
     history: "Über die Herkunft der Margarita kursieren zahlreiche konkurrierende Legenden, von einer texanischen Gastgeberin in den 1940er-Jahren bis zu mexikanischen Bars in Tijuana und Acapulco. Sicher ist, dass sie im Kern eine Tequila-Variante des klassischen 'Daisy'-Cocktails ist, dessen spanische Übersetzung 'Margarita' lautet. Ab den 1970er-Jahren mit der elektrischen Margarita-Maschine explodierte ihre Popularität in den USA. Heute ist sie einer der weltweit meistverkauften Cocktails überhaupt.",
+    pairsWith: ["Tommy's Margarita", "Paloma", "Gustavo"],
   },
   {
     name: "Paloma",
@@ -405,6 +433,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limettenspalte, Salzrand",
     history: "Die Paloma ist in Mexiko der beliebteste Tequila-Cocktail überhaupt, wird dort weit häufiger konsumiert als die international bekanntere Margarita. Ihr Name bedeutet 'Taube', ihre genaue Herkunft ist nicht dokumentiert, wird aber oft mit Guadalajara in Verbindung gebracht. Die einfache Kombination aus Tequila und spritziger Grapefruit-Limonade macht sie zu einem unkomplizierten Alltagsdrink. Erst in den letzten Jahren fand sie auch international zunehmend Beachtung als leichtere Alternative zur Margarita.",
+    pairsWith: ["Margarita", "Tommy's Margarita", "Gustavo"],
   },
   {
     name: "Tequila Sunrise",
@@ -418,6 +447,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Orangenscheibe, Cocktailkirsche",
     history: "Der Tequila Sunrise entstand vermutlich in den 1930er-Jahren in Mexiko, wurde aber erst in den 1970er-Jahren durch eine überarbeitete Version in Kalifornien weltberühmt. Besonders bekannt wurde er, als die Rolling Stones ihn während ihrer US-Tournee 1972 zu ihrem bevorzugten Backstage-Drink erklärten. Der charakteristische Farbverlauf entsteht, weil die schwerere Grenadine langsam im Glas nach unten sinkt und einen Sonnenaufgang-Effekt erzeugt. Er gilt bis heute als einer der optisch eindrucksvollsten Longdrinks überhaupt.",
+    pairsWith: ["Oaxaca Old Fashioned", "Espadin Kick"],
   },
   {
     name: "Tommy's Margarita",
@@ -431,6 +461,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler oder Margarita-Glas",
     garnish: "Limettenscheibe",
     history: "Tommy's Margarita wurde in den 1990er-Jahren von Julio Bermejo in seinem Familienrestaurant Tommy's Mexican Restaurant in San Francisco entwickelt. Er ersetzte den üblichen Orangenlikör durch Agavendicksaft, um den reinen Geschmack von 100-Prozent-Agaven-Tequila stärker hervortreten zu lassen. Bermejo gilt zudem als einflussreicher Botschafter für hochwertigen Tequila in den USA. Seine schlankere, weniger süße Rezeptur wird heute von vielen Bartendern gegenüber der klassischen Margarita bevorzugt.",
+    pairsWith: ["Margarita", "Paloma", "Gustavo"],
   },
   {
     name: "Oaxaca Old Fashioned",
@@ -445,6 +476,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenzeste",
     history: "Der Oaxaca Old Fashioned wurde 2007 vom New Yorker Bartender Phil Ward in der Bar Death & Co entwickelt und gilt als einer der einflussreichsten modernen Agaven-Cocktails. Er überträgt die klassische Old-Fashioned-Struktur auf Tequila und ergänzt sie um einen Schuss rauchigen Mezcal aus der mexikanischen Region Oaxaca. Diese Kombination trug maßgeblich dazu bei, Mezcal in der internationalen Cocktailszene bekannt zu machen. Er gilt heute als Standardrezept für rauchige Agaven-Cocktails in gehobenen Bars weltweit. Eigentlich mit Reposado-Tequila zubereitet, der aktuell nicht im Sortiment geführt wird – hier auf den Blanco-Tequila ausgewichen.",
+    pairsWith: ["Tequila Sunrise", "Espadin Kick"],
   },
   {
     name: "Moscow Mule",
@@ -458,6 +490,7 @@ export const CLASSIC_RECIPES = [
     glass: "Kupferbecher (Mule Mug)",
     garnish: "Limettenspalte, Minzzweig",
     history: "Der Moscow Mule entstand 1941 in Los Angeles, als ein Wodka-Importeur, ein Ginger-Beer-Hersteller und eine Bar-Besitzerin versuchten, ihre schwer verkäuflichen Produkte gemeinsam zu vermarkten. Der markante, verkupferte Becher wurde gezielt als Marketinginstrument eingesetzt, um den Drink unverwechselbar zu machen. Durch geschicktes Foto-Marketing in Bars im ganzen Land trug der Drink maßgeblich dazu bei, Wodka in Amerika überhaupt erst populär zu machen. Er gilt bis heute als der Cocktail, der den amerikanischen Wodka-Boom auslöste.",
+    pairsWith: ["Cosmopolitan", "Screwdriver", "Watermelon Man"],
   },
   {
     name: "Cosmopolitan",
@@ -472,6 +505,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Orangenzeste",
     history: "Der Cosmopolitan entwickelte sich in den 1980er- und frühen 1990er-Jahren in den USA aus früheren Wodka-Cranberry-Kreationen, wobei mehrere Barkeeper Anspruch auf seine Erfindung erheben. Weltberühmt wurde er vor allem durch die Fernsehserie 'Sex and the City', in der er zum Signature-Drink der Hauptfiguren avancierte. Seine leuchtend rosarote Farbe und die elegante Cocktailschale machten ihn in den 1990er- und 2000er-Jahren zum Inbegriff urbaner Cocktailkultur. Er gilt bis heute als einer der bekanntesten Cocktails der Popkultur. Klassisch mit Zitronen-Vodka zubereitet, der aktuell nicht im Sortiment geführt wird – hier auf den Standard-Vodka ausgewichen.",
+    pairsWith: ["Moscow Mule", "Screwdriver", "Watermelon Man"],
   },
   {
     name: "Bloody Mary",
@@ -500,6 +534,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "ohne",
     history: "Der White Russian ist eine mit Sahne verfeinerte Variante des älteren Black Russian und entstand vermutlich in den 1960er-Jahren; sein genauer Ursprung ist nicht eindeutig belegt. Beide Namen beziehen sich auf Wodka als typisch russische Spirituose, obwohl der Drink selbst amerikanischen Ursprungs ist. Weltweite Popkultur-Berühmtheit erlangte er 1998 durch 'The Big Lebowski', in dem Hauptfigur 'The Dude' den Drink wiederholt konsumiert. Seither gilt er als einer der bekanntesten cremigen Cocktails, oft mit dem Film in Verbindung gebracht.",
+    pairsWith: ["Vodka Martini", "Espresso Martini", "Brandy Alexander"],
   },
   {
     name: "Espresso Martini",
@@ -514,6 +549,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Kaffeebohnen",
     history: "Der Espresso Martini wurde in den 1980er-Jahren vom britischen Bartender Dick Bradsell in London erfunden, angeblich auf Bitte eines Models, das einen Drink wollte, der sie 'wach macht und dann betrunken'. Ursprünglich hieß er 'Vodka Espresso', bevor er im Zuge des Martini-Booms der 1990er-Jahre umbenannt wurde. Charakteristisch ist der dichte, haselnussbraune Schaum, der beim kräftigen Schütteln des frischen Espressos entsteht. In den 2010er- und 2020er-Jahren erlebte er weltweit eine zweite, noch größere Welle der Popularität.",
+    pairsWith: ["Vodka Martini", "White Russian"],
   },
   {
     name: "Vodka Martini",
@@ -526,6 +562,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale (Martini-Glas)",
     garnish: "Olive oder Zitronenzeste",
     history: "Der Vodka Martini entstand als Variante des klassischen Gin-Martini, als Wodka ab den 1950er-Jahren in den USA zunehmend populär wurde. Weltberühmt wurde er vor allem durch die James-Bond-Filme, in denen die Figur ihn stets 'geschüttelt, nicht gerührt' bestellt – ein bewusster Stilbruch gegenüber der klassischen Zubereitung. Puristen argumentieren bis heute, dass Schütteln den Drink unnötig verwässert und trübe macht. Trotzdem gilt der geschüttelte Vodka Martini seit Bond als eine der bekanntesten Cocktail-Bestellungen der Popkultur.",
+    pairsWith: ["Martini", "Dirty Martini", "Martinez"],
   },
   {
     name: "Screwdriver",
@@ -538,6 +575,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Orangenscheibe",
     history: "Der Screwdriver entstand vermutlich in den 1940er- oder 1950er-Jahren und wird oft mit amerikanischen Ölarbeitern im Nahen Osten in Verbindung gebracht, die ihren Wodka angeblich mit einem Schraubenzieher im Orangensaft verrührten. Als eine der einfachsten denkbaren Cocktail-Kombinationen trug er maßgeblich dazu bei, Wodka in den USA und Europa alltagstauglich zu machen. Seine schlichte Zubereitung machte ihn schnell zum Standard-Drink in Bars und Privathaushalten. Er gilt bis heute als Einstiegsdrink für viele, die zum ersten Mal selbst Cocktails mixen.",
+    pairsWith: ["Moscow Mule", "Cosmopolitan", "Watermelon Man"],
   },
   {
     name: "Sidecar",
@@ -551,6 +589,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Zuckerrand, Orangenzeste",
     history: "Der Sidecar entstand vermutlich kurz nach dem Ersten Weltkrieg in Paris oder London, wobei sowohl die Ritz Bar in Paris als auch Harry's New York Bar seine Erfindung für sich beanspruchen. Der Name soll sich auf den Beiwagen eines Motorrads beziehen, in dem angeblich ein Gast zur Bar kutschiert wurde. Als eine der ersten großen Cognac-Cocktail-Kreationen der 1920er-Jahre setzte er den Grundstein für die spätere 'Sour mit Triple Sec'-Formel, die auch bei Margarita oder White Lady wiederkehrt. Er gilt bis heute als der elegante Klassiker unter den Brandy-Cocktails.",
+    pairsWith: ["Brandy Alexander", "French Connection", "Vieux Carré"],
   },
   {
     name: "Brandy Alexander",
@@ -565,6 +604,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "Geriebene Muskatnuss",
     history: "Der Brandy Alexander ist eine Weiterentwicklung des älteren, gin-basierten 'Alexander' und wurde vermutlich in den 1920er-Jahren durch das Ersetzen von Gin mit Cognac populär. Mit seiner cremigen, dessertartigen Textur aus Sahne und Kakaolikör gilt er eher als flüssiger Nachtisch denn als klassischer Aperitif. Manche Quellen bringen seine Erfindung mit einer New Yorker Hochzeitsfeier in Verbindung, belegt ist dies jedoch nicht eindeutig. Er ist bis heute ein beliebter After-Dinner-Drink für Liebhaber süßer, cremiger Cocktails.",
+    pairsWith: ["Sidecar", "French Connection", "Vieux Carré"],
   },
   {
     name: "French Connection",
@@ -577,6 +617,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "ohne",
     history: "Der French Connection ist nach dem gleichnamigen, oscarprämierten Kriminalfilm von 1971 benannt, der von einem Drogenschmuggel-Ring zwischen Frankreich und den USA handelt. Als Zwei-Zutaten-Kombination aus französischem Cognac und italienischem Mandellikör verbindet er zwei europäische Spirituosen-Traditionen. Seine unkomplizierte Zubereitung ohne Shaker machte ihn zu einem beliebten, leicht zu mixenden After-Dinner-Drink der 1970er-Jahre. Er wird bis heute vor allem wegen seiner warmen, mandelig-fruchtigen Cognac-Note geschätzt.",
+    pairsWith: ["Sidecar", "Brandy Alexander", "Vieux Carré"],
   },
   {
     name: "Bellini",
@@ -589,6 +630,7 @@ export const CLASSIC_RECIPES = [
     glass: "Champagnerflöte",
     garnish: "ohne",
     history: "Der Bellini wurde in den 1930er- oder 1940er-Jahren von Giuseppe Cipriani, dem Gründer der berühmten Harry's Bar in Venedig, erfunden. Benannt ist er nach dem venezianischen Renaissance-Maler Giovanni Bellini, dessen Gemälde häufig ähnliche zart-rosa Farbtöne zeigten. Ursprünglich wurde er nur im Sommer serviert, wenn frische weiße Pfirsiche aus der Region verfügbar waren. Heute zählt er neben dem Martini zu den bekanntesten Aperitif-Cocktails der Welt.",
+    pairsWith: ["Aperol Spritz", "Americano", "Negroni Sbagliato"],
   },
   {
     name: "Mimosa",
@@ -601,6 +643,7 @@ export const CLASSIC_RECIPES = [
     glass: "Champagnerflöte",
     garnish: "Orangenzeste",
     history: "Der Mimosa entstand in den 1920er-Jahren, vermutlich im Ritz Hotel in Paris, als einfache Kombination aus Champagner und Orangensaft. Sein Name bezieht sich auf die gelbblühende Mimosenpflanze, deren Farbe an den hellen Orangenton des Drinks erinnert. In den USA wurde er später vor allem als fester Bestandteil des klassischen Sonntags-Brunchs populär. Heute gilt er als Inbegriff des leichten, festlichen Sekt-Cocktails zu jeder Tageszeit.",
+    pairsWith: ["Aperol Spritz", "Americano", "Negroni Sbagliato"],
   },
   {
     name: "Aperol Spritz",
@@ -614,6 +657,7 @@ export const CLASSIC_RECIPES = [
     glass: "Weinglas (Ballonglas)",
     garnish: "Orangenscheibe",
     history: "Der Aperol Spritz hat seine Wurzeln im norditalienischen 'Spritz', der im 19. Jahrhundert entstand, als österreichische Soldaten in Venetien ihren Wein mit Sodawasser 'spritzten', um ihn milder zu machen. Die moderne, Aperol-basierte Version etablierte sich vor allem ab den 2000er-Jahren als beliebter Aperitif im Veneto. Durch geschicktes internationales Marketing der Marke Aperol wurde der Drink innerhalb weniger Jahre zum globalen Sommerphänomen. Heute zählt er zu den meistverkauften Aperitif-Cocktails weltweit.",
+    pairsWith: ["Americano", "Negroni Sbagliato", "Beery Negroni Sbagliato"],
   },
   {
     name: "Americano",
@@ -627,6 +671,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenscheibe",
     history: "Der Americano entstand um 1860 in Mailand als 'Milano-Torino', benannt nach den Herkunftsstädten von Campari und Wermut. Seinen heutigen Namen erhielt er, weil er bei amerikanischen Touristen in Italien besonders beliebt war. Er gilt zudem als direkter Vorläufer des Negroni, der entstand, als jemand ihm zusätzlich Gin hinzufügte. Als leichter, spritziger Aperitif mit niedrigerem Alkoholgehalt ist er bis heute in italienischen Bars fest etabliert.",
+    pairsWith: ["Aperol Spritz", "Negroni Sbagliato", "Beery Negroni Sbagliato"],
   },
   {
     name: "Negroni Sbagliato",
@@ -640,6 +685,7 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenscheibe",
     history: "Der Negroni Sbagliato entstand der Legende nach in den 1970er-Jahren in der Mailänder Bar Basso, als ein Barkeeper aus Versehen ('sbagliato' heißt 'falsch gemacht') Prosecco statt Gin in einen Negroni goss. Statt den Fehler zu korrigieren, wurde der leichtere Zufallsdrink beibehalten und zu einem eigenständigen Klassiker. Jahrzehntelang blieb er vor allem in Italien bekannt, bevor er 2022 durch ein virales Video mit Schauspielerin Emma D'Arcy weltweit zum Social-Media-Trend wurde. Heute gilt er als leichtere, prickelnde Alternative zum klassischen Negroni.",
+    pairsWith: ["Aperol Spritz", "Americano", "Beery Negroni Sbagliato"],
   },
   {
     name: "Long Island Iced Tea",
@@ -658,6 +704,7 @@ export const CLASSIC_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Zitronenscheibe",
     history: "Der Long Island Iced Tea entstand vermutlich in den 1970er-Jahren auf Long Island im US-Bundesstaat New York, wobei mehrere Barkeeper konkurrierende Erfindungsgeschichten erzählen. Seine Mischung aus vier bis fünf klaren Spirituosen ergibt zusammen mit Cola eine Optik, die täuschend echtem Eistee ähnelt – daher der Name. Trotz seines vergleichsweise milden Geschmacks gehört er wegen der Kombination mehrerer hochprozentiger Spirituosen zu den stärksten weit verbreiteten Cocktails. Er ist bis heute vor allem als Partydrink für ausgelassene Abende bekannt.",
+    pairsWith: ["Suffering Bastard", "Zombie"],
   },
   {
     name: "Grasshopper",
@@ -671,6 +718,7 @@ export const CLASSIC_RECIPES = [
     glass: "Cocktailschale",
     garnish: "ohne",
     history: "Der Grasshopper wurde 1918 von Philibert Guichet im Tujague's Restaurant in New Orleans anlässlich eines Cocktail-Wettbewerbs erfunden, den er damit gewann. Seinen Namen und seine leuchtend grüne Farbe verdankt er dem verwendeten grünen Pfefferminzlikör. Mit seiner cremigen, dessertartigen Textur gilt er eher als flüssiger Nachtisch denn als klassischer Aperitif-Cocktail. Er zählt bis heute zu den bekanntesten süßen After-Dinner-Drinks der amerikanischen Cocktailgeschichte.",
+    pairsWith: ["White Russian", "Brandy Alexander", "Amaretto Sour"],
   },
   {
     name: "Amaretto Sour",
@@ -685,5 +733,6 @@ export const CLASSIC_RECIPES = [
     glass: "Tumbler (Old Fashioned Glas)",
     garnish: "Orangenscheibe, Cocktailkirsche",
     history: "Der Amaretto Sour übertrug ab den 1970er-Jahren das klassische Sour-Prinzip aus Spirituose, Zitrussaft und Zucker auf den italienischen Mandellikör Amaretto. Mit dem internationalen Erfolg der Marke Disaronno wurde er in den 1970er- und 1980er-Jahren zu einem der meistbestellten Cocktails in Bars. Sein süßlich-nussiges Aroma machte ihn besonders bei Cocktail-Einsteigern beliebt. In den letzten Jahren erlebt er, oft mit Eiweiß für mehr Textur zubereitet, eine Renaissance in der Craft-Cocktail-Szene.",
+    pairsWith: ["White Russian", "Brandy Alexander", "Grasshopper"],
   },
 ];

@@ -21,6 +21,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Zeste",
     ice: "Würfel",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Mai Tai 1947",
@@ -36,6 +37,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Minze, Limettenrad, Kirsche",
     ice: "Crushed Eis",
+    pairsWith: ["Piña Colada", "Mai Tai", "Zombie"],
   },
   {
     name: "Martinez",
@@ -50,6 +52,7 @@ export const HOUSE_RECIPES = [
     glass: "V-Form-Glas (Coupette)",
     garnish: "Orangenzeste (Tisch-Service)",
     ice: "Würfel",
+    pairsWith: ["Martini", "Dirty Martini", "Negroni"],
   },
   {
     name: "Monkey Island",
@@ -64,6 +67,7 @@ export const HOUSE_RECIPES = [
     glass: "Kl. Softglas",
     garnish: "Schokosoße ins Glas",
     ice: "–",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Morgentau",
@@ -78,6 +82,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Limettenrad, Minze",
     ice: "Würfel",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Mystic Treasure",
@@ -92,6 +97,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limette, Minze",
     ice: "Würfel",
+    pairsWith: ["Piña Colada", "Mai Tai", "Zombie"],
   },
   {
     name: "Orange & Thymian Gimlet",
@@ -106,6 +112,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (SOF)",
     garnish: "Thymian und Schleierkraut in Dry Orange stecken",
     ice: "Würfel",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Pisco Punch",
@@ -119,6 +126,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Minze und Limette",
     ice: "Crushed Ice",
+    pairsWith: ["Sidecar", "Brandy Alexander", "French Connection"],
   },
   {
     name: "Rhubarb Rosato",
@@ -133,6 +141,7 @@ export const HOUSE_RECIPES = [
     glass: "Weinglas",
     garnish: "Basilikumblatt",
     ice: "Würfel",
+    pairsWith: ["Aperol Spritz", "Americano", "Negroni Sbagliato"],
   },
   {
     name: "Sea Breeze",
@@ -147,6 +156,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Minze, Dry Grapefruit",
     ice: "Würfel",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Sloppy Joe Mojito",
@@ -162,6 +172,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Minze, Dry Limette",
     ice: "Wenig Würfel und Crushed Ice",
+    pairsWith: ["Daiquiri", "Mojito", "Cuba Libre"],
   },
   {
     name: "Suffering Bastard",
@@ -178,6 +189,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Minze, Dry Fruit",
     ice: "Würfel",
+    pairsWith: ["Long Island Iced Tea", "Zombie"],
   },
   {
     name: "Tea Break",
@@ -192,6 +204,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Minze, Ingwer",
     ice: "Würfel",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Vieux Carré",
@@ -207,6 +220,7 @@ export const HOUSE_RECIPES = [
     glass: "Nick & Nora",
     garnish: "Orangenzeste",
     ice: "–",
+    pairsWith: ["Old Fashioned", "Manhattan", "Sazerac"],
   },
   {
     name: "Watermelon Man",
@@ -221,6 +235,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Minze",
     ice: "Crushed Eis",
+    pairsWith: ["Moscow Mule", "Cosmopolitan", "Screwdriver"],
   },
   {
     name: "Asian Moskito",
@@ -236,6 +251,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limettenblätter, Minze",
     ice: "Eiswürfel",
+    pairsWith: ["Basil Cooler", "Der Grinch", "Captain Blaubär"],
   },
   {
     name: "Asian Mule",
@@ -252,6 +268,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Limettenblätter, Minze",
     ice: "Würfel",
+    pairsWith: ["Moscow Mule", "Cosmopolitan", "Screwdriver"],
   },
   {
     name: "Aviation",
@@ -266,6 +283,7 @@ export const HOUSE_RECIPES = [
     glass: "V-Form-Glas",
     garnish: "Zitronenzeste",
     ice: "–",
+    pairsWith: ["Gimlet", "Tom Collins", "Last Word"],
   },
   {
     name: "Basil Cooler",
@@ -281,6 +299,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Basilikumblatt",
     ice: "Würfel",
+    pairsWith: ["Asian Moskito", "Der Grinch", "Captain Blaubär"],
   },
   {
     name: "Bee's Knees Niece",
@@ -295,6 +314,7 @@ export const HOUSE_RECIPES = [
     glass: "Coupette",
     garnish: "Zeste oder Limettenrad",
     ice: "",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Beery Negroni Sbagliato",
@@ -307,6 +327,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (DOF)",
     garnish: "Dry/Fresh Orange, TK Beeren",
     ice: "Würfel",
+    pairsWith: ["Aperol Spritz", "Americano", "Negroni Sbagliato"],
   },
   {
     name: "Captain Blaubär",
@@ -321,6 +342,7 @@ export const HOUSE_RECIPES = [
     glass: "Kl. Softglas",
     garnish: "",
     ice: "–",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Cosmo 1934",
@@ -337,6 +359,7 @@ export const HOUSE_RECIPES = [
     glass: "Coupette",
     garnish: "",
     ice: "–",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Cream Berry",
@@ -361,6 +384,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Zitronenscheibe oder Zeste",
     ice: "Würfel",
+    pairsWith: ["Gimlet", "Tom Collins", "Aviation"],
   },
   {
     name: "Der Grinch",
@@ -374,6 +398,7 @@ export const HOUSE_RECIPES = [
     glass: "Kl. Softglas",
     garnish: "",
     ice: "–",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Captain Blaubär"],
   },
   {
     name: "Espadin Kick",
@@ -388,6 +413,7 @@ export const HOUSE_RECIPES = [
     glass: "Tumbler (SOF)",
     garnish: "Absinth-Spray und Limettenzeste",
     ice: "Block",
+    pairsWith: ["Tequila Sunrise", "Oaxaca Old Fashioned"],
   },
   {
     name: "Frozen KIBA",
@@ -402,6 +428,7 @@ export const HOUSE_RECIPES = [
     glass: "Kl. Softglas",
     garnish: "",
     ice: "–",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Fruit of the Loom",
@@ -417,6 +444,7 @@ export const HOUSE_RECIPES = [
     glass: "Kl. Softglas",
     garnish: "",
     ice: "Crushed Ice",
+    pairsWith: ["Asian Moskito", "Basil Cooler", "Der Grinch"],
   },
   {
     name: "Gustavo",
@@ -431,6 +459,7 @@ export const HOUSE_RECIPES = [
     glass: "Longdrinkglas",
     garnish: "Salzrand, Dry Grapefruit",
     ice: "Würfel",
+    pairsWith: ["Margarita", "Tommy's Margarita", "Paloma"],
   },
   {
     name: "Inspired by Snickers",

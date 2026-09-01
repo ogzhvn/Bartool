@@ -6,7 +6,6 @@ import { initSuperjuice } from "./superjuice.js";
 import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
-import { initAromaMatrix } from "./aromaMatrix.js";
 import { initRecommendations } from "./recommendations.js";
 
 initTabs();
@@ -17,5 +16,4 @@ initSuperjuice();
 initSyrup();
 initDilution();
 initCalculation();
-initAromaMatrix();
 initRecommendations();

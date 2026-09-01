@@ -16,6 +16,7 @@ export const PRODUCTS = [
     alternatives: "Tanqueray London Dry Gin oder ein anderer milder London Dry Gin",
     production: "Dampfinfusion der Botanicals statt Einlegen in den Alkohol",
     allergens: "Keine bekannten",
+    pairsWith: ["Martini", "Dirty Martini", "Negroni"],
   },
   {
     name: "Tanqueray London Dry Gin", group: "Gin", subGroup: "London Dry Gin",
@@ -28,6 +29,7 @@ export const PRODUCTS = [
     alternatives: "Bombay Sapphire Gin oder ein anderer klassischer London Dry Gin",
     production: "Vierfach destilliert, nur vier Botanicals (u. a. Wacholder, Koriander, Angelikawurzel, Süßholz)",
     allergens: "Keine bekannten",
+    pairsWith: ["Aviation"],
   },
 
   {
@@ -41,6 +43,7 @@ export const PRODUCTS = [
     alternatives: "Bombay Sapphire Gin, Tanqueray London Dry Gin",
     production: "Kleinbrennerei-Destillat",
     allergens: "Keine bekannten",
+    pairsWith: ["Martinez"],
   },
   {
     name: "Tanqueray No. Ten", group: "Gin", subGroup: "Klassischer Dry Gin",
@@ -72,11 +75,14 @@ export const PRODUCTS = [
     alternatives: "Klassischer Tanqueray Gin plus etwas Orangenlikör",
     production: "Basis-Gin mit zusätzlicher Bitterorangen-Aromatisierung",
     allergens: "Keine bekannten",
+    pairsWith: ["Orange & Thymian Gimlet"],
   },
 
   { name: "Monkey 47 Sloe Gin", group: "Gin", subGroup: "Sloe Gin", category: "Sloe Gin (Schwarzwald) · Deutschland", abv: "29 % vol", tastingNotes: "Süß-fruchtig, Schlehe, weniger wacholderbetont", flavorProfile: { suess: 7, sauer: 0, bitter: 0, herbKraeuterig: 6, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Mit Schlehen (Sloe Berries) angesetzte, süßere Variante des Monkey 47 – Sloe Gin ist historisch gesehen streng genommen ein Likör: fertiger Gin wird mit Schlehen und Zucker angesetzt und zieht dabei Farbe und Fruchtaromen der Beeren.", service: "Sloe Gin Fizz, pur on the rocks", alternatives: "Anderer Sloe Gin", production: "Ansatz von Schlehen in fertigem Gin, gezuckert", allergens: "Keine bekannten" },
 
-  { name: "Tanqueray 0,0%", group: "Gin", subGroup: "Alkoholfreie Alternative", category: "Alkoholfreier Gin-Ersatz · Schottland", abv: "0,0 % vol", tastingNotes: "Wacholder- und Zitrusnoten ohne Alkoholschärfe", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 6, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Alkoholfreie Variante des Tanqueray-Rezepts für Gäste, die auf Alkohol verzichten möchten, ohne auf den Geschmack zu verzichten. Statt Destillation werden die Botanicals-Aromen extrahiert und mit Wasser zu einem gin-ähnlichen Getränk zusammengesetzt.", service: "Alkoholfreie Cocktails, Mocktail-Gin-Tonic", alternatives: "Andere alkoholfreie Gin-Alternativen", production: "Botanicals-Extrakt ohne Alkoholgärung", allergens: "Keine bekannten" },
+  { name: "Tanqueray 0,0%", group: "Gin", subGroup: "Alkoholfreie Alternative", category: "Alkoholfreier Gin-Ersatz · Schottland", abv: "0,0 % vol", tastingNotes: "Wacholder- und Zitrusnoten ohne Alkoholschärfe", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 6, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Alkoholfreie Variante des Tanqueray-Rezepts für Gäste, die auf Alkohol verzichten möchten, ohne auf den Geschmack zu verzichten. Statt Destillation werden die Botanicals-Aromen extrahiert und mit Wasser zu einem gin-ähnlichen Getränk zusammengesetzt.", service: "Alkoholfreie Cocktails, Mocktail-Gin-Tonic", alternatives: "Andere alkoholfreie Gin-Alternativen", production: "Botanicals-Extrakt ohne Alkoholgärung", allergens: "Keine bekannten",
+    pairsWith: ["Cucumber Elderflower Collins"],
+  },
 
   // ---------- VODKA ----------
   {
@@ -90,6 +96,7 @@ export const PRODUCTS = [
     alternatives: "Grey Goose, Belvedere oder ein anderer Premium-Weizenvodka",
     production: "Kupferbrand-Destillation in traditionellen Pot Stills",
     allergens: "Aus Weizen – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Moscow Mule", "Cosmopolitan", "Bloody Mary"],
   },
   { name: "Koskenkorva Vodka", group: "Vodka", subGroup: "", category: "Wheat/Barley Vodka · Finnland", abv: "40 % vol", tastingNotes: "Klar, neutral, leicht getreidig",
     flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Finnischer Vodka aus einheimischem Getreide, benannt nach dem Herstellungsort Koskenkorva.", service: "Pur eisgekühlt, Longdrinks", alternatives: "Ketel One Vodka", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
@@ -108,6 +115,7 @@ export const PRODUCTS = [
     alternatives: "Bacardi Carta Blanca oder jeder andere weiße Rum",
     production: "Mindestens 3 Jahre Fassreifung, danach filtriert",
     allergens: "Keine bekannten",
+    pairsWith: ["Daiquiri", "Mojito", "Piña Colada"],
   },
   { name: "Havana Club 7 Años", group: "Rum & Cachaça", subGroup: "Kuba", category: "Aged Rum · Kuba", abv: "40 % vol", tastingNotes: "Karamell, Vanille, Eiche, weicher als der 3 Años", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 6, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Länger gereifte Havana-Club-Variante für Cocktails mit mehr Tiefe oder pur. Wie beim 3 Años bleibt auch hier der für kubanischen Rum typische trockene, nicht übermäßig süße Grundcharakter erhalten – die zusätzliche Fasszeit bringt vor allem Röst- und Vanillenoten dazu.", service: "Daiquiri (Premium), pur", alternatives: "Bacardi Ocho", production: "", allergens: "Keine bekannten" },
 
@@ -132,6 +140,7 @@ export const PRODUCTS = [
     alternatives: "Ron Zacapa 23, Bacardi Ocho",
     production: "Solera-Reifesystem wie beim Sherry",
     allergens: "Keine bekannten",
+    pairsWith: ["Mai Tai 1947"],
   },
 
   { name: "Ron Zacapa 23", group: "Rum & Cachaça", subGroup: "Guatemala", category: "Aged Rum (Solera) · Guatemala", abv: "40 % vol", tastingNotes: "Sehr weich, Honig, Karamell, Trockenfrüchte", flavorProfile: { suess: 8, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Reift im Solera-Verfahren in rund 2.300 Metern Höhe in den guatemaltekischen Bergen ('above the clouds'), wo die kühleren Temperaturen für eine besonders langsame, milde Reifung sorgen und weniger Alkohol verdunstet ('Angel's Share') als in tropischer Hitze.", service: "Pur/on the rocks als Digestif", alternatives: "Matusalem 15 Y.O., Ron Botrán 18", production: "Solera-Reifesystem in Bergregionen Guatemalas", allergens: "Keine bekannten" },
@@ -149,9 +158,12 @@ export const PRODUCTS = [
     alternatives: "Myer's Rum oder ein anderer dunkler Rum",
     production: "Blend aus verschiedenen gereiften Rums",
     allergens: "Keine bekannten",
+    pairsWith: ["Dark 'n' Stormy", "Mystic Treasure"],
   },
 
-  { name: "Myer's Rum", group: "Rum & Cachaça", subGroup: "Jamaika", category: "Dark Rum · Jamaika", abv: "40 % vol", tastingNotes: "Kräftig, Melasse, dunkle Frucht, würzig", flavorProfile: { suess: 5, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 8, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer dunkler Jamaika-Rum, bekannt für seinen kräftigen Melasse-Charakter, der typisch für die traditionelle Pot-Still-Destillation Jamaikas ist. Seit den 1980er-Jahren fester Bestandteil vieler Tiki-Klassiker.", service: "Tiki-Cocktails, Rum Punch", alternatives: "Goslings Black Seal", production: "", allergens: "Keine bekannten" },
+  { name: "Myer's Rum", group: "Rum & Cachaça", subGroup: "Jamaika", category: "Dark Rum · Jamaika", abv: "40 % vol", tastingNotes: "Kräftig, Melasse, dunkle Frucht, würzig", flavorProfile: { suess: 5, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 8, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer dunkler Jamaika-Rum, bekannt für seinen kräftigen Melasse-Charakter, der typisch für die traditionelle Pot-Still-Destillation Jamaikas ist. Seit den 1980er-Jahren fester Bestandteil vieler Tiki-Klassiker.", service: "Tiki-Cocktails, Rum Punch", alternatives: "Goslings Black Seal", production: "", allergens: "Keine bekannten",
+    pairsWith: ["Mai Tai", "Zombie"],
+  },
   {
     name: "Smith & Cross Jamaican Overproof Rum", group: "Rum & Cachaça", subGroup: "Jamaika",
     category: "Jamaica Pot Still Rum · Jamaika",
@@ -163,9 +175,12 @@ export const PRODUCTS = [
     alternatives: "Ein anderer hocharomatischer Jamaika-Rum",
     production: "Pot-Still-Destillation, hoher natürlicher Estergehalt durch lange Fermentation mit Dunder",
     allergens: "Keine bekannten",
+    pairsWith: ["Zombie", "Mai Tai 1947"],
   },
 
-  { name: "Nega Fulo", group: "Rum & Cachaça", subGroup: "Brasilien", category: "Gewürzrum/Cachaça-Stil · Brasilien", abv: "40 % vol", tastingNotes: "Würzig-süß, dunkle Gewürze", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 9, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Brasilianisch inspirierter Gewürzrum mit dunklen Gewürznoten, die ihn von klassischer, ungewürzter Cachaça (dem brasilianischen Zuckerrohrbrand aus frischem statt melassiertem Saft) unterscheiden.", service: "Caipirinha-Variationen, Tiki-Cocktails", alternatives: "Anderer Gewürzrum", production: "", allergens: "Keine bekannten" },
+  { name: "Nega Fulo", group: "Rum & Cachaça", subGroup: "Brasilien", category: "Gewürzrum/Cachaça-Stil · Brasilien", abv: "40 % vol", tastingNotes: "Würzig-süß, dunkle Gewürze", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 9, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Brasilianisch inspirierter Gewürzrum mit dunklen Gewürznoten, die ihn von klassischer, ungewürzter Cachaça (dem brasilianischen Zuckerrohrbrand aus frischem statt melassiertem Saft) unterscheiden.", service: "Caipirinha-Variationen, Tiki-Cocktails", alternatives: "Anderer Gewürzrum", production: "", allergens: "Keine bekannten",
+    pairsWith: ["Caipirinha"],
+  },
 
   // ---------- WHISKY / WHISKEY ----------
   {
@@ -179,6 +194,7 @@ export const PRODUCTS = [
     alternatives: "Anderer Bourbon mit hohem Roggenanteil",
     production: "High-Rye-Mash-Bill (hoher Roggenanteil im Bourbon)",
     allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Old Fashioned", "Whiskey Sour", "Mint Julep"],
   },
   {
     name: "Sazerac Rye", group: "Whisky", subGroup: "Rye",
@@ -191,17 +207,22 @@ export const PRODUCTS = [
     alternatives: "Anderer kräftiger Rye Whiskey",
     production: "Klassische Rye-Whiskey-Destillation und Fassreifung",
     allergens: "Aus Getreide (Roggen) – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Manhattan", "Sazerac", "Vieux Carré"],
   },
   { name: "Maker's Mark", group: "Whisky", subGroup: "Bourbon", category: "Wheated Bourbon · USA", abv: "45 % vol", tastingNotes: "Weich, Vanille, Karamell, Weizen statt Roggen", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Verwendet Weizen statt Roggen in der Mash Bill, was ihn deutlich weicher/süßer macht; erkennbar am handverschlossenen roten Wachssiegel.", service: "Old Fashioned, Whiskey Sour, pur", alternatives: "Bulleit Bourbon", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Eagle Rare 10 Jahre", group: "Whisky", subGroup: "Bourbon", category: "Single Barrel Bourbon · USA", abv: "45 % vol", tastingNotes: "Karamell, Leder, Orange, Eiche, komplex", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 6, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "10 Jahre gereifter Single-Barrel-Bourbon der Buffalo-Trace-Destillerie.", service: "Pur/on the rocks, Old Fashioned", alternatives: "Maker's Mark, Bulleit Bourbon", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Jim Beam Rye", group: "Whisky", subGroup: "Rye", category: "Rye Whiskey · USA", abv: "40 % vol", tastingNotes: "Würzig-pfeffrig, trocken, leichter als Bourbon", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 5, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer, zugänglicher Rye Whiskey des großen Bourbon-Hauses Jim Beam.", service: "Manhattan, Whiskey Sour", alternatives: "Sazerac Rye", production: "", allergens: "Aus Getreide (Roggen) – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Stork Smoky Rye", group: "Whisky", subGroup: "Rye", category: "Rauchiger Rye-Whiskey (Markenprodukt) – Angaben bitte prüfen", abv: "", tastingNotes: "Rauchig-würzig (laut Produktname)", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 6, floral: 0, rauchig: 6, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "", service: "", alternatives: "Sazerac Rye, Jim Beam Rye", production: "", allergens: "" },
-  { name: "Johnnie Walker Red Label", group: "Whisky", subGroup: "Blended Scotch", category: "Blended Scotch Whisky · Schottland", abv: "40 % vol", tastingNotes: "Rauchig-würzig, kräftig, unkompliziert", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 8, floral: 0, rauchig: 8, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Der weltweit meistverkaufte Blended Scotch, konzipiert für Longdrinks und Mixgetränke.", service: "Whisky-Cola, Highballs", alternatives: "Canadian Club Whisky", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
+  { name: "Johnnie Walker Red Label", group: "Whisky", subGroup: "Blended Scotch", category: "Blended Scotch Whisky · Schottland", abv: "40 % vol", tastingNotes: "Rauchig-würzig, kräftig, unkompliziert", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 8, floral: 0, rauchig: 8, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Der weltweit meistverkaufte Blended Scotch, konzipiert für Longdrinks und Mixgetränke.", service: "Whisky-Cola, Highballs", alternatives: "Canadian Club Whisky", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Penicillin"],
+  },
   { name: "Johnnie Walker Black Label", group: "Whisky", subGroup: "Blended Scotch", category: "Blended Scotch Whisky (12 Jahre) · Schottland", abv: "40 % vol", tastingNotes: "Rauchig, Honig, Vanille, ausgewogen", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 6, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "12 Jahre gereifter Blend mit deutlich mehr Tiefe als das Red Label.", service: "Pur/on the rocks, Whisky Sour", alternatives: "Chivas Regal 12", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Johnnie Walker Blue Label", group: "Whisky", subGroup: "Blended Scotch", category: "Premium Blended Scotch Whisky · Schottland", abv: "40 % vol", tastingNotes: "Sehr komplex, Rauch, Honig, Trockenfrüchte, lang", flavorProfile: { suess: 8, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 8, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Premium-Blend aus sehr seltenen, teils jahrzehntealten Malt- und Grain-Whiskys.", service: "Pur als Digestif", alternatives: "Johnnie Walker Black Label", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Chivas Regal 12", group: "Whisky", subGroup: "Blended Scotch", category: "Blended Scotch Whisky (12 Jahre) · Schottland", abv: "40 % vol", tastingNotes: "Weich, Honig, Apfel, Haselnuss", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 5, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer, zugänglicher 12-jähriger Blended Scotch.", service: "Pur/on the rocks", alternatives: "Johnnie Walker Black Label", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Canadian Club Whisky", group: "Whisky", subGroup: "Kanadischer Whisky", category: "Canadian Whisky · Kanada", abv: "40 % vol", tastingNotes: "Leicht, weich, dezent süßlich", flavorProfile: { suess: 4, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Milder kanadischer Blended Whisky, klassisch für Longdrinks.", service: "Whisky-Cola, Highballs", alternatives: "Johnnie Walker Red Label", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
-  { name: "Jameson Irish Whiskey", group: "Whisky", subGroup: "Irish Whiskey", category: "Blended Irish Whiskey · Irland", abv: "40 % vol", tastingNotes: "Weich, leicht süß, dreifach destilliert", flavorProfile: { suess: 4, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Meistverkaufter irischer Whiskey, dreifach destilliert für ein besonders mildes Profil.", service: "Whiskey Sour, pur/on the rocks", alternatives: "Redbreast 12", production: "Dreifache Destillation", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
+  { name: "Jameson Irish Whiskey", group: "Whisky", subGroup: "Irish Whiskey", category: "Blended Irish Whiskey · Irland", abv: "40 % vol", tastingNotes: "Weich, leicht süß, dreifach destilliert", flavorProfile: { suess: 4, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Meistverkaufter irischer Whiskey, dreifach destilliert für ein besonders mildes Profil.", service: "Whiskey Sour, pur/on the rocks", alternatives: "Redbreast 12", production: "Dreifache Destillation", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Irish Coffee"],
+  },
   { name: "Redbreast 12", group: "Whisky", subGroup: "Irish Whiskey", category: "Single Pot Still Irish Whiskey · Irland", abv: "40 % vol", tastingNotes: "Komplex, cremig, Trockenfrüchte, Gewürze", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 6, floral: 0, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 5, salzigMineralisch: 0 }, story: "Klassischer Single Pot Still Whiskey aus gemälzter und ungemälzter Gerste.", service: "Pur/on the rocks als Digestif", alternatives: "Jameson Irish Whiskey", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Suntory Yamazaki", group: "Whisky", subGroup: "Japanischer Whisky", category: "Japanischer Single Malt Whisky · Japan", abv: "43 % vol", tastingNotes: "Fein, Frucht, Sandelholz, dezent rauchig", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 6, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Erste Whisky-Destillerie Japans, gegründet 1923.", service: "Pur/on the rocks, Highball", alternatives: "Anderer japanischer Single Malt", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Glenkinchie 12", group: "Whisky", subGroup: "Lowland", category: "Lowland Single Malt (12 Jahre) · Schottland", abv: "43 % vol", tastingNotes: "Leicht, grasig-blumig, dezent süß", flavorProfile: { suess: 4, sauer: 0, bitter: 0, herbKraeuterig: 5, fruchtig: 0, wuerzigScharf: 0, floral: 5, rauchig: 0, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer Lowland-Malt, bekannt für sein leichtes, zugängliches Profil. Die Lowlands sind die südlichste schottische Whiskyregion und traditionell für besonders sanfte, oft dreifach destillierte Malts bekannt, die früher gerne als 'Damen-Whisky' vermarktet wurden – ein guter Einstieg für Islay-Skeptiker.", service: "Pur/on the rocks", alternatives: "Glenfiddich 12", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
@@ -218,7 +239,9 @@ export const PRODUCTS = [
 
   { name: "Talisker 10 Jahre", group: "Whisky", subGroup: "Islands", category: "Island Single Malt (10 Jahre) · Schottland (Isle of Skye)", abv: "45,8 % vol", tastingNotes: "Rauchig, salzig-maritim, pfeffrig-scharf", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 6, floral: 0, rauchig: 6, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 5 }, story: "Einzige Destillerie der Isle of Skye, bekannt für ihr rauchig-pfeffriges Profil mit deutlicher Meeresnähe. Die 'Islands' (Skye, Orkney, Mull, Arran u. a.) gelten offiziell nicht als eigene Whiskyregion, werden aber wegen ihres typisch maritim-rauchigen Charakters – zwischen Highland und Islay – meist gesondert geführt.", service: "Pur/on the rocks", alternatives: "Laphroaig 10 Jahre, Ardbeg 10 Jahre", production: "", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
 
-  { name: "Laphroaig 10 Jahre", group: "Whisky", subGroup: "Islay", category: "Islay Single Malt (10 Jahre) · Schottland", abv: "40 % vol", tastingNotes: "Sehr rauchig-torfig, medizinisch-jodig, kräftig", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 10, erdigHolzig: 7, nussig: 0, cremig: 0, salzigMineralisch: 5 }, story: "Einer der torfigsten, rauchigsten Islay-Malts – ausgeprägtes Marmite-artiges, medizinisches Aroma. Islay-Whiskys werden traditionell mit torfgetrocknetem Malz gebrannt, wobei der Rauch des brennenden Torfs direkt ins Malz zieht; die Nähe zum Meer verstärkt die salzig-jodige Note zusätzlich.", service: "Pur/on the rocks als Digestif", alternatives: "Ardbeg 10 Jahre, Lagavulin 16 Jahre", production: "Torfgetrocknetes Malz", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
+  { name: "Laphroaig 10 Jahre", group: "Whisky", subGroup: "Islay", category: "Islay Single Malt (10 Jahre) · Schottland", abv: "40 % vol", tastingNotes: "Sehr rauchig-torfig, medizinisch-jodig, kräftig", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 10, erdigHolzig: 7, nussig: 0, cremig: 0, salzigMineralisch: 5 }, story: "Einer der torfigsten, rauchigsten Islay-Malts – ausgeprägtes Marmite-artiges, medizinisches Aroma. Islay-Whiskys werden traditionell mit torfgetrocknetem Malz gebrannt, wobei der Rauch des brennenden Torfs direkt ins Malz zieht; die Nähe zum Meer verstärkt die salzig-jodige Note zusätzlich.", service: "Pur/on the rocks als Digestif", alternatives: "Ardbeg 10 Jahre, Lagavulin 16 Jahre", production: "Torfgetrocknetes Malz", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei",
+    pairsWith: ["Penicillin"],
+  },
   { name: "Ardbeg 10 Jahre", group: "Whisky", subGroup: "Islay", category: "Islay Single Malt (10 Jahre) · Schottland", abv: "46 % vol", tastingNotes: "Sehr rauchig-torfig, Zitrus, süßlich-rauchiger Kontrast", flavorProfile: { suess: 8, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 8, wuerzigScharf: 0, floral: 0, rauchig: 10, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Gilt als einer der rauchigsten Islay-Malts überhaupt, gemessen an den Phenolwerten des Malzes – mit einer überraschend süßlichen Zitrusnote im Hintergrund, die den Rauch etwas ausbalanciert.", service: "Pur/on the rocks als Digestif", alternatives: "Laphroaig 10 Jahre", production: "Torfgetrocknetes Malz, hoher Phenolgehalt", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
   { name: "Lagavulin 16 Jahre", group: "Whisky", subGroup: "Islay", category: "Islay Single Malt (16 Jahre) · Schottland", abv: "43 % vol", tastingNotes: "Sehr rauchig-torfig, Meersalz, lang und intensiv", flavorProfile: { suess: 2, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 9, erdigHolzig: 3, nussig: 0, cremig: 0, salzigMineralisch: 5 }, story: "Gilt als einer der intensivsten, am längsten reifenden Standard-Islay-Malts und wird traditionell mit ungewöhnlich langsamer Destillation in besonders bauchigen Brennblasen hergestellt, was seinen dichten, öligen Charakter erklärt.", service: "Pur als Digestif", alternatives: "Laphroaig 10 Jahre, Ardbeg 10 Jahre", production: "Sehr langsame Destillation", allergens: "Aus Getreide – destillierter Alkohol gilt meist als glutenfrei" },
 
@@ -237,6 +260,7 @@ export const PRODUCTS = [
     alternatives: "Sierra Tequila 100% Agave Azul",
     production: "Klassische Tequila-Destillation aus 100 % Agave",
     allergens: "Keine bekannten",
+    pairsWith: ["Margarita", "Paloma", "Tequila Sunrise"],
   },
   {
     name: "San Cosme Mezcal", group: "Tequila & Mezcal", subGroup: "Mezcal",
@@ -249,10 +273,13 @@ export const PRODUCTS = [
     alternatives: "Anderer Espadín-Mezcal",
     production: "Espadín-Agave, traditionelle Erdgruben-Röstung",
     allergens: "Keine bekannten",
+    pairsWith: ["Oaxaca Old Fashioned", "Espadin Kick"],
   },
 
   // ---------- BRANDY / COGNAC / ARMAGNAC ----------
-  { name: "Hennessy V.S.", group: "Brände", subGroup: "Cognac & Armagnac", category: "Cognac V.S. · Frankreich", abv: "40 % vol", tastingNotes: "Frisch, Eiche, dezente Frucht, jünger/kräftiger als VSOP", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Einstiegsklassifikation des großen Cognac-Hauses Hennessy, mindestens 2 Jahre Fassreifung.", service: "Longdrinks mit Cognac, Cognac Sour", alternatives: "Hennessy V.S.O.P.", production: "Mindestens 2 Jahre Fassreifung (V.S.-Klassifikation)", allergens: "Keine bekannten" },
+  { name: "Hennessy V.S.", group: "Brände", subGroup: "Cognac & Armagnac", category: "Cognac V.S. · Frankreich", abv: "40 % vol", tastingNotes: "Frisch, Eiche, dezente Frucht, jünger/kräftiger als VSOP", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Einstiegsklassifikation des großen Cognac-Hauses Hennessy, mindestens 2 Jahre Fassreifung.", service: "Longdrinks mit Cognac, Cognac Sour", alternatives: "Hennessy V.S.O.P.", production: "Mindestens 2 Jahre Fassreifung (V.S.-Klassifikation)", allergens: "Keine bekannten",
+    pairsWith: ["Sidecar", "Brandy Alexander", "French Connection"],
+  },
   {
     name: "Hennessy V.S.O.P.", group: "Brände", subGroup: "Cognac & Armagnac",
     category: "Cognac VSOP · Frankreich",
@@ -264,12 +291,15 @@ export const PRODUCTS = [
     alternatives: "Anderer VSOP-Cognac",
     production: "Mindestens 4 Jahre Fassreifung (VSOP-Klassifikation)",
     allergens: "Keine bekannten",
+    pairsWith: ["Vieux Carré"],
   },
   { name: "Hennessy X.O.", group: "Brände", subGroup: "Cognac & Armagnac", category: "Cognac X.O. (Premium) · Frankreich", abv: "40 % vol", tastingNotes: "Sehr komplex, Trockenfrüchte, Kakao, Gewürze, sehr weich", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Premium-Klassifikation mit deutlich längerer Fassreifung als VSOP, für den puren Digestif-Genuss.", service: "Pur als Digestif", alternatives: "Hennessy V.S.O.P.", production: "Mindestens 10 Jahre Fassreifung (X.O.-Klassifikation)", allergens: "Keine bekannten" },
   { name: "Armagnac V.S.O.P.", group: "Brände", subGroup: "Cognac & Armagnac", category: "Armagnac VSOP · Frankreich (Gascogne)", abv: "40 % vol", tastingNotes: "Rustikaler und würziger als Cognac, Trockenfrüchte, Eiche", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 6, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Ältester französischer Weinbrand, aus der Gascogne, meist in einem einzigen Destillationsgang gebrannt.", service: "Pur als Digestif, Brandy-Cocktails", alternatives: "Hennessy V.S.O.P.", production: "Meist einfache Destillation (statt Doppeldestillation wie bei Cognac)", allergens: "Keine bekannten" },
 
   // ---------- TRESTER / ANIS / TRAUBENBRAND ----------
-  { name: "Pisco", group: "Brände", subGroup: "Trester, Anis & Traubenbrand", category: "Traubenbrand · Peru/Chile", abv: "38–48 % vol", tastingNotes: "Fruchtig-traubig, aromatisch, klar", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 5, fruchtig: 10, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Ungereifter Traubenbrand, Basis des Pisco Sour.", service: "Pisco Sour", alternatives: "Anderer Traubenbrand", production: "", allergens: "Keine bekannten" },
+  { name: "Pisco", group: "Brände", subGroup: "Trester, Anis & Traubenbrand", category: "Traubenbrand · Peru/Chile", abv: "38–48 % vol", tastingNotes: "Fruchtig-traubig, aromatisch, klar", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 5, fruchtig: 10, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Ungereifter Traubenbrand, Basis des Pisco Sour.", service: "Pisco Sour", alternatives: "Anderer Traubenbrand", production: "", allergens: "Keine bekannten",
+    pairsWith: ["Pisco Punch"],
+  },
   { name: "Pernod", group: "Brände", subGroup: "Trester, Anis & Traubenbrand", category: "Anislikör (Pastis) · Frankreich", abv: "40 % vol", tastingNotes: "Intensiv Anis/Lakritz, süßlich", flavorProfile: { suess: 8, sauer: 0, bitter: 5, herbKraeuterig: 9, fruchtig: 5, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer französischer Anisschnaps, Ersatz für den ursprünglich verwendeten Absinth in vielen alten Rezepten.", service: "Sazerac (Rinse), pur mit Wasser verdünnt", alternatives: "Absinth (deutlich stärker/bitterer)", production: "", allergens: "Keine bekannten" },
   { name: "Sambuca", group: "Brände", subGroup: "Trester, Anis & Traubenbrand", category: "Anislikör · Italien", abv: "38–42 % vol", tastingNotes: "Süß, intensiv Anis/Holunderblüte", flavorProfile: { suess: 8, sauer: 0, bitter: 7, herbKraeuterig: 9, fruchtig: 9, wuerzigScharf: 8, floral: 9, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Süßer italienischer Anislikör, klassisch 'con la mosca' (mit Kaffeebohnen) serviert.", service: "Pur/on the rocks, Espresso Sambuca", alternatives: "Pernod", production: "", allergens: "Keine bekannten" },
   { name: "Nonino Merlot", group: "Brände", subGroup: "Trester, Anis & Traubenbrand", category: "Grappa (Merlot) · Italien", abv: "41 % vol", tastingNotes: "Fruchtig-würzig, Traubenschale, weich", flavorProfile: { suess: 0, sauer: 0, bitter: 0, herbKraeuterig: 5, fruchtig: 7, wuerzigScharf: 6, floral: 0, rauchig: 0, erdigHolzig: 2, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Grappa aus reinsortigem Merlot-Trester, hergestellt von der Familie Nonino.", service: "Pur als Digestif", alternatives: "Nonino Moscato, Nonino Chardonnay", production: "Destillation aus frischem Traubentrester", allergens: "Keine bekannten" },
@@ -300,6 +330,7 @@ export const PRODUCTS = [
     alternatives: "Anderer Mandellikör",
     production: "Aromatisierung meist über Aprikosenkern-Destillat",
     allergens: "Kann Spuren von Nüssen/Aprikosenkernen enthalten – bei Nussallergie prüfen",
+    pairsWith: ["French Connection", "Amaretto Sour"],
   },
   {
     name: "Aperol", group: "Liköre & Aperitifs", subGroup: "Bitter-Aperitif",
@@ -312,6 +343,7 @@ export const PRODUCTS = [
     alternatives: "Campari (herber/stärker)",
     production: "Mazeration von Bitterorange, Rhabarber und Kräutern",
     allergens: "Keine bekannten",
+    pairsWith: ["Aperol Spritz"],
   },
   {
     name: "Campari", group: "Liköre & Aperitifs", subGroup: "Bitter-Aperitif",
@@ -324,6 +356,7 @@ export const PRODUCTS = [
     alternatives: "Aperol (milder/süßer)",
     production: "Mazeration von Kräutern, Wurzeln und Bitterorangenschalen",
     allergens: "Keine bekannten",
+    pairsWith: ["Boulevardier", "Negroni", "Americano"],
   },
   {
     name: "Cointreau", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
@@ -336,6 +369,7 @@ export const PRODUCTS = [
     alternatives: "Anderer Triple Sec (Grand Marnier für kräftigere Note)",
     production: "Destillation von süßen und bitteren Orangenschalen",
     allergens: "Keine bekannten",
+    pairsWith: ["Singapore Sling", "Margarita", "Cosmopolitan"],
   },
   {
     name: "Grand Marnier", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
@@ -348,6 +382,7 @@ export const PRODUCTS = [
     alternatives: "Cointreau (leichter, weniger Cognac-Tiefe)",
     production: "Bitterorangen-Destillat auf Cognac-Basis",
     allergens: "Keine bekannten",
+    pairsWith: ["Mai Tai 1947"],
   },
   {
     name: "Maraschino-Likör", group: "Liköre & Aperitifs", subGroup: "Steinfrucht-/Mandellikör",
@@ -360,6 +395,7 @@ export const PRODUCTS = [
     alternatives: "Kein direkter Ersatz – Charakter ist einzigartig",
     production: "Destillation aus Marasca-Kirschen inklusive Kernen",
     allergens: "Keine bekannten",
+    pairsWith: ["Aviation", "Last Word", "Hemingway Daiquiri"],
   },
   {
     name: "Kahlúa", group: "Liköre & Aperitifs", subGroup: "Kaffeelikör",
@@ -372,6 +408,7 @@ export const PRODUCTS = [
     alternatives: "Anderer Kaffeelikör",
     production: "Mazeration/Extraktion von Kaffee, gesüßt",
     allergens: "Enthält Koffein",
+    pairsWith: ["White Russian", "Espresso Martini"],
   },
   {
     name: "Giffard Crème de Cacao White", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
@@ -384,8 +421,11 @@ export const PRODUCTS = [
     alternatives: "Giffard Crème de Cacao Brown",
     production: "Aromatisierung mit geröstetem Kakao",
     allergens: "Keine bekannten",
+    pairsWith: ["Brandy Alexander", "Grasshopper"],
   },
-  { name: "Giffard Crème de Cacao Brown", group: "Liköre & Aperitifs", subGroup: "Cremelikör", category: "Kakaolikör (braun) · Frankreich", abv: "24 % vol", tastingNotes: "Schokoladig-süß, kräftige braune Farbe", flavorProfile: { suess: 8, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Braune Variante des Kakaolikörs, klassisch für Brandy Alexander und Grasshopper.", service: "Brandy Alexander, Grasshopper, Chocolate Martini", alternatives: "Giffard Crème de Cacao White", production: "Aromatisierung mit geröstetem Kakao", allergens: "Keine bekannten" },
+  { name: "Giffard Crème de Cacao Brown", group: "Liköre & Aperitifs", subGroup: "Cremelikör", category: "Kakaolikör (braun) · Frankreich", abv: "24 % vol", tastingNotes: "Schokoladig-süß, kräftige braune Farbe", flavorProfile: { suess: 8, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Braune Variante des Kakaolikörs, klassisch für Brandy Alexander und Grasshopper.", service: "Brandy Alexander, Grasshopper, Chocolate Martini", alternatives: "Giffard Crème de Cacao White", production: "Aromatisierung mit geröstetem Kakao", allergens: "Keine bekannten",
+    pairsWith: ["Brandy Alexander"],
+  },
   {
     name: "Grüner Crème de Menthe", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
     category: "Pfefferminzlikör · diverse Herkunft",
@@ -397,6 +437,7 @@ export const PRODUCTS = [
     alternatives: "Weißer Crème de Menthe (nur Farbe unterscheidet sich)",
     production: "Aromatisierung mit Pfefferminzöl",
     allergens: "Keine bekannten",
+    pairsWith: ["Grasshopper"],
   },
   {
     name: "Weißer Crème de Menthe", group: "Liköre & Aperitifs", subGroup: "Cremelikör",
@@ -421,6 +462,7 @@ export const PRODUCTS = [
     alternatives: "Kein wirklicher Ersatz für den floralen Ton",
     production: "Aromatisierung/Mazeration mit Veilchenblüten",
     allergens: "Keine bekannten",
+    pairsWith: ["Aviation"],
   },
   {
     name: "Orange Curaçao", group: "Liköre & Aperitifs", subGroup: "Orangenlikör",
@@ -433,6 +475,7 @@ export const PRODUCTS = [
     alternatives: "Cointreau/Triple Sec (heller, weniger süß)",
     production: "Destillation/Mazeration von (Bitter-)Orangenschalen",
     allergens: "Keine bekannten",
+    pairsWith: ["Mai Tai"],
   },
   {
     name: "DOM Bénédictine", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
@@ -445,6 +488,7 @@ export const PRODUCTS = [
     alternatives: "Kein direkter Ersatz, ggf. anderer Kräuterlikör",
     production: "Mazeration von über 27 Kräutern und Gewürzen, Fassreifung",
     allergens: "Keine bekannten",
+    pairsWith: ["Singapore Sling", "Vieux Carré"],
   },
   {
     name: "Grüner Chartreuse", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
@@ -457,6 +501,7 @@ export const PRODUCTS = [
     alternatives: "Kein direkter Ersatz – einzigartiges Profil",
     production: "Mazeration von rund 130 Kräutern und Pflanzen nach Klosterrezept",
     allergens: "Keine bekannten",
+    pairsWith: ["Last Word"],
   },
   {
     name: "Cherry Heering (Kirschlikör)", group: "Liköre & Aperitifs", subGroup: "Fruchtlikör",
@@ -469,6 +514,7 @@ export const PRODUCTS = [
     alternatives: "Anderer dunkler Kirschlikör",
     production: "Mazeration dunkler Kirschen, Fassreifung",
     allergens: "Keine bekannten",
+    pairsWith: ["Singapore Sling"],
   },
   {
     name: "Helbing Kümmel", group: "Liköre & Aperitifs", subGroup: "Kräuter-/Blütenlikör",
@@ -481,6 +527,7 @@ export const PRODUCTS = [
     alternatives: "Anderer Kümmelschnaps",
     production: "Destillation/Aromatisierung mit Kümmel und Kräutern",
     allergens: "Keine bekannten",
+    pairsWith: ["Sea Breeze"],
   },
   { name: "Giffard Abricot du Roussillon", group: "Liköre & Aperitifs", subGroup: "Steinfrucht-/Mandellikör", category: "Aprikosenlikör · Frankreich", abv: "18 % vol", tastingNotes: "Süß-fruchtig, reife Aprikose", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 10, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 7, cremig: 0, salzigMineralisch: 0 }, story: "Aprikosenlikör des französischen Traditionshauses Giffard aus Roussillon-Aprikosen.", service: "Fruchtige Sour-Cocktails", alternatives: "Amaretto (anderes Profil)", production: "", allergens: "Keine bekannten" },
   { name: "Giffard Triple Sec", group: "Liköre & Aperitifs", subGroup: "Orangenlikör", category: "Orangenlikör (Triple Sec) · Frankreich", abv: "40 % vol", tastingNotes: "Klar-orangig, süß-herb", flavorProfile: { suess: 6, sauer: 0, bitter: 0, herbKraeuterig: 0, fruchtig: 9, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Orangenlikör des Hauses Giffard, klassische Triple-Sec-Zutat.", service: "Margarita, Cosmopolitan, Sidecar", alternatives: "Cointreau", production: "", allergens: "Keine bekannten" },
@@ -526,6 +573,7 @@ export const PRODUCTS = [
     alternatives: "Martini Rosso oder anderer hochwertiger roter Wermut",
     production: "Traditionsrezeptur mit Vanille, Zimt und weiteren Gewürzen",
     allergens: "Enthält Sulfite (weinbasiert)",
+    pairsWith: ["Manhattan", "Boulevardier", "Negroni"],
   },
   {
     name: "Martini Florale", group: "Wermut & Aperitif-Wein", subGroup: "Wermut",
@@ -538,9 +586,14 @@ export const PRODUCTS = [
     alternatives: "Anderer floraler/aromatisierter Wermut",
     production: "Wermutbasis mit Blütenaromatisierung",
     allergens: "Enthält Sulfite (weinbasiert)",
+    pairsWith: ["Morgentau"],
   },
-  { name: "Martini Bianco", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Weißer Wermut · Italien", abv: "14,4 % vol", tastingNotes: "Süß, vanillig, leicht blumig", flavorProfile: { suess: 6, sauer: 0, bitter: 10, herbKraeuterig: 3, fruchtig: 5, wuerzigScharf: 0, floral: 4, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Süße weiße Wermut-Variante von Martini & Rossi.", service: "Wermut-Cocktails, pur on the rocks mit Zitrus", alternatives: "Lillet Blanc", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
-  { name: "Martini Dry", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Trockener Wermut · Italien", abv: "18 % vol", tastingNotes: "Trocken, kräuterig, dezent bitter", flavorProfile: { suess: 0, sauer: 0, bitter: 10, herbKraeuterig: 5, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Trockene, kräuterbetonte Wermut-Variante – klassische Martini-Cocktail-Zutat.", service: "Martini (Cocktail), Gibson", alternatives: "Anderer trockener Wermut", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
+  { name: "Martini Bianco", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Weißer Wermut · Italien", abv: "14,4 % vol", tastingNotes: "Süß, vanillig, leicht blumig", flavorProfile: { suess: 6, sauer: 0, bitter: 10, herbKraeuterig: 3, fruchtig: 5, wuerzigScharf: 0, floral: 4, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Süße weiße Wermut-Variante von Martini & Rossi.", service: "Wermut-Cocktails, pur on the rocks mit Zitrus", alternatives: "Lillet Blanc", production: "", allergens: "Enthält Sulfite (weinbasiert)",
+    pairsWith: ["Cosmo 1934"],
+  },
+  { name: "Martini Dry", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Trockener Wermut · Italien", abv: "18 % vol", tastingNotes: "Trocken, kräuterig, dezent bitter", flavorProfile: { suess: 0, sauer: 0, bitter: 10, herbKraeuterig: 5, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Trockene, kräuterbetonte Wermut-Variante – klassische Martini-Cocktail-Zutat.", service: "Martini (Cocktail), Gibson", alternatives: "Anderer trockener Wermut", production: "", allergens: "Enthält Sulfite (weinbasiert)",
+    pairsWith: ["Martini", "Dirty Martini", "Vodka Martini"],
+  },
   { name: "Martini Rosso", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Roter Wermut · Italien", abv: "15 % vol", tastingNotes: "Süß-würzig, Karamell, Kräuter", flavorProfile: { suess: 6, sauer: 0, bitter: 9, herbKraeuterig: 6, fruchtig: 0, wuerzigScharf: 6, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer roter Wermut, Standardzutat im Manhattan und Negroni.", service: "Manhattan, Negroni, Americano", alternatives: "Antica Formula (Premium-Variante)", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
   { name: "Martini Vibrante", group: "Wermut & Aperitif-Wein", subGroup: "Wermut", category: "Aromatisierter Wermut (fruchtig-würzig) · Italien", abv: "14,4 % vol", tastingNotes: "Fruchtig-würzig, kräftig", flavorProfile: { suess: 0, sauer: 0, bitter: 9, herbKraeuterig: 3, fruchtig: 8, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Aromatisierte Wermut-Variante von Martini & Rossi mit intensiverem Fruchtprofil.", service: "Spritz-Varianten, Longdrinks", alternatives: "Martini Fiero", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
   { name: "Martini Fiero", group: "Wermut & Aperitif-Wein", subGroup: "Aperitif-Wein", category: "Bitterorangen-Aperitif (Wermut-Basis) · Italien", abv: "14,9 % vol", tastingNotes: "Bitterorange, süß-herb", flavorProfile: { suess: 6, sauer: 0, bitter: 9, herbKraeuterig: 3, fruchtig: 7, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Aperol-artiger, wermutbasierter Bitterorangen-Aperitif von Martini & Rossi.", service: "Spritz-Varianten", alternatives: "Aperol", production: "", allergens: "Enthält Sulfite (weinbasiert)" },
@@ -557,6 +610,7 @@ export const PRODUCTS = [
     alternatives: "Belsazar Rosé oder Aperol in geringerer Menge",
     production: "Roséwein-Basis mit Kräuterauszügen",
     allergens: "Enthält Sulfite (weinbasiert)",
+    pairsWith: ["Rhubarb Rosato"],
   },
   { name: "Lustau Manzanilla Papirusa", group: "Wermut & Aperitif-Wein", subGroup: "Sherry", category: "Manzanilla-Sherry · Spanien (Sanlúcar)", abv: "15 % vol", tastingNotes: "Sehr trocken, salzig-mineralisch, Hefenote",
     flavorProfile: { suess: 0, sauer: 0, bitter: 2, herbKraeuterig: 3, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 6 }, story: "Unter Flor gereifter, besonders trockener und salziger Sherry aus Sanlúcar de Barrameda.", service: "Pur gut gekühlt, als Aperitif", alternatives: "Lustau Amontillado Medium", production: "Biologischer Ausbau unter Flor-Hefeschicht", allergens: "Enthält Sulfite (weinbasiert)" },
@@ -578,14 +632,19 @@ export const PRODUCTS = [
     alternatives: "Kein direkter Ersatz für den charakteristischen Geschmack",
     production: "Mazeration von Gewürzen und Kräutern (u. a. Enzianwurzel), Rezeptur geheim",
     allergens: "Keine bekannten",
+    pairsWith: ["Old Fashioned", "Manhattan", "Sazerac"],
   },
 
   // ---------- ABSINTH ----------
-  { name: "Absinth", group: "Absinth", subGroup: "", category: "Absinth (Wermutkraut) · diverse Herkunft", abv: "45–70 % vol", tastingNotes: "Sehr intensiv Anis/Wermutkraut, bitter-kräuterig", flavorProfile: { suess: 5, sauer: 0, bitter: 10, herbKraeuterig: 10, fruchtig: 0, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Hochprozentige Spirituose aus Wermutkraut, Anis und Fenchel – traditionell mit Wasser über einen Zuckerwürfel verdünnt oder als 'Rinse' im Glas geschwenkt.", service: "Sazerac (Rinse), Absinth-Zeremonie mit Wasser", alternatives: "Pernod (deutlich milder)", production: "Mazeration von Wermutkraut, Anis und weiteren Kräutern", allergens: "Keine bekannten" },
+  { name: "Absinth", group: "Absinth", subGroup: "", category: "Absinth (Wermutkraut) · diverse Herkunft", abv: "45–70 % vol", tastingNotes: "Sehr intensiv Anis/Wermutkraut, bitter-kräuterig", flavorProfile: { suess: 5, sauer: 0, bitter: 10, herbKraeuterig: 10, fruchtig: 0, wuerzigScharf: 8, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Hochprozentige Spirituose aus Wermutkraut, Anis und Fenchel – traditionell mit Wasser über einen Zuckerwürfel verdünnt oder als 'Rinse' im Glas geschwenkt.", service: "Sazerac (Rinse), Absinth-Zeremonie mit Wasser", alternatives: "Pernod (deutlich milder)", production: "Mazeration von Wermutkraut, Anis und weiteren Kräutern", allergens: "Keine bekannten",
+    pairsWith: ["Sazerac"],
+  },
 
   // ---------- SCHAUMWEIN ----------
   { name: "Pfannebecker Pinot Cuvée (Winzersekt)", group: "Schaumwein", subGroup: "", category: "Winzersekt (Pinot-Cuvée) · Deutschland", abv: "12 % vol", tastingNotes: "Fein-fruchtig, feine Perlage", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Winzersekt des Weinguts Pfannebecker aus Pinot-Trauben.", service: "Pur, Spritz-Varianten", alternatives: "Geiger Prosecco", production: "", allergens: "Enthält Sulfite" },
-  { name: "Taittinger Brut Réserve", group: "Schaumwein", subGroup: "", category: "Champagner (Brut) · Frankreich", abv: "12,5 % vol", tastingNotes: "Elegant, Zitrus, Brioche, feine Perlage", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer Non-Vintage-Champagner des Hauses Taittinger.", service: "Pur, Champagner-Cocktails (French 75)", alternatives: "Ruinart R de Ruinart Brut", production: "", allergens: "Enthält Sulfite" },
+  { name: "Taittinger Brut Réserve", group: "Schaumwein", subGroup: "", category: "Champagner (Brut) · Frankreich", abv: "12,5 % vol", tastingNotes: "Elegant, Zitrus, Brioche, feine Perlage", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer Non-Vintage-Champagner des Hauses Taittinger.", service: "Pur, Champagner-Cocktails (French 75)", alternatives: "Ruinart R de Ruinart Brut", production: "", allergens: "Enthält Sulfite",
+    pairsWith: ["French 75", "Mimosa"],
+  },
   { name: "Taittinger Prelude Grand Cru", group: "Schaumwein", subGroup: "", category: "Champagner (Grand Cru) · Frankreich", abv: "12,5 % vol", tastingNotes: "Kräftiger, mineralisch, komplex",
     flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 0, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 5, nussig: 0, cremig: 0, salzigMineralisch: 5 }, story: "Ausschließlich aus Grand-Cru-Lagen erzeugter Champagner von Taittinger.", service: "Pur als Aperitif", alternatives: "Taittinger Brut Réserve", production: "", allergens: "Enthält Sulfite" },
   { name: "Taittinger Comtes de Champagne Blanc de Blancs 2011", group: "Schaumwein", subGroup: "", category: "Prestige-Champagner (Jahrgang) · Frankreich", abv: "12,5 % vol", tastingNotes: "Sehr fein, Zitrus, Mandel, langer Abgang", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 5, cremig: 0, salzigMineralisch: 0 }, story: "Prestige-Cuvée von Taittinger, ausschließlich aus Chardonnay.", service: "Pur als Digestif/Aperitif", alternatives: "Ruinart Blanc de Blancs", production: "", allergens: "Enthält Sulfite" },
@@ -597,9 +656,13 @@ export const PRODUCTS = [
   { name: "Ruinart Rosé", group: "Schaumwein", subGroup: "", category: "Champagner Rosé · Frankreich", abv: "12,5 % vol", tastingNotes: "Fruchtig, rote Frucht, frisch", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Roséchampagner von Ruinart.", service: "Pur, Champagner-Cocktails", alternatives: "Taittinger Prestige Rosé", production: "", allergens: "Enthält Sulfite" },
   { name: "Dom Pérignon Vintage Brut 2013", group: "Schaumwein", subGroup: "", category: "Prestige-Champagner (Jahrgang) · Frankreich", abv: "12,5 % vol", tastingNotes: "Sehr komplex, cremig, Zitrus, lang", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 8, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 5, salzigMineralisch: 0 }, story: "Ikonische Prestige-Cuvée von Moët & Chandon, nur in herausragenden Jahrgängen erzeugt.", service: "Pur als Digestif/Aperitif", alternatives: "Taittinger Comtes de Champagne Blanc de Blancs 2011", production: "", allergens: "Enthält Sulfite" },
   { name: "Dom Pérignon Vintage Rosé 2008", group: "Schaumwein", subGroup: "", category: "Prestige-Champagner Rosé (Jahrgang) · Frankreich", abv: "12,5 % vol", tastingNotes: "Sehr komplex, rote Frucht, cremig, langer Abgang", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 8, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 5, salzigMineralisch: 0 }, story: "Rosé-Ausführung der Prestige-Cuvée Dom Pérignon.", service: "Pur als Digestif/Aperitif", alternatives: "Taittinger Comtes de Champagne Rosé 2007", production: "", allergens: "Enthält Sulfite" },
-  { name: "3³ Secco (Weingut Pfannebecker)", group: "Schaumwein", subGroup: "", category: "Secco (Traubensecco) · Deutschland", abv: "11 % vol", tastingNotes: "Fruchtig-frisch, leicht süß, feine Perlage", flavorProfile: { suess: 4, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 7, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Secco des Weinguts Pfannebecker aus Trauben-Cuvée.", service: "Pur, Spritz-Varianten", alternatives: "Geiger Prosecco", production: "", allergens: "Enthält Sulfite" },
+  { name: "3³ Secco (Weingut Pfannebecker)", group: "Schaumwein", subGroup: "", category: "Secco (Traubensecco) · Deutschland", abv: "11 % vol", tastingNotes: "Fruchtig-frisch, leicht süß, feine Perlage", flavorProfile: { suess: 4, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 7, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Secco des Weinguts Pfannebecker aus Trauben-Cuvée.", service: "Pur, Spritz-Varianten", alternatives: "Geiger Prosecco", production: "", allergens: "Enthält Sulfite",
+    pairsWith: ["Beery Negroni Sbagliato"],
+  },
   { name: "Geiger Prosecco", group: "Schaumwein", subGroup: "", category: "Prosecco · Italien", abv: "11 % vol", tastingNotes: "Fruchtig, Apfel, Birne, leicht", flavorProfile: { suess: 0, sauer: 3, bitter: 7, herbKraeuterig: 0, fruchtig: 6, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Klassischer italienischer Prosecco für Aperol Spritz & Co.", service: "Aperol Spritz, pur", alternatives: "3³ Secco (Weingut Pfannebecker)", production: "", allergens: "Enthält Sulfite" },
-  { name: "Chapeau Secco", group: "Schaumwein", subGroup: "", category: "Secco (Markenprodukt) – Name laut Bestellliste abgekürzt, bitte prüfen", abv: "11 % vol", tastingNotes: "Fruchtig-frisch, leicht", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "", service: "Spritz-Varianten", alternatives: "Geiger Prosecco", production: "", allergens: "Enthält Sulfite" },
+  { name: "Chapeau Secco", group: "Schaumwein", subGroup: "", category: "Secco (Markenprodukt) – Name laut Bestellliste abgekürzt, bitte prüfen", abv: "11 % vol", tastingNotes: "Fruchtig-frisch, leicht", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "", service: "Spritz-Varianten", alternatives: "Geiger Prosecco", production: "", allergens: "Enthält Sulfite",
+    pairsWith: ["Bellini", "Aperol Spritz", "Negroni Sbagliato"],
+  },
   { name: "Natureo Sekt 0,0 (alkoholfrei)", group: "Schaumwein", subGroup: "", category: "Alkoholfreier Sekt-Ersatz · Spanien", abv: "0,0 % vol", tastingNotes: "Fruchtig-frisch, feine Perlage, ohne Alkohol", flavorProfile: { suess: 0, sauer: 3, bitter: 0, herbKraeuterig: 0, fruchtig: 5, wuerzigScharf: 0, floral: 0, rauchig: 0, erdigHolzig: 0, nussig: 0, cremig: 0, salzigMineralisch: 0 }, story: "Alkoholfreie Schaumwein-Alternative der Familia Torres.", service: "Alkoholfreier Aperitif, Mocktail-Spritz", alternatives: "Drei³ Zero (Weingut Spreitzer)", production: "Entalkoholisierter Basiswein", allergens: "Enthält Sulfite" },
 
   // ---------- WEIN ----------

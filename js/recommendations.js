@@ -2,30 +2,9 @@ import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onProductsChanged, onRecipesChanged, loadInventory, saveInventory } from "./storage.js";
 import { escapeHtml } from "./utils.js";
-import { hasFlavorProfile, compatibilityScore, resolveIngredientProduct, deriveRecipeFlavorProfile, asFlavorProfileHolder } from "./compatibility.js";
 import { calculateRecipeCost } from "./costing.js";
 
 const RESULTS_PAGE_SIZE = 20;
-
-// Produktgruppen, die als eigenständig "verkaufbar" für Cross-Sell-Vorschläge
-// gelten (Spirituosen pur, Wein/Bier/Schaumwein) - Mixer, Sirupe, Säfte,
-// Tee/Kaffee & Sonstiges sind Zutaten, keine Dinge, die man einem Gast
-// zusätzlich empfiehlt (z. B. kein "dazu passt gut: Agavendicksaft").
-const SELLABLE_GROUPS = new Set([
-  "Gin",
-  "Vodka",
-  "Rum & Cachaça",
-  "Whisky",
-  "Tequila & Mezcal",
-  "Brände",
-  "Liköre & Aperitifs",
-  "Wermut & Aperitif-Wein",
-  "Bitters",
-  "Absinth",
-  "Schaumwein",
-  "Wein",
-  "Bier",
-]);
 
 const modeButtons = document.querySelectorAll(".rec-mode-btn");
 const modeAMainEl = document.getElementById("rec-mode-a-main");
@@ -261,7 +240,9 @@ function renderRecipeSidebarList() {
 }
 
 // Zutaten-Überlappung als Dice-Koeffizient (0..1) über die Namen beider
-// Zutatenlisten.
+// Zutatenlisten - einziges algorithmisches Signal hier, echte Zutaten sind
+// Fakten statt Heuristik. Ein manuell kuratierter pairsWith-Eintrag ist
+// trotzdem immer genauer und geht deshalb unabhängig vom Score-Wert vor.
 function ingredientOverlapScore(a, b) {
   if (a.ingredients.length === 0 || b.ingredients.length === 0) return 0;
   const namesB = b.ingredients.map((i) => i.name.toLowerCase());
@@ -269,28 +250,8 @@ function ingredientOverlapScore(a, b) {
   return (2 * matched) / (a.ingredients.length + b.ingredients.length);
 }
 
-// compatibilityScore() paarweise über beide Zutatenlisten gemittelt (nur
-// Zutaten, die auf ein Produkt mit Aromaprofil auflösbar sind).
-function pairwiseCompatibilityAvg(a, b, products) {
-  const prodsA = a.ingredients.map((i) => resolveIngredientProduct(i.name, products)).filter(Boolean);
-  const prodsB = b.ingredients.map((i) => resolveIngredientProduct(i.name, products)).filter(Boolean);
-  const scores = [];
-  prodsA.forEach((pa) => {
-    prodsB.forEach((pb) => {
-      const s = compatibilityScore(pa, pb);
-      if (s !== null) scores.push(s);
-    });
-  });
-  if (scores.length === 0) return null;
-  return scores.reduce((sum, s) => sum + s, 0) / scores.length;
-}
-
-// Kombiniert Zutaten-Überlappung und Aroma-Kompatibilität zu einem 0-100
-// Ähnlichkeits-Score. Ohne auflösbare Aromaprofile zählt nur die Überlappung.
-function similarityScore(a, b, products) {
-  const overlapPct = ingredientOverlapScore(a, b) * 100;
-  const pairwiseAvg = pairwiseCompatibilityAvg(a, b, products);
-  return pairwiseAvg === null ? Math.round(overlapPct) : Math.round(0.5 * overlapPct + 0.5 * pairwiseAvg);
+function isCuratedPair(reference, candidate) {
+  return (reference.pairsWith ?? []).some((n) => n.toLowerCase() === candidate.name.toLowerCase());
 }
 
 function renderModeBResults() {
@@ -299,7 +260,6 @@ function renderModeBResults() {
     bResultsEl.innerHTML = "";
     return;
   }
-  const products = getAllProducts();
   const recipes = getAllRecipes();
   const reference = recipes.find((r) => r.name === selectedRecipeName);
   if (!reference) {
@@ -311,8 +271,8 @@ function renderModeBResults() {
 
   const scored = recipes
     .filter((r) => r.name !== reference.name)
-    .map((r) => ({ recipe: r, score: similarityScore(reference, r, products) }))
-    .sort((x, y) => y.score - x.score);
+    .map((r) => ({ recipe: r, score: Math.round(ingredientOverlapScore(reference, r) * 100), curated: isCuratedPair(reference, r) }))
+    .sort((x, y) => (y.curated ? 1 : 0) - (x.curated ? 1 : 0) || y.score - x.score);
 
   const visible = showAllModeB ? scored : scored.slice(0, RESULTS_PAGE_SIZE);
   const hiddenCount = scored.length - visible.length;
@@ -339,11 +299,11 @@ function renderModeBResults() {
       ? `<p class="empty-note">Keine anderen Rezepte gefunden.</p>`
       : entries
           .map(
-            ({ recipe, score, cost }) => `
+            ({ recipe, score, curated, cost }) => `
           <div class="sm-pitch-card">
             <div class="sm-pitch-head">
               <span class="sm-pitch-name">${escapeHtml(recipe.name)}</span>
-              <span class="sm-pitch-type">${score} / 100${cost != null ? ` · Wareneinsatz ${formatEuro(cost)}` : ""}</span>
+              <span class="sm-pitch-type">${curated ? "Kuratiert · " : ""}${score}% Zutaten-Überschneidung${cost != null ? ` · Wareneinsatz ${formatEuro(cost)}` : ""}</span>
             </div>
           </div>
         `
@@ -369,10 +329,6 @@ function renderModeBResults() {
 
 // ---------- Modus C: Cross-Sell ----------
 
-function isSellableProduct(product) {
-  return SELLABLE_GROUPS.has(product.group);
-}
-
 function renderModeCResults() {
   const name = cSearchEl.value.trim();
   if (!name) {
@@ -386,62 +342,21 @@ function renderModeCResults() {
     cResultsEl.innerHTML = `<p class="empty-note">Kein Produkt oder Rezept mit diesem Namen gefunden.</p>`;
     return;
   }
-  const { type, item } = found;
+  const { item } = found;
 
-  // (a) manuell gepflegtes "Passt gut zu" ist immer genauer als jede Heuristik.
-  if (item.pairsWith && item.pairsWith.length > 0) {
-    const entries = item.pairsWith.map((n) => lookupByName(n, products, recipes)).filter(Boolean);
-    cResultsEl.innerHTML =
-      entries.length > 0
-        ? entries.map(({ type: t, item: i }) => pitchCard(t, i)).join("")
-        : `<p class="empty-note">Die hinterlegten "Passt gut zu"-Namen wurden nicht gefunden.</p>`;
+  // Rein manuell kuratiertes "Passt gut zu" - kein algorithmischer Fallback
+  // mehr, damit nie eine unbegründete Empfehlung erscheint (z. B. ein Sirup
+  // als "Cross-Sell" zu einem Cocktail). Fehlt die Kuratierung, ist das ein
+  // ehrlicher Hinweis statt einer geratenen Vermutung.
+  if (!item.pairsWith || item.pairsWith.length === 0) {
+    cResultsEl.innerHTML = `<p class="empty-note">Für "${escapeHtml(item.name)}" ist noch kein "Passt gut zu" hinterlegt.</p>`;
     return;
   }
-
-  // (b) algorithmischer Fallback: compatibilityScore, aber nur gegen andere
-  // verkaufbare Spirituosen/Wein/Bier/Schaumwein und Cocktails - Mixer,
-  // Sirupe, Säfte, Tee/Kaffee sind Zutaten, keine Cross-Sell-Vorschläge.
-  let holder;
-  if (type === "product") {
-    if (!hasFlavorProfile(item)) {
-      cResultsEl.innerHTML = `<p class="empty-note">Für "${escapeHtml(item.name)}" ist weder "Passt gut zu" noch ein Aromaprofil hinterlegt.</p>`;
-      return;
-    }
-    holder = item;
-  } else {
-    const derived = deriveRecipeFlavorProfile(item, products);
-    if (!derived) {
-      cResultsEl.innerHTML = `<p class="empty-note">Für "${escapeHtml(item.name)}" ist weder "Passt gut zu" noch ein ableitbares Aromaprofil hinterlegt.</p>`;
-      return;
-    }
-    holder = asFlavorProfileHolder(item.name, derived);
-  }
-
-  const productCandidates = products
-    .filter(isSellableProduct)
-    .filter(hasFlavorProfile)
-    .filter((p) => p.name !== item.name)
-    .filter((p) => type !== "product" || p.group !== item.group)
-    .map((p) => ({ type: "product", item: p, holder: p }));
-
-  const recipeCandidates = recipes
-    .filter((r) => r.name !== item.name)
-    .map((r) => {
-      const derived = deriveRecipeFlavorProfile(r, products);
-      return derived ? { type: "recipe", item: r, holder: asFlavorProfileHolder(r.name, derived) } : null;
-    })
-    .filter(Boolean);
-
-  const scored = [...productCandidates, ...recipeCandidates]
-    .map((c) => ({ ...c, score: compatibilityScore(holder, c.holder) }))
-    .filter((c) => c.score !== null)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
-
+  const entries = item.pairsWith.map((n) => lookupByName(n, products, recipes)).filter(Boolean);
   cResultsEl.innerHTML =
-    scored.length === 0
-      ? `<p class="empty-note">Keine passenden Vorschläge gefunden.</p>`
-      : scored.map(({ type: t, item: i }) => pitchCard(t, i)).join("");
+    entries.length > 0
+      ? entries.map(({ type: t, item: i }) => pitchCard(t, i)).join("")
+      : `<p class="empty-note">Die hinterlegten "Passt gut zu"-Namen wurden nicht gefunden.</p>`;
 }
 
 function populateModeCOptions() {
