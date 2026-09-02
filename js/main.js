@@ -1,4 +1,4 @@
-import { initTabs } from "./tabs.js";
+import { initTabs, closeMobileNav } from "./tabs.js";
 import { initHome } from "./home.js";
 import { initBatching } from "./batching.js";
 import { initRecipes } from "./recipes.js";
@@ -32,7 +32,7 @@ const logoutBtn = document.getElementById("logout-btn");
 const forcedPasswordForm = document.getElementById("forced-password-form");
 const forcedPasswordError = document.getElementById("forced-password-error");
 
-const changePasswordBtn = document.getElementById("change-password-btn");
+const changePasswordBtn = document.getElementById("change-password-nav-btn");
 const passwordModalOverlay = document.getElementById("password-modal-overlay");
 const passwordModalForm = document.getElementById("password-modal-form");
 const passwordModalError = document.getElementById("password-modal-error");
@@ -171,6 +171,7 @@ changePasswordBtn.addEventListener("click", () => {
   passwordModalError.hidden = true;
   passwordModalForm.reset();
   passwordModalOverlay.hidden = false;
+  closeMobileNav();
 });
 
 passwordModalCancelBtn.addEventListener("click", () => {

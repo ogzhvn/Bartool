@@ -22,6 +22,7 @@ export function initTabs() {
   const navBackdrop = document.getElementById("nav-backdrop");
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
+    if (!btn.dataset.tab) return;
     btn.addEventListener("click", () => {
       const subnav = btn.nextElementSibling;
       const hasSubnav = subnav?.classList.contains("sidebar-subnav");
