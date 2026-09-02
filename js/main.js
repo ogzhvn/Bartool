@@ -23,6 +23,7 @@ const authScreen = document.getElementById("auth-screen");
 const forcedPasswordScreen = document.getElementById("forced-password-screen");
 const appShell = document.getElementById("app-shell");
 const headerUser = document.getElementById("header-user");
+const navToggle = document.getElementById("nav-toggle");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const userInfoEl = document.getElementById("current-user-info");
@@ -98,6 +99,7 @@ async function handleAuthState({ session, profile }) {
     forcedPasswordScreen.hidden = true;
     appShell.hidden = true;
     headerUser.hidden = true;
+    navToggle.hidden = true;
     return;
   }
 
@@ -105,6 +107,7 @@ async function handleAuthState({ session, profile }) {
     authScreen.hidden = true;
     appShell.hidden = true;
     headerUser.hidden = true;
+    navToggle.hidden = true;
     document.getElementById("forced-password-username").value = profile?.username ?? "";
     forcedPasswordScreen.hidden = false;
     return;
@@ -114,6 +117,7 @@ async function handleAuthState({ session, profile }) {
   forcedPasswordScreen.hidden = true;
   appShell.hidden = false;
   headerUser.hidden = false;
+  navToggle.hidden = false;
   userInfoEl.textContent = `${profile?.display_name || profile?.username || session.user.email} · ${
     profile?.role === "admin" ? "Admin" : "Mitarbeiter"
   }`;

@@ -175,6 +175,10 @@ main:has(#products-edit-view.active) {
     display: inline-flex;
   }
 
+  .nav-toggle[hidden] {
+    display: none;
+  }
+
   .app-layout {
     display: block;
   }
