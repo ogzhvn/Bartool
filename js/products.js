@@ -1,5 +1,6 @@
 import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
+import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
@@ -128,6 +129,20 @@ const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
 const sidebarSearchEl = document.getElementById("product-sidebar-search");
+const selectedCountEl = document.getElementById("product-selected-count");
+const selectAllBtn = document.getElementById("product-select-all");
+const selectNoneBtn = document.getElementById("product-select-none");
+const exportExcelBtn = document.getElementById("product-export-excel");
+const exportWordBtn = document.getElementById("product-export-word");
+
+// Namen der für den Export angehakten Produkte (überlebt Neurendern der Liste).
+const selectedNames = new Set();
+
+function updateExportBar() {
+  selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
+  exportExcelBtn.disabled = selectedNames.size === 0;
+  exportWordBtn.disabled = selectedNames.size === 0;
+}
 
 let editingOriginalName = null;
 
@@ -376,7 +391,12 @@ function renderProductItem(product) {
   const item = document.createElement("details");
   item.className = "recipe-item";
   item.innerHTML = `
-    <summary>${escapeHtml(product.name)}</summary>
+    <summary>
+      <span class="recipe-item-title">
+        <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
+        ${escapeHtml(product.name)}
+      </span>
+    </summary>
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
@@ -386,6 +406,16 @@ function renderProductItem(product) {
       </div>
     </div>
   `;
+  const checkbox = item.querySelector(".product-select-checkbox");
+  checkbox.addEventListener("click", (e) => e.stopPropagation());
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) {
+      selectedNames.add(product.name);
+    } else {
+      selectedNames.delete(product.name);
+    }
+    updateExportBar();
+  });
   const editBtn = item.querySelector(".edit-btn");
   if (editBtn) {
     editBtn.addEventListener("click", (e) => {
@@ -425,6 +455,7 @@ function renderBrowseList() {
 
   if (products.length === 0) {
     listEl.innerHTML = `<p class="empty-note">Keine Produkte gefunden.</p>`;
+    updateExportBar();
     return;
   }
   listEl.innerHTML = "";
@@ -441,6 +472,7 @@ function renderBrowseList() {
         .sort((a, b) => a.name.localeCompare(b.name, "de"))
         .forEach((product) => listEl.appendChild(renderProductItem(product)));
     });
+    updateExportBar();
     return;
   }
 
@@ -471,6 +503,7 @@ function renderBrowseList() {
         .forEach((product) => listEl.appendChild(renderProductItem(product)));
     });
   });
+  updateExportBar();
 }
 
 function renderSidebarList() {
@@ -559,6 +592,22 @@ export function initProducts() {
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
+  selectAllBtn.addEventListener("click", () => {
+    currentFilteredProducts().forEach((p) => selectedNames.add(p.name));
+    renderBrowseList();
+  });
+  selectNoneBtn.addEventListener("click", () => {
+    selectedNames.clear();
+    renderBrowseList();
+  });
+  exportExcelBtn.addEventListener("click", () => {
+    const products = getAllProducts().filter((p) => selectedNames.has(p.name));
+    if (products.length > 0) exportProductsToExcel(products);
+  });
+  exportWordBtn.addEventListener("click", () => {
+    const products = getAllProducts().filter((p) => selectedNames.has(p.name));
+    if (products.length > 0) exportProductsToWord(products);
+  });
   // "Produkte" direkt anklicken (Sidebar-Button, Start-Kachel) zeigt wieder
   // den vollen Katalog statt in der zuletzt gewählten Kategorie zu bleiben.
   document.querySelectorAll('[data-tab="products"]').forEach((el) => {

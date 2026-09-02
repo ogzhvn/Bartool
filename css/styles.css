@@ -393,7 +393,8 @@ textarea {
   gap: 0.7rem;
 }
 
-.recipe-select-checkbox {
+.recipe-select-checkbox,
+.product-select-checkbox {
   width: 18px;
   height: 18px;
   cursor: pointer;

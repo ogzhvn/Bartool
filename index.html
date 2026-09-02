@@ -356,6 +356,15 @@
             <option value="">Alle Kategorien</option>
           </select>
         </div>
+
+        <div class="export-bar">
+          <span id="product-selected-count" class="export-count">0 ausgewählt</span>
+          <button type="button" id="product-select-all" class="btn-secondary">Alle auswählen</button>
+          <button type="button" id="product-select-none" class="btn-secondary">Auswahl aufheben</button>
+          <button type="button" id="product-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
+          <button type="button" id="product-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+        </div>
+
         <div id="product-list" class="recipe-accordion"></div>
       </div>
 
@@ -774,7 +783,7 @@
     <p>Bartool</p>
   </footer>
 
-  <!-- Nur für den Excel-Export im Rezepte-Tab benötigt -->
+  <!-- Nur für den Excel-Export in den Rezepte- und Produkte-Tabs benötigt -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Supabase-Client (Auth, Datenbank, Realtime, Edge Functions) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
