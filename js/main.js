@@ -10,6 +10,7 @@ import { initCalculation } from "./calculation.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
 import { initDataQuality } from "./dataQuality.js";
+import { initChangeRequestsAdmin, initMyChangeRequests } from "./changeRequests.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
@@ -80,6 +81,8 @@ async function bootstrapAppOnce() {
   initAdminPanel();
   initAuditLog();
   initDataQuality();
+  initChangeRequestsAdmin();
+  initMyChangeRequests();
   startSessionTimeoutWatch();
 }
 

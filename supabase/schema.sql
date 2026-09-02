@@ -324,6 +324,48 @@ create trigger profiles_audit
   for each row execute function public.log_audit();
 
 -- ---------------------------------------------------------------------
+-- Freigabe-Workflow: Mitarbeiter schlagen Änderungen vor, Admin prüft
+-- ---------------------------------------------------------------------
+
+create table if not exists public.change_requests (
+  id uuid primary key default gen_random_uuid(),
+  table_name text not null check (table_name in ('recipes', 'products')),
+  row_id uuid,
+  payload jsonb not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  proposed_by uuid not null references public.profiles (id) on delete cascade,
+  reviewed_by uuid references public.profiles (id) on delete set null,
+  review_comment text,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+
+alter table public.change_requests enable row level security;
+
+drop policy if exists "change_requests: own insert" on public.change_requests;
+create policy "change_requests: own insert"
+  on public.change_requests for insert
+  with check (proposed_by = auth.uid());
+
+drop policy if exists "change_requests: own or admin select" on public.change_requests;
+create policy "change_requests: own or admin select"
+  on public.change_requests for select
+  using (proposed_by = auth.uid() or private.is_admin());
+
+drop policy if exists "change_requests: admin update" on public.change_requests;
+create policy "change_requests: admin update"
+  on public.change_requests for update
+  using (private.is_admin())
+  with check (private.is_admin());
+
+do $$
+begin
+  alter publication supabase_realtime add table public.change_requests;
+exception
+  when duplicate_object then null;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
 -- ---------------------------------------------------------------------
 

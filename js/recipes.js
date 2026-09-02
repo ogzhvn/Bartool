@@ -5,6 +5,7 @@ import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
+import { submitChangeRequest } from "./changeRequests.js";
 
 const listViewEl = document.getElementById("recipes-list-view");
 const editViewEl = document.getElementById("recipes-edit-view");
@@ -92,24 +93,38 @@ async function handleSave() {
     return;
   }
   const basePortions = parseFloat(basePortionsEl.value) || 1;
+  const recipe = {
+    name,
+    basePortions,
+    ingredients,
+    method: methodEl.value.trim(),
+    glass: glassEl.value.trim(),
+    garnish: garnishEl.value.trim(),
+    ice: iceEl.value.trim(),
+    history: historyEl.value.trim(),
+    quickPitch: quickPitchEl.value.trim(),
+  };
+  const pairsWith = parsePairsWith(pairsWithEl.value);
+  if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
+
+  // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
+  // reichen den Vorschlag zur Prüfung ein.
+  if (!isAdmin()) {
+    try {
+      await submitChangeRequest("recipes", recipe);
+      alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      resetForm();
+      showListView();
+    } catch (error) {
+      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+    }
+    return;
+  }
 
   try {
     if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
       await deleteRecipe(editingOriginalName);
     }
-    const recipe = {
-      name,
-      basePortions,
-      ingredients,
-      method: methodEl.value.trim(),
-      glass: glassEl.value.trim(),
-      garnish: garnishEl.value.trim(),
-      ice: iceEl.value.trim(),
-      history: historyEl.value.trim(),
-      quickPitch: quickPitchEl.value.trim(),
-    };
-    const pairsWith = parsePairsWith(pairsWithEl.value);
-    if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
     await saveRecipe(recipe);
     editingOriginalName = name;
   } catch (error) {
@@ -193,14 +208,10 @@ function renderBrowseList() {
       <div class="recipe-item-body">
         <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
         ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
-        ${
-          isAdmin()
-            ? `<div class="actions">
-          <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-          ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-        </div>`
-            : ""
-        }
+        <div class="actions">
+          <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
+          ${isAdmin() && isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+        </div>
       </div>
     `;
     const checkbox = item.querySelector(".recipe-select-checkbox");
@@ -268,6 +279,9 @@ export function openRecipeForEdit(name) {
 }
 
 export function initRecipes() {
+  if (!isAdmin()) {
+    document.getElementById("recipe-save").textContent = "Vorschlag einreichen";
+  }
   editor.setIngredients([]);
   document.getElementById("recipe-add-ingredient").addEventListener("click", () => editor.addRow());
   document.getElementById("recipe-save").addEventListener("click", handleSave);
