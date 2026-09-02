@@ -53,6 +53,7 @@ body {
   position: absolute;
   left: 1rem;
   top: 1.4rem;
+  z-index: 110;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -195,6 +196,15 @@ main:has(#products-edit-view.active) {
 
   .sidebar.open {
     display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 105;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background: var(--bg);
+    padding-top: 4.5rem;
+    border-bottom: none;
   }
 
   main,
