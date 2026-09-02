@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "./supabaseClient.js";
+import { functionErrorMessage } from "./utils.js";
 
 let currentSession = null;
 let currentProfile = null;
@@ -51,7 +52,7 @@ export async function signIn(username, password) {
   });
 
   if (error || !data?.access_token || !data?.refresh_token) {
-    return { error: new Error(data?.error || error?.message || "Login fehlgeschlagen.") };
+    return { error: new Error(await functionErrorMessage(error, data)) };
   }
 
   return supabase.auth.setSession({

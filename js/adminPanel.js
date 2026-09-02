@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
-import { escapeHtml } from "./utils.js";
+import { escapeHtml, functionErrorMessage } from "./utils.js";
 
 const createForm = document.getElementById("admin-create-form");
 const createError = document.getElementById("admin-create-error");
@@ -97,7 +97,7 @@ function renderEmployees(profiles) {
         body: { action: "reset-password", userId: id, password },
       });
       if (error || data?.error) {
-        alert("Passwort konnte nicht zurückgesetzt werden: " + (data?.error || error.message));
+        alert("Passwort konnte nicht zurückgesetzt werden: " + (await functionErrorMessage(error, data)));
         return;
       }
       alert("Passwort wurde zurückgesetzt. Die Person muss beim nächsten Login ein neues Passwort setzen.");
@@ -113,7 +113,7 @@ function renderEmployees(profiles) {
         body: { action: "delete", userId: id },
       });
       if (error || data?.error) {
-        alert("Konto konnte nicht gelöscht werden: " + (data?.error || error.message));
+        alert("Konto konnte nicht gelöscht werden: " + (await functionErrorMessage(error, data)));
         return;
       }
       loadEmployees();
@@ -138,7 +138,7 @@ async function handleCreate(e) {
 
   if (error || data?.error) {
     createError.hidden = false;
-    createError.textContent = "Konto konnte nicht angelegt werden: " + (data?.error || error.message);
+    createError.textContent = "Konto konnte nicht angelegt werden: " + (await functionErrorMessage(error, data));
     return;
   }
 
