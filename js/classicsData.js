@@ -10,6 +10,7 @@
 export const CLASSIC_RECIPES = [
   {
     name: "Old Fashioned",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -24,6 +25,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Manhattan",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -38,6 +40,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Whiskey Sour",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -53,6 +56,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Sazerac",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -68,6 +72,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mint Julep",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -82,6 +87,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Boulevardier",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 30, unit: "ml" },
@@ -96,6 +102,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Penicillin",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Red Label", amount: 45, unit: "ml" },
@@ -111,6 +118,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Irish Coffee",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Jameson Irish Whiskey", amount: 40, unit: "ml" },
@@ -126,6 +134,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Martini",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -139,6 +148,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Dirty Martini",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -153,6 +163,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Negroni",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -167,6 +178,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Gimlet",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -180,6 +192,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Tom Collins",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -195,6 +208,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Aviation",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 45, unit: "ml" },
@@ -210,6 +224,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Last Word",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 20, unit: "ml" },
@@ -225,6 +240,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French 75",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -240,6 +256,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Singapore Sling",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -259,6 +276,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bee's Knees",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -273,6 +291,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Daiquiri",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 60, unit: "ml" },
@@ -287,6 +306,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mojito",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 60, unit: "ml" },
@@ -303,6 +323,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Piña Colada",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 60, unit: "ml" },
@@ -317,6 +338,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mai Tai",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 30, unit: "ml" },
@@ -333,6 +355,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Dark 'n' Stormy",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Goslings Black Seal Bermuda Rum", amount: 60, unit: "ml" },
@@ -347,6 +370,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Cuba Libre",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 50, unit: "ml" },
@@ -361,6 +385,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Hemingway Daiquiri",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 60, unit: "ml" },
@@ -376,6 +401,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Zombie",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 30, unit: "ml" },
@@ -395,6 +421,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Caipirinha",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Nega Fulo", amount: 60, unit: "ml" },
@@ -409,6 +436,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Margarita",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 50, unit: "ml" },
@@ -423,6 +451,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Paloma",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 50, unit: "ml" },
@@ -437,6 +466,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Tequila Sunrise",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 50, unit: "ml" },
@@ -451,6 +481,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Tommy's Margarita",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 60, unit: "ml" },
@@ -465,6 +496,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Oaxaca Old Fashioned",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 45, unit: "ml" },
@@ -480,6 +512,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Moscow Mule",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -494,6 +527,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Cosmopolitan",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 40, unit: "ml" },
@@ -509,6 +543,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bloody Mary",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -524,6 +559,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "White Russian",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -538,6 +574,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Espresso Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -553,6 +590,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Vodka Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 60, unit: "ml" },
@@ -566,6 +604,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Screwdriver",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -579,6 +618,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Sidecar",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Hennessy V.S.", amount: 50, unit: "ml" },
@@ -593,6 +633,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Brandy Alexander",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Hennessy V.S.", amount: 30, unit: "ml" },
@@ -608,6 +649,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French Connection",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Hennessy V.S.", amount: 40, unit: "ml" },
@@ -621,6 +663,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bellini",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Weißer Pfirsichpüree", amount: 50, unit: "ml" },
@@ -634,6 +677,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mimosa",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Vaihinger Orangensaft", amount: 60, unit: "ml" },
@@ -647,6 +691,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Aperol Spritz",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Aperol", amount: 60, unit: "ml" },
@@ -661,6 +706,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Americano",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Campari", amount: 30, unit: "ml" },
@@ -675,6 +721,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Negroni Sbagliato",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Antica Formula", amount: 30, unit: "ml" },
@@ -689,6 +736,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Long Island Iced Tea",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 15, unit: "ml" },
@@ -708,6 +756,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Grasshopper",
+    category: "Liköre & Amaro",
     basePortions: 1,
     ingredients: [
       { name: "Grüner Crème de Menthe", amount: 30, unit: "ml" },
@@ -722,6 +771,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Amaretto Sour",
+    category: "Liköre & Amaro",
     basePortions: 1,
     ingredients: [
       { name: "Amaretto", amount: 60, unit: "ml" },
@@ -739,6 +789,7 @@ export const CLASSIC_RECIPES = [
   // ---------- Erweiterung: weitere Pre-Prohibition-Klassiker & moderne Klassiker ----------
   {
     name: "Clover Club",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -754,6 +805,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Corpse Reviver No. 2",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 20, unit: "ml" },
@@ -770,6 +822,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "White Lady",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 40, unit: "ml" },
@@ -784,6 +837,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Vesper",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -798,6 +852,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Hanky Panky",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -812,6 +867,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bramble",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -827,6 +883,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "20th Century",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 40, unit: "ml" },
@@ -842,6 +899,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Monkey Gland",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -857,6 +915,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bijou",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -872,6 +931,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Tuxedo No. 2",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 45, unit: "ml" },
@@ -888,6 +948,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "White Negroni",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -903,6 +964,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Rob Roy",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Black Label", amount: 60, unit: "ml" },
@@ -917,6 +979,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Blood and Sand",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Red Label", amount: 20, unit: "ml" },
@@ -932,6 +995,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Paper Plane",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 20, unit: "ml" },
@@ -947,6 +1011,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Gold Rush",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -961,6 +1026,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Toronto",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -976,6 +1042,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Whiskey Smash",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -991,6 +1058,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Black Manhattan",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -1005,6 +1073,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Remember the Maine",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -1020,6 +1089,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Improved Whiskey Cocktail",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 60, unit: "ml" },
@@ -1036,6 +1106,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Diamondback",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 45, unit: "ml" },
@@ -1050,6 +1121,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Affinity",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Black Label", amount: 30, unit: "ml" },
@@ -1065,6 +1137,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Rusty Nail",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Black Label", amount: 50, unit: "ml" },
@@ -1079,6 +1152,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Brooklyn",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 60, unit: "ml" },
@@ -1095,6 +1169,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Jungle Bird",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Goslings Black Seal Bermuda Rum", amount: 45, unit: "ml" },
@@ -1111,6 +1186,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "El Presidente",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 45, unit: "ml" },
@@ -1126,6 +1202,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Painkiller",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Goslings Black Seal Bermuda Rum", amount: 60, unit: "ml" },
@@ -1141,6 +1218,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Old Cuban",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 45, unit: "ml" },
@@ -1158,6 +1236,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Hurricane",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 30, unit: "ml" },
@@ -1175,6 +1254,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Corn 'n' Oil",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Myer's Rum", amount: 60, unit: "ml" },
@@ -1192,6 +1272,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Naked and Famous",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "San Cosme Mezcal", amount: 20, unit: "ml" },
@@ -1207,6 +1288,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mexican Firing Squad",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 60, unit: "ml" },
@@ -1222,6 +1304,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mezcal Negroni",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "San Cosme Mezcal", amount: 30, unit: "ml" },
@@ -1237,6 +1320,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Kamikaze",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 30, unit: "ml" },
@@ -1251,6 +1335,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Salty Dog",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -1264,6 +1349,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Harvey Wallbanger",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 45, unit: "ml" },
@@ -1280,6 +1366,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Between the Sheets",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Hennessy V.S.", amount: 20, unit: "ml" },
@@ -1295,6 +1382,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Champs-Élysées",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Hennessy V.S.", amount: 60, unit: "ml" },
@@ -1311,6 +1399,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Jack Rose",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Calvados", amount: 60, unit: "ml" },
@@ -1325,6 +1414,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Widow's Kiss",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Calvados", amount: 45, unit: "ml" },
@@ -1340,6 +1430,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Champagne Cocktail",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Zuckersirup", amount: 5, unit: "ml" },
@@ -1356,6 +1447,7 @@ export const CLASSIC_RECIPES = [
 
   {
     name: "Pisco Sour",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Pisco", amount: 60, unit: "ml" },
@@ -1372,6 +1464,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Kir Royal",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Crème de Cassis", amount: 10, unit: "ml" },
@@ -1385,6 +1478,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Fernet & Coke",
+    category: "Liköre & Amaro",
     basePortions: 1,
     ingredients: [
       { name: "Fernet Branca", amount: 50, unit: "ml" },
@@ -1398,6 +1492,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Death in the Afternoon",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Absinth", amount: 15, unit: "ml" },
@@ -1411,6 +1506,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Trinidad Sour",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Angostura Bitters", amount: 45, unit: "ml" },
@@ -1426,6 +1522,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Kingston Negroni",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Smith & Cross Jamaican Overproof Rum", amount: 30, unit: "ml" },
@@ -1440,6 +1537,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Black Velvet",
+    category: "Bier-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Guinness Hop House 13 Lager", amount: 100, unit: "ml" },
@@ -1455,6 +1553,7 @@ export const CLASSIC_RECIPES = [
   // ---------- Erweiterung: Difford's Guide "World's Top 100 Cocktails" (bislang fehlende Einträge) ----------
   {
     name: "Porn Star Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -1471,6 +1570,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Gin Basil Smash",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -1486,6 +1586,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Picante de la Casa (Spicy Margarita)",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 50, unit: "ml" },
@@ -1501,6 +1602,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Fitzgerald",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -1516,6 +1618,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Sex on the Beach",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 40, unit: "ml" },
@@ -1531,6 +1634,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Screaming Orgasm",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 20, unit: "ml" },
@@ -1547,6 +1651,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 45, unit: "ml" },
@@ -1561,6 +1666,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Enzoni",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 40, unit: "ml" },
@@ -1577,6 +1683,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Ramos Gin Fizz",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 45, unit: "ml" },
@@ -1595,6 +1702,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Hugo Spritz",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Chapeau Secco", amount: 90, unit: "ml" },
@@ -1611,6 +1719,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Slow Comfortable Screw Against The Wall",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 20, unit: "ml" },
@@ -1628,6 +1737,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "La Louisiane",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 45, unit: "ml" },
@@ -1644,6 +1754,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Godfather",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Black Label", amount: 45, unit: "ml" },
@@ -1657,6 +1768,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Mezcal Margarita",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "San Cosme Mezcal", amount: 50, unit: "ml" },
@@ -1671,6 +1783,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Final Ward",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 20, unit: "ml" },
@@ -1686,6 +1799,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Chartreuse Swizzle",
+    category: "Liköre & Amaro",
     basePortions: 1,
     ingredients: [
       { name: "Grüner Chartreuse", amount: 60, unit: "ml" },
@@ -1702,6 +1816,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Vodka Sour",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 60, unit: "ml" },
@@ -1717,6 +1832,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Gin Fizz",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 60, unit: "ml" },
@@ -1732,6 +1848,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bobby Burns",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Johnnie Walker Black Label", amount: 50, unit: "ml" },
@@ -1747,6 +1864,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Bitter Giuseppe",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Aperol", amount: 45, unit: "ml" },
@@ -1761,6 +1879,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Man O' War",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 45, unit: "ml" },
@@ -1776,6 +1895,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Air Mail",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 45, unit: "ml" },
@@ -1791,6 +1911,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Poet's Dream",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -1805,6 +1926,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Nuclear Daiquiri",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 30, unit: "ml" },
@@ -1822,6 +1944,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Breakfast Martini",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -1837,6 +1960,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "London Calling",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Tanqueray London Dry Gin", amount: 45, unit: "ml" },
@@ -1853,6 +1977,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Tokyo Iced Tea",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 15, unit: "ml" },
@@ -1872,6 +1997,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Division Bell",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "San Cosme Mezcal", amount: 45, unit: "ml" },
@@ -1887,6 +2013,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Garibaldi",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Campari", amount: 50, unit: "ml" },
@@ -1900,6 +2027,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Batanga",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 50, unit: "ml" },
@@ -1914,6 +2042,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Milano-Torino (Mi-To)",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Campari", amount: 30, unit: "ml" },
@@ -1927,6 +2056,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Lemon Drop Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -1942,6 +2072,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Left Bank Martini",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 45, unit: "ml" },
@@ -1956,6 +2087,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Pistachio Martini",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 50, unit: "ml" },
@@ -1970,6 +2102,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French 76",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 30, unit: "ml" },

@@ -187,13 +187,18 @@
 
       <!-- List view -->
       <div id="recipes-list-view" class="recipe-subview active">
-        <p class="hint">50 Cocktail-Klassiker und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin").</p>
+        <p class="hint">133 Cocktail-Klassiker (nach Basis-Spirituose kategorisiert) und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"), der Filter grenzt nach Kategorie ein.</p>
 
         <div class="actions" data-admin-only>
           <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
         </div>
 
-        <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
+        <div class="field-row">
+          <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
+          <select id="recipe-category-filter">
+            <option value="">Alle Kategorien</option>
+          </select>
+        </div>
 
         <div class="export-bar">
           <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
@@ -223,6 +228,11 @@
               <label>
                 Ergibt Portionen (Basis)
                 <input type="number" id="recipe-base-portions" value="1" min="0.01" step="0.01" />
+              </label>
+              <label>
+                Kategorie
+                <input type="text" id="recipe-category" list="recipe-category-options" placeholder="z. B. Gin" />
+                <datalist id="recipe-category-options"></datalist>
               </label>
             </div>
 

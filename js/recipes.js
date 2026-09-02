@@ -6,9 +6,32 @@ import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
 
+const CATEGORY_ORDER = [
+  "Gin",
+  "Vodka",
+  "Rum & Cachaça",
+  "Whisky",
+  "Tequila & Mezcal",
+  "Brände",
+  "Aperitivo & Spritz",
+  "Sekt & Champagner-Cocktails",
+  "Bier-Cocktails",
+  "Liköre & Amaro",
+  "Alkoholfrei",
+  "Sonstiges",
+];
+
+function categorySortIndex(category) {
+  const i = CATEGORY_ORDER.indexOf(category);
+  return i === -1 ? CATEGORY_ORDER.length : i;
+}
+
 const listViewEl = document.getElementById("recipes-list-view");
 const editViewEl = document.getElementById("recipes-edit-view");
 const nameEl = document.getElementById("recipe-name");
+const categoryEl = document.getElementById("recipe-category");
+const categoryOptionsEl = document.getElementById("recipe-category-options");
+const categoryFilterEl = document.getElementById("recipe-category-filter");
 const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
 const glassEl = document.getElementById("recipe-glass");
@@ -52,6 +75,7 @@ function parsePairsWith(value) {
 
 function resetForm() {
   nameEl.value = "";
+  categoryEl.value = "";
   basePortionsEl.value = 1;
   methodEl.value = "";
   glassEl.value = "";
@@ -67,6 +91,7 @@ function resetForm() {
 
 function loadIntoForm(recipe) {
   nameEl.value = recipe.name;
+  categoryEl.value = recipe.category ?? "";
   basePortionsEl.value = recipe.basePortions;
   methodEl.value = recipe.method ?? "";
   glassEl.value = recipe.glass ?? "";
@@ -99,6 +124,7 @@ async function handleSave() {
     }
     const recipe = {
       name,
+      category: categoryEl.value.trim(),
       basePortions,
       ingredients,
       method: methodEl.value.trim(),
@@ -152,13 +178,95 @@ function recipeMatchesQuery(recipe, query) {
 
 function currentFilteredRecipes() {
   const query = searchEl.value.trim().toLowerCase();
-  return getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
+  const categoryFilter = categoryFilterEl.value;
+  return getAllRecipes().filter((r) => {
+    const matchesQuery = recipeMatchesQuery(r, query);
+    const matchesCategory = !categoryFilter || r.category === categoryFilter;
+    return matchesQuery && matchesCategory;
+  });
+}
+
+function groupRecipesByCategory(recipes) {
+  const groups = new Map();
+  recipes.forEach((recipe) => {
+    const category = recipe.category || "Sonstiges";
+    if (!groups.has(category)) groups.set(category, []);
+    groups.get(category).push(recipe);
+  });
+  return [...groups.entries()].sort(([a], [b]) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de"));
 }
 
 function updateExportBar() {
   selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
   exportExcelBtn.disabled = selectedNames.size === 0;
   exportWordBtn.disabled = selectedNames.size === 0;
+}
+
+function renderRecipeItem(recipe) {
+  const metaRows = [
+    ["Glas", recipe.glass],
+    ["Garnitur", recipe.garnish],
+    ["Eis", recipe.ice],
+    ["Zubereitung", recipe.method],
+    ["Geschichte", recipe.history],
+    ["Kurzer Pitch", recipe.quickPitch],
+    ["Passt gut zu", (recipe.pairsWith ?? []).join(", ")],
+  ].filter(([, value]) => value);
+
+  const item = document.createElement("details");
+  item.className = "recipe-item";
+  item.innerHTML = `
+    <summary>
+      <span class="recipe-item-title">
+        <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
+        ${escapeHtml(recipe.name)}
+      </span>
+    </summary>
+    <div class="recipe-item-body">
+      <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
+      ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+      ${
+        isAdmin()
+          ? `<div class="actions">
+        <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
+        ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+      </div>`
+          : ""
+      }
+    </div>
+  `;
+  const checkbox = item.querySelector(".recipe-select-checkbox");
+  checkbox.addEventListener("click", (e) => e.stopPropagation());
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) {
+      selectedNames.add(recipe.name);
+    } else {
+      selectedNames.delete(recipe.name);
+    }
+    updateExportBar();
+  });
+  const editBtn = item.querySelector(".edit-btn");
+  if (editBtn) {
+    editBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      loadIntoForm(recipe);
+      showEditView();
+    });
+  }
+  const deleteBtn = item.querySelector(".delete-btn");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
+      try {
+        if (editingOriginalName === recipe.name) resetForm();
+        await deleteRecipe(recipe.name);
+      } catch (error) {
+        alert("Rezept konnte nicht gelöscht werden: " + error.message);
+      }
+    });
+  }
+  return item;
 }
 
 function renderBrowseList() {
@@ -170,71 +278,15 @@ function renderBrowseList() {
     return;
   }
   listEl.innerHTML = "";
-  recipes.forEach((recipe) => {
-    const metaRows = [
-      ["Glas", recipe.glass],
-      ["Garnitur", recipe.garnish],
-      ["Eis", recipe.ice],
-      ["Zubereitung", recipe.method],
-      ["Geschichte", recipe.history],
-      ["Kurzer Pitch", recipe.quickPitch],
-      ["Passt gut zu", (recipe.pairsWith ?? []).join(", ")],
-    ].filter(([, value]) => value);
+  groupRecipesByCategory(recipes).forEach(([category, items]) => {
+    const header = document.createElement("h3");
+    header.className = "product-group-header";
+    header.textContent = category;
+    listEl.appendChild(header);
 
-    const item = document.createElement("details");
-    item.className = "recipe-item";
-    item.innerHTML = `
-      <summary>
-        <span class="recipe-item-title">
-          <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
-          ${escapeHtml(recipe.name)}
-        </span>
-      </summary>
-      <div class="recipe-item-body">
-        <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
-        ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
-        ${
-          isAdmin()
-            ? `<div class="actions">
-          <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-          ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-        </div>`
-            : ""
-        }
-      </div>
-    `;
-    const checkbox = item.querySelector(".recipe-select-checkbox");
-    checkbox.addEventListener("click", (e) => e.stopPropagation());
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        selectedNames.add(recipe.name);
-      } else {
-        selectedNames.delete(recipe.name);
-      }
-      updateExportBar();
-    });
-    const editBtn = item.querySelector(".edit-btn");
-    if (editBtn) {
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        loadIntoForm(recipe);
-        showEditView();
-      });
-    }
-    const deleteBtn = item.querySelector(".delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
-        try {
-          if (editingOriginalName === recipe.name) resetForm();
-          await deleteRecipe(recipe.name);
-        } catch (error) {
-          alert("Rezept konnte nicht gelöscht werden: " + error.message);
-        }
-      });
-    }
-    listEl.appendChild(item);
+    items
+      .sort((a, b) => a.name.localeCompare(b.name, "de"))
+      .forEach((recipe) => listEl.appendChild(renderRecipeItem(recipe)));
   });
   updateExportBar();
 }
@@ -258,6 +310,24 @@ function renderSidebarList() {
   });
 }
 
+function populateCategoryFilter() {
+  const categories = [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
+    (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de")
+  );
+  const currentValue = categoryFilterEl.value;
+  categoryFilterEl.innerHTML =
+    `<option value="">Alle Kategorien</option>` +
+    categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  if (categories.includes(currentValue)) categoryFilterEl.value = currentValue;
+}
+
+function populateCategoryOptions() {
+  const categories = [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
+    (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de")
+  );
+  categoryOptionsEl.innerHTML = categories.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("");
+}
+
 export function initRecipes() {
   editor.setIngredients([]);
   document.getElementById("recipe-add-ingredient").addEventListener("click", () => editor.addRow());
@@ -271,6 +341,7 @@ export function initRecipes() {
   document.getElementById("recipe-back-to-list").addEventListener("click", showListView);
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
+  categoryFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
   selectAllBtn.addEventListener("click", () => {
     currentFilteredRecipes().forEach((r) => selectedNames.add(r.name));
@@ -289,9 +360,13 @@ export function initRecipes() {
     if (recipes.length > 0) exportRecipesToWord(recipes);
   });
   onRecipesChanged(() => {
+    populateCategoryFilter();
+    populateCategoryOptions();
     renderBrowseList();
     renderSidebarList();
   });
+  populateCategoryFilter();
+  populateCategoryOptions();
   renderBrowseList();
   renderSidebarList();
 }

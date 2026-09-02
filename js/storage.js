@@ -15,6 +15,7 @@ let productsChannel = null;
 function toRecipeRecord(recipe) {
   return {
     name: recipe.name,
+    category: recipe.category || null,
     base_portions: recipe.basePortions,
     ingredients: recipe.ingredients,
     method: recipe.method || null,
@@ -30,6 +31,7 @@ function toRecipeRecord(recipe) {
 function fromRecipeRow(row) {
   return {
     name: row.name,
+    category: row.category ?? "",
     basePortions: row.base_portions,
     ingredients: row.ingredients ?? [],
     method: row.method ?? "",
