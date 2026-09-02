@@ -16,6 +16,27 @@ function tabExists(tabId) {
   return !!tabId && !!document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
 }
 
+function currentTabId() {
+  return document.querySelector(".tab-btn.active")?.dataset.tab ?? null;
+}
+
+// Wird gesetzt, bevor man aus einer Liste (z.B. Datenqualität im Admin-Tab)
+// direkt ins Bearbeiten-Formular eines anderen Tabs springt, damit man nach
+// dem Bearbeiten (Zurück/Speichern/Löschen) wieder auf der Ausgangsseite mit
+// der ursprünglichen Scroll-Position landet, statt in der Listenansicht des
+// Zieltabs zu bleiben.
+let pendingEditReturn = null;
+
+export function setPendingEditReturn() {
+  pendingEditReturn = { tabId: currentTabId(), scrollY: window.scrollY };
+}
+
+export function takePendingEditReturn() {
+  const target = pendingEditReturn;
+  pendingEditReturn = null;
+  return target;
+}
+
 export function initTabs() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
@@ -65,7 +86,8 @@ export function initTabs() {
   }
 }
 
-export function switchTab(tabId, { updateHash = true, replace = false } = {}) {
+export function switchTab(tabId, { updateHash = true, replace = false, keepEditReturn = false } = {}) {
+  if (!keepEditReturn) pendingEditReturn = null;
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.dataset.tab === tabId;
     btn.classList.toggle("active", active);

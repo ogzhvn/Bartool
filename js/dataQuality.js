@@ -3,7 +3,7 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { openProductForEdit } from "./products.js";
 import { openRecipeForEdit } from "./recipes.js";
 import { onProductsChanged, onRecipesChanged } from "./storage.js";
-import { switchTab } from "./tabs.js";
+import { switchTab, setPendingEditReturn } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
 
 const containerEl = document.getElementById("data-quality-report");
@@ -46,7 +46,8 @@ function renderMetricGroup(title, titleDative, tabId, items, metrics, openForEdi
   wrapper.innerHTML = `<h4>${escapeHtml(title)}</h4>${rows}`;
   wrapper.querySelectorAll(".quality-item-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      switchTab(tabId);
+      setPendingEditReturn();
+      switchTab(tabId, { keepEditReturn: true });
       openForEdit(btn.dataset.name);
     });
   });

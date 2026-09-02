@@ -6,7 +6,7 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
-import { switchTab, closeMobileNav } from "./tabs.js";
+import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -159,6 +159,19 @@ function showEditView() {
   listViewEl.classList.remove("active");
 }
 
+// Verlässt die Bearbeiten-Ansicht: normalerweise zurück zur Produktliste,
+// außer man ist per Datenqualität-Sprung aus einem anderen Tab hierher
+// gekommen – dann zurück auf die Ausgangsseite mit der ursprünglichen
+// Scroll-Position.
+function exitEditView() {
+  const target = takePendingEditReturn();
+  showListView();
+  if (target) {
+    switchTab(target.tabId);
+    requestAnimationFrame(() => window.scrollTo({ top: target.scrollY }));
+  }
+}
+
 const FIELDS = [
   ["name", nameEl],
   ["category", categoryEl],
@@ -217,7 +230,7 @@ async function handleSave() {
       await submitChangeRequest("products", product);
       alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
       resetForm();
-      showListView();
+      exitEditView();
     } catch (error) {
       alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
     }
@@ -251,7 +264,7 @@ async function handleDelete() {
       await submitChangeRequest("products", { name: editingOriginalName }, "delete");
       alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
       resetForm();
-      showListView();
+      exitEditView();
     } catch (error) {
       alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
     }
@@ -262,7 +275,7 @@ async function handleDelete() {
   try {
     await deleteProduct(editingOriginalName);
     resetForm();
-    showListView();
+    exitEditView();
   } catch (error) {
     alert("Produkt konnte nicht gelöscht werden: " + error.message);
   }
@@ -635,7 +648,7 @@ export function initProducts() {
     resetForm();
     showEditView();
   });
-  document.getElementById("product-back-to-list").addEventListener("click", showListView);
+  document.getElementById("product-back-to-list").addEventListener("click", exitEditView);
   document.getElementById("product-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);

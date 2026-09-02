@@ -6,7 +6,7 @@ import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
-import { switchTab, closeMobileNav } from "./tabs.js";
+import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 
 const CATEGORY_ORDER = [
   "Gin",
@@ -67,6 +67,19 @@ function showListView() {
 function showEditView() {
   editViewEl.classList.add("active");
   listViewEl.classList.remove("active");
+}
+
+// Verlässt die Bearbeiten-Ansicht: normalerweise zurück zur Rezeptliste,
+// außer man ist per Datenqualität-Sprung aus einem anderen Tab hierher
+// gekommen – dann zurück auf die Ausgangsseite mit der ursprünglichen
+// Scroll-Position.
+function exitEditView() {
+  const target = takePendingEditReturn();
+  showListView();
+  if (target) {
+    switchTab(target.tabId);
+    requestAnimationFrame(() => window.scrollTo({ top: target.scrollY }));
+  }
 }
 
 function parsePairsWith(value) {
@@ -142,7 +155,7 @@ async function handleSave() {
       await submitChangeRequest("recipes", recipe);
       alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
       resetForm();
-      showListView();
+      exitEditView();
     } catch (error) {
       alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
     }
@@ -176,7 +189,7 @@ async function handleDelete() {
       await submitChangeRequest("recipes", { name: editingOriginalName }, "delete");
       alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
       resetForm();
-      showListView();
+      exitEditView();
     } catch (error) {
       alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
     }
@@ -187,7 +200,7 @@ async function handleDelete() {
   try {
     await deleteRecipe(editingOriginalName);
     resetForm();
-    showListView();
+    exitEditView();
   } catch (error) {
     alert("Rezept konnte nicht gelöscht werden: " + error.message);
   }
@@ -427,7 +440,7 @@ export function initRecipes() {
     resetForm();
     showEditView();
   });
-  document.getElementById("recipe-back-to-list").addEventListener("click", showListView);
+  document.getElementById("recipe-back-to-list").addEventListener("click", exitEditView);
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   categoryFilterEl.addEventListener("change", () => {
