@@ -57,8 +57,8 @@ let activeOberkategorie = null;
 // die nur eingeblendet wird, wenn "Wein" aktiv ist.
 const WEINTYPEN = [
   { name: "Weißwein", group: "Wein", subGroup: "Weißwein" },
-  { name: "Rotwein", group: "Wein", subGroup: "Rotwein" },
   { name: "Roséwein", group: "Wein", subGroup: "Roséwein" },
+  { name: "Rotwein", group: "Wein", subGroup: "Rotwein" },
   { name: "Schaumwein", group: "Schaumwein", subGroup: null },
 ];
 
@@ -326,14 +326,52 @@ function updateGroupFilterVisibility() {
   groupFilterEl.hidden = activeOberkategorie?.name === "Wein";
 }
 
-function groupByRegion(products) {
-  const regions = new Map();
+// `product.region` ist Freitext nach dem Muster "<Ort>, <Anbaugebiet> (<Land>)"
+// bzw. "<Anbaugebiet> (<Land>)". Das Land steht als letzte Klammer am Ende,
+// das Anbaugebiet ist das Segment direkt davor. Bei unklaren/unverifizierten
+// Klammerinhalten (siehe "Chapeau Secco") wird nicht geraten, sondern der
+// komplette Text als eigene Gruppe belassen.
+function parseWineOrigin(regionStr) {
+  const fallback = { country: (regionStr || "").trim() || "Ohne Herkunft", subregion: null };
+  if (!regionStr) return fallback;
+  const match = regionStr.match(/^(.*)\(([^()]+)\)\s*$/);
+  if (!match) return fallback;
+  const country = match[2].trim();
+  if (!country || country.length > 30 || /[,/]/.test(country)) return fallback;
+  const parts = match[1]
+    .replace(/,\s*$/, "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const subregion = parts.length > 0 ? parts[parts.length - 1] : null;
+  return { country, subregion };
+}
+
+// Gruppierung für die Weinart-Ansicht (rechtes Fenster): erst nach Land,
+// Deutschland immer zuerst, danach alphabetisch. Innerhalb eines Landes nach
+// Anbaugebiet sortiert; ein eigener Zwischenkopf fürs Anbaugebiet erscheint
+// nur, wenn mehrere Weine aus derselben Region kommen.
+function groupWinesByOrigin(products) {
+  const countries = new Map();
   products.forEach((product) => {
-    const regionName = product.region || "Ohne Region";
-    if (!regions.has(regionName)) regions.set(regionName, []);
-    regions.get(regionName).push(product);
+    const { country, subregion } = parseWineOrigin(product.region);
+    if (!countries.has(country)) countries.set(country, new Map());
+    const subregions = countries.get(country);
+    const key = subregion || "";
+    if (!subregions.has(key)) subregions.set(key, []);
+    subregions.get(key).push(product);
   });
-  return [...regions.entries()].sort(([a], [b]) => a.localeCompare(b, "de"));
+
+  return [...countries.entries()]
+    .sort(([a], [b]) => {
+      if (a === "Deutschland") return -1;
+      if (b === "Deutschland") return 1;
+      return a.localeCompare(b, "de");
+    })
+    .map(([country, subregions]) => ({
+      country,
+      subregions: [...subregions.entries()].sort(([a], [b]) => a.localeCompare(b, "de")),
+    }));
 }
 
 function groupProducts(products) {
@@ -460,17 +498,25 @@ function renderBrowseList() {
   }
   listEl.innerHTML = "";
 
-  // Innerhalb eines gewählten Weintyps (Weiß/Rot/Rosé/Schaumwein) wird nach
-  // Region statt nach Gruppe/Untergruppe sortiert.
+  // Innerhalb eines gewählten Weintyps (Weiß/Rosé/Rot/Schaumwein) wird nach
+  // Herkunftsland (Deutschland zuerst) und darunter nach Anbaugebiet sortiert.
   if (activeWeinTyp) {
-    groupByRegion(products).forEach(([regionName, items]) => {
+    groupWinesByOrigin(products).forEach(({ country, subregions }) => {
       const header = document.createElement("h3");
       header.className = "product-group-header";
-      header.textContent = regionName;
+      header.textContent = country;
       listEl.appendChild(header);
-      items
-        .sort((a, b) => a.name.localeCompare(b.name, "de"))
-        .forEach((product) => listEl.appendChild(renderProductItem(product)));
+      subregions.forEach(([subregion, items]) => {
+        if (subregion && items.length > 1) {
+          const subHeader = document.createElement("h4");
+          subHeader.className = "product-subgroup-header";
+          subHeader.textContent = subregion;
+          listEl.appendChild(subHeader);
+        }
+        items
+          .sort((a, b) => a.name.localeCompare(b.name, "de"))
+          .forEach((product) => listEl.appendChild(renderProductItem(product)));
+      });
     });
     updateExportBar();
     return;
