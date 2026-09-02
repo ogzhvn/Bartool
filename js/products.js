@@ -10,6 +10,8 @@ import { switchTab, closeMobileNav } from "./tabs.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
+// "Wein" vor "Schaumwein", damit beim Klick auf die Oberkategorie "Wein"
+// (ohne gewählte Weinart) Weißwein/Roséwein/Rotwein vor Schaumwein stehen.
 const GROUP_ORDER = [
   "Gin",
   "Vodka",
@@ -28,8 +30,8 @@ const GROUP_ORDER = [
   "Mixer & Softdrink",
   "Tee & Kaffee",
   "Sonstiges",
-  "Schaumwein",
   "Wein",
+  "Schaumwein",
 ];
 
 function groupSortIndex(group) {
@@ -79,6 +81,7 @@ const SUBGROUP_ORDER = {
     "Japanischer Whisky",
     "Kanadischer Whisky",
   ],
+  Wein: WEINTYPEN.filter((typ) => typ.group === "Wein").map((typ) => typ.subGroup),
 };
 
 function subgroupSortIndex(group, subGroup) {
@@ -349,8 +352,7 @@ function parseWineOrigin(regionStr) {
 
 // Gruppierung für die Weinart-Ansicht (rechtes Fenster): erst nach Land,
 // Deutschland immer zuerst, danach alphabetisch. Innerhalb eines Landes nach
-// Anbaugebiet sortiert; ein eigener Zwischenkopf fürs Anbaugebiet erscheint
-// nur, wenn mehrere Weine aus derselben Region kommen.
+// Anbaugebiet sortiert, mit eigenem Zwischenkopf pro Anbaugebiet.
 function groupWinesByOrigin(products) {
   const countries = new Map();
   products.forEach((product) => {
@@ -507,7 +509,7 @@ function renderBrowseList() {
       header.textContent = country;
       listEl.appendChild(header);
       subregions.forEach(([subregion, items]) => {
-        if (subregion && items.length > 1) {
+        if (subregion) {
           const subHeader = document.createElement("h4");
           subHeader.className = "product-subgroup-header";
           subHeader.textContent = subregion;
