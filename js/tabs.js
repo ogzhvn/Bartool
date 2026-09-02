@@ -1,3 +1,13 @@
+// On the collapsed mobile nav, picking an entry should close the dropdown
+// instead of leaving it open over the newly shown panel. Auch von den
+// Unterpunkten des Produkt-Kategoriebaums aufgerufen.
+export function closeMobileNav() {
+  const sidebar = document.getElementById("sidebar");
+  const navToggle = document.getElementById("nav-toggle");
+  sidebar?.classList.remove("open");
+  navToggle?.setAttribute("aria-expanded", "false");
+}
+
 export function initTabs() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
@@ -5,10 +15,7 @@ export function initTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(btn.dataset.tab);
-      // On the collapsed mobile nav, picking a tab should close the dropdown
-      // instead of leaving it open over the newly shown panel.
-      sidebar?.classList.remove("open");
-      navToggle?.setAttribute("aria-expanded", "false");
+      closeMobileNav();
     });
   });
 

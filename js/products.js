@@ -5,7 +5,7 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
-import { switchTab } from "./tabs.js";
+import { switchTab, closeMobileNav } from "./tabs.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -278,6 +278,11 @@ function renderSidebarCategoryTree() {
     btn.textContent = label;
     btn.addEventListener("click", () => {
       switchTab("products");
+      // Wie bei den Haupt-Tabs: Detail-/Bearbeiten-Ansicht verlassen und die
+      // mobile Navigation schließen, sonst bleibt die Liste unter dem
+      // aufgeklappten Menü verborgen und die Kategorie wirkt "tot".
+      showListView();
+      closeMobileNav();
       activeOberkategorie = oberkategorie;
       activeWeinTyp = weinTyp;
       groupFilterEl.value = "";
@@ -285,6 +290,7 @@ function renderSidebarCategoryTree() {
       populateGroupFilter();
       renderSidebarCategoryTree();
       renderBrowseList();
+      window.scrollTo({ top: 0 });
     });
     return btn;
   };
