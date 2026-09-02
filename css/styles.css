@@ -281,6 +281,16 @@ textarea {
   max-height: none;
 }
 
+#product-wein-subnav {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+#product-wein-subnav .product-subgroup-header {
+  margin-top: 0;
+}
+
 .product-browse-main {
   flex: 2 1 360px;
   min-width: 280px;

@@ -351,6 +351,10 @@
         <div class="product-browse-layout">
           <aside class="product-category-nav">
             <div id="product-category-list" class="recipe-name-list"></div>
+            <div id="product-wein-subnav" hidden>
+              <h4 class="product-subgroup-header">Weinart</h4>
+              <div id="product-wein-list" class="recipe-name-list"></div>
+            </div>
           </aside>
 
           <div class="product-browse-main">
@@ -400,6 +404,32 @@
               <label>
                 Alkoholgehalt (% vol)
                 <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
+              </label>
+            </div>
+
+            <h3>Wein-Details (nur für Wein/Schaumwein)</h3>
+            <div class="field-row">
+              <label>
+                Region
+                <input type="text" id="product-region" placeholder="z. B. Rheingau, Loire" />
+              </label>
+              <label>
+                Rebsorte
+                <input type="text" id="product-grape-variety" placeholder="z. B. Riesling" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Lage
+                <input type="text" id="product-vineyard" placeholder="z. B. Erbacher Marcobrunn" />
+              </label>
+              <label>
+                Jahrgang
+                <input type="text" id="product-vintage" placeholder="z. B. 2021" />
+              </label>
+              <label>
+                Ausbau
+                <input type="text" id="product-aging" placeholder="z. B. Barrique, Stahltank" />
               </label>
             </div>
 

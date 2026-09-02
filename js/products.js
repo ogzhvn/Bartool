@@ -47,6 +47,17 @@ const OBERKATEGORIEN = [
 
 let activeOberkategorie = null;
 
+// Untertypen innerhalb der Oberkategorie "Wein" – zweite Navigationsebene,
+// die nur eingeblendet wird, wenn "Wein" aktiv ist.
+const WEINTYPEN = [
+  { name: "Weißwein", group: "Wein", subGroup: "Weißwein" },
+  { name: "Rotwein", group: "Wein", subGroup: "Rotwein" },
+  { name: "Roséwein", group: "Wein", subGroup: "Roséwein" },
+  { name: "Schaumwein", group: "Schaumwein", subGroup: null },
+];
+
+let activeWeinTyp = null;
+
 // Scotch Single Malt regions – kept together and above the other whisky styles
 // instead of falling wherever they land alphabetically (e.g. "Irish Whiskey"
 // would otherwise sort between "Islay" and "Lowland").
@@ -76,6 +87,11 @@ const categoryEl = document.getElementById("product-category");
 const groupEl = document.getElementById("product-group");
 const subgroupEl = document.getElementById("product-subgroup");
 const abvEl = document.getElementById("product-abv");
+const regionEl = document.getElementById("product-region");
+const grapeVarietyEl = document.getElementById("product-grape-variety");
+const vineyardEl = document.getElementById("product-vineyard");
+const vintageEl = document.getElementById("product-vintage");
+const agingEl = document.getElementById("product-aging");
 const tastingNotesEl = document.getElementById("product-tasting-notes");
 const serviceEl = document.getElementById("product-service");
 const alternativesEl = document.getElementById("product-alternatives");
@@ -101,6 +117,8 @@ const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
 const groupFilterEl = document.getElementById("product-group-filter");
 const categoryListEl = document.getElementById("product-category-list");
+const weinSubnavEl = document.getElementById("product-wein-subnav");
+const weinListEl = document.getElementById("product-wein-list");
 const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
@@ -124,6 +142,11 @@ const FIELDS = [
   ["group", groupEl],
   ["subGroup", subgroupEl],
   ["abv", abvEl],
+  ["region", regionEl],
+  ["grapeVariety", grapeVarietyEl],
+  ["vineyard", vineyardEl],
+  ["vintage", vintageEl],
+  ["aging", agingEl],
   ["tastingNotes", tastingNotesEl],
   ["service", serviceEl],
   ["alternatives", alternativesEl],
@@ -227,7 +250,10 @@ function currentFilteredProducts() {
     const matchesQuery = p.name.toLowerCase().includes(query) || (p.category ?? "").toLowerCase().includes(query);
     const matchesGroup = !groupFilter || p.group === groupFilter;
     const matchesOberkategorie = !activeOberkategorie || activeOberkategorie.groups.includes(p.group);
-    return matchesQuery && matchesGroup && matchesOberkategorie;
+    const matchesWeinTyp =
+      !activeWeinTyp ||
+      (p.group === activeWeinTyp.group && (activeWeinTyp.subGroup === null || p.subGroup === activeWeinTyp.subGroup));
+    return matchesQuery && matchesGroup && matchesOberkategorie && matchesWeinTyp;
   });
 }
 
@@ -241,9 +267,11 @@ function renderCategoryNav() {
     btn.textContent = label;
     btn.addEventListener("click", () => {
       activeOberkategorie = oberkategorie;
+      activeWeinTyp = null;
       groupFilterEl.value = "";
       populateGroupFilter();
       renderCategoryNav();
+      renderWeinSubnav();
       renderBrowseList();
     });
     return btn;
@@ -251,6 +279,40 @@ function renderCategoryNav() {
 
   categoryListEl.appendChild(makeBtn("Alle", null));
   OBERKATEGORIEN.forEach((ok) => categoryListEl.appendChild(makeBtn(ok.name, ok)));
+}
+
+function renderWeinSubnav() {
+  const isWein = activeOberkategorie?.name === "Wein";
+  weinSubnavEl.hidden = !isWein;
+  groupFilterEl.hidden = isWein;
+  if (!isWein) return;
+
+  weinListEl.innerHTML = "";
+  const makeBtn = (label, weinTyp) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "recipe-name-btn" + (activeWeinTyp === weinTyp ? " active" : "");
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+      activeWeinTyp = weinTyp;
+      renderWeinSubnav();
+      renderBrowseList();
+    });
+    return btn;
+  };
+
+  weinListEl.appendChild(makeBtn("Alle", null));
+  WEINTYPEN.forEach((typ) => weinListEl.appendChild(makeBtn(typ.name, typ)));
+}
+
+function groupByRegion(products) {
+  const regions = new Map();
+  products.forEach((product) => {
+    const regionName = product.region || "Ohne Region";
+    if (!regions.has(regionName)) regions.set(regionName, []);
+    regions.get(regionName).push(product);
+  });
+  return [...regions.entries()].sort(([a], [b]) => a.localeCompare(b, "de"));
 }
 
 function groupProducts(products) {
@@ -285,6 +347,11 @@ function renderProductItem(product) {
   const metaRows = [
     ["Kategorie & Herkunft", product.category],
     ["Alkoholgehalt", product.abv],
+    ["Region", product.region],
+    ["Rebsorte", product.grapeVariety],
+    ["Lage", product.vineyard],
+    ["Jahrgang", product.vintage],
+    ["Ausbau", product.aging],
     ["Tasting Notes", product.tastingNotes],
     ["Serviervorschlag", product.service],
     ["Alternativen", product.alternatives],
@@ -353,6 +420,22 @@ function renderBrowseList() {
     return;
   }
   listEl.innerHTML = "";
+
+  // Innerhalb eines gewählten Weintyps (Weiß/Rot/Rosé/Schaumwein) wird nach
+  // Region statt nach Gruppe/Untergruppe sortiert.
+  if (activeWeinTyp) {
+    groupByRegion(products).forEach(([regionName, items]) => {
+      const header = document.createElement("h3");
+      header.className = "product-group-header";
+      header.textContent = regionName;
+      listEl.appendChild(header);
+      items
+        .sort((a, b) => a.name.localeCompare(b.name, "de"))
+        .forEach((product) => listEl.appendChild(renderProductItem(product)));
+    });
+    return;
+  }
+
   groupProducts(products).forEach(({ groupName, subgroups }) => {
     const header = document.createElement("h3");
     header.className = "product-group-header";
@@ -460,6 +543,7 @@ export function initProducts() {
     populateDatalists();
     populatePairsWithOptions();
     renderCategoryNav();
+    renderWeinSubnav();
     renderBrowseList();
     renderSidebarList();
   });
@@ -473,6 +557,7 @@ export function initProducts() {
   populateDatalists();
   populatePairsWithOptions();
   renderCategoryNav();
+  renderWeinSubnav();
   renderBrowseList();
   renderSidebarList();
 }

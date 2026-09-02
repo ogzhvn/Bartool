@@ -107,6 +107,11 @@ function toProductRecord(product) {
     price_unit: product.priceUnit || null,
     quick_pitch: product.quickPitch || null,
     pairs_with: product.pairsWith ?? null,
+    region: product.region || null,
+    grape_variety: product.grapeVariety || null,
+    vineyard: product.vineyard || null,
+    vintage: product.vintage || null,
+    aging: product.aging || null,
   };
 }
 
@@ -128,6 +133,11 @@ function fromProductRow(row) {
     priceUnit: row.price_unit ?? "liter",
     quickPitch: row.quick_pitch ?? "",
     pairsWith: row.pairs_with ?? [],
+    region: row.region ?? "",
+    grapeVariety: row.grape_variety ?? "",
+    vineyard: row.vineyard ?? "",
+    vintage: row.vintage ?? "",
+    aging: row.aging ?? "",
   };
 }
 

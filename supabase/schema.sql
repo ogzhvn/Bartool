@@ -224,6 +224,12 @@ create table if not exists public.products (
   price_unit text,
   quick_pitch text,
   pairs_with jsonb,
+  -- Nur für Wein/Schaumwein befüllt (siehe Produkte-Tab, Kategorie "Wein").
+  region text,
+  grape_variety text,
+  vineyard text,
+  vintage text,
+  aging text,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
@@ -241,6 +247,11 @@ alter table public.products add column if not exists price_value numeric;
 alter table public.products add column if not exists price_unit text;
 alter table public.products add column if not exists quick_pitch text;
 alter table public.products add column if not exists pairs_with jsonb;
+alter table public.products add column if not exists region text;
+alter table public.products add column if not exists grape_variety text;
+alter table public.products add column if not exists vineyard text;
+alter table public.products add column if not exists vintage text;
+alter table public.products add column if not exists aging text;
 
 alter table public.products enable row level security;
 
