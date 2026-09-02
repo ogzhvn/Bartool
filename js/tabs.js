@@ -10,6 +10,10 @@ export function closeMobileNav() {
 
 const LAST_TAB_KEY = "bartool-last-tab";
 
+function tabExists(tabId) {
+  return !!tabId && !!document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+}
+
 export function initTabs() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
@@ -26,13 +30,21 @@ export function initTabs() {
     navToggle.setAttribute("aria-expanded", String(isOpen));
   });
 
+  window.addEventListener("hashchange", () => {
+    const tabId = location.hash.slice(1);
+    if (tabExists(tabId)) switchTab(tabId, { updateHash: false });
+  });
+
+  const hashTab = location.hash.slice(1);
   const lastTab = localStorage.getItem(LAST_TAB_KEY);
-  if (lastTab && document.querySelector(`.tab-btn[data-tab="${lastTab}"]`)) {
-    switchTab(lastTab);
+  const defaultTab = document.querySelector(".tab-btn.active")?.dataset.tab;
+  const initialTab = [hashTab, lastTab, defaultTab].find(tabExists);
+  if (initialTab) {
+    switchTab(initialTab, { updateHash: true, replace: true });
   }
 }
 
-export function switchTab(tabId) {
+export function switchTab(tabId, { updateHash = true, replace = false } = {}) {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.dataset.tab === tabId;
     btn.classList.toggle("active", active);
@@ -42,4 +54,13 @@ export function switchTab(tabId) {
     panel.classList.toggle("active", panel.id === tabId);
   });
   localStorage.setItem(LAST_TAB_KEY, tabId);
+
+  if (updateHash && location.hash.slice(1) !== tabId) {
+    const url = `${location.pathname}${location.search}#${tabId}`;
+    if (replace) {
+      history.replaceState(null, "", url);
+    } else {
+      history.pushState(null, "", url);
+    }
+  }
 }
