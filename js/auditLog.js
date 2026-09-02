@@ -2,7 +2,11 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { escapeHtml } from "./utils.js";
 
 const filterEl = document.getElementById("audit-log-filter");
+const dateFilterEl = document.getElementById("audit-log-date-filter");
+const sectionEl = document.getElementById("audit-log-section");
 const listEl = document.getElementById("audit-log-list");
+
+let loaded = false;
 
 const TABLE_LABELS = { recipes: "Rezept", products: "Produkt", profiles: "Konto" };
 const ACTION_LABELS = { insert: "angelegt", update: "geändert", delete: "gelöscht" };
@@ -46,6 +50,11 @@ async function loadAuditLog() {
     .limit(200);
   if (filterEl.value) {
     query = query.eq("table_name", filterEl.value);
+  }
+  if (dateFilterEl.value) {
+    const since = new Date();
+    since.setDate(since.getDate() - Number(dateFilterEl.value));
+    query = query.gte("changed_at", since.toISOString());
   }
   const { data, error } = await query;
   if (error) {
@@ -98,5 +107,11 @@ function renderAuditLog(entries) {
 
 export function initAuditLog() {
   filterEl.addEventListener("change", loadAuditLog);
-  loadAuditLog();
+  dateFilterEl.addEventListener("change", loadAuditLog);
+  sectionEl.addEventListener("toggle", () => {
+    if (sectionEl.open && !loaded) {
+      loaded = true;
+      loadAuditLog();
+    }
+  });
 }

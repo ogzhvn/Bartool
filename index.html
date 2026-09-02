@@ -805,19 +805,33 @@
       <p class="hint">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>
       <div id="data-quality-report"></div>
 
-      <h3>Änderungsverlauf</h3>
-      <div class="field-row">
-        <label>
-          Tabelle
-          <select id="audit-log-filter">
-            <option value="">Alle</option>
-            <option value="recipes">Rezepte</option>
-            <option value="products">Produkte</option>
-            <option value="profiles">Konten</option>
-          </select>
-        </label>
-      </div>
-      <div id="audit-log-list"></div>
+      <details class="recipe-item" id="audit-log-section">
+        <summary>Änderungsverlauf</summary>
+        <div class="recipe-item-body">
+          <div class="field-row">
+            <label>
+              Tabelle
+              <select id="audit-log-filter">
+                <option value="">Alle</option>
+                <option value="recipes">Rezepte</option>
+                <option value="products">Produkte</option>
+                <option value="profiles">Konten</option>
+              </select>
+            </label>
+            <label>
+              Zeitraum
+              <select id="audit-log-date-filter">
+                <option value="">Alle</option>
+                <option value="1">Letzter Tag</option>
+                <option value="3">Letzte 3 Tage</option>
+                <option value="7">Letzte Woche</option>
+                <option value="30">Letzter Monat</option>
+              </select>
+            </label>
+          </div>
+          <div id="audit-log-list"></div>
+        </div>
+      </details>
     </section>
 
     </main>
