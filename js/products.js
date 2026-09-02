@@ -1,6 +1,6 @@
 import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
-import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
+import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
@@ -354,6 +354,15 @@ function populatePairsWithOptions() {
     (a, b) => a.localeCompare(b, "de")
   );
   pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
+}
+
+// Springt vom Datenqualität-Dashboard im Admin-Tab direkt ins Bearbeiten-
+// Formular eines Produkts (Aufrufer wechselt vorher per switchTab("products")).
+export function openProductForEdit(name) {
+  const product = getProduct(name);
+  if (!product) return;
+  loadIntoForm(product);
+  showEditView();
 }
 
 export function initProducts() {

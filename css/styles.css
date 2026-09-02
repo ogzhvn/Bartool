@@ -824,6 +824,28 @@ textarea {
   margin-top: 0.6rem;
 }
 
+.quality-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.quality-item-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.quality-item-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 @media (max-width: 480px) {
   .ingredient-row {
     grid-template-columns: 1fr 1fr;

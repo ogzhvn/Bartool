@@ -9,6 +9,7 @@ import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
+import { initDataQuality } from "./dataQuality.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
@@ -78,6 +79,7 @@ async function bootstrapAppOnce() {
   initCalculation();
   initAdminPanel();
   initAuditLog();
+  initDataQuality();
   startSessionTimeoutWatch();
 }
 

@@ -1,7 +1,7 @@
 import { saveRecipe, deleteRecipe, onRecipesChanged } from "./storage.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { escapeHtml, formatNumber } from "./utils.js";
-import { getAllRecipes, isCustomRecipe } from "./recipeLibrary.js";
+import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
@@ -256,6 +256,15 @@ function renderSidebarList() {
     btn.addEventListener("click", () => loadIntoForm(recipe));
     sidebarListEl.appendChild(btn);
   });
+}
+
+// Springt vom Datenqualität-Dashboard im Admin-Tab direkt ins Bearbeiten-
+// Formular eines Rezepts (Aufrufer wechselt vorher per switchTab("recipes")).
+export function openRecipeForEdit(name) {
+  const recipe = getRecipe(name);
+  if (!recipe) return;
+  loadIntoForm(recipe);
+  showEditView();
 }
 
 export function initRecipes() {
