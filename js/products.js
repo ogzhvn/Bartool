@@ -33,6 +33,20 @@ function groupSortIndex(group) {
   return i === -1 ? GROUP_ORDER.length : i;
 }
 
+// Oberkategorien für die Kategorie-Navigation links im Produkte-Tab.
+// Jede Gruppe aus GROUP_ORDER gehört genau einer Oberkategorie an.
+const OBERKATEGORIEN = [
+  { name: "Spirituosen", groups: ["Gin", "Vodka", "Rum & Cachaça", "Whisky", "Tequila & Mezcal", "Brände", "Absinth"] },
+  { name: "Liköre & Bitters", groups: ["Liköre & Aperitifs", "Wermut & Aperitif-Wein", "Bitters"] },
+  { name: "Wein", groups: ["Wein", "Schaumwein"] },
+  { name: "Sirups & Frucht", groups: ["Sirup", "Fruchtpüree"] },
+  { name: "Softdrinks & Mixer", groups: ["Saft", "Mixer & Softdrink", "Tee & Kaffee"] },
+  { name: "Bier", groups: ["Bier"] },
+  { name: "Sonstiges", groups: ["Sonstiges"] },
+];
+
+let activeOberkategorie = null;
+
 // Scotch Single Malt regions – kept together and above the other whisky styles
 // instead of falling wherever they land alphabetically (e.g. "Irish Whiskey"
 // would otherwise sort between "Islay" and "Lowland").
@@ -86,6 +100,7 @@ const editViewEl = document.getElementById("products-edit-view");
 const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
 const groupFilterEl = document.getElementById("product-group-filter");
+const categoryListEl = document.getElementById("product-category-list");
 const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
@@ -211,8 +226,31 @@ function currentFilteredProducts() {
   return getAllProducts().filter((p) => {
     const matchesQuery = p.name.toLowerCase().includes(query) || (p.category ?? "").toLowerCase().includes(query);
     const matchesGroup = !groupFilter || p.group === groupFilter;
-    return matchesQuery && matchesGroup;
+    const matchesOberkategorie = !activeOberkategorie || activeOberkategorie.groups.includes(p.group);
+    return matchesQuery && matchesGroup && matchesOberkategorie;
   });
+}
+
+function renderCategoryNav() {
+  categoryListEl.innerHTML = "";
+
+  const makeBtn = (label, oberkategorie) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "recipe-name-btn" + (activeOberkategorie === oberkategorie ? " active" : "");
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+      activeOberkategorie = oberkategorie;
+      groupFilterEl.value = "";
+      populateGroupFilter();
+      renderCategoryNav();
+      renderBrowseList();
+    });
+    return btn;
+  };
+
+  categoryListEl.appendChild(makeBtn("Alle", null));
+  OBERKATEGORIEN.forEach((ok) => categoryListEl.appendChild(makeBtn(ok.name, ok)));
 }
 
 function groupProducts(products) {
@@ -364,9 +402,9 @@ function renderSidebarList() {
 }
 
 function populateGroupFilter() {
-  const groups = [...new Set(getAllProducts().map((p) => p.group).filter(Boolean))].sort(
-    (a, b) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de")
-  );
+  const groups = [...new Set(getAllProducts().map((p) => p.group).filter(Boolean))]
+    .filter((g) => !activeOberkategorie || activeOberkategorie.groups.includes(g))
+    .sort((a, b) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de"));
   const currentValue = groupFilterEl.value;
   groupFilterEl.innerHTML =
     `<option value="">Alle Kategorien</option>` +
@@ -421,6 +459,7 @@ export function initProducts() {
     populateGroupFilter();
     populateDatalists();
     populatePairsWithOptions();
+    renderCategoryNav();
     renderBrowseList();
     renderSidebarList();
   });
@@ -433,6 +472,7 @@ export function initProducts() {
   populateGroupFilter();
   populateDatalists();
   populatePairsWithOptions();
+  renderCategoryNav();
   renderBrowseList();
   renderSidebarList();
 }

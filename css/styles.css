@@ -265,6 +265,27 @@ textarea {
   font-weight: 700;
 }
 
+.product-browse-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.product-category-nav {
+  flex: 0 0 200px;
+  min-width: 180px;
+}
+
+.product-category-nav .recipe-name-list {
+  max-height: none;
+}
+
+.product-browse-main {
+  flex: 2 1 360px;
+  min-width: 280px;
+}
+
 .recipe-edit-layout {
   display: flex;
   gap: 1.5rem;

@@ -99,7 +99,7 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
         <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
-        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produktwissen</button>
+        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produkte</button>
       </div>
       <div class="sidebar-group" data-admin-only>
         <h3 class="sidebar-group-title">Verwaltung</h3>
@@ -133,7 +133,7 @@
           <span class="tool-card-desc">Rezeptbuch durchsuchen: Klassiker, Hausrezepte und eigene</span>
         </button>
         <button type="button" class="tool-card" data-tab="products">
-          <span class="tool-card-title">Produktwissen</span>
+          <span class="tool-card-title">Produkte</span>
           <span class="tool-card-desc">Getränke- und Zutatenkatalog der Bar</span>
         </button>
         <button type="button" class="tool-card" data-tab="superjuice">
@@ -338,7 +338,7 @@
 
     <!-- PRODUCTS (browse list + edit, in one tab) -->
     <section id="products" class="tab-panel">
-      <h2>Produktwissen</h2>
+      <h2>Produkte</h2>
 
       <!-- List view -->
       <div id="products-list-view" class="recipe-subview active">
@@ -348,13 +348,21 @@
           <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
         </div>
 
-        <div class="field-row">
-          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
-          <select id="product-group-filter">
-            <option value="">Alle Kategorien</option>
-          </select>
+        <div class="product-browse-layout">
+          <aside class="product-category-nav">
+            <div id="product-category-list" class="recipe-name-list"></div>
+          </aside>
+
+          <div class="product-browse-main">
+            <div class="field-row">
+              <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+              <select id="product-group-filter">
+                <option value="">Alle Kategorien</option>
+              </select>
+            </div>
+            <div id="product-list" class="recipe-accordion"></div>
+          </div>
         </div>
-        <div id="product-list" class="recipe-accordion"></div>
       </div>
 
       <!-- Edit view (form + sidebar) -->
