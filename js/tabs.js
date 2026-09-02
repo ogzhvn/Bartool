@@ -36,6 +36,11 @@ export function initTabs() {
 
   navBackdrop?.addEventListener("click", closeMobileNav);
 
+  document.getElementById("app-title")?.addEventListener("click", () => {
+    switchTab("home");
+    closeMobileNav();
+  });
+
   window.addEventListener("hashchange", () => {
     const tabId = location.hash.slice(1);
     if (tabExists(tabId)) switchTab(tabId, { updateHash: false });

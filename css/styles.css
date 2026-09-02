@@ -43,6 +43,10 @@ body {
   font-size: 1.8rem;
 }
 
+.app-title {
+  cursor: pointer;
+}
+
 .subtitle {
   margin: 0.2rem 0 0;
   color: var(--text-muted);
