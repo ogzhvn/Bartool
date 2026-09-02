@@ -39,7 +39,10 @@ function renderEmployees(profiles) {
                 <option value="admin" ${p.role === "admin" ? "selected" : ""}>Admin</option>
               </select>
             </td>
-            <td><button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>Löschen</button></td>
+            <td>
+              <button type="button" class="btn-secondary reset-password-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>Passwort zurücksetzen</button>
+              <button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>Löschen</button>
+            </td>
           </tr>`
           )
           .join("")}
@@ -77,6 +80,27 @@ function renderEmployees(profiles) {
         alert("Rolle konnte nicht geändert werden: " + error.message);
         loadEmployees();
       }
+    });
+  });
+
+  employeeListEl.querySelectorAll(".reset-password-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.closest("tr").dataset.id;
+      const password = prompt("Neues temporäres Passwort (mind. 8 Zeichen):");
+      if (password === null) return;
+      if (password.length < 8) {
+        alert("Das Passwort muss mindestens 8 Zeichen haben.");
+        return;
+      }
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.functions.invoke("admin-users", {
+        body: { action: "reset-password", userId: id, password },
+      });
+      if (error || data?.error) {
+        alert("Passwort konnte nicht zurückgesetzt werden: " + (data?.error || error.message));
+        return;
+      }
+      alert("Passwort wurde zurückgesetzt. Die Person muss beim nächsten Login ein neues Passwort setzen.");
     });
   });
 

@@ -340,6 +340,11 @@ create table if not exists public.change_requests (
   reviewed_at timestamptz
 );
 
+-- "upsert" (Anlegen/Ändern) oder "delete" (Löschung, payload = { name }).
+alter table public.change_requests add column if not exists action text not null default 'upsert';
+alter table public.change_requests drop constraint if exists change_requests_action_check;
+alter table public.change_requests add constraint change_requests_action_check check (action in ('upsert', 'delete'));
+
 alter table public.change_requests enable row level security;
 
 drop policy if exists "change_requests: own insert" on public.change_requests;

@@ -141,6 +141,20 @@ async function handleDelete() {
     alert('Dieses Rezept ist ein Klassiker aus der Bibliothek und wurde noch nicht in deinem Rezeptbuch gespeichert – es gibt nichts zu löschen.');
     return;
   }
+
+  if (!isAdmin()) {
+    if (!confirm(`Löschung von "${editingOriginalName}" zur Prüfung vorschlagen?`)) return;
+    try {
+      await submitChangeRequest("recipes", { name: editingOriginalName }, "delete");
+      alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      resetForm();
+      showListView();
+    } catch (error) {
+      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+    }
+    return;
+  }
+
   if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
   try {
     await deleteRecipe(editingOriginalName);
@@ -210,7 +224,7 @@ function renderBrowseList() {
         ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
         <div class="actions">
           <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
-          ${isAdmin() && isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+          ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? "Löschen" : "Löschung vorschlagen"}</button>` : ""}
         </div>
       </div>
     `;
@@ -236,6 +250,16 @@ function renderBrowseList() {
     if (deleteBtn) {
       deleteBtn.addEventListener("click", async (e) => {
         e.preventDefault();
+        if (!isAdmin()) {
+          if (!confirm(`Löschung von "${recipe.name}" zur Prüfung vorschlagen?`)) return;
+          try {
+            await submitChangeRequest("recipes", { name: recipe.name }, "delete");
+            alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+          } catch (error) {
+            alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+          }
+          return;
+        }
         if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
         try {
           if (editingOriginalName === recipe.name) resetForm();
@@ -281,6 +305,7 @@ export function openRecipeForEdit(name) {
 export function initRecipes() {
   if (!isAdmin()) {
     document.getElementById("recipe-save").textContent = "Vorschlag einreichen";
+    document.getElementById("recipe-delete").textContent = "Löschung vorschlagen";
   }
   editor.setIngredients([]);
   document.getElementById("recipe-add-ingredient").addEventListener("click", () => editor.addRow());

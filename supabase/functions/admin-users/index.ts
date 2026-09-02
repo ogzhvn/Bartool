@@ -122,6 +122,31 @@ Deno.serve(async (req) => {
     return jsonResponse({ userId: created.user.id });
   }
 
+  if (body.action === "reset-password") {
+    const userId = String(body.userId ?? "");
+    const password = String(body.password ?? "");
+    if (!userId || password.length < 8) {
+      return jsonResponse({ error: "userId und ein Passwort mit mindestens 8 Zeichen werden benötigt." }, 400);
+    }
+
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password });
+    if (updateError) {
+      return jsonResponse({ error: updateError.message }, 400);
+    }
+
+    // Wie bei der Konto-Neuanlage: nächster Login zwingt zum Setzen eines
+    // eigenen Passworts, das temporäre bleibt nicht dauerhaft gültig.
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({ must_change_password: true })
+      .eq("id", userId);
+    if (profileError) {
+      return jsonResponse({ error: profileError.message }, 400);
+    }
+
+    return jsonResponse({ ok: true });
+  }
+
   if (body.action === "delete") {
     const userId = String(body.userId ?? "");
     if (!userId) {

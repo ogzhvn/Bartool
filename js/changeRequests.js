@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
-import { saveRecipe, saveProduct } from "./storage.js";
+import { saveRecipe, saveProduct, deleteRecipe, deleteProduct } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 
 const pendingListEl = document.getElementById("change-requests-list");
@@ -8,16 +8,19 @@ const myWrapperEl = document.getElementById("my-change-requests-wrapper");
 const myListEl = document.getElementById("my-change-requests-list");
 
 const TABLE_LABELS = { recipes: "Rezept", products: "Produkt" };
+const ACTION_LABELS = { upsert: "Änderung", delete: "Löschung" };
 const STATUS_LABELS = { pending: "wird geprüft", approved: "übernommen", rejected: "abgelehnt" };
 
 // Von den Bearbeiten-Formularen (recipes.js/products.js) aufgerufen, wenn
-// eine nicht-Admin-Person eine Änderung einreicht – RLS erlaubt Mitarbeitern
-// ohnehin keinen direkten Schreibzugriff auf recipes/products.
-export async function submitChangeRequest(tableName, payload) {
+// eine nicht-Admin-Person eine Änderung oder Löschung einreicht – RLS
+// erlaubt Mitarbeitern ohnehin keinen direkten Schreibzugriff auf
+// recipes/products. Für action "delete" reicht payload = { name }.
+export async function submitChangeRequest(tableName, payload, action = "upsert") {
   const supabase = getSupabaseClient();
   const user = getCurrentUser();
   const { error } = await supabase.from("change_requests").insert({
     table_name: tableName,
+    action,
     payload,
     proposed_by: user.id,
   });
@@ -36,7 +39,13 @@ function renderPayload(payload) {
 
 async function approveRequest(entry) {
   try {
-    if (entry.table_name === "recipes") {
+    if (entry.action === "delete") {
+      if (entry.table_name === "recipes") {
+        await deleteRecipe(entry.payload.name);
+      } else {
+        await deleteProduct(entry.payload.name);
+      }
+    } else if (entry.table_name === "recipes") {
       await saveRecipe(entry.payload);
     } else {
       await saveProduct(entry.payload);
@@ -78,12 +87,17 @@ function renderPending(entries) {
     const who = entry.proposer?.display_name || entry.proposer?.username || "unbekannt";
     const when = new Date(entry.created_at).toLocaleString("de-DE");
     const tableLabel = TABLE_LABELS[entry.table_name] ?? entry.table_name;
+    const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
+    const body =
+      entry.action === "delete"
+        ? `<p>Löschvorschlag – wird bei Annahme vollständig entfernt (bzw. auf die mitgelieferte Version zurückgesetzt, falls vorhanden).</p>`
+        : renderPayload(entry.payload ?? {});
 
     const item = document.createElement("details");
     item.className = "audit-entry";
     item.innerHTML = `
-      <summary>${escapeHtml(when)} · ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“ · von ${escapeHtml(who)}</summary>
-      <div class="recipe-item-body">${renderPayload(entry.payload ?? {})}</div>
+      <summary>${escapeHtml(when)} · ${escapeHtml(actionLabel)}: ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“ · von ${escapeHtml(who)}</summary>
+      <div class="recipe-item-body">${body}</div>
       <div class="actions">
         <button type="button" class="btn-primary approve-btn">Annehmen</button>
         <button type="button" class="btn-secondary reject-btn">Ablehnen</button>
@@ -119,10 +133,11 @@ function renderMine(entries) {
   myListEl.innerHTML = entries
     .map((entry) => {
       const tableLabel = TABLE_LABELS[entry.table_name] ?? entry.table_name;
+      const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
       const when = new Date(entry.created_at).toLocaleString("de-DE");
       const statusLabel = STATUS_LABELS[entry.status] ?? entry.status;
       const comment = entry.status === "rejected" && entry.review_comment ? ` – ${escapeHtml(entry.review_comment)}` : "";
-      return `<p><strong>${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“</strong> (${escapeHtml(when)}): ${escapeHtml(statusLabel)}${comment}</p>`;
+      return `<p><strong>${escapeHtml(actionLabel)}: ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“</strong> (${escapeHtml(when)}): ${escapeHtml(statusLabel)}${comment}</p>`;
     })
     .join("");
 }

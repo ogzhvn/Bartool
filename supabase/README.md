@@ -83,9 +83,16 @@ temporäres Passwort ändern und können sich dabei gleich einen eigenen
 Benutzernamen aussuchen (erzwungener Screen); Mitarbeitende können ihr
 Passwort danach jederzeit über "Passwort ändern" im Header selbst ändern
 (der Benutzername lässt sich später nur noch über den Admin-Tab anpassen).
-Aus
-Sicherheitsgründen (öffentlich zugängliches Tresen-Tablet) meldet Bartool
-nach 6h Inaktivität automatisch ab.
+Vergessene Passwörter setzt ein Admin über "Passwort zurücksetzen" im
+Admin-Tab zurück (vergibt ein neues temporäres Passwort, erzwingt beim
+nächsten Login wieder eine eigene Wahl). Aus Sicherheitsgründen (öffentlich
+zugängliches Tresen-Tablet) meldet Bartool nach 6h Inaktivität automatisch
+ab.
+
+Mitarbeitende können Rezepte/Produkte bearbeiten, neu anlegen oder deren
+Löschung vorschlagen – das landet als Vorschlag im Admin-Tab unter "Offene
+Vorschläge" statt direkt gespeichert zu werden (RLS erlaubt nur Admins
+direktes Schreiben auf `recipes`/`products`).
 
 ## 6. Sicherheits-Check (empfohlen)
 

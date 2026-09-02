@@ -181,6 +181,20 @@ async function handleDelete() {
     alert("Dieses Produkt stammt aus dem Grundkatalog und wurde noch nicht in deinem Bestand gespeichert – es gibt nichts zu löschen.");
     return;
   }
+
+  if (!isAdmin()) {
+    if (!confirm(`Löschung von "${editingOriginalName}" zur Prüfung vorschlagen?`)) return;
+    try {
+      await submitChangeRequest("products", { name: editingOriginalName }, "delete");
+      alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      resetForm();
+      showListView();
+    } catch (error) {
+      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+    }
+    return;
+  }
+
   if (!confirm(`Produkt "${editingOriginalName}" wirklich löschen?`)) return;
   try {
     await deleteProduct(editingOriginalName);
@@ -255,7 +269,7 @@ function renderProductItem(product) {
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
-        ${isAdmin() && isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? "Löschen" : "Löschung vorschlagen"}</button>` : ""}
       </div>
     </div>
   `;
@@ -271,6 +285,16 @@ function renderProductItem(product) {
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
+      if (!isAdmin()) {
+        if (!confirm(`Löschung von "${product.name}" zur Prüfung vorschlagen?`)) return;
+        try {
+          await submitChangeRequest("products", { name: product.name }, "delete");
+          alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+        } catch (error) {
+          alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+        }
+        return;
+      }
       if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
       try {
         if (editingOriginalName === product.name) resetForm();
@@ -379,6 +403,7 @@ export function openProductForEdit(name) {
 export function initProducts() {
   if (!isAdmin()) {
     document.getElementById("product-save").textContent = "Vorschlag einreichen";
+    document.getElementById("product-delete").textContent = "Löschung vorschlagen";
   }
   document.getElementById("product-save").addEventListener("click", handleSave);
   document.getElementById("product-new").addEventListener("click", resetForm);
