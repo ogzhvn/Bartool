@@ -625,7 +625,28 @@ export const PRODUCTS = [
 
   // ---------- WEIN ----------
   { name: "Sauvignon Blanc (Weingut Pfannebecker)", group: "Wein", subGroup: "Weißwein", category: "Weißwein (Sauvignon Blanc) · Deutschland", region: "Rheinhessen (Deutschland)", grapeVariety: "Sauvignon Blanc", abv: "12–13 % vol", tastingNotes: "Frisch-grasig, Zitrus, Stachelbeere", story: "", service: "Als Weinbegleitung, Wein-Spritz", alternatives: "Riesling (Weingut Spreitzer)", production: "", allergens: "Enthält Sulfite" },
-  { name: "Riesling (Weingut Spreitzer)", group: "Wein", subGroup: "Weißwein", category: "Weißwein (Riesling) · Deutschland (Rheingau)", region: "Rheingau (Deutschland)", grapeVariety: "Riesling", abv: "12 % vol", tastingNotes: "Fruchtig-mineralisch, Apfel, feine Säure", story: "", service: "Als Weinbegleitung, Wein-Spritz", alternatives: "Sauvignon Blanc (Weingut Pfannebecker)", production: "", allergens: "Enthält Sulfite" },
+  {
+    // BEISPIEL für die ausgebaute Wein-Spezifikation (siehe Bartool-Chat) –
+    // recherchiert anhand Weingut/Sorte, nicht anhand der konkret im Haus
+    // stehenden Flasche/Charge. Lage laut Winzer-Angaben ist eine Cuvée aus
+    // mehreren Lagen; Jahrgang bitte beim Wareneingang gegen das Etikett
+    // prüfen und eintragen.
+    name: "Riesling (Weingut Spreitzer)", group: "Wein", subGroup: "Weißwein",
+    category: "Weißwein (Riesling, VDP.Gutswein) · Deutschland (Rheingau)",
+    region: "Oestrich-Winkel, Rheingau (Deutschland)",
+    grapeVariety: "Riesling (100 %)",
+    vineyard: "Cuvée aus VDP.Erste-Lage-Weinbergen (u. a. Lenchen, Doosberg, Klosterberg bei Oestrich/Winkel)",
+    vintage: "Aktueller Jahrgang – bitte laut Flaschenetikett beim Wareneingang eintragen",
+    aging: "Edelstahltank, Handlese (kein Barrique; Barrique-Ausbau bleibt den Lagenweinen des Guts vorbehalten)",
+    abv: "12 % vol",
+    tastingNotes: "Birne, Melone, saftige Frucht, feine Mineralik, frische Säure, leicht-mittlerer Körper",
+    foodPairing: "Guter Begleiter zu leichten Vorspeisen, Fisch/Meeresfrüchten und milden bis mittelkräftigen Käsesorten; auch klassisch als Aperitif",
+    story: "Familienweingut in Oestrich-Winkel (Rheingau) mit Weinbau-Tradition seit 1641, heute geführt von den Zwillingsbrüdern Andreas und Bernd Spreitzer. Über 18 ha, fast ausschließlich mit Riesling bestockt, auf tiefgründigen Löss-/Tonböden mit Quarzit-Anteil.",
+    service: "Als Weinbegleitung, Wein-Spritz",
+    alternatives: "Sauvignon Blanc (Weingut Pfannebecker)",
+    production: "Handlese, VDP.Gutswein",
+    allergens: "Enthält Sulfite",
+  },
   { name: "Grauburgunder (Weingut Gröhl)", group: "Wein", subGroup: "Weißwein", category: "Weißwein (Grauburgunder/Pinot Gris) · Deutschland (Rheinhessen)", region: "Rheinhessen (Deutschland)", grapeVariety: "Grauburgunder (Pinot Gris)", abv: "12,5–13 % vol", tastingNotes: "Vollmundig, Birne, dezente Würze", story: "", service: "Als Weinbegleitung", alternatives: "Riesling (Weingut Spreitzer)", production: "", allergens: "Enthält Sulfite" },
   { name: "Sancerre Blanc (Bernard Reverdy)", group: "Wein", subGroup: "Weißwein", category: "Weißwein (Sauvignon Blanc, AOC Sancerre) · Frankreich (Loire)", region: "Sancerre, Loire (Frankreich)", grapeVariety: "Sauvignon Blanc", abv: "13 % vol", tastingNotes: "Mineralisch-frisch, Feuerstein, Zitrus", story: "", service: "Als Weinbegleitung, Premium-Aperitif", alternatives: "Sauvignon Blanc (Weingut Pfannebecker)", production: "", allergens: "Enthält Sulfite" },
   { name: "Viognier Réserve (Philipp Kuhn)", group: "Wein", subGroup: "Weißwein", category: "Weißwein (Viognier) · Deutschland (Pfalz)", region: "Pfalz (Deutschland)", grapeVariety: "Viognier", abv: "13 % vol", tastingNotes: "Aromatisch, Aprikose, Blüten, vollmundig", story: "", service: "Als Weinbegleitung", alternatives: "Grauburgunder (Weingut Gröhl)", production: "", allergens: "Enthält Sulfite" },

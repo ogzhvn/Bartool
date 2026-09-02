@@ -112,6 +112,7 @@ function toProductRecord(product) {
     vineyard: product.vineyard || null,
     vintage: product.vintage || null,
     aging: product.aging || null,
+    food_pairing: product.foodPairing || null,
   };
 }
 
@@ -138,6 +139,7 @@ function fromProductRow(row) {
     vineyard: row.vineyard ?? "",
     vintage: row.vintage ?? "",
     aging: row.aging ?? "",
+    foodPairing: row.food_pairing ?? "",
   };
 }
 
