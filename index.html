@@ -13,6 +13,7 @@
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
       <span id="current-user-info"></span>
+      <button type="button" id="change-password-btn" class="btn-secondary">Passwort ändern</button>
       <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
     </div>
   </header>
@@ -23,8 +24,8 @@
       <h2>Anmelden</h2>
       <p class="hint">Zugang erhältst du von deinem Bartool-Admin.</p>
       <label>
-        E-Mail
-        <input type="email" id="login-email" autocomplete="username" required />
+        Benutzername
+        <input type="text" id="login-username" autocomplete="username" required />
       </label>
       <label>
         Passwort
@@ -36,6 +37,46 @@
       </div>
     </form>
   </section>
+
+  <!-- ERZWUNGENER PASSWORTWECHSEL (nach Konto-Anlage durch Admin) -->
+  <section id="forced-password-screen" class="auth-screen" hidden>
+    <form id="forced-password-form" class="auth-form">
+      <h2>Passwort festlegen</h2>
+      <p class="hint">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte lege jetzt ein eigenes Passwort fest, bevor es weitergeht.</p>
+      <label>
+        Neues Passwort
+        <input type="password" id="forced-password-new" autocomplete="new-password" minlength="10" required />
+      </label>
+      <label>
+        Neues Passwort bestätigen
+        <input type="password" id="forced-password-confirm" autocomplete="new-password" minlength="10" required />
+      </label>
+      <div id="forced-password-error" class="error-note" hidden></div>
+      <div class="actions">
+        <button type="submit" class="btn-primary">Passwort speichern</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- PASSWORT ÄNDERN (jederzeit über den Header erreichbar) -->
+  <div id="password-modal-overlay" class="modal-overlay" hidden>
+    <form id="password-modal-form" class="auth-form modal-box">
+      <h2>Passwort ändern</h2>
+      <label>
+        Neues Passwort
+        <input type="password" id="password-modal-new" autocomplete="new-password" minlength="10" required />
+      </label>
+      <label>
+        Neues Passwort bestätigen
+        <input type="password" id="password-modal-confirm" autocomplete="new-password" minlength="10" required />
+      </label>
+      <div id="password-modal-error" class="error-note" hidden></div>
+      <div class="actions">
+        <button type="button" id="password-modal-cancel" class="btn-secondary">Abbrechen</button>
+        <button type="submit" class="btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
 
   <div id="app-shell" hidden>
   <div class="app-layout">
@@ -621,14 +662,14 @@
             <input type="email" id="admin-new-email" required />
           </label>
           <label>
-            Name
-            <input type="text" id="admin-new-name" />
+            Benutzername
+            <input type="text" id="admin-new-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required />
           </label>
         </div>
         <div class="field-row">
           <label>
-            Passwort (temporär)
-            <input type="password" id="admin-new-password" minlength="8" required />
+            Name
+            <input type="text" id="admin-new-name" />
           </label>
           <label>
             Rolle
@@ -636,6 +677,12 @@
               <option value="mitarbeiter">Mitarbeiter</option>
               <option value="admin">Admin</option>
             </select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Passwort (temporär)
+            <input type="password" id="admin-new-password" minlength="8" required />
           </label>
         </div>
         <div id="admin-create-error" class="error-note" hidden></div>

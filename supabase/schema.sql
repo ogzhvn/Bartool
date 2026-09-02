@@ -76,6 +76,46 @@ create policy "profiles: admin manages all"
   with check (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Benutzername-Login & erzwungener Passwortwechsel
+-- ---------------------------------------------------------------------
+-- Login läuft über einen Benutzernamen statt der E-Mail (siehe Edge
+-- Function "login-with-username") – einfacher zu merken/eintippen hinterm
+-- Tresen. Die E-Mail bleibt intern für Supabase Auth bestehen.
+
+alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists must_change_password boolean not null default true;
+
+-- Bestehende Profile ohne Benutzernamen: aus dem E-Mail-Lokalteil ableiten,
+-- greift nur beim allerersten Lauf nach diesem Update.
+update public.profiles
+set username = regexp_replace(lower(split_part(email, '@', 1)), '[^a-z0-9._-]', '', 'g')
+where username is null;
+
+alter table public.profiles alter column username set not null;
+
+alter table public.profiles drop constraint if exists profiles_username_key;
+alter table public.profiles add constraint profiles_username_key unique (username);
+
+alter table public.profiles drop constraint if exists profiles_username_format;
+alter table public.profiles add constraint profiles_username_format
+  check (username ~ '^[a-z0-9._-]{3,32}$');
+
+-- Eng begrenzter RPC-Aufruf: setzt must_change_password ausschließlich für
+-- das eigene Konto zurück, kein generelles Self-Update auf profiles nötig.
+create or replace function public.mark_password_changed()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.profiles set must_change_password = false where id = auth.uid();
+$$;
+
+revoke all on function public.mark_password_changed() from public;
+revoke execute on function public.mark_password_changed() from anon;
+grant execute on function public.mark_password_changed() to authenticated;
+
+-- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
 -- ---------------------------------------------------------------------
 
