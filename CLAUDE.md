@@ -59,6 +59,9 @@ Dieses Muster nie durchbrechen.
    Matching ist ein strikter Teilstring-Vergleich
    (`ingredient.name.toLowerCase().includes(product.name.toLowerCase())`).
    Generisch ("Gin") matcht nicht – immer die Hausmarke ("Bombay Sapphire Gin").
+   Produktnamen vor dem Schreiben per `grep -n` in `js/productsData.js` bzw.
+   in der DB verifizieren, nie aus dem Kopf tippen: ein falsch geratener Name
+   bricht das Matching still, ohne Fehlermeldung.
 9. **Features immer über `getAllRecipes()` / `getAllProducts()` lesen**, nie direkt
    aus den Daten-Dateien.
 10. **Kein Commit auf einem nicht lauffähigen Zwischenstand.** Vor dem Commit:
@@ -98,8 +101,8 @@ Ich sage von mir aus Bescheid, wenn eine dieser Bedingungen zutrifft:
 - Die aktuelle Aufgabe ist abgeschlossen und committet, und der nächste Auftrag
   betrifft ein **anderes Modul / anderes Thema**.
 - Wir haben in dieser Session bereits eine der großen Datendateien angefasst.
-- Der Kontext ist erkennbar über ~60 % gefüllt bzw. es wurde schon einmal
-  komprimiert.
+- Es wurde in dieser Session schon einmal komprimiert, oder es wurde mehr als
+  eine der großen Datendateien angefasst.
 - Es kommt eine Aufgabe, die viel neuen Kontext braucht (Datenimport,
   Schema-Umbau, Redesign).
 
