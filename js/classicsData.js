@@ -240,7 +240,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French 75",
-    category: "Gin",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 30, unit: "ml" },
@@ -1537,7 +1537,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Black Velvet",
-    category: "Bier-Cocktails",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Guinness Hop House 13 Lager", amount: 100, unit: "ml" },
@@ -1895,7 +1895,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "Air Mail",
-    category: "Rum & Cachaça",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 45, unit: "ml" },
@@ -2102,7 +2102,7 @@ export const CLASSIC_RECIPES = [
   },
   {
     name: "French 76",
-    category: "Vodka",
+    category: "Sekt & Champagner-Cocktails",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 30, unit: "ml" },
