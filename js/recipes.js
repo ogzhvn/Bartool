@@ -6,6 +6,7 @@ import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
+import { switchTab, closeMobileNav } from "./tabs.js";
 
 const CATEGORY_ORDER = [
   "Gin",
@@ -33,6 +34,7 @@ const nameEl = document.getElementById("recipe-name");
 const categoryEl = document.getElementById("recipe-category");
 const categoryOptionsEl = document.getElementById("recipe-category-options");
 const categoryFilterEl = document.getElementById("recipe-category-filter");
+const categoryTreeEl = document.getElementById("recipe-category-tree");
 const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
 const glassEl = document.getElementById("recipe-glass");
@@ -345,10 +347,14 @@ function renderSidebarList() {
   });
 }
 
-function populateCategoryFilter() {
-  const categories = [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
+function sortedCategories() {
+  return [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
     (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de")
   );
+}
+
+function populateCategoryFilter() {
+  const categories = sortedCategories();
   const currentValue = categoryFilterEl.value;
   categoryFilterEl.innerHTML =
     `<option value="">Alle Kategorien</option>` +
@@ -356,10 +362,45 @@ function populateCategoryFilter() {
   if (categories.includes(currentValue)) categoryFilterEl.value = currentValue;
 }
 
+// Kategorie-Baum in der Sidebar unter "Bibliothek → Rezepte", analog zum
+// Produkte-Baum: ein Klick wechselt in den Rezepte-Tab und setzt den
+// Kategorie-Filter. Quelle der Wahrheit bleibt das Filter-Dropdown.
+function renderSidebarCategoryTree() {
+  categoryTreeEl.innerHTML = "";
+  const categories = sortedCategories();
+  const active = categoryFilterEl.value;
+
+  categories.forEach((category) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "subnav-btn" + (category === active ? " active" : "");
+    btn.textContent = category;
+    btn.addEventListener("click", () => {
+      switchTab("recipes");
+      // Detail-/Bearbeiten-Ansicht verlassen und die mobile Navigation
+      // schließen, sonst bleibt die Liste unter dem Menü verborgen.
+      showListView();
+      closeMobileNav();
+      categoryFilterEl.value = category;
+      renderSidebarCategoryTree();
+      renderBrowseList();
+      window.scrollTo({ top: 0 });
+    });
+    categoryTreeEl.appendChild(btn);
+  });
+}
+
+// Setzt den Kategorie-Filter zurück auf "Alle" – aufgerufen, wenn "Rezepte"
+// direkt angeklickt wird (Sidebar-Button oder Start-Kachel), statt über einen
+// Unterpunkt im Kategorie-Baum.
+function resetCategoryFilter() {
+  categoryFilterEl.value = "";
+  renderSidebarCategoryTree();
+  renderBrowseList();
+}
+
 function populateCategoryOptions() {
-  const categories = [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
-    (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de")
-  );
+  const categories = sortedCategories();
   categoryOptionsEl.innerHTML = categories.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("");
 }
 
@@ -389,7 +430,15 @@ export function initRecipes() {
   document.getElementById("recipe-back-to-list").addEventListener("click", showListView);
   document.getElementById("recipe-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
-  categoryFilterEl.addEventListener("change", renderBrowseList);
+  categoryFilterEl.addEventListener("change", () => {
+    renderSidebarCategoryTree();
+    renderBrowseList();
+  });
+  // "Rezepte" direkt anklicken (Sidebar-Button, Start-Kachel) zeigt wieder
+  // alle Kategorien statt in der zuletzt gewählten zu bleiben.
+  document.querySelectorAll('[data-tab="recipes"]').forEach((el) => {
+    el.addEventListener("click", resetCategoryFilter);
+  });
   sidebarSearchEl.addEventListener("input", renderSidebarList);
   selectAllBtn.addEventListener("click", () => {
     currentFilteredRecipes().forEach((r) => selectedNames.add(r.name));
@@ -410,11 +459,13 @@ export function initRecipes() {
   onRecipesChanged(() => {
     populateCategoryFilter();
     populateCategoryOptions();
+    renderSidebarCategoryTree();
     renderBrowseList();
     renderSidebarList();
   });
   populateCategoryFilter();
   populateCategoryOptions();
+  renderSidebarCategoryTree();
   renderBrowseList();
   renderSidebarList();
 }
