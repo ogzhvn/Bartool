@@ -132,7 +132,8 @@ body {
   margin: 0.2rem 0 0.3rem;
 }
 
-.tab-btn.active + .sidebar-subnav {
+.tab-btn.active + .sidebar-subnav,
+.sidebar-subnav.expanded {
   display: block;
 }
 

@@ -23,6 +23,15 @@ export function initTabs() {
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      const subnav = btn.nextElementSibling;
+      const hasSubnav = subnav?.classList.contains("sidebar-subnav");
+      // Erster Klick auf einen Punkt mit Unterkategorien klappt die nur auf,
+      // statt sofort in die Seite zu wechseln. Erst ein zweiter Klick (oder
+      // eine Unterkategorie) navigiert wirklich.
+      if (hasSubnav && !subnav.classList.contains("expanded") && !btn.classList.contains("active")) {
+        subnav.classList.add("expanded");
+        return;
+      }
       switchTab(btn.dataset.tab);
       closeMobileNav();
     });
@@ -63,6 +72,11 @@ export function switchTab(tabId, { updateHash = true, replace = false } = {}) {
   });
   document.querySelectorAll(".tab-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
+  });
+  document.querySelectorAll(".sidebar-subnav.expanded").forEach((subnav) => {
+    if (subnav.previousElementSibling?.dataset.tab !== tabId) {
+      subnav.classList.remove("expanded");
+    }
   });
   localStorage.setItem(LAST_TAB_KEY, tabId);
 
