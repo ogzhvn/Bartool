@@ -118,6 +118,45 @@ body {
   background: var(--bg-elevated);
 }
 
+.sidebar-subnav {
+  display: none;
+  margin: 0.2rem 0 0.3rem;
+}
+
+.tab-btn.active + .sidebar-subnav {
+  display: block;
+}
+
+.subnav-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  color: var(--text-muted);
+  padding: 0.4rem 0.6rem 0.4rem 1.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.subnav-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.subnav-btn.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.subnav-btn--nested {
+  padding-left: 2.2rem;
+  font-size: 0.8rem;
+}
+
 main {
   flex: 1 1 auto;
   min-width: 0;
@@ -263,37 +302,6 @@ textarea {
   color: var(--accent);
   font-size: 1.05rem;
   font-weight: 700;
-}
-
-.product-browse-layout {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.product-category-nav {
-  flex: 0 0 200px;
-  min-width: 180px;
-}
-
-.product-category-nav .recipe-name-list {
-  max-height: none;
-}
-
-#product-wein-subnav {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-#product-wein-subnav .product-subgroup-header {
-  margin-top: 0;
-}
-
-.product-browse-main {
-  flex: 2 1 360px;
-  min-width: 280px;
 }
 
 .recipe-edit-layout {

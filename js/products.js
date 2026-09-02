@@ -5,7 +5,10 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
+import { switchTab } from "./tabs.js";
 
+// Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
+// Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
 const GROUP_ORDER = [
   "Gin",
   "Vodka",
@@ -17,8 +20,6 @@ const GROUP_ORDER = [
   "Wermut & Aperitif-Wein",
   "Bitters",
   "Absinth",
-  "Schaumwein",
-  "Wein",
   "Bier",
   "Sirup",
   "Fruchtpüree",
@@ -26,6 +27,8 @@ const GROUP_ORDER = [
   "Mixer & Softdrink",
   "Tee & Kaffee",
   "Sonstiges",
+  "Schaumwein",
+  "Wein",
 ];
 
 function groupSortIndex(group) {
@@ -33,16 +36,18 @@ function groupSortIndex(group) {
   return i === -1 ? GROUP_ORDER.length : i;
 }
 
-// Oberkategorien für die Kategorie-Navigation links im Produkte-Tab.
-// Jede Gruppe aus GROUP_ORDER gehört genau einer Oberkategorie an.
+// Oberkategorien für die Kategorie-Navigation in der Sidebar unter
+// "Bibliothek → Produkte". Jede Gruppe aus GROUP_ORDER gehört genau einer
+// Oberkategorie an. "Wein" steht bewusst zuletzt und trägt die Weinarten
+// (WEINTYPEN) als verschachtelte Unterkategorien.
 const OBERKATEGORIEN = [
   { name: "Spirituosen", groups: ["Gin", "Vodka", "Rum & Cachaça", "Whisky", "Tequila & Mezcal", "Brände", "Absinth"] },
   { name: "Liköre & Bitters", groups: ["Liköre & Aperitifs", "Wermut & Aperitif-Wein", "Bitters"] },
-  { name: "Wein", groups: ["Wein", "Schaumwein"] },
   { name: "Sirups & Frucht", groups: ["Sirup", "Fruchtpüree"] },
   { name: "Softdrinks & Mixer", groups: ["Saft", "Mixer & Softdrink", "Tee & Kaffee"] },
   { name: "Bier", groups: ["Bier"] },
   { name: "Sonstiges", groups: ["Sonstiges"] },
+  { name: "Wein", groups: ["Wein", "Schaumwein"] },
 ];
 
 let activeOberkategorie = null;
@@ -116,9 +121,7 @@ const editViewEl = document.getElementById("products-edit-view");
 const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
 const groupFilterEl = document.getElementById("product-group-filter");
-const categoryListEl = document.getElementById("product-category-list");
-const weinSubnavEl = document.getElementById("product-wein-subnav");
-const weinListEl = document.getElementById("product-wein-list");
+const categoryTreeEl = document.getElementById("product-category-tree");
 const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
@@ -257,52 +260,45 @@ function currentFilteredProducts() {
   });
 }
 
-function renderCategoryNav() {
-  categoryListEl.innerHTML = "";
+// Kategorie-Baum in der Sidebar unter "Bibliothek → Produkte": Oberkategorien
+// als Hauptpunkte, die Weinarten als eingerückte Unterpunkte unter "Wein".
+// Ein Klick wechselt in den Produkte-Tab und setzt den Filter.
+function renderSidebarCategoryTree() {
+  categoryTreeEl.innerHTML = "";
 
-  const makeBtn = (label, oberkategorie) => {
+  const makeBtn = (label, { oberkategorie = null, weinTyp = null, nested = false } = {}) => {
+    const isActive = activeOberkategorie === oberkategorie && activeWeinTyp === weinTyp;
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "recipe-name-btn" + (activeOberkategorie === oberkategorie ? " active" : "");
+    btn.className = "subnav-btn" + (nested ? " subnav-btn--nested" : "") + (isActive ? " active" : "");
     btn.textContent = label;
     btn.addEventListener("click", () => {
+      switchTab("products");
       activeOberkategorie = oberkategorie;
-      activeWeinTyp = null;
+      activeWeinTyp = weinTyp;
       groupFilterEl.value = "";
+      updateGroupFilterVisibility();
       populateGroupFilter();
-      renderCategoryNav();
-      renderWeinSubnav();
+      renderSidebarCategoryTree();
       renderBrowseList();
     });
     return btn;
   };
 
-  categoryListEl.appendChild(makeBtn("Alle", null));
-  OBERKATEGORIEN.forEach((ok) => categoryListEl.appendChild(makeBtn(ok.name, ok)));
+  OBERKATEGORIEN.forEach((ok) => {
+    categoryTreeEl.appendChild(makeBtn(ok.name, { oberkategorie: ok }));
+    if (ok.name === "Wein") {
+      WEINTYPEN.forEach((typ) =>
+        categoryTreeEl.appendChild(makeBtn(typ.name, { oberkategorie: ok, weinTyp: typ, nested: true }))
+      );
+    }
+  });
 }
 
-function renderWeinSubnav() {
-  const isWein = activeOberkategorie?.name === "Wein";
-  weinSubnavEl.hidden = !isWein;
-  groupFilterEl.hidden = isWein;
-  if (!isWein) return;
-
-  weinListEl.innerHTML = "";
-  const makeBtn = (label, weinTyp) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "recipe-name-btn" + (activeWeinTyp === weinTyp ? " active" : "");
-    btn.textContent = label;
-    btn.addEventListener("click", () => {
-      activeWeinTyp = weinTyp;
-      renderWeinSubnav();
-      renderBrowseList();
-    });
-    return btn;
-  };
-
-  weinListEl.appendChild(makeBtn("Alle", null));
-  WEINTYPEN.forEach((typ) => weinListEl.appendChild(makeBtn(typ.name, typ)));
+function updateGroupFilterVisibility() {
+  // Innerhalb "Wein" übernehmen die Weinart-Unterpunkte in der Sidebar die
+  // Filterung, das generische Kategorie-Dropdown wäre dort redundant.
+  groupFilterEl.hidden = activeOberkategorie?.name === "Wein";
 }
 
 function groupByRegion(products) {
@@ -512,6 +508,19 @@ function populatePairsWithOptions() {
   pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
 }
 
+// Setzt die Kategorie-/Weinart-Filter zurück auf "Alle" – aufgerufen, wenn
+// "Produkte" direkt angeklickt wird (Sidebar-Button oder Start-Kachel), statt
+// über einen Unterpunkt im Kategorie-Baum.
+function resetCategoryFilters() {
+  activeOberkategorie = null;
+  activeWeinTyp = null;
+  groupFilterEl.value = "";
+  updateGroupFilterVisibility();
+  populateGroupFilter();
+  renderSidebarCategoryTree();
+  renderBrowseList();
+}
+
 // Springt vom Datenqualität-Dashboard im Admin-Tab direkt ins Bearbeiten-
 // Formular eines Produkts (Aufrufer wechselt vorher per switchTab("products")).
 export function openProductForEdit(name) {
@@ -538,12 +547,16 @@ export function initProducts() {
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
+  // "Produkte" direkt anklicken (Sidebar-Button, Start-Kachel) zeigt wieder
+  // den vollen Katalog statt in der zuletzt gewählten Kategorie zu bleiben.
+  document.querySelectorAll('[data-tab="products"]').forEach((el) => {
+    el.addEventListener("click", resetCategoryFilters);
+  });
   onProductsChanged(() => {
     populateGroupFilter();
     populateDatalists();
     populatePairsWithOptions();
-    renderCategoryNav();
-    renderWeinSubnav();
+    renderSidebarCategoryTree();
     renderBrowseList();
     renderSidebarList();
   });
@@ -553,11 +566,11 @@ export function initProducts() {
     populatePairsWithOptions();
     renderBrowseList();
   });
+  updateGroupFilterVisibility();
   populateGroupFilter();
   populateDatalists();
   populatePairsWithOptions();
-  renderCategoryNav();
-  renderWeinSubnav();
+  renderSidebarCategoryTree();
   renderBrowseList();
   renderSidebarList();
 }

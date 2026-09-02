@@ -100,6 +100,7 @@
         <h3 class="sidebar-group-title">Bibliothek</h3>
         <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produkte</button>
+        <div id="product-category-tree" class="sidebar-subnav"></div>
       </div>
       <div class="sidebar-group" data-admin-only>
         <h3 class="sidebar-group-title">Verwaltung</h3>
@@ -348,25 +349,13 @@
           <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
         </div>
 
-        <div class="product-browse-layout">
-          <aside class="product-category-nav">
-            <div id="product-category-list" class="recipe-name-list"></div>
-            <div id="product-wein-subnav" hidden>
-              <h4 class="product-subgroup-header">Weinart</h4>
-              <div id="product-wein-list" class="recipe-name-list"></div>
-            </div>
-          </aside>
-
-          <div class="product-browse-main">
-            <div class="field-row">
-              <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
-              <select id="product-group-filter">
-                <option value="">Alle Kategorien</option>
-              </select>
-            </div>
-            <div id="product-list" class="recipe-accordion"></div>
-          </div>
+        <div class="field-row">
+          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
+          <select id="product-group-filter">
+            <option value="">Alle Kategorien</option>
+          </select>
         </div>
+        <div id="product-list" class="recipe-accordion"></div>
       </div>
 
       <!-- Edit view (form + sidebar) -->
