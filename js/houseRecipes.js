@@ -9,6 +9,7 @@
 export const HOUSE_RECIPES = [
   {
     name: "Himbeer-Ingwer Fizz",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 45, unit: "ml" },
@@ -25,6 +26,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Mai Tai 1947",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Matusalem 15 Y.O.", amount: 35, unit: "ml" },
@@ -41,6 +43,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Martinez",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bene Dry Gin", amount: 35, unit: "ml" },
@@ -56,6 +59,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Monkey Island",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Banane", amount: 1, unit: "stk" },
@@ -71,6 +75,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Morgentau",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Ronnefeldt Morgentau", amount: 50, unit: "ml" },
@@ -86,6 +91,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Mystic Treasure",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Goslings Black Seal Bermuda Rum", amount: 45, unit: "ml" },
@@ -101,6 +107,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Orange & Thymian Gimlet",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Tanqueray Flor de Sevilla", amount: 45, unit: "ml" },
@@ -116,6 +123,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Pisco Punch",
+    category: "Brände",
     basePortions: 1,
     ingredients: [
       { name: "Pisco", amount: 60, unit: "ml" },
@@ -130,6 +138,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Rhubarb Rosato",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Ramazzotti Rosato", amount: 45, unit: "ml" },
@@ -145,6 +154,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Sea Breeze",
+    category: "Liköre & Amaro",
     basePortions: 1,
     ingredients: [
       { name: "Helbing Kümmel", amount: 50, unit: "ml" },
@@ -160,6 +170,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Sloppy Joe Mojito",
+    category: "Rum & Cachaça",
     basePortions: 1,
     ingredients: [
       { name: "Havana Club 3 Años", amount: 45, unit: "ml" },
@@ -176,6 +187,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Suffering Bastard",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bulleit Bourbon", amount: 25, unit: "ml" },
@@ -193,6 +205,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Tea Break",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Rauch Eistee Pfirsich", amount: 20, unit: "ml" },
@@ -208,6 +221,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Vieux Carré",
+    category: "Whisky",
     basePortions: 1,
     ingredients: [
       { name: "Sazerac Rye", amount: 35, unit: "ml" },
@@ -224,6 +238,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Watermelon Man",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 40, unit: "ml" },
@@ -239,6 +254,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Asian Moskito",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Minzblätter", amount: 10, unit: "stk" },
@@ -255,6 +271,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Asian Mule",
+    category: "Vodka",
     basePortions: 1,
     ingredients: [
       { name: "Ketel One Vodka", amount: 45, unit: "ml" },
@@ -272,6 +289,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Aviation",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Tanqueray London Dry Gin", amount: 45, unit: "ml" },
@@ -287,6 +305,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Basil Cooler",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Basilikumblätter (5–6)", amount: 5, unit: "stk" },
@@ -303,6 +322,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Bee's Knees Niece",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Earl-Grey-infused Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -318,6 +338,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Beery Negroni Sbagliato",
+    category: "Aperitivo & Spritz",
     basePortions: 1,
     ingredients: [
       { name: "Beery Campari-Vermouth-Mix", amount: 70, unit: "ml" },
@@ -331,6 +352,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Captain Blaubär",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Monin Blaubeeren-Püree", amount: 70, unit: "ml" },
@@ -346,6 +368,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Cosmo 1934",
+    category: "Gin",
     basePortions: 1,
     ingredients: [
       { name: "Bombay Sapphire Gin", amount: 50, unit: "ml" },
@@ -363,6 +386,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Cream Berry",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [{ name: "Pre-Mix", amount: 100, unit: "ml" }],
     method: "Stir auf Würfel oder Block",
@@ -372,6 +396,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Cucumber Elderflower Collins",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Tanqueray 0,0% Gin", amount: 45, unit: "ml" },
@@ -388,6 +413,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Der Grinch",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Vaihinger Apfelsaft", amount: 100, unit: "ml" },
@@ -402,6 +428,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Espadin Kick",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "San Cosme Mezcal", amount: 50, unit: "ml" },
@@ -417,6 +444,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Frozen KIBA",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Banane", amount: 1, unit: "stk" },
@@ -432,6 +460,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Fruit of the Loom",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [
       { name: "Boiron Mango-Püree", amount: 35, unit: "ml" },
@@ -448,6 +477,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Gustavo",
+    category: "Tequila & Mezcal",
     basePortions: 1,
     ingredients: [
       { name: "Jose Cuervo 100% Agave Tequila", amount: 45, unit: "ml" },
@@ -463,6 +493,7 @@ export const HOUSE_RECIPES = [
   },
   {
     name: "Inspired by Snickers",
+    category: "Alkoholfrei",
     basePortions: 1,
     ingredients: [{ name: "Pre-Mix", amount: 80, unit: "ml" }],
     method: "Stir & Strain",

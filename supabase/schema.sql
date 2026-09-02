@@ -158,6 +158,7 @@ $$;
 create table if not exists public.recipes (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
+  category text,
   base_portions numeric not null default 1,
   ingredients jsonb not null default '[]'::jsonb,
   method text,
@@ -173,6 +174,7 @@ create table if not exists public.recipes (
 
 alter table public.recipes add column if not exists quick_pitch text;
 alter table public.recipes add column if not exists pairs_with jsonb;
+alter table public.recipes add column if not exists category text;
 
 alter table public.recipes enable row level security;
 
