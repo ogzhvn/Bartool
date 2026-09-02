@@ -132,6 +132,21 @@ Die Empfehlung sieht immer so aus – **kurz und mit fertigem Startprompt**:
 Der Startprompt muss allein stehen können: betroffene Dateien mit Pfad, Ziel,
 bereits getroffene Entscheidungen, was ausdrücklich **nicht** angefasst werden soll.
 
+## Testaccount (Supabase Auth)
+Für Login-/Feature-Tests existiert ein Admin-Testaccount in der Supabase-
+Instanz (Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen
+verwenden, nur zum Durchklicken des Tools.
+
+- Benutzername: `claude-test`
+- E-Mail: `claude-testaccount@bartool.local`
+- Rolle: `admin`
+- Passwort: liegt **nicht** hier (Repo ist public), sondern lokal in
+  `.claude/local/testaccount.md` (per `.gitignore` von Commits ausgeschlossen).
+  Fehlt diese Datei in einer neuen Session: Passwort per `execute_sql` neu
+  setzen mit
+  `update auth.users set encrypted_password = crypt('<neues_pw>', gen_salt('bf')), updated_at = now() where email = 'claude-testaccount@bartool.local';`
+  und lokal in `.claude/local/testaccount.md` ablegen (nicht committen).
+
 ## Git
 - Entwicklung und Push auf `main`.
 - Commit-Messages auf Deutsch: kurzer Titel, bei Bedarf 1–2 Zeilen Kontext.
