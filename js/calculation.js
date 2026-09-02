@@ -4,7 +4,11 @@ import { UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { priceLabelFor, ingredientCost, priceForIngredient } from "./costing.js";
 
+const panelEl = document.getElementById("calculation");
 const ingredientsEl = document.getElementById("calc-ingredients");
+const totalEl = document.getElementById("calc-total");
+const totalValueEl = document.getElementById("calc-total-value");
+const totalSubEl = document.getElementById("calc-total-sub");
 const recipeSelectEl = document.getElementById("calc-recipe-select");
 const resultEl = document.getElementById("calc-result");
 const targetQuoteEl = document.getElementById("calc-target-quote");
@@ -81,12 +85,13 @@ function calculate() {
     lines.push({ name, amount, unit, cost });
   });
 
-  resultEl.hidden = false;
-
   if (lines.length === 0) {
-    resultEl.innerHTML = `<p class="empty-note">Bitte mindestens eine gültige Zutat mit Menge eingeben.</p>`;
+    resultEl.hidden = true;
+    totalEl.hidden = true;
     return;
   }
+
+  resultEl.hidden = false;
 
   const tableHtml = `
     <table>
@@ -104,7 +109,10 @@ function calculate() {
 
   const targetQuote = parseFloat(targetQuoteEl.value) || 0;
   if (targetQuote <= 0) {
-    resultEl.innerHTML = `${tableHtml}<p class="summary">Wareneinsatz gesamt: ${formatEuro(total)}</p>`;
+    resultEl.innerHTML = tableHtml;
+    totalEl.hidden = false;
+    totalValueEl.textContent = formatEuro(total);
+    totalSubEl.textContent = "Wareneinsatz gesamt · ohne Ziel-Quote kein Verkaufspreis";
     return;
   }
 
@@ -117,11 +125,14 @@ function calculate() {
     ${tableHtml}
     <p class="summary">
       Wareneinsatz gesamt: ${formatEuro(total)}<br />
-      Empfohlener Verkaufspreis (netto): ${formatEuro(priceNet)}<br />
-      Empfohlener Verkaufspreis (brutto, inkl. ${formatNumber(vat)} % MwSt.): ${formatEuro(priceGross)}<br />
+      Verkaufspreis netto: ${formatEuro(priceNet)}<br />
       Rohertrag (Marge): ${formatEuro(margin)}
     </p>
   `;
+
+  totalEl.hidden = false;
+  totalValueEl.textContent = formatEuro(priceGross);
+  totalSubEl.textContent = `inkl. ${formatNumber(vat)} % MwSt. · Wareneinsatz ${formatEuro(total)} · Marge ${formatEuro(margin)}`;
 }
 
 function populateRecipeSelect() {
@@ -147,7 +158,7 @@ function handleLoadRecipe() {
   recipe.ingredients.forEach((ing) =>
     addRow({ name: ing.name, amount: ing.amount, unit: ing.unit, price: priceForIngredient(ing.name) ?? "" })
   );
-  resultEl.hidden = true;
+  calculate();
 }
 
 function handleClear() {
@@ -155,6 +166,7 @@ function handleClear() {
   addRow();
   recipeSelectEl.value = "";
   resultEl.hidden = true;
+  totalEl.hidden = true;
 }
 
 export function initCalculation() {
@@ -163,6 +175,16 @@ export function initCalculation() {
   onRecipesChanged(populateRecipeSelect);
   document.getElementById("calc-add-ingredient").addEventListener("click", () => addRow());
   document.getElementById("calc-load-recipe").addEventListener("click", handleLoadRecipe);
-  document.getElementById("calc-calculate").addEventListener("click", calculate);
   document.getElementById("calc-clear").addEventListener("click", handleClear);
+  // Live rechnen: jede Eingabe im Panel löst eine Neuberechnung aus.
+  const recalcFromEvent = (e) => {
+    if (e.target.id === "calc-recipe-select") return;
+    calculate();
+  };
+  panelEl.addEventListener("input", recalcFromEvent);
+  panelEl.addEventListener("change", recalcFromEvent);
+  // Eine entfernte Zutatenzeile ist kein input-Event – nach dem Klick neu rechnen.
+  panelEl.addEventListener("click", (e) => {
+    if (e.target.closest(".remove-btn")) calculate();
+  });
 }

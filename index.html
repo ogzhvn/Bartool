@@ -3,13 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0c0c0e" />
   <title>Bartool – Rechner für Barkeeper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header class="app-header">
-    <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar" hidden>☰</button>
-    <h1 id="app-title" class="app-title">🍸 Bartool</h1>
+    <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar" hidden><i class="ph ph-list" aria-hidden="true"></i></button>
+    <h1 id="app-title" class="app-title"><i class="ph ph-martini brand-mark" aria-hidden="true"></i>Bar<em>tool</em></h1>
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
       <span id="current-user-info"></span>
@@ -33,7 +38,7 @@
       </label>
       <div id="login-error" class="error-note" hidden></div>
       <div class="actions">
-        <button type="submit" class="btn-primary">Anmelden</button>
+        <button type="submit" class="btn-primary">Anmelden <i class="ph ph-arrow-right" aria-hidden="true"></i></button>
       </div>
     </form>
   </section>
@@ -87,26 +92,26 @@
     <div id="nav-backdrop" class="nav-backdrop" hidden></div>
     <nav class="sidebar" id="sidebar" role="tablist">
       <div class="sidebar-group">
-        <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true">Start</button>
+        <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Rechner</h3>
-        <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false">Batching</button>
-        <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false">Superjuice</button>
-        <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false">Zuckersirup</button>
-        <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false">Verdünnung &amp; ABV</button>
-        <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false">Kalkulation</button>
+        <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false"><i class="ph ph-flask" aria-hidden="true"></i>Batching</button>
+        <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false"><i class="ph ph-orange-slice" aria-hidden="true"></i>Superjuice</button>
+        <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false"><i class="ph ph-drop-half" aria-hidden="true"></i>Zuckersirup</button>
+        <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false"><i class="ph ph-drop" aria-hidden="true"></i>Verdünnung &amp; ABV</button>
+        <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false"><i class="ph ph-currency-eur" aria-hidden="true"></i>Kalkulation</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
-        <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false">Rezepte</button>
+        <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false"><i class="ph ph-book-open" aria-hidden="true"></i>Rezepte</button>
         <div id="recipe-category-tree" class="sidebar-subnav"></div>
-        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false">Produkte</button>
+        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
         <div id="product-category-tree" class="sidebar-subnav"></div>
       </div>
       <div class="sidebar-group" data-admin-only>
         <h3 class="sidebar-group-title">Verwaltung</h3>
-        <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false">Admin</button>
+        <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
       </div>
     </nav>
 
@@ -128,34 +133,42 @@
       <h3>Deine Werkzeuge</h3>
       <div class="tool-grid">
         <button type="button" class="tool-card" data-tab="batching">
+          <i class="ph ph-flask tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Batching</span>
           <span class="tool-card-desc">Rezepte auf mehr Portionen oder ein Ziel-Volumen hochrechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="recipes">
+          <i class="ph ph-book-open tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Rezepte</span>
           <span class="tool-card-desc">Rezeptbuch durchsuchen: Klassiker, Hausrezepte und eigene</span>
         </button>
         <button type="button" class="tool-card" data-tab="products">
+          <i class="ph ph-wine tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Produkte</span>
           <span class="tool-card-desc">Getränke- und Zutatenkatalog der Bar</span>
         </button>
         <button type="button" class="tool-card" data-tab="superjuice">
+          <i class="ph ph-orange-slice tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Superjuice</span>
           <span class="tool-card-desc">Säuremengen für Superjuice aus Schalengewicht berechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="syrup">
+          <i class="ph ph-drop-half tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Zuckersirup</span>
           <span class="tool-card-desc">Zuckermenge für ein Zucker:Wasser-Verhältnis berechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="dilution">
+          <i class="ph ph-drop tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Verdünnung &amp; ABV</span>
           <span class="tool-card-desc">Alkoholgehalt vor und nach Verdünnung durch Eis berechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="calculation">
+          <i class="ph ph-currency-eur tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Kalkulation</span>
           <span class="tool-card-desc">Wareneinsatz und Verkaufspreis eines Rezepts berechnen</span>
         </button>
         <button type="button" class="tool-card" data-tab="admin" data-admin-only>
+          <i class="ph ph-key tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title">Admin</span>
           <span class="tool-card-desc">Mitarbeiterkonten anlegen und Rollen verwalten</span>
         </button>
@@ -165,7 +178,7 @@
     <!-- BATCHING -->
     <section id="batching" class="tab-panel">
       <h2>Rezept-Hochrechner (Batching)</h2>
-      <p class="hint">Gib dein Rezept ein und skaliere es auf mehr Portionen oder ein bestimmtes Batch-Volumen.</p>
+      <p class="hint">Rezept eingeben oder laden, Ziel setzen – gerechnet wird live. Das Ergebnis steht unten in der Leiste.</p>
 
       <div class="field-row">
         <label>
@@ -192,38 +205,51 @@
         </label>
       </div>
 
+      <h3>Skalieren auf</h3>
+      <div class="seg" role="radiogroup" aria-label="Skalieren auf">
+        <label class="seg-opt">
+          <input type="radio" name="batch-mode" value="portions" checked />
+          <span>Portionen</span>
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="batch-mode" value="volume" />
+          <span>Volumen</span>
+        </label>
+      </div>
+
+      <div class="stepper" data-mode-field="portions">
+        <button type="button" id="batch-portions-minus" class="stepper-btn" aria-label="Eine Portion weniger"><i class="ph ph-minus" aria-hidden="true"></i></button>
+        <label class="stepper-value">
+          <input type="number" id="batch-target-portions" value="10" min="0.01" step="1" aria-label="Ziel-Portionen" />
+          <span>Portionen</span>
+        </label>
+        <button type="button" id="batch-portions-plus" class="stepper-btn" aria-label="Eine Portion mehr"><i class="ph ph-plus" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="stepper" data-mode-field="volume" hidden>
+        <label class="stepper-value">
+          <input type="number" id="batch-target-volume" value="1000" min="1" step="10" aria-label="Ziel-Volumen in ml" />
+          <span>ml Zielvolumen</span>
+        </label>
+      </div>
+
       <h3>Zutaten</h3>
       <div id="batch-ingredients" class="ingredient-list"></div>
-      <button type="button" id="batch-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
-
-      <h3>Skalieren auf</h3>
-      <div class="field-row">
-        <label class="radio-label">
-          <input type="radio" name="batch-mode" value="portions" checked />
-          Anzahl Portionen
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="batch-mode" value="volume" />
-          Batch-Volumen (ml)
-        </label>
-      </div>
-      <div class="field-row">
-        <label>
-          Ziel-Portionen
-          <input type="number" id="batch-target-portions" value="10" min="0.01" step="0.01" />
-        </label>
-        <label>
-          Ziel-Volumen (ml)
-          <input type="number" id="batch-target-volume" value="1000" min="1" step="1" disabled />
-        </label>
-      </div>
-
       <div class="actions">
-        <button type="button" id="batch-calculate" class="btn-primary">Berechnen</button>
+        <button type="button" id="batch-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
         <button type="button" id="batch-clear" class="btn-secondary">Zurücksetzen</button>
       </div>
 
       <div id="batch-result" class="result-box" hidden></div>
+
+      <div id="batch-total" class="result-bar" hidden>
+        <div class="result-bar-figure">
+          <span class="result-bar-label">Gesamtvolumen</span>
+          <strong id="batch-total-value">–</strong>
+          <span id="batch-total-sub" class="result-bar-sub"></span>
+        </div>
+        <button type="button" id="batch-share" class="btn-primary"><i class="ph ph-export" aria-hidden="true"></i> Teilen</button>
+      </div>
     </section>
 
     <!-- RECIPES (browse list + edit, in one tab) -->
@@ -235,7 +261,7 @@
         <p class="hint">133 Cocktail-Klassiker (nach Basis-Spirituose kategorisiert) und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"), der Filter grenzt nach Kategorie ein.</p>
 
         <div class="actions">
-          <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
+          <button type="button" id="recipe-list-new" class="btn-primary"><i class="ph ph-plus" aria-hidden="true"></i> Neues Rezept</button>
         </div>
 
         <div class="field-row">
@@ -259,7 +285,7 @@
       <!-- Edit view (form + sidebar) -->
       <div id="recipes-edit-view" class="recipe-subview">
         <div class="actions">
-          <button type="button" id="recipe-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+          <button type="button" id="recipe-back-to-list" class="btn-secondary"><i class="ph ph-arrow-left" aria-hidden="true"></i> Zurück zur Liste</button>
         </div>
         <p class="hint">Wähle rechts ein Rezept zum Bearbeiten aus oder leg links ein neues an. Änderungen an einem Klassiker landen als eigene Kopie in deinem Rezeptbuch.</p>
 
@@ -283,7 +309,7 @@
 
             <h3>Zutaten</h3>
             <div id="recipe-ingredients" class="ingredient-list"></div>
-            <button type="button" id="recipe-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
+            <button type="button" id="recipe-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
 
             <h3>Details</h3>
             <div class="field-row">
@@ -330,7 +356,7 @@
 
           <aside class="recipe-edit-sidebar">
             <div class="actions">
-              <button type="button" id="recipe-sidebar-new" class="btn-secondary">+ Neu</button>
+              <button type="button" id="recipe-sidebar-new" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Neu</button>
             </div>
             <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" />
             <div id="recipe-sidebar-list" class="recipe-name-list"></div>
@@ -348,7 +374,7 @@
         <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
 
         <div class="actions">
-          <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
+          <button type="button" id="product-list-new" class="btn-primary"><i class="ph ph-plus" aria-hidden="true"></i> Neues Produkt</button>
         </div>
 
         <div class="field-row">
@@ -372,7 +398,7 @@
       <!-- Edit view (form + sidebar) -->
       <div id="products-edit-view" class="recipe-subview">
         <div class="actions">
-          <button type="button" id="product-back-to-list" class="btn-secondary">← Zurück zur Liste</button>
+          <button type="button" id="product-back-to-list" class="btn-secondary"><i class="ph ph-arrow-left" aria-hidden="true"></i> Zurück zur Liste</button>
         </div>
         <p class="hint">Wähle rechts ein Produkt zum Bearbeiten aus oder leg links ein neues an.</p>
 
@@ -508,7 +534,7 @@
 
           <aside class="recipe-edit-sidebar">
             <div class="actions">
-              <button type="button" id="product-sidebar-new" class="btn-secondary">+ Neu</button>
+              <button type="button" id="product-sidebar-new" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Neu</button>
             </div>
             <input type="text" id="product-sidebar-search" placeholder="Suchen…" />
             <div id="product-sidebar-list" class="recipe-name-list"></div>
@@ -631,45 +657,57 @@
     <!-- DILUTION / ABV -->
     <section id="dilution" class="tab-panel">
       <h2>Verdünnungs- &amp; ABV-Rechner</h2>
-      <p class="hint">Berechnet den Alkoholgehalt (ABV) eines Drinks vor und nach der Verdünnung durch Eis.</p>
+      <p class="hint">Zutaten mit Menge und ABV eintragen – der Alkoholgehalt vor und nach der Verdünnung steht live in der Leiste unten.</p>
+
+      <h3>Verdünnung angeben als</h3>
+      <div class="seg" role="radiogroup" aria-label="Verdünnung angeben als">
+        <label class="seg-opt">
+          <input type="radio" name="dil-mode" value="percent" checked />
+          <span>% des Endvolumens</span>
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="dil-mode" value="ml" />
+          <span>ml Wasser</span>
+        </label>
+      </div>
+
+      <div class="stepper" data-mode-field="percent">
+        <button type="button" id="dil-percent-minus" class="stepper-btn" aria-label="Fünf Prozent weniger"><i class="ph ph-minus" aria-hidden="true"></i></button>
+        <label class="stepper-value">
+          <input type="number" id="dil-percent" value="25" min="0" max="95" step="5" aria-label="Verdünnung in Prozent" />
+          <span>% Verdünnung</span>
+        </label>
+        <button type="button" id="dil-percent-plus" class="stepper-btn" aria-label="Fünf Prozent mehr"><i class="ph ph-plus" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="stepper" data-mode-field="ml" hidden>
+        <label class="stepper-value">
+          <input type="number" id="dil-ml" value="30" min="0" step="5" aria-label="Verdünnung in Millilitern" />
+          <span>ml Wasser</span>
+        </label>
+      </div>
 
       <h3>Zutaten</h3>
       <div id="dil-ingredients" class="ingredient-list dil-list"></div>
-      <button type="button" id="dil-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
-
-      <h3>Verdünnung</h3>
-      <div class="field-row">
-        <label class="radio-label">
-          <input type="radio" name="dil-mode" value="percent" checked />
-          % des Endvolumens
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="dil-mode" value="ml" />
-          ml Verdünnung
-        </label>
-      </div>
-      <div class="field-row">
-        <label>
-          Verdünnung (%)
-          <input type="number" id="dil-percent" value="25" min="0" max="95" step="1" />
-        </label>
-        <label>
-          Verdünnung (ml)
-          <input type="number" id="dil-ml" value="30" min="0" step="1" disabled />
-        </label>
-      </div>
-
       <div class="actions">
-        <button type="button" id="dil-calculate" class="btn-primary">Berechnen</button>
+        <button type="button" id="dil-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
       </div>
 
       <div id="dil-result" class="result-box" hidden></div>
+
+      <div id="dil-total" class="result-bar" hidden>
+        <div class="result-bar-figure">
+          <span class="result-bar-label">ABV nach Verdünnung</span>
+          <strong id="dil-total-value">–</strong>
+          <span id="dil-total-sub" class="result-bar-sub"></span>
+        </div>
+      </div>
     </section>
 
     <!-- CALCULATION (Wareneinsatz / Verkaufspreis) -->
     <section id="calculation" class="tab-panel">
       <h2>Kalkulations-Rechner</h2>
-      <p class="hint">Berechnet den Wareneinsatz eines Rezepts und einen empfohlenen Verkaufspreis anhand der Ziel-Wareneinsatzquote.</p>
+      <p class="hint">Wareneinsatz und empfohlener Verkaufspreis, live gerechnet aus Ziel-Wareneinsatzquote und MwSt.</p>
 
       <div class="field-row">
         <label>
@@ -681,16 +719,6 @@
       </div>
       <div class="actions">
         <button type="button" id="calc-load-recipe" class="btn-secondary">Einfügen</button>
-      </div>
-
-      <h3>Zutaten</h3>
-      <p class="hint">Preis pro Liter bei ml/cl/oz/BL/Dash, Preis pro Stück bei Stück/Teile.</p>
-      <div id="calc-ingredients" class="calc-ingredient-list"></div>
-      <button type="button" id="calc-add-ingredient" class="btn-secondary">+ Zutat hinzufügen</button>
-
-      <div class="actions">
-        <button type="button" id="calc-calculate" class="btn-primary">Berechnen</button>
-        <button type="button" id="calc-clear" class="btn-secondary">Zurücksetzen</button>
       </div>
 
       <h3>Preisziel</h3>
@@ -705,7 +733,23 @@
         </label>
       </div>
 
+      <h3>Zutaten</h3>
+      <p class="hint">Preis pro Liter bei ml/cl/oz/BL/Dash, Preis pro Stück bei Stück/Teile.</p>
+      <div id="calc-ingredients" class="calc-ingredient-list"></div>
+      <div class="actions">
+        <button type="button" id="calc-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
+        <button type="button" id="calc-clear" class="btn-secondary">Zurücksetzen</button>
+      </div>
+
       <div id="calc-result" class="result-box" hidden></div>
+
+      <div id="calc-total" class="result-bar" hidden>
+        <div class="result-bar-figure">
+          <span class="result-bar-label">Verkaufspreis brutto</span>
+          <strong id="calc-total-value">–</strong>
+          <span id="calc-total-sub" class="result-bar-sub"></span>
+        </div>
+      </div>
     </section>
 
     <!-- ADMIN -->

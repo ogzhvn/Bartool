@@ -4,29 +4,45 @@ import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 
+const panelEl = document.getElementById("batching");
 const ingredientsEl = document.getElementById("batch-ingredients");
 const resultEl = document.getElementById("batch-result");
+const totalEl = document.getElementById("batch-total");
+const totalValueEl = document.getElementById("batch-total-value");
+const totalSubEl = document.getElementById("batch-total-sub");
 const recipeSelectEl = document.getElementById("batch-recipe-select");
 const recipeInfoEl = document.getElementById("batch-recipe-info");
 
 const editor = createIngredientEditor(ingredientsEl);
 
+function currentMode() {
+  return document.querySelector('input[name="batch-mode"]:checked').value;
+}
+
 function updateModeInputs() {
-  const mode = document.querySelector('input[name="batch-mode"]:checked').value;
-  document.getElementById("batch-target-portions").disabled = mode !== "portions";
-  document.getElementById("batch-target-volume").disabled = mode !== "volume";
+  const mode = currentMode();
+  panelEl.querySelectorAll("[data-mode-field]").forEach((el) => {
+    el.hidden = el.dataset.modeField !== mode;
+  });
+  calculateScale();
+}
+
+function showNote(message) {
+  resultEl.hidden = false;
+  resultEl.innerHTML = `<p class="empty-note">${message}</p>`;
+  totalEl.hidden = true;
 }
 
 function calculateScale() {
   const ingredients = editor.getIngredients();
   if (ingredients.length === 0) {
-    resultEl.hidden = false;
-    resultEl.innerHTML = `<p class="empty-note">Bitte mindestens eine gültige Zutat eingeben.</p>`;
+    resultEl.hidden = true;
+    totalEl.hidden = true;
     return;
   }
 
   const basePortions = parseFloat(document.getElementById("batch-base-portions").value) || 1;
-  const mode = document.querySelector('input[name="batch-mode"]:checked').value;
+  const mode = currentMode();
 
   let factor;
   if (mode === "portions") {
@@ -39,8 +55,9 @@ function calculateScale() {
       return toMl ? sum + ing.amount * toMl : sum;
     }, 0);
     if (baseVolumeMl === 0) {
-      resultEl.hidden = false;
-      resultEl.innerHTML = `<p class="empty-note">Für die Skalierung nach Volumen wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt.</p>`;
+      showNote(
+        "Für die Skalierung nach Volumen wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt."
+      );
       return;
     }
     // Eine Portionszahl wie "14.35" ist nicht umsetzbar: auf die
@@ -49,18 +66,19 @@ function calculateScale() {
     const rawPortions = basePortions * (targetVolume / baseVolumeMl);
     const flooredPortions = Math.floor(rawPortions);
     if (flooredPortions < 1) {
-      resultEl.hidden = false;
-      resultEl.innerHTML = `<p class="empty-note">Das Ziel-Volumen reicht nicht für eine ganze Portion.</p>`;
+      showNote("Das Ziel-Volumen reicht nicht für eine ganze Portion.");
       return;
     }
     factor = flooredPortions / basePortions;
   }
 
-  const scaled = ingredients.map((ing) => ({
-    ...ing,
-    scaledAmount: ing.amount * factor,
-  }));
+  if (!(factor > 0)) {
+    resultEl.hidden = true;
+    totalEl.hidden = true;
+    return;
+  }
 
+  const scaled = ingredients.map((ing) => ({ ...ing, scaledAmount: ing.amount * factor }));
   const totalVolumeMl = scaled.reduce((sum, ing) => {
     const toMl = UNIT_TO_ML[ing.unit];
     return toMl ? sum + ing.scaledAmount * toMl : sum;
@@ -80,10 +98,41 @@ function calculateScale() {
           .join("")}
       </tbody>
     </table>
-    <p class="summary">Ergibt ca. ${formatNumber(resultingPortions)} Portionen${
-    totalVolumeMl > 0 ? ` · Gesamtvolumen: ${formatNumber(totalVolumeMl)} ml (${formatNumber(totalVolumeMl / 1000)} l)` : ""
-  }</p>
   `;
+
+  if (totalVolumeMl > 0) {
+    totalEl.hidden = false;
+    totalValueEl.textContent = `${formatNumber(totalVolumeMl)} ml`;
+    totalSubEl.textContent = `${formatNumber(totalVolumeMl / 1000)} l · ${formatNumber(resultingPortions)} Portionen`;
+  } else {
+    totalEl.hidden = false;
+    totalValueEl.textContent = `${formatNumber(resultingPortions)} Portionen`;
+    totalSubEl.textContent = "Kein Volumen berechenbar – nur Stückzutaten";
+  }
+}
+
+function stepPortions(delta) {
+  const input = document.getElementById("batch-target-portions");
+  const next = Math.max(1, Math.round((parseFloat(input.value) || 0) + delta));
+  input.value = next;
+  calculateScale();
+}
+
+async function shareResult() {
+  const rows = editor
+    .getIngredients()
+    .map((ing) => `${ing.name}: ${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit]}`);
+  const name = document.getElementById("batch-name").value || "Batch";
+  const text = [`${name} – ${totalValueEl.textContent} (${totalSubEl.textContent})`, ...rows].join("\n");
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: name, text });
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+    }
+  }
+  if (navigator.clipboard) await navigator.clipboard.writeText(text);
 }
 
 function populateRecipeSelect() {
@@ -108,8 +157,8 @@ function handleLoadRecipe() {
   document.getElementById("batch-name").value = recipe.name;
   document.getElementById("batch-base-portions").value = recipe.basePortions;
   editor.setIngredients(recipe.ingredients);
-  resultEl.hidden = true;
   renderRecipeInfo(recipe);
+  calculateScale();
 }
 
 function renderRecipeInfo(recipe) {
@@ -137,6 +186,7 @@ function handleClear() {
   recipeSelectEl.value = "";
   editor.setIngredients([]);
   resultEl.hidden = true;
+  totalEl.hidden = true;
   recipeInfoEl.hidden = true;
 }
 
@@ -146,9 +196,21 @@ export function initBatching() {
   onRecipesChanged(populateRecipeSelect);
   document.getElementById("batch-add-ingredient").addEventListener("click", () => editor.addRow());
   document.getElementById("batch-load-recipe").addEventListener("click", handleLoadRecipe);
-  document.getElementById("batch-calculate").addEventListener("click", calculateScale);
   document.getElementById("batch-clear").addEventListener("click", handleClear);
-  document
-    .querySelectorAll('input[name="batch-mode"]')
-    .forEach((el) => el.addEventListener("change", updateModeInputs));
+  document.getElementById("batch-portions-minus").addEventListener("click", () => stepPortions(-1));
+  document.getElementById("batch-portions-plus").addEventListener("click", () => stepPortions(1));
+  document.getElementById("batch-share").addEventListener("click", shareResult);
+  document.querySelectorAll('input[name="batch-mode"]').forEach((el) => el.addEventListener("change", updateModeInputs));
+  // Live rechnen: jede Eingabe im Panel löst eine Neuberechnung aus.
+  const recalcFromEvent = (e) => {
+    if (e.target.id === "batch-recipe-select") return;
+    calculateScale();
+  };
+  panelEl.addEventListener("input", recalcFromEvent);
+  panelEl.addEventListener("change", recalcFromEvent);
+  // Eine entfernte Zutatenzeile ist kein input-Event – nach dem Klick neu rechnen.
+  panelEl.addEventListener("click", (e) => {
+    if (e.target.closest(".remove-btn")) calculateScale();
+  });
+  updateModeInputs();
 }

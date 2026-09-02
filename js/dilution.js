@@ -1,7 +1,11 @@
 import { formatNumber } from "./utils.js";
 
+const panelEl = document.getElementById("dilution");
 const ingredientsEl = document.getElementById("dil-ingredients");
 const resultEl = document.getElementById("dil-result");
+const totalEl = document.getElementById("dil-total");
+const totalValueEl = document.getElementById("dil-total-value");
+const totalSubEl = document.getElementById("dil-total-sub");
 
 function makeIngredientRow() {
   const row = document.createElement("div");
@@ -30,17 +34,29 @@ function getIngredients() {
     .filter((i) => !Number.isNaN(i.amount) && i.amount > 0 && !Number.isNaN(i.abv));
 }
 
+function currentMode() {
+  return document.querySelector('input[name="dil-mode"]:checked').value;
+}
+
 function updateModeInputs() {
-  const mode = document.querySelector('input[name="dil-mode"]:checked').value;
-  document.getElementById("dil-percent").disabled = mode !== "percent";
-  document.getElementById("dil-ml").disabled = mode !== "ml";
+  const mode = currentMode();
+  panelEl.querySelectorAll("[data-mode-field]").forEach((el) => {
+    el.hidden = el.dataset.modeField !== mode;
+  });
+  calculate();
+}
+
+function showNote(message) {
+  resultEl.hidden = false;
+  resultEl.innerHTML = `<p class="empty-note">${message}</p>`;
+  totalEl.hidden = true;
 }
 
 function calculate() {
   const ingredients = getIngredients();
   if (ingredients.length === 0) {
-    resultEl.hidden = false;
-    resultEl.innerHTML = `<p class="empty-note">Bitte mindestens eine gültige Zutat (Menge + ABV) eingeben.</p>`;
+    resultEl.hidden = true;
+    totalEl.hidden = true;
     return;
   }
 
@@ -48,14 +64,13 @@ function calculate() {
   const totalAlcohol = ingredients.reduce((sum, i) => sum + (i.amount * i.abv) / 100, 0);
   const preAbv = (totalAlcohol / preVolume) * 100;
 
-  const mode = document.querySelector('input[name="dil-mode"]:checked').value;
+  const mode = currentMode();
   let dilutionMl;
   let finalVolume;
   if (mode === "percent") {
     const percent = parseFloat(document.getElementById("dil-percent").value) || 0;
     if (percent >= 100) {
-      resultEl.hidden = false;
-      resultEl.innerHTML = `<p class="empty-note">Verdünnung muss unter 100 % liegen.</p>`;
+      showNote("Verdünnung muss unter 100 % liegen.");
       return;
     }
     finalVolume = preVolume / (1 - percent / 100);
@@ -79,18 +94,37 @@ function calculate() {
       </tbody>
     </table>
     <p class="summary">
-      Volumen vor Verdünnung: ${formatNumber(preVolume)} ml · ABV vor Verdünnung: ${formatNumber(preAbv)} %<br />
-      Verdünnung: ${formatNumber(dilutionMl)} ml (${formatNumber(dilutionPercentOfFinal)} % des Endvolumens)<br />
-      Endvolumen: ${formatNumber(finalVolume)} ml · <strong>ABV nach Verdünnung: ${formatNumber(finalAbv)} %</strong>
+      Vor Verdünnung: ${formatNumber(preVolume)} ml · ${formatNumber(preAbv)} % ABV<br />
+      Verdünnung: ${formatNumber(dilutionMl)} ml (${formatNumber(dilutionPercentOfFinal)} % des Endvolumens)
     </p>
   `;
+
+  totalEl.hidden = false;
+  totalValueEl.textContent = `${formatNumber(finalAbv)} %`;
+  totalSubEl.textContent = `Endvolumen ${formatNumber(finalVolume)} ml · vorher ${formatNumber(preAbv)} %`;
+}
+
+function stepPercent(delta) {
+  const input = document.getElementById("dil-percent");
+  const next = Math.min(95, Math.max(0, (parseFloat(input.value) || 0) + delta));
+  input.value = next;
+  calculate();
 }
 
 export function initDilution() {
   addIngredientRow();
   document.getElementById("dil-add-ingredient").addEventListener("click", addIngredientRow);
-  document.getElementById("dil-calculate").addEventListener("click", calculate);
+  document.getElementById("dil-percent-minus").addEventListener("click", () => stepPercent(-5));
+  document.getElementById("dil-percent-plus").addEventListener("click", () => stepPercent(5));
   document
     .querySelectorAll('input[name="dil-mode"]')
     .forEach((el) => el.addEventListener("change", updateModeInputs));
+  // Live rechnen: jede Eingabe im Panel löst eine Neuberechnung aus.
+  panelEl.addEventListener("input", calculate);
+  panelEl.addEventListener("change", calculate);
+  // Eine entfernte Zutatenzeile ist kein input-Event – nach dem Klick neu rechnen.
+  panelEl.addEventListener("click", (e) => {
+    if (e.target.closest(".remove-btn")) calculate();
+  });
+  updateModeInputs();
 }
