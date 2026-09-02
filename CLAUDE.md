@@ -1,71 +1,126 @@
-# Bartool – Hinweise für Claude Code
+# Bartool – Arbeitsanweisung für Claude Code
 
-## Was ist das
-Bar-Operations-Tool: Batching-, ABV- und Dilution-Rechner. Frontend als self-contained HTML/JS, dark-themed. Backend: Supabase (Postgres).
+## Projekt in drei Sätzen
+Bar-Operations-Tool für A-ROSA Travemünde: Rechner (Batching, Superjuice,
+Zuckersirup, Verdünnung/ABV, Kalkulation) + Rezept- und Produktbibliothek.
+Frontend: statisches HTML/CSS/Vanilla-JS, **kein Build-Schritt**, dark theme.
+Backend: Supabase (Postgres, Auth, RLS, Edge Functions). Deployment: GitHub Pages.
 
-## Einsatzkontext
-- Läuft gleichwertig auf Handy/Tablet hinterm Tresen und auf Desktop/Laptop – UI muss auf beiden gut bedienbar sein (Touch-Targets, responsives Layout).
-- Wird im laufenden Barbetrieb genutzt: schnelle Ladezeit, robust gegen Fehleingaben.
+Läuft hinterm Tresen auf Handy/Tablet **und** auf Desktop → Touch-Targets,
+responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 
-## Datenhaltung
-- Backend: Supabase (Postgres). Eingaben, Werte und eigene Rezepte werden dauerhaft in der Datenbank gespeichert.
-- Frontend verbindet sich nur mit SUPABASE_URL + anon/public Key. Service-Role-Key und DB-Passwort gehören niemals in den Client-Code.
-- Row Level Security ist für alle Tabellen aktiv.
-- Claude Code hat über MCP direkten Zugriff auf das Supabase-Projekt (project_ref-gescoped). Für Schema-Änderungen die MCP-Verbindung nutzen, keine ungescopten Rohzugriffe.
+## Architektur-Map (hier zuerst nachsehen, nicht suchen)
 
-## Skills
-Eigene Claude Code Skills existieren für: Cocktail-Batch-Math, UI-Design, Recipe Export/Print (Details siehe jeweilige .skill-Dateien im Projekt).
+| Was | Wo |
+|---|---|
+| Einstieg, Modul-Init, Auth-Gating | `js/main.js` |
+| Tab-Umschaltung (`data-tab` ↔ `.tab-panel`) | `js/tabs.js` |
+| Alle Markup-/Tab-Definitionen | `index.html` |
+| Styling, Theme-Variablen | `css/styles.css` |
+| DB-Zugriff Rezepte/Produkte | `js/storage.js` |
+| Supabase-Client + Keys | `js/supabaseClient.js`, `js/supabaseConfig.js` |
+| Login, Rollen (`isAdmin`) | `js/auth.js` |
+| Rechner | `js/batching.js`, `superjuice.js`, `syrup.js`, `dilution.js`, `calculation.js` |
+| Bibliothek (Merge DB+statisch) | `js/recipeLibrary.js`, `js/productLibrary.js` |
+| Statische Daten (GROSS, s.u.) | `js/classicsData.js`, `js/houseRecipes.js`, `js/productsData.js` |
+| Admin, Audit, Änderungsanträge | `js/adminPanel.js`, `auditLog.js`, `changeRequests.js`, `dataQuality.js` |
+| DB-Schema + RLS + Setup | `supabase/schema.sql`, `supabase/README.md` |
+| Edge Functions | `supabase/functions/{admin-users,login-with-username}` |
+| Historische Docs (**nicht** Ist-Stand) | `docs/archive/` |
 
-## Konventionen
-- Frontend als Einzeldatei-Ansatz beibehalten, sofern nicht explizit anders gewünscht.
-- Dark Theme als Standard-Look nicht ohne Rückfrage ändern.
+**Ein Feature = ein Modul unter `js/` mit einer `initX()`-Funktion + Import in
+`main.js` + `<button data-tab>` und `<section class="tab-panel">` in `index.html`.**
+Dieses Muster nie durchbrechen.
 
-## Daten: Rezepte & Produkte gehören in Supabase
+`storage.js` folgt pro Datentyp demselben Muster: `load*()` / `save*()` /
+`delete*()` / `on*Changed()` / `init*Sync()`. Neue Datenarten genauso bauen.
 
-Wichtige Nutzervorgabe: **Neue Rezepte und Produkte sollen immer in die
-Supabase-Datenbank geschrieben werden**, nicht (nur) als statische Einträge
-in den JS-Dateien (`js/classicsData.js`, `js/houseRecipes.js`,
-`js/productsData.js`) ergänzt werden.
+## Harte Regeln
 
-Hintergrund/Architektur (Stand jetzt):
+1. **Kein Build-Schritt, keine Frameworks, keine npm-Dependencies im Frontend.**
+   Externe Libs nur per CDN-`<script>` (aktuell: supabase-js, xlsx).
+2. **Secrets:** Nur `SUPABASE_URL` + anon/public Key im Client. Service-Role-Key
+   und DB-Passwort niemals in Frontend-Code oder Commits.
+3. **RLS ist für alle Tabellen aktiv.** Schema-Änderungen ausschließlich über die
+   Supabase-MCP-Tools (project_ref-gescoped) + Migration, nie ungescopte Rohzugriffe.
+   Nach jeder Schema-Änderung `supabase/schema.sql` mitziehen.
+4. **Dark Theme und Layout-Grundgerüst nicht ohne Rückfrage ändern.**
+5. **Nutzereingaben nie als HTML einsetzen** (`textContent` statt `innerHTML`,
+   sonst escapen). Es gab hier schon einen stored-XSS-Fix.
+6. **Produktdaten nie erfinden oder schätzen.** Nur was in den echten Bestell-/
+   Sortimentslisten steht oder was der Nutzer explizit bestätigt hat. Bei fehlender
+   Original-Zutat: sinnvolle Annäherung wählen und im `history`-/Beschreibungsfeld
+   transparent vermerken.
+7. **Neue Rezepte und Produkte gehören in die Supabase-Tabellen `recipes` /
+   `products`**, nicht in die statischen JS-Dateien. Die statischen Dateien sind
+   Altbestand; DB-Einträge mit gleichem Namen überschreiben sie
+   (`recipeLibrary.js`: DB > `HOUSE_RECIPES` > `CLASSIC_RECIPES`).
+8. **Zutatennamen müssen exakt zu Produktnamen aus `products` passen.** Das
+   Matching ist ein strikter Teilstring-Vergleich
+   (`ingredient.name.toLowerCase().includes(product.name.toLowerCase())`).
+   Generisch ("Gin") matcht nicht – immer die Hausmarke ("Bombay Sapphire Gin").
+9. **Features immer über `getAllRecipes()` / `getAllProducts()` lesen**, nie direkt
+   aus den Daten-Dateien.
+10. **Kein Commit auf einem nicht lauffähigen Zwischenstand.** Vor dem Commit:
+    App gedanklich durchspielen bzw. `python3 -m http.server 8000` und klicken.
 
-- `js/storage.js` liest/schreibt Rezepte über die Supabase-Tabelle
-  `recipes` (`saveRecipe()` → `supabase.from("recipes").upsert(...)`) und
-  Produkte über die Tabelle `products`.
-- `js/recipeLibrary.js` führt beim Anzeigen drei Quellen zusammen:
-  eigene/DB-Rezepte (`loadRecipes()`) > `HOUSE_RECIPES` (statisch,
-  `js/houseRecipes.js`) > `CLASSIC_RECIPES` (statisch, `js/classicsData.js`).
-  Ein DB-Rezept mit gleichem Namen überschreibt die statische Version.
-- Bisher lag die große Klassiker-/Hausrezept-Sammlung rein statisch im
-  Code (kein DB-Eintrag nötig, damit sie in der App erscheint).
+## Kontext-Budget (wichtig – hier wird das meiste Geld verbrannt)
 
-**Für zukünftige Aufgaben:** Wenn neue Rezepte oder Produkte hinzugefügt
-werden sollen, diese direkt in die Supabase-Tabellen `recipes` bzw.
-`products` schreiben (z. B. über die Supabase-MCP-Tools oder die App
-selbst), statt sie nur in die statischen JS-Dateien einzutragen. Das
-Zutaten-/Ingredient-Namensschema muss dabei weiterhin exakt mit den
-Produktnamen aus `products` (bzw. `js/productsData.js`) übereinstimmen,
-damit Aromenmatrix/Verkaufsmatrix/Empfehlungssystem korrekt zuordnen
-können. Bei fehlenden Original-Zutaten im Sortiment: sinnvolle Annäherung
-wählen und das in der `history`/Beschreibung transparent vermerken.
+Drei Dateien sind riesig und dürfen **nie komplett gelesen** werden:
+`js/productsData.js` (~130 KB), `js/classicsData.js` (~130 KB),
+`index.html` (~33 KB). Auch `js/products.js` und `js/recipes.js` nur gezielt.
 
-# Persönliche Arbeitsweise
+Stattdessen:
 
-## Kommunikation
-- Antworte kurz und direkt. Keine Einleitungssätze, keine Wiederholung der Aufgabe, keine Zusammenfassung am Ende, außer explizit gewünscht.
-- Kein Hedging, keine Floskeln ("das ist eine gute Frage" etc.).
-- Technisches Vokabular ohne Erklärung verwenden – ich arbeite selbst mit Claude Code.
-- Antworten auf Deutsch, außer Code/Fachbegriffe.
+```bash
+grep -n "Bombay Sapphire" js/productsData.js        # Eintrag finden
+sed -n '4200,4260p' js/productsData.js              # nur den Ausschnitt lesen
+grep -n 'data-tab="batching"' index.html            # Markup-Stelle finden
+grep -c "name:" js/productsData.js                  # zählen statt lesen
+```
 
-## Arbeitsweise bei Code-Änderungen
-- Änderungen direkt umsetzen, nicht erst lang planen oder nachfragen.
-- Nur bei größeren/strukturellen Entscheidungen (z. B. neue Architektur, größere Refactorings, Risiko von Datenverlust) vorher kurz nachfragen.
-- Nach Abschluss: kurze Zusammenfassung, was gemacht wurde – keine ausführliche Erklärung, außer gefragt.
+Weitere Regeln für mich (Claude):
+- **Immer erst die Architektur-Map oben lesen, dann gezielt greppen** – keine
+  breiten Suchläufe über das ganze Repo.
+- **Ein Auftrag = ein Modul.** Wenn ein Prompt mehrere Features enthält, arbeite
+  ich sie einzeln nacheinander ab und melde nach jedem Teilstück kurz zurück,
+  statt alles auf einmal zu laden.
+- **Keine Subagenten / keine parallelen Explorationen**, außer der Nutzer bittet
+  ausdrücklich darum.
+- **Nicht neu lesen, was ich in dieser Session schon gelesen habe.**
+- Nach Edits nicht zur Kontrolle nochmal die ganze Datei lesen.
+- Massen-Datenänderungen (viele Rezepte/Produkte) über ein kleines Skript oder
+  SQL, nicht über hunderte Einzel-Edits.
+
+### Wann ich ein neues Fenster empfehle
+
+Ich sage von mir aus Bescheid, wenn eine dieser Bedingungen zutrifft:
+- Die aktuelle Aufgabe ist abgeschlossen und committet, und der nächste Auftrag
+  betrifft ein **anderes Modul / anderes Thema**.
+- Wir haben in dieser Session bereits eine der großen Datendateien angefasst.
+- Der Kontext ist erkennbar über ~60 % gefüllt bzw. es wurde schon einmal
+  komprimiert.
+- Es kommt eine Aufgabe, die viel neuen Kontext braucht (Datenimport,
+  Schema-Umbau, Redesign).
+
+Die Empfehlung sieht immer so aus – **kurz und mit fertigem Startprompt**:
+
+> **Empfehlung: neues Fenster.** Grund: <ein Satz>.
+> Stand: <was ist fertig + Commit-Hash>.
+> Startprompt fürs neue Fenster:
+> ```
+> <vollständiger, selbsterklärender Prompt inkl. betroffener Dateien,
+>  Ziel und relevanter Vorentscheidungen – ohne Rückverweis auf diesen Chat>
+> ```
+
+Der Startprompt muss allein stehen können: betroffene Dateien mit Pfad, Ziel,
+bereits getroffene Entscheidungen, was ausdrücklich **nicht** angefasst werden soll.
 
 ## Git
-- Änderungen automatisch committen, mit klaren, aussagekräftigen Commit-Messages (kurzer Titel + bei Bedarf 1–2 Zeilen Kontext).
-- Keine Commits auf einem nicht funktionierenden Zwischenstand.
+- Entwicklung und Push auf `main`.
+- Commit-Messages auf Deutsch: kurzer Titel, bei Bedarf 1–2 Zeilen Kontext.
+- Automatisch committen, wenn ein Arbeitsschritt fertig und lauffähig ist.
 
-## Hintergrund
-- Barkeeper (A-ROSA Travemünde), bereite IHK-Externenprüfung zum Hotelfachmann vor.
-- Aktuelles Projekt: Bartool (siehe projekteigene CLAUDE.md).
+## Nicht in dieser Datei
+Persönliche Kommunikations-/Arbeitspräferenzen stehen in den globalen
+Claude-Einstellungen und werden hier bewusst nicht dupliziert.
