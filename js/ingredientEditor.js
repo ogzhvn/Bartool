@@ -1,12 +1,13 @@
 import { UNIT_LABELS } from "./units.js";
+import { escapeHtml } from "./utils.js";
 
 export function createIngredientEditor(containerEl) {
   function makeRow(data = {}) {
     const row = document.createElement("div");
     row.className = "ingredient-row";
     row.innerHTML = `
-      <input class="ing-name" type="text" placeholder="Zutat" value="${data.name ?? ""}" />
-      <input class="ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${data.amount ?? ""}" />
+      <input class="ing-name" type="text" placeholder="Zutat" value="${escapeHtml(data.name ?? "")}" />
+      <input class="ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${escapeHtml(data.amount ?? "")}" />
       <select class="ing-unit">
         ${Object.entries(UNIT_LABELS)
           .map(

@@ -18,14 +18,14 @@ function makeRow(data = {}) {
   const row = document.createElement("div");
   row.className = "calc-ingredient-row";
   row.innerHTML = `
-    <input class="calc-ing-name" type="text" placeholder="Zutat" value="${data.name ?? ""}" />
-    <input class="calc-ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${data.amount ?? ""}" />
+    <input class="calc-ing-name" type="text" placeholder="Zutat" value="${escapeHtml(data.name ?? "")}" />
+    <input class="calc-ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${escapeHtml(data.amount ?? "")}" />
     <select class="calc-ing-unit">
       ${Object.entries(UNIT_LABELS)
         .map(([val, label]) => `<option value="${val}" ${data.unit === val ? "selected" : ""}>${label}</option>`)
         .join("")}
     </select>
-    <input class="calc-ing-price" type="number" min="0" step="0.01" placeholder="Preis" value="${data.price ?? ""}" />
+    <input class="calc-ing-price" type="number" min="0" step="0.01" placeholder="Preis" value="${escapeHtml(data.price ?? "")}" />
     <span class="calc-price-label"></span>
     <span class="calc-cost">0,00 €</span>
     <button type="button" class="remove-btn" title="Entfernen">✕</button>
