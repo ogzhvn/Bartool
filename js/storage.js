@@ -113,6 +113,7 @@ function toProductRecord(product) {
     vintage: product.vintage || null,
     aging: product.aging || null,
     food_pairing: product.foodPairing || null,
+    drinking_window: product.drinkingWindow || null,
   };
 }
 
@@ -140,6 +141,7 @@ function fromProductRow(row) {
     vintage: row.vintage ?? "",
     aging: row.aging ?? "",
     foodPairing: row.food_pairing ?? "",
+    drinkingWindow: row.drinking_window ?? "",
   };
 }
 

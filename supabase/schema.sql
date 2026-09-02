@@ -233,6 +233,8 @@ create table if not exists public.products (
   -- Bewusst allgemein gehalten (keine konkreten Gerichte), z. B. "passt zu
   -- hellem Fleisch, Fisch, milden Käsesorten".
   food_pairing text,
+  -- Nur für Jahrgangs-Champagner/Prestige-Cuvées relevant.
+  drinking_window text,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
@@ -256,6 +258,7 @@ alter table public.products add column if not exists vineyard text;
 alter table public.products add column if not exists vintage text;
 alter table public.products add column if not exists aging text;
 alter table public.products add column if not exists food_pairing text;
+alter table public.products add column if not exists drinking_window text;
 
 alter table public.products enable row level security;
 

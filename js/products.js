@@ -97,6 +97,7 @@ const grapeVarietyEl = document.getElementById("product-grape-variety");
 const vineyardEl = document.getElementById("product-vineyard");
 const vintageEl = document.getElementById("product-vintage");
 const agingEl = document.getElementById("product-aging");
+const drinkingWindowEl = document.getElementById("product-drinking-window");
 const tastingNotesEl = document.getElementById("product-tasting-notes");
 const foodPairingEl = document.getElementById("product-food-pairing");
 const serviceEl = document.getElementById("product-service");
@@ -151,6 +152,7 @@ const FIELDS = [
   ["vineyard", vineyardEl],
   ["vintage", vintageEl],
   ["aging", agingEl],
+  ["drinkingWindow", drinkingWindowEl],
   ["tastingNotes", tastingNotesEl],
   ["foodPairing", foodPairingEl],
   ["service", serviceEl],
@@ -350,6 +352,7 @@ function renderProductItem(product) {
     ["Lage", product.vineyard],
     ["Jahrgang", product.vintage],
     ["Ausbau", product.aging],
+    ["Trinkfenster", product.drinkingWindow],
     ["Tasting Notes", product.tastingNotes],
     ["Speiseempfehlung", product.foodPairing],
     ["Serviervorschlag", product.service],
