@@ -4,8 +4,10 @@
 export function closeMobileNav() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
+  const navBackdrop = document.getElementById("nav-backdrop");
   sidebar?.classList.remove("open");
   navToggle?.setAttribute("aria-expanded", "false");
+  if (navBackdrop) navBackdrop.hidden = true;
 }
 
 const LAST_TAB_KEY = "bartool-last-tab";
@@ -17,6 +19,7 @@ function tabExists(tabId) {
 export function initTabs() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
+  const navBackdrop = document.getElementById("nav-backdrop");
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -28,7 +31,10 @@ export function initTabs() {
   navToggle?.addEventListener("click", () => {
     const isOpen = sidebar.classList.toggle("open");
     navToggle.setAttribute("aria-expanded", String(isOpen));
+    if (navBackdrop) navBackdrop.hidden = !isOpen;
   });
+
+  navBackdrop?.addEventListener("click", closeMobileNav);
 
   window.addEventListener("hashchange", () => {
     const tabId = location.hash.slice(1);
