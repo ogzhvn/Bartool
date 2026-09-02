@@ -783,7 +783,8 @@ textarea {
 }
 
 #product-list table,
-#admin-employee-list table {
+#admin-employee-list table,
+#audit-log-list table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 0.6rem;
@@ -792,15 +793,35 @@ textarea {
 #product-list th,
 #product-list td,
 #admin-employee-list th,
-#admin-employee-list td {
+#admin-employee-list td,
+#audit-log-list th,
+#audit-log-list td {
   text-align: left;
   padding: 0.5rem 0.5rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.9rem;
 }
 
-#admin-employee-list select {
+#admin-employee-list select,
+#admin-employee-list input {
   padding: 0.35rem 0.4rem;
+}
+
+.audit-entry {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.audit-entry summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.audit-entry table {
+  margin-top: 0.6rem;
 }
 
 @media (max-width: 480px) {

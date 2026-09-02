@@ -8,6 +8,7 @@ import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initAdminPanel } from "./adminPanel.js";
+import { initAuditLog } from "./auditLog.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
@@ -76,6 +77,7 @@ async function bootstrapAppOnce() {
   initDilution();
   initCalculation();
   initAdminPanel();
+  initAuditLog();
   startSessionTimeoutWatch();
 }
 

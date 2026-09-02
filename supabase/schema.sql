@@ -259,6 +259,71 @@ create policy "products: admin write"
   with check (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Audit-Log: Änderungshistorie für recipes/products/profiles
+-- ---------------------------------------------------------------------
+
+create table if not exists public.audit_log (
+  id uuid primary key default gen_random_uuid(),
+  table_name text not null,
+  row_id uuid,
+  action text not null check (action in ('insert', 'update', 'delete')),
+  changed_by uuid references public.profiles (id) on delete set null,
+  changed_at timestamptz not null default now(),
+  old_data jsonb,
+  new_data jsonb
+);
+
+alter table public.audit_log enable row level security;
+
+drop policy if exists "audit_log: admin reads all" on public.audit_log;
+create policy "audit_log: admin reads all"
+  on public.audit_log for select
+  using (private.is_admin());
+
+-- Bewusst keine Insert/Update/Delete-Policy für authenticated/anon – nur
+-- die SECURITY DEFINER-Trigger-Funktion unten schreibt hier hinein, sie
+-- läuft als Tabellenbesitzer und umgeht RLS wie gewohnt.
+create or replace function public.log_audit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.audit_log (table_name, row_id, action, changed_by, old_data, new_data)
+  values (
+    tg_table_name,
+    case when tg_op = 'DELETE' then old.id else new.id end,
+    lower(tg_op),
+    auth.uid(),
+    case when tg_op in ('UPDATE', 'DELETE') then to_jsonb(old) else null end,
+    case when tg_op in ('INSERT', 'UPDATE') then to_jsonb(new) else null end
+  );
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.log_audit() from public;
+
+drop trigger if exists recipes_audit on public.recipes;
+create trigger recipes_audit
+  after insert or update or delete on public.recipes
+  for each row execute function public.log_audit();
+
+drop trigger if exists products_audit on public.products;
+create trigger products_audit
+  after insert or update or delete on public.products
+  for each row execute function public.log_audit();
+
+drop trigger if exists profiles_audit on public.profiles;
+create trigger profiles_audit
+  after insert or update or delete on public.profiles
+  for each row execute function public.log_audit();
+
+-- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
 -- ---------------------------------------------------------------------
 
