@@ -8,6 +8,8 @@ export function closeMobileNav() {
   navToggle?.setAttribute("aria-expanded", "false");
 }
 
+const LAST_TAB_KEY = "bartool-last-tab";
+
 export function initTabs() {
   const sidebar = document.getElementById("sidebar");
   const navToggle = document.getElementById("nav-toggle");
@@ -23,6 +25,11 @@ export function initTabs() {
     const isOpen = sidebar.classList.toggle("open");
     navToggle.setAttribute("aria-expanded", String(isOpen));
   });
+
+  const lastTab = localStorage.getItem(LAST_TAB_KEY);
+  if (lastTab && document.querySelector(`.tab-btn[data-tab="${lastTab}"]`)) {
+    switchTab(lastTab);
+  }
 }
 
 export function switchTab(tabId) {
@@ -34,4 +41,5 @@ export function switchTab(tabId) {
   document.querySelectorAll(".tab-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
   });
+  localStorage.setItem(LAST_TAB_KEY, tabId);
 }
