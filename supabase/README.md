@@ -77,10 +77,13 @@ Konten selbst schon Admin-Rechte voraussetzt:
 Danach in Bartool mit dem gewählten **Benutzernamen** (nicht der E-Mail)
 und dem Passwort aus Schritt 1 einloggen. Weitere Konten (Admin oder
 Mitarbeiter) lassen sich ab jetzt bequem über den Tab **Admin** in der App
-anlegen – dort wird pro Konto auch ein Benutzername vergeben. Über den Tab
-angelegte Konten müssen ihr temporäres Passwort beim ersten Login ändern
-(erzwungener Passwortwechsel-Screen); Mitarbeitende können ihr Passwort
-danach jederzeit über "Passwort ändern" im Header selbst ändern. Aus
+anlegen – dort wird pro Konto zunächst ein Platzhalter-Benutzername
+vergeben. Über den Tab angelegte Konten müssen beim ersten Login ihr
+temporäres Passwort ändern und können sich dabei gleich einen eigenen
+Benutzernamen aussuchen (erzwungener Screen); Mitarbeitende können ihr
+Passwort danach jederzeit über "Passwort ändern" im Header selbst ändern
+(der Benutzername lässt sich später nur noch über den Admin-Tab anpassen).
+Aus
 Sicherheitsgründen (öffentlich zugängliches Tresen-Tablet) meldet Bartool
 nach 6h Inaktivität automatisch ab.
 

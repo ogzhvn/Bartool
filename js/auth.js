@@ -85,6 +85,28 @@ export async function changePassword(newPassword) {
   return { error: null };
 }
 
+// Erzwungener Erst-Login: setzt Passwort und selbstgewählten Benutzernamen
+// (statt des vom Admin vergebenen Platzhalters) in einem Zug und quittiert
+// must_change_password.
+export async function completeFirstLogin(username, newPassword) {
+  const supabase = getSupabaseClient();
+  const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+  if (updateError) {
+    return { error: updateError };
+  }
+
+  const { error: rpcError } = await supabase.rpc("complete_first_login", {
+    new_username: username.trim().toLowerCase(),
+  });
+  if (rpcError) {
+    return { error: rpcError };
+  }
+
+  await loadProfile();
+  notify();
+  return { error: null };
+}
+
 export function getCurrentUser() {
   return currentSession?.user ?? null;
 }

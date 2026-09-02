@@ -115,6 +115,27 @@ revoke all on function public.mark_password_changed() from public;
 revoke execute on function public.mark_password_changed() from anon;
 grant execute on function public.mark_password_changed() to authenticated;
 
+-- Beim erzwungenen Erst-Login darf sich der Nutzer zusätzlich zum neuen
+-- Passwort auch einen eigenen Benutzernamen aussuchen (statt des vom Admin
+-- vergebenen Platzhalters). Format-/Unique-Constraints auf profiles.username
+-- greifen dabei ganz normal weiter.
+create or replace function public.complete_first_login(new_username text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles
+  set username = lower(trim(new_username)), must_change_password = false
+  where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.complete_first_login(text) from public;
+revoke execute on function public.complete_first_login(text) from anon;
+grant execute on function public.complete_first_login(text) to authenticated;
+
 -- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
 -- ---------------------------------------------------------------------

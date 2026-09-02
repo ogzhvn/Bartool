@@ -9,7 +9,7 @@ import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
-import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword } from "./auth.js";
+import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
 // längerer Inaktivität lieber neu anmelden lassen statt dauerhaft offen zu
@@ -98,6 +98,7 @@ async function handleAuthState({ session, profile }) {
     authScreen.hidden = true;
     appShell.hidden = true;
     headerUser.hidden = true;
+    document.getElementById("forced-password-username").value = profile?.username ?? "";
     forcedPasswordScreen.hidden = false;
     return;
   }
@@ -130,17 +131,26 @@ logoutBtn.addEventListener("click", () => signOut());
 forcedPasswordForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   forcedPasswordError.hidden = true;
+  const username = document.getElementById("forced-password-username").value.trim().toLowerCase();
   const newPassword = document.getElementById("forced-password-new").value;
   const confirmPassword = document.getElementById("forced-password-confirm").value;
+  if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+    forcedPasswordError.hidden = false;
+    forcedPasswordError.textContent =
+      "Benutzername darf nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten (3–32 Zeichen).";
+    return;
+  }
   if (newPassword !== confirmPassword) {
     forcedPasswordError.hidden = false;
     forcedPasswordError.textContent = "Die beiden Passwörter stimmen nicht überein.";
     return;
   }
-  const { error } = await changePassword(newPassword);
+  const { error } = await completeFirstLogin(username, newPassword);
   if (error) {
     forcedPasswordError.hidden = false;
-    forcedPasswordError.textContent = "Passwort konnte nicht gespeichert werden: " + error.message;
+    forcedPasswordError.textContent =
+      "Konto konnte nicht eingerichtet werden: " +
+      (error.message.includes("profiles_username_key") ? "Dieser Benutzername ist bereits vergeben." : error.message);
     return;
   }
   forcedPasswordForm.reset();

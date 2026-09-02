@@ -42,7 +42,11 @@
   <section id="forced-password-screen" class="auth-screen" hidden>
     <form id="forced-password-form" class="auth-form">
       <h2>Passwort festlegen</h2>
-      <p class="hint">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte lege jetzt ein eigenes Passwort fest, bevor es weitergeht.</p>
+      <p class="hint">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte wähle jetzt einen eigenen Benutzernamen und ein eigenes Passwort, bevor es weitergeht.</p>
+      <label>
+        Benutzername
+        <input type="text" id="forced-password-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required />
+      </label>
       <label>
         Neues Passwort
         <input type="password" id="forced-password-new" autocomplete="new-password" minlength="10" required />
