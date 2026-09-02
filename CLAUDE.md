@@ -55,6 +55,19 @@ Dieses Muster nie durchbrechen.
    `products`**, nicht in die statischen JS-Dateien. Die statischen Dateien sind
    Altbestand; DB-Einträge mit gleichem Namen überschreiben sie
    (`recipeLibrary.js`: DB > `HOUSE_RECIPES` > `CLASSIC_RECIPES`).
+   **Der komplette Katalog aus `productsData.js`/`classicsData.js`/
+   `houseRecipes.js` liegt inzwischen zusätzlich 1:1 in der DB gespiegelt**
+   (Stand: alle ~310 Produkte + Klassiker/Hausrezepte haben einen DB-Eintrag
+   mit identischem Namen). Das bedeutet: **eine Änderung nur in der statischen
+   Datei ist im Live-Tool unsichtbar**, weil die DB-Version sie überschreibt.
+   Vor jeder inhaltlichen Änderung an einem bestehenden Rezept/Produkt per
+   `execute_sql` prüfen, ob ein DB-Eintrag mit dem Namen existiert
+   (`select name from products where name = '...'`), und falls ja, die
+   geänderten Felder dort **immer per `UPDATE ... WHERE name = '...'` mitziehen**
+   – nicht nur in der JS-Datei. Bei vielen betroffenen Zeilen ein Skript
+   nutzen, das die SQL-Statements aus den JS-Objekten generiert (siehe
+   Vorgehen bei der Wein-Ausbau-Aktion), statt Statements einzeln zu tippen.
+   Diese Regel gilt für **jede** Session, nicht nur die aktuelle.
 8. **Zutatennamen müssen exakt zu Produktnamen aus `products` passen.** Das
    Matching ist ein strikter Teilstring-Vergleich
    (`ingredient.name.toLowerCase().includes(product.name.toLowerCase())`).
