@@ -148,6 +148,10 @@ function updateExportBar() {
 }
 
 let editingOriginalName = null;
+// Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
+// Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
+// gleichen Stelle landet statt oben in der Liste.
+let savedListScrollY = null;
 
 function showListView() {
   listViewEl.classList.add("active");
@@ -169,6 +173,10 @@ function exitEditView() {
   if (target) {
     switchTab(target.tabId);
     requestAnimationFrame(() => window.scrollTo({ top: target.scrollY }));
+  } else if (savedListScrollY !== null) {
+    const y = savedListScrollY;
+    savedListScrollY = null;
+    requestAnimationFrame(() => window.scrollTo({ top: y }));
   }
 }
 
@@ -243,6 +251,7 @@ async function handleSave() {
     }
     await saveProduct(product);
     editingOriginalName = name;
+    exitEditView();
   } catch (error) {
     alert("Produkt konnte nicht gespeichert werden: " + error.message);
   }
@@ -473,6 +482,7 @@ function renderProductItem(product) {
   if (editBtn) {
     editBtn.addEventListener("click", (e) => {
       e.preventDefault();
+      savedListScrollY = window.scrollY;
       loadIntoForm(product);
       showEditView();
     });
@@ -645,6 +655,7 @@ export function initProducts() {
   document.getElementById("product-new").addEventListener("click", resetForm);
   document.getElementById("product-delete").addEventListener("click", handleDelete);
   document.getElementById("product-list-new").addEventListener("click", () => {
+    savedListScrollY = window.scrollY;
     resetForm();
     showEditView();
   });

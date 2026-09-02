@@ -58,6 +58,10 @@ const editor = createIngredientEditor(ingredientsEl);
 
 let editingOriginalName = null;
 const selectedNames = new Set();
+// Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
+// Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
+// gleichen Stelle landet statt oben in der Liste.
+let savedListScrollY = null;
 
 function showListView() {
   listViewEl.classList.add("active");
@@ -79,6 +83,10 @@ function exitEditView() {
   if (target) {
     switchTab(target.tabId);
     requestAnimationFrame(() => window.scrollTo({ top: target.scrollY }));
+  } else if (savedListScrollY !== null) {
+    const y = savedListScrollY;
+    savedListScrollY = null;
+    requestAnimationFrame(() => window.scrollTo({ top: y }));
   }
 }
 
@@ -168,6 +176,7 @@ async function handleSave() {
     }
     await saveRecipe(recipe);
     editingOriginalName = name;
+    exitEditView();
   } catch (error) {
     alert("Rezept konnte nicht gespeichert werden: " + error.message);
   }
@@ -289,6 +298,7 @@ function renderRecipeItem(recipe) {
   if (editBtn) {
     editBtn.addEventListener("click", (e) => {
       e.preventDefault();
+      savedListScrollY = window.scrollY;
       loadIntoForm(recipe);
       showEditView();
     });
@@ -437,6 +447,7 @@ export function initRecipes() {
   document.getElementById("recipe-new").addEventListener("click", resetForm);
   document.getElementById("recipe-delete").addEventListener("click", handleDelete);
   document.getElementById("recipe-list-new").addEventListener("click", () => {
+    savedListScrollY = window.scrollY;
     resetForm();
     showEditView();
   });
