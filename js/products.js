@@ -1,9 +1,10 @@
 import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
-import { getAllProducts, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
+import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
+import { submitChangeRequest } from "./changeRequests.js";
 
 const GROUP_ORDER = [
   "Gin",
@@ -146,6 +147,20 @@ async function handleSave() {
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
 
+  // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
+  // reichen den Vorschlag zur Prüfung ein.
+  if (!isAdmin()) {
+    try {
+      await submitChangeRequest("products", product);
+      alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      resetForm();
+      showListView();
+    } catch (error) {
+      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+    }
+    return;
+  }
+
   try {
     if (editingOriginalName && editingOriginalName !== name && isCustomProduct(editingOriginalName)) {
       await deleteProduct(editingOriginalName);
@@ -238,14 +253,10 @@ function renderProductItem(product) {
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
-      ${
-        isAdmin()
-          ? `<div class="actions">
-        <button type="button" class="btn-secondary edit-btn">Bearbeiten</button>
-        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
-      </div>`
-          : ""
-      }
+      <div class="actions">
+        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
+        ${isAdmin() && isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">Löschen</button>` : ""}
+      </div>
     </div>
   `;
   const editBtn = item.querySelector(".edit-btn");
@@ -356,7 +367,19 @@ function populatePairsWithOptions() {
   pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
 }
 
+// Springt vom Datenqualität-Dashboard im Admin-Tab direkt ins Bearbeiten-
+// Formular eines Produkts (Aufrufer wechselt vorher per switchTab("products")).
+export function openProductForEdit(name) {
+  const product = getProduct(name);
+  if (!product) return;
+  loadIntoForm(product);
+  showEditView();
+}
+
 export function initProducts() {
+  if (!isAdmin()) {
+    document.getElementById("product-save").textContent = "Vorschlag einreichen";
+  }
   document.getElementById("product-save").addEventListener("click", handleSave);
   document.getElementById("product-new").addEventListener("click", resetForm);
   document.getElementById("product-delete").addEventListener("click", handleDelete);

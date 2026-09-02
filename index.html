@@ -13,6 +13,7 @@
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
       <span id="current-user-info"></span>
+      <button type="button" id="change-password-btn" class="btn-secondary">Passwort ändern</button>
       <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
     </div>
   </header>
@@ -23,8 +24,8 @@
       <h2>Anmelden</h2>
       <p class="hint">Zugang erhältst du von deinem Bartool-Admin.</p>
       <label>
-        E-Mail
-        <input type="email" id="login-email" autocomplete="username" required />
+        Benutzername
+        <input type="text" id="login-username" autocomplete="username" required />
       </label>
       <label>
         Passwort
@@ -36,6 +37,50 @@
       </div>
     </form>
   </section>
+
+  <!-- ERZWUNGENER PASSWORTWECHSEL (nach Konto-Anlage durch Admin) -->
+  <section id="forced-password-screen" class="auth-screen" hidden>
+    <form id="forced-password-form" class="auth-form">
+      <h2>Passwort festlegen</h2>
+      <p class="hint">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte wähle jetzt einen eigenen Benutzernamen und ein eigenes Passwort, bevor es weitergeht.</p>
+      <label>
+        Benutzername
+        <input type="text" id="forced-password-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required />
+      </label>
+      <label>
+        Neues Passwort
+        <input type="password" id="forced-password-new" autocomplete="new-password" minlength="10" required />
+      </label>
+      <label>
+        Neues Passwort bestätigen
+        <input type="password" id="forced-password-confirm" autocomplete="new-password" minlength="10" required />
+      </label>
+      <div id="forced-password-error" class="error-note" hidden></div>
+      <div class="actions">
+        <button type="submit" class="btn-primary">Passwort speichern</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- PASSWORT ÄNDERN (jederzeit über den Header erreichbar) -->
+  <div id="password-modal-overlay" class="modal-overlay" hidden>
+    <form id="password-modal-form" class="auth-form modal-box">
+      <h2>Passwort ändern</h2>
+      <label>
+        Neues Passwort
+        <input type="password" id="password-modal-new" autocomplete="new-password" minlength="10" required />
+      </label>
+      <label>
+        Neues Passwort bestätigen
+        <input type="password" id="password-modal-confirm" autocomplete="new-password" minlength="10" required />
+      </label>
+      <div id="password-modal-error" class="error-note" hidden></div>
+      <div class="actions">
+        <button type="button" id="password-modal-cancel" class="btn-secondary">Abbrechen</button>
+        <button type="submit" class="btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
 
   <div id="app-shell" hidden>
   <div class="app-layout">
@@ -71,6 +116,11 @@
       </div>
 
       <div class="home-stats" id="home-stats"></div>
+
+      <div id="my-change-requests-wrapper" hidden>
+        <h3>Meine Vorschläge</h3>
+        <div id="my-change-requests-list"></div>
+      </div>
 
       <h3>Deine Werkzeuge</h3>
       <div class="tool-grid">
@@ -189,7 +239,7 @@
       <div id="recipes-list-view" class="recipe-subview active">
         <p class="hint">133 Cocktail-Klassiker (nach Basis-Spirituose kategorisiert) und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"), der Filter grenzt nach Kategorie ein.</p>
 
-        <div class="actions" data-admin-only>
+        <div class="actions">
           <button type="button" id="recipe-list-new" class="btn-primary">+ Neues Rezept</button>
         </div>
 
@@ -279,7 +329,7 @@
             <div class="actions">
               <button type="button" id="recipe-save" class="btn-primary">Speichern</button>
               <button type="button" id="recipe-new" class="btn-secondary">Neues Rezept</button>
-              <button type="button" id="recipe-delete" class="btn-secondary">Löschen</button>
+              <button type="button" id="recipe-delete" class="btn-secondary" data-admin-only>Löschen</button>
             </div>
           </div>
 
@@ -302,7 +352,7 @@
       <div id="products-list-view" class="recipe-subview active">
         <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
 
-        <div class="actions" data-admin-only>
+        <div class="actions">
           <button type="button" id="product-list-new" class="btn-primary">+ Neues Produkt</button>
         </div>
 
@@ -412,7 +462,7 @@
             <div class="actions">
               <button type="button" id="product-save" class="btn-primary">Speichern</button>
               <button type="button" id="product-new" class="btn-secondary">Neues Produkt</button>
-              <button type="button" id="product-delete" class="btn-secondary">Löschen</button>
+              <button type="button" id="product-delete" class="btn-secondary" data-admin-only>Löschen</button>
             </div>
           </div>
 
@@ -631,14 +681,14 @@
             <input type="email" id="admin-new-email" required />
           </label>
           <label>
-            Name
-            <input type="text" id="admin-new-name" />
+            Benutzername
+            <input type="text" id="admin-new-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required />
           </label>
         </div>
         <div class="field-row">
           <label>
-            Passwort (temporär)
-            <input type="password" id="admin-new-password" minlength="8" required />
+            Name
+            <input type="text" id="admin-new-name" />
           </label>
           <label>
             Rolle
@@ -646,6 +696,12 @@
               <option value="mitarbeiter">Mitarbeiter</option>
               <option value="admin">Admin</option>
             </select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Passwort (temporär)
+            <input type="password" id="admin-new-password" minlength="8" required />
           </label>
         </div>
         <div id="admin-create-error" class="error-note" hidden></div>
@@ -656,6 +712,28 @@
 
       <h3>Konten</h3>
       <div id="admin-employee-list"></div>
+
+      <h3>Offene Vorschläge</h3>
+      <p class="hint">Änderungsvorschläge von Mitarbeitenden zu Rezepten und Produkten. Annehmen übernimmt den Vorschlag direkt, Ablehnen kann mit einem Kommentar begründet werden.</p>
+      <div id="change-requests-list"></div>
+
+      <h3>Datenqualität</h3>
+      <p class="hint">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>
+      <div id="data-quality-report"></div>
+
+      <h3>Änderungsverlauf</h3>
+      <div class="field-row">
+        <label>
+          Tabelle
+          <select id="audit-log-filter">
+            <option value="">Alle</option>
+            <option value="recipes">Rezepte</option>
+            <option value="products">Produkte</option>
+            <option value="profiles">Konten</option>
+          </select>
+        </label>
+      </div>
+      <div id="audit-log-list"></div>
     </section>
 
     </main>

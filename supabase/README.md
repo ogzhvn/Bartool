@@ -26,16 +26,22 @@ Im Supabase-Dashboard unter **SQL Editor** den Inhalt von
   in einem eigenen, nicht öffentlich per REST-API aufrufbaren Schema statt in
   `public`)
 
-## 3. Edge Function deployen
+## 3. Edge Functions deployen
 
-Die Funktion `admin-users` legt Mitarbeiterkonten an bzw. löscht sie – dafür
-wird der `service_role`-Key gebraucht, der niemals im Frontend landen darf.
-Er bleibt als Supabase-Secret serverseitig.
+Zwei Functions, beide nutzen den `service_role`-Key serverseitig, der
+niemals im Frontend landen darf:
+
+- `admin-users` – legt Mitarbeiterkonten an bzw. löscht sie.
+- `login-with-username` – löst beim Login den Benutzernamen auf die
+  hinterlegte E-Mail auf (Bartool loggt sich per Benutzername statt E-Mail
+  ein). Läuft ohne JWT-Prüfung, da der Aufrufer beim Login noch nicht
+  angemeldet ist.
 
 ```bash
 npx supabase login
 npx supabase link --project-ref DEIN-PROJECT-REF
 npx supabase functions deploy admin-users
+npx supabase functions deploy login-with-username --no-verify-jwt
 ```
 
 Supabase stellt `SUPABASE_URL`, `SUPABASE_ANON_KEY` und
@@ -55,31 +61,46 @@ Konten selbst schon Admin-Rechte voraussetzt:
 
 1. Im Supabase-Dashboard unter **Authentication → Users → Add user** einen
    Nutzer mit E-Mail + Passwort anlegen (Auto Confirm aktivieren).
-2. Im **SQL Editor** die zugehörige `profiles`-Zeile auf `admin` setzen:
+2. Im **SQL Editor** die zugehörige `profiles`-Zeile auf `admin` setzen
+   (Benutzername frei wählbar, wird für den Login in Bartool gebraucht):
 
    ```sql
-   insert into public.profiles (id, email, role)
-   values ('<user-id-aus-schritt-1>', 'deine@email.de', 'admin')
-   on conflict (id) do update set role = 'admin', email = excluded.email;
+   insert into public.profiles (id, email, username, role, must_change_password)
+   values ('<user-id-aus-schritt-1>', 'deine@email.de', '<dein-benutzername>', 'admin', false)
+   on conflict (id) do update set role = 'admin', email = excluded.email, username = excluded.username;
    ```
 
    Das `on conflict` sorgt dafür, dass der Befehl auch dann funktioniert
    (bzw. keinen Fehler wirft), wenn die Zeile aus einem vorherigen Versuch
    schon existiert.
 
-Danach in Bartool mit diesem Konto einloggen. Weitere Konten (Admin oder
+Danach in Bartool mit dem gewählten **Benutzernamen** (nicht der E-Mail)
+und dem Passwort aus Schritt 1 einloggen. Weitere Konten (Admin oder
 Mitarbeiter) lassen sich ab jetzt bequem über den Tab **Admin** in der App
-anlegen.
+anlegen – dort wird pro Konto zunächst ein Platzhalter-Benutzername
+vergeben. Über den Tab angelegte Konten müssen beim ersten Login ihr
+temporäres Passwort ändern und können sich dabei gleich einen eigenen
+Benutzernamen aussuchen (erzwungener Screen); Mitarbeitende können ihr
+Passwort danach jederzeit über "Passwort ändern" im Header selbst ändern
+(der Benutzername lässt sich später nur noch über den Admin-Tab anpassen).
+Aus
+Sicherheitsgründen (öffentlich zugängliches Tresen-Tablet) meldet Bartool
+nach 6h Inaktivität automatisch ab.
 
 ## 6. Sicherheits-Check (empfohlen)
 
 Nach dem Einspielen des Schemas im Dashboard unter **Advisors → Security**
-nachsehen. Eine Warnung lässt sich nicht per SQL beheben und sollte manuell
-aktiviert werden:
+nachsehen.
 
-- **Leaked Password Protection**: unter **Authentication → Policies**
-  (bzw. **Auth → Settings**) aktivieren – prüft neue Passwörter gegen
-  HaveIBeenPwned, kostenlos und ohne Nachteile.
+- **Leaked Password Protection**: prüft neue Passwörter gegen
+  HaveIBeenPwned. Steht auf dem Supabase Free-Tier nicht zur Verfügung –
+  als Ausgleich erzwingt Bartool selbst einen Passwortwechsel bei jedem neu
+  angelegten Konto (siehe oben) und eine Mindestlänge von 10 Zeichen.
+  Perspektivisch (Supabase Pro-Tier) nachträglich aktivierbar.
+- **MFA (TOTP) für Admin-Konten**: unter **Authentication → Settings**
+  aktivieren und für die eigenen Admin-Accounts einrichten – auf allen
+  Tiers verfügbar, guter zusätzlicher Schutz gerade für die Konten mit den
+  weitreichendsten Rechten.
 
 ## Rollen
 
