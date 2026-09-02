@@ -709,12 +709,9 @@ textarea {
   transform: translateY(-2px);
 }
 
-.tool-card-icon {
-  font-size: 1.6rem;
-}
-
 .tool-card-title {
   font-weight: 700;
+  color: var(--accent);
 }
 
 .tool-card-desc {
