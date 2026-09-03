@@ -4,6 +4,7 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
+import { allergensForRecipe } from "./allergens.js";
 import { printRecipes } from "./printView.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
@@ -258,6 +259,36 @@ function updateExportBar() {
   printBtn.disabled = selectedNames.size === 0;
 }
 
+// Allergen-Block für die Rezeptansicht. Sagt nie "allergenfrei": was nicht
+// belegt ist, wird als ungeprüft ausgewiesen.
+function renderAllergenBlock(recipe) {
+  const { entries, unchecked, clear } = allergensForRecipe(recipe);
+
+  const zeilen = entries
+    .map(
+      (e) =>
+        `<li><strong>${escapeHtml(e.product)}:</strong> ${escapeHtml(e.allergens)}</li>`
+    )
+    .join("");
+
+  const teile = [];
+  if (entries.length > 0) {
+    teile.push(`<ul class="allergen-list">${zeilen}</ul>`);
+  } else if (clear.length > 0 && unchecked.length === 0) {
+    teile.push(
+      `<p class="allergen-note">Bei allen ${clear.length} Zutaten ist im Katalog „Keine bekannten" hinterlegt. Das ersetzt keine eigene Prüfung.</p>`
+    );
+  }
+
+  if (unchecked.length > 0) {
+    const liste = unchecked.map((u) => `${u.name} (${u.reason})`).join(", ");
+    teile.push(`<p class="allergen-note">Ungeprüft: ${escapeHtml(liste)}</p>`);
+  }
+
+  if (teile.length === 0) return "";
+  return `<div class="allergen-box"><strong>Allergene</strong>${teile.join("")}</div>`;
+}
+
 function renderRecipeItem(recipe) {
   const metaRows = [
     ["Glas", recipe.glass],
@@ -283,6 +314,7 @@ function renderRecipeItem(recipe) {
     <div class="recipe-item-body">
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+      ${renderAllergenBlock(recipe)}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
         ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? "Löschen" : "Löschung vorschlagen"}</button>` : ""}

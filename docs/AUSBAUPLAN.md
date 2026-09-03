@@ -97,7 +97,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 4 | Globale Suche (Cmd/Ctrl+K) | erledigt |
 | 5 | `js/abv.js` – ABV-Mathematik zentralisieren | erledigt |
 | 6 | Bottled-Cocktail-Modus im Batching | erledigt |
-| 7 | Allergene pro Rezept | offen |
+| 7 | Allergene pro Rezept | erledigt |
 | 8 | Kartenkalkulation | offen |
 | 9 | Ansätze / Mise en Place | offen |
 | 10 | Etiketten drucken | offen |

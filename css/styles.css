@@ -1720,3 +1720,30 @@ select {
     max-height: calc(100vh - 2rem);
   }
 }
+
+/* ── Allergene im Rezept (js/allergens.js) ───────────────── */
+
+.allergen-box {
+  margin: 0.9rem 0 0.4rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-700);
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+}
+
+.allergen-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.allergen-list li {
+  margin-bottom: 0.2rem;
+}
+
+.allergen-note {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.83rem;
+}
