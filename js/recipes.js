@@ -268,6 +268,7 @@ function renderRecipeItem(recipe) {
 
   const item = document.createElement("details");
   item.className = "recipe-item";
+  item.dataset.name = recipe.name;
   item.innerHTML = `
     <summary>
       <span class="recipe-item-title">
@@ -434,6 +435,23 @@ export function openRecipeForEdit(name) {
   if (!recipe) return;
   loadIntoForm(recipe);
   showEditView();
+}
+
+// Springt aus der globalen Suche zu einem Rezept: Leseansicht (nicht das
+// Bearbeiten-Formular), Kategoriefilter zurückgesetzt, Eintrag aufgeklappt.
+export function focusRecipe(name) {
+  showListView();
+  categoryFilterEl.value = "";
+  renderSidebarCategoryTree();
+  searchEl.value = name;
+  renderBrowseList();
+  requestAnimationFrame(() => {
+    const item = listEl.querySelector(`.recipe-item[data-name="${CSS.escape(name)}"]`);
+    if (item) {
+      item.open = true;
+      item.scrollIntoView({ block: "start" });
+    }
+  });
 }
 
 export function initRecipes() {

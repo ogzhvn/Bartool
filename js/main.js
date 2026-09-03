@@ -12,6 +12,7 @@ import { initAuditLog } from "./auditLog.js";
 import { initDataQuality } from "./dataQuality.js";
 import { initChangeRequestsAdmin, initMyChangeRequests } from "./changeRequests.js";
 import { initRecipeSync, initProductSync } from "./storage.js";
+import { initQuickSearch } from "./quickSearch.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
@@ -84,6 +85,7 @@ async function bootstrapAppOnce() {
   initDataQuality();
   initChangeRequestsAdmin();
   initMyChangeRequests();
+  initQuickSearch();
   startSessionTimeoutWatch();
 }
 

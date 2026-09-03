@@ -22,6 +22,7 @@
       <span id="current-user-info"></span>
       <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
     </div>
+    <button type="button" id="quick-search-btn" class="header-search-btn" aria-label="Suche öffnen (Strg/Cmd+K)"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></button>
   </header>
 
   <div id="offline-banner" class="offline-banner no-print" hidden>Offline – nur Lesen und Rechnen möglich.</div>
@@ -845,6 +846,14 @@
   <footer class="app-footer no-print">
     <p>Bartool</p>
   </footer>
+
+  <!-- Globale Suche (Strg/Cmd+K) -->
+  <div id="quick-search-overlay" class="modal-overlay quick-search-overlay no-print" hidden>
+    <div class="quick-search-box" role="dialog" aria-modal="true" aria-label="Globale Suche">
+      <input type="text" id="quick-search-input" class="quick-search-input" placeholder="Rezepte oder Produkte suchen…" autocomplete="off" />
+      <div id="quick-search-results" class="quick-search-results"></div>
+    </div>
+  </div>
 
   <!-- Nur für den Excel-Export in den Rezepte- und Produkte-Tabs benötigt -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

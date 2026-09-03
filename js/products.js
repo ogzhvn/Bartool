@@ -452,6 +452,7 @@ function renderProductItem(product) {
 
   const item = document.createElement("details");
   item.className = "recipe-item";
+  item.dataset.name = product.name;
   item.innerHTML = `
     <summary>
       <span class="recipe-item-title">
@@ -644,6 +645,22 @@ export function openProductForEdit(name) {
   if (!product) return;
   loadIntoForm(product);
   showEditView();
+}
+
+// Springt aus der globalen Suche zu einem Produkt: Leseansicht (nicht das
+// Bearbeiten-Formular), Filter zurückgesetzt, Eintrag aufgeklappt.
+export function focusProduct(name) {
+  showListView();
+  resetCategoryFilters();
+  searchEl.value = name;
+  renderBrowseList();
+  requestAnimationFrame(() => {
+    const item = listEl.querySelector(`.recipe-item[data-name="${CSS.escape(name)}"]`);
+    if (item) {
+      item.open = true;
+      item.scrollIntoView({ block: "start" });
+    }
+  });
 }
 
 export function initProducts() {

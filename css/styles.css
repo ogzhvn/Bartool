@@ -149,6 +149,27 @@ a:hover {
   color: var(--text-muted);
 }
 
+.header-search-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.header-search-btn:hover {
+  border-color: var(--border);
+  color: var(--accent-300);
+}
+
 .header-user .btn-secondary {
   padding: 0.35rem 0.7rem;
   font-size: 0.8rem;
@@ -1291,6 +1312,84 @@ select {
   max-width: 360px;
   box-shadow: var(--shadow-pop);
   border-color: var(--border-strong);
+}
+
+.quick-search-overlay {
+  align-items: flex-start;
+  padding-top: 10vh;
+}
+
+.quick-search-box {
+  width: 100%;
+  max-width: 560px;
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.quick-search-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.05rem;
+  padding: 1rem 1.1rem;
+}
+
+.quick-search-input:focus {
+  outline: none;
+}
+
+.quick-search-results {
+  overflow-y: auto;
+  padding: 0.4rem 0;
+}
+
+.quick-search-group-title {
+  margin: 0;
+  padding: 0.5rem 1.1rem 0.3rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quick-search-hit {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.quick-search-hit-category {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.quick-search-hit:hover,
+.quick-search-hit.active {
+  background: var(--accent-900);
+  color: var(--accent-300);
+}
+
+.quick-search-empty {
+  padding: 1rem 1.1rem;
+  color: var(--text-muted);
 }
 
 .modal-box .actions {
