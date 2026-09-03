@@ -1,4 +1,4 @@
-const CACHE = "bartool-v5";
+const CACHE = "bartool-v6";
 
 const APP_SHELL = [
   "./",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "css/styles.css",
   "js/abv.js",
   "js/adminPanel.js",
+  "js/allergens.js",
   "js/auditLog.js",
   "js/auth.js",
   "js/batching.js",

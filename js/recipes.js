@@ -2,6 +2,7 @@ import { saveRecipe, deleteRecipe, onRecipesChanged } from "./storage.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
+import { allergensForRecipe } from "./allergens.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { isAdmin } from "./auth.js";
@@ -256,6 +257,10 @@ function updateExportBar() {
 }
 
 function renderRecipeItem(recipe) {
+  const { allergens, unmatched } = allergensForRecipe(recipe);
+  const allergensText = allergens.length > 0 ? allergens.join(", ") : "Keine bekannten";
+  const unmatchedText = unmatched.length > 0 ? ` — ungeprüft: ${unmatched.join(", ")}` : "";
+
   const metaRows = [
     ["Glas", recipe.glass],
     ["Garnitur", recipe.garnish],
@@ -278,6 +283,7 @@ function renderRecipeItem(recipe) {
     </summary>
     <div class="recipe-item-body">
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
+      <p><strong>Allergene:</strong> ${escapeHtml(allergensText)}${escapeHtml(unmatchedText)}</p>
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
