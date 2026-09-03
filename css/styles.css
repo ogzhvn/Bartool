@@ -1393,3 +1393,14 @@ select {
   padding: 2rem 1rem;
   border-top: 1px solid var(--border);
 }
+
+/* ── Offline-Banner ─────────────────────────────────────── */
+
+.offline-banner {
+  background: var(--accent-900);
+  color: var(--accent-300);
+  border-bottom: 1px solid var(--accent-700);
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+}

@@ -8,6 +8,26 @@ let productsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Quota oder Private-Mode: Cache-Schreiben ist best-effort, darf die App nie kippen.
+  }
+}
+
+const RECIPES_CACHE_KEY = "bartool:recipes";
+const PRODUCTS_CACHE_KEY = "bartool:products";
+
 // ---------------------------------------------------------------------
 // Rezepte (Tabelle "recipes" in Supabase)
 // ---------------------------------------------------------------------
@@ -47,7 +67,13 @@ function fromRecipeRow(row) {
 async function refreshRecipes() {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.from("recipes").select("*").order("name");
-  if (!error) recipesCache = (data ?? []).map(fromRecipeRow);
+  if (!error) {
+    recipesCache = (data ?? []).map(fromRecipeRow);
+    writeCache(RECIPES_CACHE_KEY, recipesCache);
+  } else {
+    const cached = readCache(RECIPES_CACHE_KEY);
+    if (cached) recipesCache = cached;
+  }
   window.dispatchEvent(new CustomEvent(RECIPES_UPDATED_EVENT));
 }
 
@@ -55,6 +81,11 @@ async function refreshRecipes() {
 // und hält ihn per Realtime synchron, damit Änderungen von anderen
 // Geräten/Nutzern automatisch ankommen.
 export async function initRecipeSync() {
+  const cached = readCache(RECIPES_CACHE_KEY);
+  if (cached) {
+    recipesCache = cached;
+    window.dispatchEvent(new CustomEvent(RECIPES_UPDATED_EVENT));
+  }
   await refreshRecipes();
   const supabase = getSupabaseClient();
   if (recipesChannel) supabase.removeChannel(recipesChannel);
@@ -69,6 +100,7 @@ export function loadRecipes() {
 }
 
 export async function saveRecipe(recipe) {
+  if (!navigator.onLine) throw new Error("Offline – Änderungen sind erst wieder mit Netz möglich.");
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("recipes").upsert(toRecipeRecord(recipe), { onConflict: "name" });
   if (error) throw error;
@@ -76,6 +108,7 @@ export async function saveRecipe(recipe) {
 }
 
 export async function deleteRecipe(name) {
+  if (!navigator.onLine) throw new Error("Offline – Änderungen sind erst wieder mit Netz möglich.");
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("recipes").delete().eq("name", name);
   if (error) throw error;
@@ -148,11 +181,22 @@ function fromProductRow(row) {
 async function refreshProducts() {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.from("products").select("*").order("name");
-  if (!error) productsCache = (data ?? []).map(fromProductRow);
+  if (!error) {
+    productsCache = (data ?? []).map(fromProductRow);
+    writeCache(PRODUCTS_CACHE_KEY, productsCache);
+  } else {
+    const cached = readCache(PRODUCTS_CACHE_KEY);
+    if (cached) productsCache = cached;
+  }
   window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
 }
 
 export async function initProductSync() {
+  const cached = readCache(PRODUCTS_CACHE_KEY);
+  if (cached) {
+    productsCache = cached;
+    window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
+  }
   await refreshProducts();
   const supabase = getSupabaseClient();
   if (productsChannel) supabase.removeChannel(productsChannel);
@@ -167,6 +211,7 @@ export function loadProducts() {
 }
 
 export async function saveProduct(product) {
+  if (!navigator.onLine) throw new Error("Offline – Änderungen sind erst wieder mit Netz möglich.");
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("products").upsert(toProductRecord(product), { onConflict: "name" });
   if (error) throw error;
@@ -174,6 +219,7 @@ export async function saveProduct(product) {
 }
 
 export async function deleteProduct(name) {
+  if (!navigator.onLine) throw new Error("Offline – Änderungen sind erst wieder mit Netz möglich.");
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("products").delete().eq("name", name);
   if (error) throw error;

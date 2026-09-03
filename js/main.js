@@ -205,3 +205,11 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
   });
 }
+
+const offlineBanner = document.getElementById("offline-banner");
+function updateOfflineBanner() {
+  if (offlineBanner) offlineBanner.hidden = navigator.onLine;
+}
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
