@@ -740,6 +740,27 @@ select {
   grid-template-columns: 2fr 1fr 1fr auto;
 }
 
+/* Die Alkohol-Spalte im Batching wird nur im Flaschen-Modus gebraucht.
+   Sie steht immer im Markup, damit eingetragene Werte beim Moduswechsel
+   nicht verloren gehen – sie wird nur ein- und ausgeblendet. */
+.ingredient-list:not(.show-abv) .ing-abv {
+  display: none;
+}
+
+.ingredient-list.show-abv .ingredient-row {
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+@media (max-width: 599px) {
+  .ingredient-list.show-abv .ingredient-row {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .ingredient-list.show-abv .ing-name {
+    grid-column: 1 / -1;
+  }
+}
+
 .ingredient-row input,
 .ingredient-row select {
   width: 100%;

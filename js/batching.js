@@ -3,6 +3,7 @@ import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
+import { alcoholMl, abvAfterWater } from "./abv.js";
 
 const panelEl = document.getElementById("batching");
 const ingredientsEl = document.getElementById("batch-ingredients");
@@ -10,6 +11,7 @@ const resultEl = document.getElementById("batch-result");
 const totalEl = document.getElementById("batch-total");
 const totalValueEl = document.getElementById("batch-total-value");
 const totalSubEl = document.getElementById("batch-total-sub");
+const totalLabelEl = document.getElementById("batch-total-label");
 const recipeSelectEl = document.getElementById("batch-recipe-select");
 const recipeInfoEl = document.getElementById("batch-recipe-info");
 
@@ -24,13 +26,134 @@ function updateModeInputs() {
   panelEl.querySelectorAll("[data-mode-field]").forEach((el) => {
     el.hidden = el.dataset.modeField !== mode;
   });
+  // Die Alkohol-Spalte in den Zutatenzeilen wird nur im Flaschen-Modus
+  // gebraucht und würde sonst nur verwirren.
+  ingredientsEl.classList.toggle("show-abv", mode === "bottles");
+  updateDilutionLabel();
   calculateScale();
+}
+
+function currentDilutionMode() {
+  return document.querySelector('input[name="batch-dilution-mode"]:checked')?.value ?? "percent";
+}
+
+function updateDilutionLabel() {
+  const el = document.getElementById("batch-dilution-unit");
+  if (el) el.textContent = currentDilutionMode() === "percent" ? "% Wasseranteil" : "% Ziel-ABV";
 }
 
 function showNote(message) {
   resultEl.hidden = false;
   resultEl.innerHTML = `<p class="empty-note">${message}</p>`;
   totalEl.hidden = true;
+}
+
+// Summe der Zutaten in ml. Stückzutaten (Stück, Teile) haben kein Volumen und
+// zählen hier nicht mit.
+function volumeMlOf(ingredients, factor = 1) {
+  return ingredients.reduce((sum, ing) => {
+    const toMl = UNIT_TO_ML[ing.unit];
+    return toMl ? sum + ing.amount * factor * toMl : sum;
+  }, 0);
+}
+
+// Vorgemischte Flaschen: Der Nutzer gibt vor, wieviele Flaschen welcher Größe
+// am Ende dastehen sollen und wie stark verdünnt wird. Daraus ergibt sich
+// rückwärts, wieviel Rezept und wieviel Wasser hineingehört.
+function calculateBottles(ingredients, basePortions) {
+  const bottleSize = parseFloat(document.getElementById("batch-bottle-size").value) || 0;
+  const bottleCount = parseFloat(document.getElementById("batch-bottle-count").value) || 0;
+  const value = parseFloat(document.getElementById("batch-dilution-value").value) || 0;
+  const dilutionMode = currentDilutionMode();
+
+  const finalVolume = bottleSize * bottleCount;
+  if (finalVolume <= 0) {
+    showNote("Bitte Flaschengröße und Anzahl eintragen.");
+    return;
+  }
+
+  const baseVolumeMl = volumeMlOf(ingredients);
+  if (baseVolumeMl === 0) {
+    showNote(
+      "Für den Flaschen-Modus wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt."
+    );
+    return;
+  }
+
+  const baseAlcoholMl = alcoholMl(
+    ingredients.map((ing) => ({
+      amountMl: (UNIT_TO_ML[ing.unit] ?? 0) * ing.amount,
+      abv: ing.abv ?? 0,
+    }))
+  );
+
+  // preVolume = das unverdünnte Rezept, das in die Flaschen soll.
+  let preVolume;
+  if (dilutionMode === "percent") {
+    if (value >= 100) {
+      showNote("Der Wasseranteil muss unter 100 % liegen.");
+      return;
+    }
+    preVolume = finalVolume * (1 - value / 100);
+  } else {
+    if (value <= 0) {
+      showNote("Bitte einen Ziel-Alkoholgehalt über 0 % eintragen.");
+      return;
+    }
+    if (baseAlcoholMl === 0) {
+      showNote("Ohne Alkoholgehalt bei den Zutaten lässt sich kein Ziel-ABV berechnen.");
+      return;
+    }
+    // Nötiger reiner Alkohol für das Ziel, daraus die Menge Rezept.
+    const neededAlcohol = (finalVolume * value) / 100;
+    preVolume = (neededAlcohol / baseAlcoholMl) * baseVolumeMl;
+    if (preVolume > finalVolume) {
+      const maxAbv = (baseAlcoholMl / baseVolumeMl) * 100;
+      showNote(
+        `Ziel nicht erreichbar: unverdünnt hat das Rezept nur ${formatNumber(maxAbv)} % ABV. Wasser kann nur verdünnen.`
+      );
+      return;
+    }
+  }
+
+  const factor = preVolume / baseVolumeMl;
+  const waterMl = finalVolume - preVolume;
+  const finalAbv = abvAfterWater(baseAlcoholMl * factor, preVolume, waterMl);
+  const ohneAbv = ingredients.filter((ing) => ing.abv === null).map((ing) => ing.name);
+
+  const scaled = ingredients.map((ing) => ({ ...ing, scaledAmount: ing.amount * factor }));
+
+  resultEl.hidden = false;
+  resultEl.innerHTML = `
+    <table>
+      <thead><tr><th>Zutat</th><th>Menge</th></tr></thead>
+      <tbody>
+        ${scaled
+          .map(
+            (ing) =>
+              `<tr><td>${escapeHtml(ing.name)}</td><td>${formatNumber(ing.scaledAmount)} ${UNIT_LABELS[ing.unit]}</td></tr>`
+          )
+          .join("")}
+        <tr><td><strong>Wasser</strong></td><td><strong>${formatNumber(waterMl)} ml</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="summary">
+      Rezept unverdünnt: ${formatNumber(preVolume)} ml · Wasser: ${formatNumber(waterMl)} ml
+      (${formatNumber((waterMl / finalVolume) * 100)} % vom Endvolumen)<br />
+      Ergibt ${formatNumber(bottleCount)} Flaschen à ${formatNumber(bottleSize)} ml
+      · entspricht ${formatNumber(basePortions * factor)} Portionen
+    </p>
+    ${
+      ohneAbv.length > 0
+        ? `<p class="empty-note">Ohne Alkoholgehalt gerechnet (als 0 % angenommen): ${escapeHtml(ohneAbv.join(", "))}. Wert in der Zutatenzeile ergänzen, sonst stimmt der ABV nicht.</p>`
+        : ""
+    }
+  `;
+
+  totalEl.hidden = false;
+  totalLabelEl.textContent = "Alkoholgehalt";
+  totalValueEl.textContent = `${formatNumber(finalAbv)} % ABV`;
+  totalSubEl.textContent = `${formatNumber(finalVolume)} ml gesamt · ${formatNumber(bottleCount)} × ${formatNumber(bottleSize)} ml`;
 }
 
 function calculateScale() {
@@ -43,6 +166,11 @@ function calculateScale() {
 
   const basePortions = parseFloat(document.getElementById("batch-base-portions").value) || 1;
   const mode = currentMode();
+
+  if (mode === "bottles") {
+    calculateBottles(ingredients, basePortions);
+    return;
+  }
 
   let factor;
   if (mode === "portions") {
@@ -100,6 +228,7 @@ function calculateScale() {
     </table>
   `;
 
+  totalLabelEl.textContent = "Gesamtvolumen";
   if (totalVolumeMl > 0) {
     totalEl.hidden = false;
     totalValueEl.textContent = `${formatNumber(totalVolumeMl)} ml`;
@@ -119,9 +248,11 @@ function stepPortions(delta) {
 }
 
 async function shareResult() {
-  const rows = editor
-    .getIngredients()
-    .map((ing) => `${ing.name}: ${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit]}`);
+  // Geteilt wird, was auch auf dem Bildschirm steht: im Ergebnisblock stehen
+  // bereits die hochgerechneten Mengen (inklusive Wasser im Flaschen-Modus).
+  const rows = [...resultEl.querySelectorAll("tbody tr")].map((tr) =>
+    [...tr.querySelectorAll("td")].map((td) => td.textContent.trim()).join(": ")
+  );
   const name = document.getElementById("batch-name").value || "Batch";
   const text = [`${name} – ${totalValueEl.textContent} (${totalSubEl.textContent})`, ...rows].join("\n");
   if (navigator.share) {
@@ -201,6 +332,12 @@ export function initBatching() {
   document.getElementById("batch-portions-plus").addEventListener("click", () => stepPortions(1));
   document.getElementById("batch-share").addEventListener("click", shareResult);
   document.querySelectorAll('input[name="batch-mode"]').forEach((el) => el.addEventListener("change", updateModeInputs));
+  document.querySelectorAll('input[name="batch-dilution-mode"]').forEach((el) =>
+    el.addEventListener("change", () => {
+      updateDilutionLabel();
+      calculateScale();
+    })
+  );
   // Live rechnen: jede Eingabe im Panel löst eine Neuberechnung aus.
   const recalcFromEvent = (e) => {
     if (e.target.id === "batch-recipe-select") return;

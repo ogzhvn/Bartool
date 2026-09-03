@@ -228,6 +228,10 @@
           <input type="radio" name="batch-mode" value="volume" />
           <span>Volumen</span>
         </label>
+        <label class="seg-opt">
+          <input type="radio" name="batch-mode" value="bottles" />
+          <span>Flaschen</span>
+        </label>
       </div>
 
       <div class="stepper" data-mode-field="portions">
@@ -246,6 +250,35 @@
         </label>
       </div>
 
+      <div class="field-row" data-mode-field="bottles" hidden>
+        <label>
+          Flaschengröße (ml)
+          <input type="number" id="batch-bottle-size" value="700" min="50" step="50" />
+        </label>
+        <label>
+          Anzahl Flaschen
+          <input type="number" id="batch-bottle-count" value="6" min="1" step="1" />
+        </label>
+      </div>
+
+      <div class="seg" data-mode-field="bottles" hidden role="radiogroup" aria-label="Verdünnung festlegen über">
+        <label class="seg-opt">
+          <input type="radio" name="batch-dilution-mode" value="percent" checked />
+          <span>Verdünnung %</span>
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="batch-dilution-mode" value="target" />
+          <span>Ziel-ABV %</span>
+        </label>
+      </div>
+
+      <div class="stepper" data-mode-field="bottles" hidden>
+        <label class="stepper-value">
+          <input type="number" id="batch-dilution-value" value="20" min="0" max="99" step="1" aria-label="Verdünnung oder Ziel-Alkoholgehalt in Prozent" />
+          <span id="batch-dilution-unit">% Wasseranteil</span>
+        </label>
+      </div>
+
       <h3>Zutaten</h3>
       <div id="batch-ingredients" class="ingredient-list"></div>
       <div class="actions">
@@ -257,7 +290,7 @@
 
       <div id="batch-total" class="result-bar" hidden>
         <div class="result-bar-figure">
-          <span class="result-bar-label">Gesamtvolumen</span>
+          <span class="result-bar-label" id="batch-total-label">Gesamtvolumen</span>
           <strong id="batch-total-value">–</strong>
           <span id="batch-total-sub" class="result-bar-sub"></span>
         </div>
