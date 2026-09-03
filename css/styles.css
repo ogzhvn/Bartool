@@ -1412,3 +1412,116 @@ select {
   background: var(--accent);
   border-bottom: 1px solid var(--accent-700);
 }
+
+/* ------------------------------------------------------------------
+   Druckansicht
+   Papier ist weiß: Das dunkle Bildschirm-Theme wird beim Drucken
+   komplett umgedreht, damit weder Toner verschwendet noch Text
+   unlesbar wird. Alles, was nur zur Bedienung da ist (Navigation,
+   Buttons, Suche, Filter), fliegt raus – gedruckt wird nur der Inhalt
+   des gerade geöffneten Reiters.
+   ------------------------------------------------------------------ */
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  /* Pauschal alle Hintergründe und Farben zurücksetzen. Bewusst über den
+     Universalselektor: das Theme setzt dunkle Hintergründe an vielen
+     Stellen, und eine Liste einzelner Klassen würde immer wieder eine
+     vergessen – dann druckt sich Schwarz auf Schwarz. */
+  * {
+    background: transparent !important;
+    background-image: none !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* Reine Bedienelemente und alles, was nicht aufs Papier gehört */
+  .app-header,
+  .offline-banner,
+  .sidebar,
+  .nav-backdrop,
+  .export-bar,
+  .modal-overlay,
+  .recipe-edit-sidebar,
+  .app-footer,
+  .no-print,
+  button,
+  input[type="checkbox"] {
+    display: none !important;
+  }
+
+  /* Nur der aktive Reiter kommt aufs Papier */
+  .tab-panel {
+    display: none !important;
+  }
+  .tab-panel.active {
+    display: block !important;
+  }
+
+  /* In den Bibliotheken nur drucken, was aufgeklappt ist – sonst wären es
+     hunderte Namenszeilen. Wer drucken will, klappt vorher auf. */
+  #recipes details:not([open]),
+  #products details:not([open]) {
+    display: none !important;
+  }
+
+  details[open] > *:not(summary) {
+    display: block !important;
+  }
+
+  .app-layout,
+  main {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Umrandete Blöcke bleiben als dünne Linie erkennbar */
+  .card,
+  .result-card,
+  .stat-tile,
+  details,
+  fieldset {
+    border: 1px solid #999 !important;
+  }
+
+  /* Eingabefelder als schlichte Werte, damit ein ausgedruckter
+     Batch-Zettel lesbar ist statt wie ein Formular auszusehen */
+  input,
+  select,
+  textarea {
+    border: none !important;
+    border-bottom: 1px solid #999 !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th,
+  td {
+    border: 1px solid #999 !important;
+    padding: 4px 6px !important;
+  }
+
+  /* Nichts mitten im Eintrag umbrechen */
+  details,
+  .result-card,
+  .stat-tile,
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
