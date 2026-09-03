@@ -183,6 +183,9 @@ function toProductRecord(product) {
     aging: product.aging || null,
     food_pairing: product.foodPairing || null,
     drinking_window: product.drinkingWindow || null,
+    par_level: product.parLevel === "" || product.parLevel == null ? null : Number(product.parLevel),
+    supplier: product.supplier || null,
+    order_unit: product.orderUnit || null,
   };
 }
 
@@ -211,6 +214,9 @@ function fromProductRow(row) {
     aging: row.aging ?? "",
     foodPairing: row.food_pairing ?? "",
     drinkingWindow: row.drinking_window ?? "",
+    parLevel: row.par_level ?? "",
+    supplier: row.supplier ?? "",
+    orderUnit: row.order_unit ?? "",
   };
 }
 

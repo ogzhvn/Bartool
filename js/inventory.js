@@ -11,6 +11,13 @@ import { getAllProducts } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
 import { isAdmin, getCurrentUser } from "./auth.js";
 import { escapeHtml } from "./utils.js";
+import {
+  auswertung,
+  differenz,
+  bestellvorschlag,
+  renderAuswertungHtml,
+  renderBestellvorschlagHtml,
+} from "./ordering.js";
 
 // Inventur, Teil 1: Erfassung.
 //
@@ -31,6 +38,12 @@ const saveBtn = document.getElementById("inv-save");
 const closeBtn = document.getElementById("inv-close-count");
 const backBtn = document.getElementById("inv-back");
 const statusEl = document.getElementById("inv-status");
+const analyseBtn = document.getElementById("inv-analyse");
+const analysisEl = document.getElementById("inv-analysis");
+const orderBtn = document.getElementById("inv-order");
+const orderResultEl = document.getElementById("inv-order-result");
+const exportCountBtn = document.getElementById("inv-export-count");
+const exportOrderBtn = document.getElementById("inv-export-order");
 
 // Die gerade geöffnete Zählung und ihr Stand.
 let aktuelleZaehlung = null;
@@ -243,6 +256,8 @@ async function openCount(zaehlung) {
   saveBtn.hidden = gesperrt;
   closeBtn.hidden = gesperrt;
 
+  analysisEl.innerHTML = "";
+  orderResultEl.innerHTML = "";
   overviewEl.hidden = true;
   countViewEl.hidden = false;
   renderProgress();
@@ -298,6 +313,91 @@ async function handleCloseCount() {
   }
 }
 
+// Die letzte abgeschlossene Zählung vor der aktuellen – Grundlage für den
+// Vergleich. Ohne Vorzählung gibt es keine Differenz, das wird auch so gesagt.
+async function ladeVorzaehlung() {
+  const alle = loadInventoryCounts()
+    .filter((z) => z.status === "abgeschlossen" && z.id !== aktuelleZaehlung?.id)
+    .sort((a, b) => new Date(b.countedOn) - new Date(a.countedOn));
+  if (alle.length === 0) return null;
+  try {
+    return await loadInventoryItems(alle[0].id);
+  } catch {
+    return null;
+  }
+}
+
+async function zeigeAuswertung() {
+  if (!aktuelleZaehlung) return;
+  const a = auswertung(stand);
+  const vorher = await ladeVorzaehlung();
+  analysisEl.innerHTML = renderAuswertungHtml(a, differenz(stand, vorher));
+}
+
+function zeigeBestellvorschlag() {
+  if (!aktuelleZaehlung) return;
+  orderResultEl.innerHTML = renderBestellvorschlagHtml(bestellvorschlag(stand));
+}
+
+function exportZaehlung() {
+  if (!aktuelleZaehlung) return;
+  const a = auswertung(stand);
+  if (a.zeilen.length === 0) {
+    setStatus("Noch nichts gezählt – es gibt nichts zu exportieren.");
+    return;
+  }
+  const rows = a.zeilen.map((z) => ({
+    Produkt: z.name,
+    Kategorie: z.gruppe,
+    Menge: z.menge,
+    Einheit: z.einheit,
+    Wert: z.wert === null ? "" : Number(z.wert.toFixed(2)),
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [{ wch: 34 }, { wch: 22 }, { wch: 10 }, { wch: 8 }, { wch: 12 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Inventur");
+  XLSX.writeFile(wb, `Bartool-Inventur_${aktuelleZaehlung.countedOn}.xlsx`);
+}
+
+function exportBestellliste() {
+  if (!aktuelleZaehlung) return;
+  const v = bestellvorschlag(stand);
+  // Von Hand korrigierte Mengen aus der Anzeige übernehmen, falls der
+  // Vorschlag gerade sichtbar ist.
+  const korrekturen = {};
+  orderResultEl.querySelectorAll("tr[data-name]").forEach((tr) => {
+    const feld = tr.querySelector(".order-qty");
+    if (feld) korrekturen[tr.dataset.name] = parseFloat(feld.value);
+  });
+
+  const rows = [];
+  v.lieferanten.forEach((l) => {
+    l.positionen.forEach((pos) => {
+      const menge = korrekturen[pos.name] ?? pos.menge;
+      if (!(menge > 0)) return;
+      rows.push({
+        Lieferant: l.name,
+        Produkt: pos.name,
+        Bestand: pos.bestand,
+        Soll: pos.soll,
+        Bestellen: menge,
+        Einheit: pos.einheit,
+      });
+    });
+  });
+
+  if (rows.length === 0) {
+    setStatus("Kein Bestellbedarf – oder es fehlen noch Soll-Bestände.");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 8 }, { wch: 11 }, { wch: 14 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Bestellung");
+  XLSX.writeFile(wb, `Bartool-Bestellung_${aktuelleZaehlung.countedOn}.xlsx`);
+}
+
 export function initInventory() {
   renderCountList();
   onInventoryCountsChanged(() => {
@@ -315,6 +415,10 @@ export function initInventory() {
   saveBtn.addEventListener("click", () => upload());
   closeBtn.addEventListener("click", handleCloseCount);
   searchEl.addEventListener("input", renderItems);
+  analyseBtn.addEventListener("click", zeigeAuswertung);
+  orderBtn.addEventListener("click", zeigeBestellvorschlag);
+  exportCountBtn.addEventListener("click", exportZaehlung);
+  exportOrderBtn.addEventListener("click", exportBestellliste);
 
   listEl.addEventListener("click", async (e) => {
     const box = e.target.closest(".inv-count-item");

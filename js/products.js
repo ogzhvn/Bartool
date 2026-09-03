@@ -112,6 +112,8 @@ const productionEl = document.getElementById("product-production");
 const allergensEl = document.getElementById("product-allergens");
 const priceValueEl = document.getElementById("product-price-value");
 const priceUnitEl = document.getElementById("product-price-unit");
+const parLevelEl = document.getElementById("product-par-level");
+const supplierOptionsEl = document.getElementById("product-supplier-options");
 const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
@@ -204,11 +206,14 @@ const FIELDS = [
   ["allergens", allergensEl],
   ["quickPitch", quickPitchEl],
   ["priceUnit", priceUnitEl],
+  ["supplier", document.getElementById("product-supplier")],
+  ["orderUnit", document.getElementById("product-order-unit")],
 ];
 
 function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
   priceValueEl.value = "";
+  parLevelEl.value = "";
   pairsWithEl.value = "";
   editingOriginalName = null;
   renderSidebarList();
@@ -217,6 +222,7 @@ function resetForm() {
 function loadIntoForm(product) {
   FIELDS.forEach(([key, el]) => (el.value = product[key] ?? (key === "priceUnit" ? "liter" : "")));
   priceValueEl.value = product.priceValue || "";
+  parLevelEl.value = product.parLevel ?? "";
   pairsWithEl.value = (product.pairsWith ?? []).join(", ");
   editingOriginalName = product.name;
   renderSidebarList();
@@ -231,6 +237,10 @@ async function handleSave() {
   const product = {};
   FIELDS.forEach(([key, el]) => (product[key] = key === "name" ? name : el.value.trim()));
   product.priceValue = parseFloat(priceValueEl.value) || 0;
+  // Leer lassen ist erlaubt und heißt "kein Soll-Bestand gepflegt" – dann
+  // taucht das Produkt im Bestellvorschlag unter "Soll-Bestand fehlt" auf,
+  // statt stillschweigend mit 0 gerechnet zu werden.
+  product.parLevel = parLevelEl.value === "" ? "" : parseFloat(parLevelEl.value);
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
 
@@ -612,7 +622,15 @@ function populateGroupFilter() {
   if (groups.includes(currentValue)) groupFilterEl.value = currentValue;
 }
 
+function populateSupplierOptions() {
+  const lieferanten = [...new Set(getAllProducts().map((p) => p.supplier).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "de")
+  );
+  supplierOptionsEl.innerHTML = lieferanten.map((l) => `<option value="${escapeHtml(l)}"></option>`).join("");
+}
+
 function populateDatalists() {
+  populateSupplierOptions();
   const products = getAllProducts();
   const groups = [...new Set(products.map((p) => p.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
   const subgroups = [...new Set(products.map((p) => p.subGroup).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));

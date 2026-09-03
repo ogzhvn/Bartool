@@ -238,10 +238,17 @@ create table if not exists public.products (
   food_pairing text,
   -- Nur für Jahrgangs-Champagner/Prestige-Cuvées relevant.
   drinking_window text,
+  -- Bestellwesen: Soll-Bestand, Lieferant und Bestelleinheit.
+  par_level numeric,
+  supplier text,
+  order_unit text,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
 
+alter table public.products add column if not exists par_level numeric;
+alter table public.products add column if not exists supplier text;
+alter table public.products add column if not exists order_unit text;
 alter table public.products add column if not exists group_name text;
 alter table public.products add column if not exists sub_group text;
 alter table public.products add column if not exists abv text;

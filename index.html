@@ -415,6 +415,20 @@
         </div>
 
         <div id="inv-items" class="inv-items"></div>
+
+        <h3>Auswertung</h3>
+        <div class="actions no-print">
+          <button type="button" id="inv-analyse" class="btn-secondary">Auswertung anzeigen</button>
+          <button type="button" id="inv-export-count" class="btn-secondary">Zählung als Excel</button>
+        </div>
+        <div id="inv-analysis"></div>
+
+        <h3>Bestellvorschlag</h3>
+        <div class="actions no-print">
+          <button type="button" id="inv-order" class="btn-secondary">Vorschlag erstellen</button>
+          <button type="button" id="inv-export-order" class="btn-secondary">Bestellliste als Excel</button>
+        </div>
+        <div id="inv-order-result"></div>
       </div>
     </section>
 
@@ -697,6 +711,21 @@
                 </select>
               </label>
             </div>
+            <div class="field-row">
+              <label>
+                Soll-Bestand
+                <input type="number" id="product-par-level" min="0" step="1" placeholder="z. B. 6" />
+              </label>
+              <label>
+                Lieferant
+                <input type="text" id="product-supplier" list="product-supplier-options" placeholder="z. B. Getränke Meyer" />
+              </label>
+              <label>
+                Bestelleinheit
+                <input type="text" id="product-order-unit" placeholder="z. B. Flasche, 6er-Kiste" />
+              </label>
+            </div>
+            <datalist id="product-supplier-options"></datalist>
 
             <h3>Service</h3>
             <div class="field-row">
