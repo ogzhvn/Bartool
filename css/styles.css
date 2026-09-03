@@ -2085,3 +2085,63 @@ input[type="datetime-local"] {
     justify-content: center;
   }
 }
+
+/* ── Favoriten & Schnellzugriff (js/favorites.js) ────────── */
+
+/* Stern in den Listeneinträgen. Sitzt in der Zusammenfassungszeile und
+   darf das Auf- und Zuklappen nicht auslösen (siehe stopPropagation). */
+.fav-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.fav-btn:hover {
+  color: var(--accent-300);
+}
+
+.fav-btn.is-fav {
+  color: var(--accent);
+}
+
+.shortcut-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Mindestens 44px hoch, damit die Kacheln am Tresen treffbar sind. */
+.shortcut-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.shortcut-chip:hover {
+  border-color: var(--accent-700);
+  color: var(--accent-300);
+}
+
+.shortcut-chip i {
+  color: var(--accent);
+}

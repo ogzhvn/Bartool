@@ -108,7 +108,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 11 | Inventur – Erfassung | erledigt |
 | 12 | Inventur – Auswertung & Bestellvorschlag | erledigt |
 | 13 | Excel-Import für Produkte | erledigt |
-| 14 | Startseite: Favoriten & zuletzt benutzt | offen |
+| 14 | Startseite: Favoriten & zuletzt benutzt | erledigt |
 | 15 | Audit-Log: Wiederherstellen | offen |
 
 ---

@@ -2,6 +2,7 @@ import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
 import { printProducts } from "./printView.js";
+import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
@@ -473,6 +474,7 @@ function renderProductItem(product) {
         <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
         ${escapeHtml(product.name)}
       </span>
+      <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
@@ -483,6 +485,17 @@ function renderProductItem(product) {
       </div>
     </div>
   `;
+  const favBtn = item.querySelector(".fav-btn");
+  favBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    favBtn.classList.toggle("is-fav", toggleFavorite("product", product.name));
+  });
+
+  item.addEventListener("toggle", () => {
+    if (item.open) pushRecent("product", product.name);
+  });
+
   const checkbox = item.querySelector(".product-select-checkbox");
   checkbox.addEventListener("click", (e) => e.stopPropagation());
   checkbox.addEventListener("change", () => {

@@ -5,6 +5,7 @@ import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { allergensForRecipe } from "./allergens.js";
+import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { printRecipes } from "./printView.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
@@ -314,6 +315,7 @@ function renderRecipeItem(recipe) {
         <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
         ${escapeHtml(recipe.name)}
       </span>
+      <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
@@ -325,6 +327,18 @@ function renderRecipeItem(recipe) {
       </div>
     </div>
   `;
+  const favBtn = item.querySelector(".fav-btn");
+  favBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    favBtn.classList.toggle("is-fav", toggleFavorite("recipe", recipe.name));
+  });
+
+  // Aufklappen zählt als "angesehen" – das füttert die Startseite.
+  item.addEventListener("toggle", () => {
+    if (item.open) pushRecent("recipe", recipe.name);
+  });
+
   const checkbox = item.querySelector(".recipe-select-checkbox");
   checkbox.addEventListener("click", (e) => e.stopPropagation());
   checkbox.addEventListener("change", () => {
