@@ -220,6 +220,10 @@
           <input type="radio" name="batch-mode" value="volume" />
           <span>Volumen</span>
         </label>
+        <label class="seg-opt">
+          <input type="radio" name="batch-mode" value="bottles" />
+          <span>Flaschen</span>
+        </label>
       </div>
 
       <div class="stepper" data-mode-field="portions">
@@ -238,8 +242,42 @@
         </label>
       </div>
 
+      <div class="field-row" data-mode-field="bottles" hidden>
+        <label>
+          Flaschengröße
+          <input type="number" id="batch-bottle-size" value="700" min="1" step="10" aria-label="Flaschengröße in ml" />
+        </label>
+        <label>
+          Anzahl Flaschen
+          <input type="number" id="batch-bottle-count" value="1" min="1" step="1" aria-label="Anzahl Flaschen" />
+        </label>
+      </div>
+
+      <div class="seg" role="radiogroup" aria-label="Verdünnung festlegen" data-mode-field="bottles" hidden>
+        <label class="seg-opt">
+          <input type="radio" name="batch-bottle-target" value="dilution" checked />
+          <span>Verdünnung in %</span>
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="batch-bottle-target" value="targetAbv" />
+          <span>Ziel-ABV in %</span>
+        </label>
+      </div>
+
+      <div class="field-row" data-mode-field="bottles" hidden>
+        <label data-bottle-target-field="dilution">
+          Verdünnung
+          <input type="number" id="batch-bottle-dilution" value="20" min="0" max="99" step="1" aria-label="Verdünnung in %" />
+        </label>
+        <label data-bottle-target-field="targetAbv" hidden>
+          Ziel-ABV
+          <input type="number" id="batch-bottle-target-abv" value="24" min="0.1" max="100" step="0.1" aria-label="Ziel-ABV in %" />
+        </label>
+      </div>
+
       <h3>Zutaten</h3>
       <div id="batch-ingredients" class="ingredient-list"></div>
+      <div id="batch-bottle-abv" class="bottle-abv-list" data-mode-field="bottles" hidden></div>
       <div class="actions no-print">
         <button type="button" id="batch-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
         <button type="button" id="batch-clear" class="btn-secondary">Zurücksetzen</button>

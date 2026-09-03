@@ -1,4 +1,4 @@
-const CACHE = "bartool-v4";
+const CACHE = "bartool-v5";
 
 const APP_SHELL = [
   "./",

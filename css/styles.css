@@ -791,6 +791,35 @@ select {
   white-space: nowrap;
 }
 
+.bottle-abv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: -0.2rem 0 0.8rem;
+}
+
+.bottle-abv-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.bottle-abv-row input {
+  width: 100%;
+}
+
+.bottle-abv-name {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.bottle-abv-unknown {
+  font-size: 0.75rem;
+  color: var(--danger);
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
   .calc-ingredient-row {
     grid-template-columns: 1fr 1fr;
