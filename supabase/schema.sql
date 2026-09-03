@@ -339,6 +339,86 @@ create policy "preparations: admin deletes"
   using (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Inventur
+-- ---------------------------------------------------------------------
+
+create table if not exists public.inventory_counts (
+  id uuid primary key default gen_random_uuid(),
+  counted_on date not null default current_date,
+  title text,
+  -- offen | abgeschlossen
+  status text not null default 'offen',
+  created_by uuid references public.profiles (id) on delete set null,
+  note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Bewusst product_name statt product_id: das ganze Tool arbeitet
+-- namensbasiert (siehe Zutaten-Matching), und eine Zählung soll auch dann
+-- lesbar bleiben, wenn ein Produkt später umbenannt oder gelöscht wird.
+create table if not exists public.inventory_items (
+  id uuid primary key default gen_random_uuid(),
+  count_id uuid not null references public.inventory_counts (id) on delete cascade,
+  product_name text not null,
+  -- null bedeutet "noch nicht gezählt" und ist etwas anderes als 0
+  -- ("gezählt, nichts da"). Diese Unterscheidung muss erhalten bleiben.
+  quantity numeric,
+  unit text,
+  updated_at timestamptz not null default now(),
+  unique (count_id, product_name)
+);
+
+create index if not exists inventory_items_count_id_idx on public.inventory_items (count_id);
+
+alter table public.inventory_counts enable row level security;
+alter table public.inventory_items enable row level security;
+
+drop trigger if exists inventory_counts_set_updated_at on public.inventory_counts;
+create trigger inventory_counts_set_updated_at
+  before update on public.inventory_counts
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists inventory_items_set_updated_at on public.inventory_items;
+create trigger inventory_items_set_updated_at
+  before update on public.inventory_items
+  for each row execute function public.set_updated_at();
+
+-- Gezählt wird im Team: lesen, anlegen und ändern für alle Angemeldeten,
+-- löschen nur Admin.
+drop policy if exists "inventory_counts: read" on public.inventory_counts;
+create policy "inventory_counts: read" on public.inventory_counts for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_counts: insert" on public.inventory_counts;
+create policy "inventory_counts: insert" on public.inventory_counts for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_counts: update" on public.inventory_counts;
+create policy "inventory_counts: update" on public.inventory_counts for update
+  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_counts: admin deletes" on public.inventory_counts;
+create policy "inventory_counts: admin deletes" on public.inventory_counts for delete
+  using (private.is_admin());
+
+drop policy if exists "inventory_items: read" on public.inventory_items;
+create policy "inventory_items: read" on public.inventory_items for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_items: insert" on public.inventory_items;
+create policy "inventory_items: insert" on public.inventory_items for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_items: update" on public.inventory_items;
+create policy "inventory_items: update" on public.inventory_items for update
+  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+drop policy if exists "inventory_items: admin deletes" on public.inventory_items;
+create policy "inventory_items: admin deletes" on public.inventory_items for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 
 create table if not exists public.audit_log (
   id uuid primary key default gen_random_uuid(),

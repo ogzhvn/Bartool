@@ -372,3 +372,138 @@ export async function deletePreparation(id) {
 export function onPreparationsChanged(callback) {
   window.addEventListener(PREPARATIONS_UPDATED_EVENT, callback);
 }
+
+// ---------------------------------------------------------------------
+// Inventur (Tabellen "inventory_counts" und "inventory_items")
+//
+// Anders als bei Rezepten und Produkten wird hier nicht alles in einen
+// Cache geladen: eine Zählung hat schnell dreihundert Positionen, und
+// gezählt wird immer nur in einer. Der Kopf-Datensatz kommt in den Cache,
+// die Positionen werden je Zählung geladen.
+// ---------------------------------------------------------------------
+
+const COUNTS_UPDATED_EVENT = "bartool:inventory-counts-updated";
+const COUNTS_CACHE_KEY = "bartool:inventory-counts";
+
+let countsCache = [];
+let countsChannel = null;
+
+function fromCountRow(row) {
+  return {
+    id: row.id,
+    countedOn: row.counted_on,
+    title: row.title ?? "",
+    status: row.status ?? "offen",
+    createdBy: row.created_by ?? null,
+    note: row.note ?? "",
+    createdAt: row.created_at,
+  };
+}
+
+async function refreshInventoryCounts() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase
+      .from("inventory_counts")
+      .select("*")
+      .order("counted_on", { ascending: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    countsCache = (data ?? []).map(fromCountRow);
+    writeCache(COUNTS_CACHE_KEY, countsCache);
+  } else {
+    const buffered = readCache(COUNTS_CACHE_KEY);
+    if (buffered) countsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(COUNTS_UPDATED_EVENT));
+}
+
+export async function initInventorySync() {
+  const buffered = readCache(COUNTS_CACHE_KEY);
+  if (buffered) {
+    countsCache = buffered;
+    window.dispatchEvent(new CustomEvent(COUNTS_UPDATED_EVENT));
+  }
+  await refreshInventoryCounts();
+  const supabase = getSupabaseClient();
+  if (countsChannel) supabase.removeChannel(countsChannel);
+  countsChannel = supabase
+    .channel("public:inventory_counts")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "inventory_counts" },
+      refreshInventoryCounts
+    )
+    .subscribe();
+}
+
+export function loadInventoryCounts() {
+  return countsCache;
+}
+
+export function onInventoryCountsChanged(callback) {
+  window.addEventListener(COUNTS_UPDATED_EVENT, callback);
+}
+
+export async function saveInventoryCount(count) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const record = {
+    counted_on: count.countedOn,
+    title: count.title || null,
+    status: count.status || "offen",
+    note: count.note || null,
+  };
+  if (count.id) record.id = count.id;
+  if (count.createdBy) record.created_by = count.createdBy;
+  const { data, error } = await supabase.from("inventory_counts").upsert(record).select().single();
+  if (error) throw error;
+  await refreshInventoryCounts();
+  return fromCountRow(data);
+}
+
+export async function deleteInventoryCount(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("inventory_counts").delete().eq("id", id);
+  if (error) throw error;
+  await refreshInventoryCounts();
+}
+
+// Positionen einer Zählung. Rückgabe als Objekt {produktname: {quantity, unit}},
+// weil die Zählansicht genau so darauf zugreift.
+export async function loadInventoryItems(countId) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("*")
+    .eq("count_id", countId);
+  if (error) throw error;
+  const map = {};
+  (data ?? []).forEach((row) => {
+    map[row.product_name] = { quantity: row.quantity, unit: row.unit ?? "" };
+  });
+  return map;
+}
+
+// Schreibt mehrere Positionen auf einmal. Wird vom Zähl-Modus benutzt, um
+// den lokal gepufferten Zwischenstand gebündelt hochzuladen.
+export async function saveInventoryItems(countId, eintraege) {
+  if (isOffline()) throw offlineWriteError();
+  if (!eintraege.length) return;
+  const supabase = getSupabaseClient();
+  const rows = eintraege.map((e) => ({
+    count_id: countId,
+    product_name: e.productName,
+    quantity: e.quantity === "" || e.quantity == null ? null : Number(e.quantity),
+    unit: e.unit || null,
+  }));
+  const { error } = await supabase
+    .from("inventory_items")
+    .upsert(rows, { onConflict: "count_id,product_name" });
+  if (error) throw error;
+}

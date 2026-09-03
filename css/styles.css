@@ -1987,3 +1987,70 @@ input[type="datetime-local"] {
     text-overflow: ellipsis;
   }
 }
+
+/* ── Inventur (js/inventory.js) ──────────────────────────── */
+
+.inv-count-item {
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-700);
+  border-radius: var(--radius);
+}
+
+.inv-items {
+  margin-top: 0.5rem;
+}
+
+/* Zählzeile: Name links, Eingabe rechts. Alles mindestens 44px hoch,
+   damit man im Lager mit dem Daumen trifft. */
+.inv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 52px;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.inv-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.95rem;
+}
+
+/* Bereits gezählt: dezent abgesetzt, damit man sieht wo man stehen
+   geblieben ist. */
+.inv-row-done .inv-row-name {
+  color: var(--accent-300);
+}
+
+.inv-row-input {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.inv-row-input .stepper-btn {
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+
+.inv-qty {
+  width: 4.5rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.inv-status-warn {
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .inv-qty {
+    width: 3.6rem;
+  }
+}

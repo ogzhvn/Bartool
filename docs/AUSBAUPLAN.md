@@ -105,7 +105,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 8 | Kartenkalkulation | erledigt |
 | 9 | Ansätze / Mise en Place | erledigt |
 | 10 | Etiketten drucken | erledigt |
-| 11 | Inventur – Erfassung | offen |
+| 11 | Inventur – Erfassung | erledigt |
 | 12 | Inventur – Auswertung & Bestellvorschlag | offen |
 | 13 | Excel-Import für Produkte | offen |
 | 14 | Startseite: Favoriten & zuletzt benutzt | offen |
