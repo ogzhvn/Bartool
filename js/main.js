@@ -139,7 +139,10 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-logoutBtn.addEventListener("click", () => signOut());
+logoutBtn.addEventListener("click", () => {
+  closeMobileNav();
+  signOut();
+});
 
 forcedPasswordForm.addEventListener("submit", async (e) => {
   e.preventDefault();
