@@ -76,7 +76,14 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
   - `js/utils.js`: `escapeHtml()`, `formatNumber()`
   - `js/units.js`: `UNIT_TO_ML`, `UNIT_LABELS`
   - `js/costing.js`: `ingredientCost()`, `priceForIngredient()`, `calculateRecipeCost()`
-  - `js/ingredientEditor.js`: `createIngredientEditor(containerEl)`
+  - `js/ingredientEditor.js`: `createIngredientEditor(containerEl)` – Zutatenzeilen fürs Batching,
+    belegt den Alkoholgehalt automatisch aus dem Produktkatalog vor
+  - `js/abv.js`: `parseAbv()`, `alcoholMl()`, `abvAfterWater()`, `waterForTargetAbv()`
+  - `js/printView.js`: `printRecipes()`, `printProducts()` – Muster für jede weitere Druckausgabe
+  - `js/quickSearch.js`: globale Suche; `focusRecipe(name)` / `focusProduct(name)` springen in die Leseansicht
+- `js/dilution.js` hat eine eigene Zutatenliste (nicht den `ingredientEditor`), kann Rezepte aus dem
+  Rezeptbuch laden (rechnet dabei cl/oz/BL/Dash in ml um, Stückzutaten werden gemeldet statt verschluckt)
+  und belegt den Alkoholgehalt aus dem Produktkatalog vor.
 
 ---
 

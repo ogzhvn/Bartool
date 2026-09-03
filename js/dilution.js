@@ -1,5 +1,9 @@
-import { formatNumber } from "./utils.js";
-import { alcoholMl, abvAfterWater } from "./abv.js";
+import { escapeHtml, formatNumber } from "./utils.js";
+import { alcoholMl, abvAfterWater, parseAbv } from "./abv.js";
+import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
+import { getAllProducts, getProduct } from "./productLibrary.js";
+import { onRecipesChanged, onProductsChanged } from "./storage.js";
+import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 
 const panelEl = document.getElementById("dilution");
 const ingredientsEl = document.getElementById("dil-ingredients");
@@ -7,22 +11,44 @@ const resultEl = document.getElementById("dil-result");
 const totalEl = document.getElementById("dil-total");
 const totalValueEl = document.getElementById("dil-total-value");
 const totalSubEl = document.getElementById("dil-total-sub");
+const recipeSelectEl = document.getElementById("dil-recipe-select");
+const productOptionsEl = document.getElementById("dil-product-options");
+const recipeNoteEl = document.getElementById("dil-recipe-note");
 
-function makeIngredientRow() {
+function makeIngredientRow(data = {}) {
   const row = document.createElement("div");
   row.className = "ingredient-row";
   row.innerHTML = `
-    <input class="ing-name" type="text" placeholder="Zutat" />
-    <input class="ing-amount" type="number" min="0" step="0.1" placeholder="ml" />
-    <input class="ing-abv" type="number" min="0" max="100" step="0.1" placeholder="ABV %" />
+    <input class="ing-name" type="text" placeholder="Zutat" list="dil-product-options" value="${escapeHtml(data.name ?? "")}" />
+    <input class="ing-amount" type="number" min="0" step="0.1" placeholder="ml" value="${escapeHtml(data.amount ?? "")}" />
+    <input class="ing-abv" type="number" min="0" max="100" step="0.1" placeholder="ABV %" value="${escapeHtml(data.abv ?? "")}" />
     <button type="button" class="remove-btn" title="Entfernen">✕</button>
   `;
+
+  const nameEl = row.querySelector(".ing-name");
+  const abvEl = row.querySelector(".ing-abv");
+
+  // Alkoholgehalt aus dem Produktkatalog einsetzen, sobald ein bekannter
+  // Name dasteht – aber nie einen selbst eingetragenen Wert überschreiben.
+  function abvVorbelegen() {
+    if (abvEl.value !== "") return;
+    const produkt = getProduct(nameEl.value.trim());
+    const wert = produkt ? parseAbv(produkt.abv) : null;
+    if (wert !== null) {
+      abvEl.value = wert;
+      calculate();
+    }
+  }
+
+  nameEl.addEventListener("blur", abvVorbelegen);
+  nameEl.addEventListener("change", abvVorbelegen);
+
   row.querySelector(".remove-btn").addEventListener("click", () => row.remove());
   return row;
 }
 
-function addIngredientRow() {
-  ingredientsEl.appendChild(makeIngredientRow());
+function addIngredientRow(data) {
+  ingredientsEl.appendChild(makeIngredientRow(data));
 }
 
 function getIngredients() {
@@ -112,7 +138,75 @@ function stepPercent(delta) {
   calculate();
 }
 
+// Alle Produktnamen als Vorschlagsliste für die Zutatenfelder.
+function populateProductOptions() {
+  productOptionsEl.innerHTML = getAllProducts()
+    .map((p) => `<option value="${escapeHtml(p.name)}"></option>`)
+    .join("");
+}
+
+function populateRecipeSelect() {
+  const recipes = getAllRecipes();
+  const bisher = recipeSelectEl.value;
+  recipeSelectEl.innerHTML =
+    `<option value="">– Rezept auswählen –</option>` +
+    recipes.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join("");
+  if (recipes.some((r) => r.name === bisher)) recipeSelectEl.value = bisher;
+}
+
+// Lädt ein Rezept in die Zutatenliste. Dieser Rechner arbeitet in ml, also
+// werden cl, oz, Barlöffel und Dash umgerechnet. Stückzutaten (Stück, Teile)
+// haben kein Volumen und werden übersprungen – das wird sichtbar gemeldet,
+// damit niemand mit einer unvollständigen Liste weiterrechnet.
+function handleLoadRecipe() {
+  const name = recipeSelectEl.value;
+  if (!name) {
+    alert("Bitte zuerst ein Rezept auswählen.");
+    return;
+  }
+  const recipe = getRecipe(name);
+  if (!recipe) return;
+
+  const uebersprungen = [];
+  const zeilen = [];
+  recipe.ingredients.forEach((ing) => {
+    const toMl = UNIT_TO_ML[ing.unit];
+    if (!toMl) {
+      uebersprungen.push(`${ing.name} (${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit] ?? ing.unit})`);
+      return;
+    }
+    const produkt = getProduct(ing.name);
+    const abv = produkt ? parseAbv(produkt.abv) : null;
+    zeilen.push({ name: ing.name, amount: ing.amount * toMl, abv: abv ?? "" });
+  });
+
+  ingredientsEl.innerHTML = "";
+  if (zeilen.length === 0) {
+    addIngredientRow();
+  } else {
+    zeilen.forEach(addIngredientRow);
+  }
+
+  const ohneAbv = zeilen.filter((z) => z.abv === "").map((z) => z.name);
+  const hinweise = [];
+  if (uebersprungen.length > 0) {
+    hinweise.push(`Ohne Volumen und deshalb nicht übernommen: ${uebersprungen.join(", ")}.`);
+  }
+  if (ohneAbv.length > 0) {
+    hinweise.push(`Kein Alkoholgehalt im Produktkatalog gefunden für: ${ohneAbv.join(", ")}. Bitte selbst eintragen.`);
+  }
+  recipeNoteEl.hidden = hinweise.length === 0;
+  recipeNoteEl.textContent = hinweise.join(" ");
+
+  calculate();
+}
+
 export function initDilution() {
+  populateProductOptions();
+  populateRecipeSelect();
+  onProductsChanged(populateProductOptions);
+  onRecipesChanged(populateRecipeSelect);
+  document.getElementById("dil-load-recipe").addEventListener("click", handleLoadRecipe);
   addIngredientRow();
   document.getElementById("dil-add-ingredient").addEventListener("click", addIngredientRow);
   document.getElementById("dil-percent-minus").addEventListener("click", () => stepPercent(-5));
@@ -121,8 +215,12 @@ export function initDilution() {
     .querySelectorAll('input[name="dil-mode"]')
     .forEach((el) => el.addEventListener("change", updateModeInputs));
   // Live rechnen: jede Eingabe im Panel löst eine Neuberechnung aus.
-  panelEl.addEventListener("input", calculate);
-  panelEl.addEventListener("change", calculate);
+  const recalcFromEvent = (e) => {
+    if (e.target.id === "dil-recipe-select") return;
+    calculate();
+  };
+  panelEl.addEventListener("input", recalcFromEvent);
+  panelEl.addEventListener("change", recalcFromEvent);
   // Eine entfernte Zutatenzeile ist kein input-Event – nach dem Klick neu rechnen.
   panelEl.addEventListener("click", (e) => {
     if (e.target.closest(".remove-btn")) calculate();

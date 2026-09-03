@@ -705,7 +705,21 @@
     <!-- DILUTION / ABV -->
     <section id="dilution" class="tab-panel">
       <h2>Verdünnungs- &amp; ABV-Rechner</h2>
-      <p class="hint">Zutaten mit Menge und ABV eintragen – der Alkoholgehalt vor und nach der Verdünnung steht live in der Leiste unten.</p>
+      <p class="hint">Zutaten mit Menge und ABV eintragen – der Alkoholgehalt vor und nach der Verdünnung steht live in der Leiste unten. Rezepte lassen sich direkt laden, und bei bekannten Produkten wird der Alkoholgehalt automatisch eingesetzt.</p>
+
+      <div class="field-row">
+        <label>
+          Rezept aus Rezeptbuch laden
+          <select id="dil-recipe-select">
+            <option value="">– Rezept auswählen –</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="dil-load-recipe" class="btn-secondary">Einfügen</button>
+      </div>
+
+      <div id="dil-recipe-note" class="empty-note" hidden></div>
 
       <h3>Verdünnung angeben als</h3>
       <div class="seg" role="radiogroup" aria-label="Verdünnung angeben als">
@@ -737,6 +751,7 @@
 
       <h3>Zutaten</h3>
       <div id="dil-ingredients" class="ingredient-list dil-list"></div>
+      <datalist id="dil-product-options"></datalist>
       <div class="actions">
         <button type="button" id="dil-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
       </div>
