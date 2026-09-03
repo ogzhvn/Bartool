@@ -4,8 +4,9 @@ import {
   deletePreparation,
   onPreparationsChanged,
 } from "./storage.js";
-import { isAdmin, getCurrentUser } from "./auth.js";
-import { escapeHtml, formatNumber } from "./utils.js";
+import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
+import { printLabels } from "./printView.js";
+import { escapeHtml, formatNumberDe } from "./utils.js";
 
 // Mise en Place: welche Ansätze stehen, wie lange halten sie noch.
 //
@@ -43,6 +44,7 @@ const madeAtEl = document.getElementById("prep-made-at");
 const expiresEl = document.getElementById("prep-expires");
 const notesEl = document.getElementById("prep-notes");
 const showDoneEl = document.getElementById("prep-show-done");
+const labelCountEl = document.getElementById("prep-label-count");
 
 // Datum für ein <input type="date"> (lokale Zeit, nicht UTC – sonst
 // verschiebt sich das Datum abends um einen Tag).
@@ -101,8 +103,8 @@ function eintragHtml(prep) {
   else status = `noch ${tage} Tag(e)`;
 
   const details = [
-    prep.batchSizeMl ? `${formatNumber(Number(prep.batchSizeMl))} ml` : "",
-    prep.abv !== "" && prep.abv != null ? `${formatNumber(Number(prep.abv))} % ABV` : "",
+    prep.batchSizeMl ? `${formatNumberDe(prep.batchSizeMl)} ml` : "",
+    prep.abv !== "" && prep.abv != null ? `${formatNumberDe(prep.abv)} % ABV` : "",
     prep.location,
     `angesetzt ${formatDate(prep.madeAt)}`,
     `haltbar bis ${formatDate(prep.expiresAt)}`,
@@ -124,6 +126,7 @@ function eintragHtml(prep) {
           ? `<button type="button" class="btn-secondary prep-reactivate">Wieder aktiv</button>`
           : `<button type="button" class="btn-secondary prep-done-btn">Verbraucht</button>
              <button type="button" class="btn-secondary prep-edit">Bearbeiten</button>`}
+        <button type="button" class="btn-secondary prep-label-btn">Etikett</button>
         ${isAdmin() ? `<button type="button" class="btn-secondary prep-delete">Löschen</button>` : ""}
       </div>
     </div>`;
@@ -242,6 +245,16 @@ export function initPreparations() {
     const prep = loadPreparations().find((p) => p.id === box.dataset.id);
     if (!prep) return;
 
+    if (e.target.closest(".prep-label-btn")) {
+      // Den Namen kennen wir nur beim eigenen Konto: die Nutzerliste ist
+      // Admin-Sache. Bei Ansätzen von Kolleg:innen bleibt die Zeile weg,
+      // statt eine Kennnummer aufs Etikett zu drucken.
+      const eigener = prep.madeBy && prep.madeBy === getCurrentUser()?.id;
+      const profil = getCurrentProfile();
+      const ersteller = eigener ? profil?.display_name || profil?.username || "" : "";
+      printLabels(prep, TYP_LABELS[prep.prepType] ?? prep.prepType, labelCountEl.value, ersteller);
+      return;
+    }
     if (e.target.closest(".prep-done-btn")) await setStatus(prep, "verbraucht");
     else if (e.target.closest(".prep-reactivate")) await setStatus(prep, "aktiv");
     else if (e.target.closest(".prep-edit")) loadIntoForm(prep);

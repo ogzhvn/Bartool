@@ -2,6 +2,13 @@ export function formatNumber(n) {
   return Number(n.toFixed(2)).toString();
 }
 
+// Wie formatNumber, aber mit Komma als Dezimaltrennzeichen. Für alles, was
+// gedruckt oder neben Euro-Beträgen angezeigt wird – dort wirkt ein Punkt
+// wie ein Tippfehler. Die Rechner selbst nutzen weiter formatNumber.
+export function formatNumberDe(n) {
+  return Number(Number(n).toFixed(2)).toLocaleString("de-DE", { maximumFractionDigits: 2 });
+}
+
 // supabase-js liefert bei einer Edge Function, die einen Fehlerstatus (4xx)
 // zurückgibt, nur einen generischen Fehler ("Edge Function returned a
 // non-2xx status code") in `error` – die eigentliche Fehlermeldung steckt

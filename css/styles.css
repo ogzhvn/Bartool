@@ -1877,6 +1877,18 @@ select {
   margin-top: 0.5rem;
 }
 
+.prep-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.prep-options .prep-toggle input[type="number"] {
+  width: 4.5rem;
+}
+
 .prep-toggle {
   display: flex;
   flex-direction: row;
@@ -1899,4 +1911,79 @@ input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
   color-scheme: dark;
+}
+
+/* ── Etiketten für Ansätze (js/printView.js) ─────────────── */
+
+/* Maße in mm, damit die Etiketten unabhängig von der Bildschirmgröße
+   immer gleich groß aus dem Drucker kommen. 70 × 40 mm ergibt auf A4
+   zwei Spalten mit sechs Reihen, also zwölf Etiketten je Blatt. */
+@media print {
+  body.printing-labels .print-area {
+    display: block !important;
+  }
+
+  body.printing-labels .label-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4mm;
+    align-content: flex-start;
+  }
+
+  .label-card {
+    width: 70mm;
+    height: 40mm;
+    padding: 3mm 4mm;
+    border: 1px solid #999 !important;
+    border-radius: 2mm;
+    overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .label-name {
+    font-size: 12pt;
+    font-weight: bold;
+    line-height: 1.15;
+    /* Lange Namen werden gekürzt statt das Etikett zu sprengen. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .label-type {
+    font-size: 7.5pt;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .label-dates {
+    display: flex;
+    gap: 4mm;
+    font-size: 7pt;
+  }
+
+  .label-dates span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .label-dates strong {
+    font-size: 10pt;
+  }
+
+  .label-note {
+    font-size: 6.5pt;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

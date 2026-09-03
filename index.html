@@ -372,10 +372,16 @@
       </form>
 
       <h3>Übersicht</h3>
-      <label class="prep-toggle no-print">
-        <input type="checkbox" id="prep-show-done" />
-        <span>Verbrauchte anzeigen</span>
-      </label>
+      <div class="prep-options no-print">
+        <label class="prep-toggle">
+          <input type="checkbox" id="prep-show-done" />
+          <span>Verbrauchte anzeigen</span>
+        </label>
+        <label class="prep-toggle">
+          <span>Etiketten je Druck</span>
+          <input type="number" id="prep-label-count" value="2" min="1" max="60" step="1" />
+        </label>
+      </div>
       <div id="prep-list"></div>
     </section>
 

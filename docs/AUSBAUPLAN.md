@@ -104,7 +104,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 7 | Allergene pro Rezept | erledigt |
 | 8 | Kartenkalkulation | erledigt |
 | 9 | Ansätze / Mise en Place | erledigt |
-| 10 | Etiketten drucken | offen |
+| 10 | Etiketten drucken | erledigt |
 | 11 | Inventur – Erfassung | offen |
 | 12 | Inventur – Auswertung & Bestellvorschlag | offen |
 | 13 | Excel-Import für Produkte | offen |

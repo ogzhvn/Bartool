@@ -1,6 +1,6 @@
 import { buildRecipeBlocks } from "./recipeExport.js";
 import { buildProductBlocks } from "./productExport.js";
-import { escapeHtml } from "./utils.js";
+import { escapeHtml, formatNumberDe } from "./utils.js";
 
 // Druckansicht für ausgewählte Rezepte und Produkte.
 //
@@ -49,4 +49,62 @@ export function printProducts(products) {
     products.length === 1 ? products[0].name : `Produkte (${products.length})`,
     buildProductBlocks(products)
   );
+}
+
+// ---------------------------------------------------------------------
+// Etiketten für Ansätze
+//
+// Bewusst ohne QR-Code: dafür bräuchte es eine zusätzliche Bibliothek, und
+// das Projekt kommt ohne Fremdcode im Frontend aus. Auf dem Etikett steht
+// das, was hinterm Tresen zählt – was drin ist und wie lange es noch gut ist.
+// ---------------------------------------------------------------------
+
+function formatLabelDate(value) {
+  if (!value) return "–";
+  return new Date(value).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function labelHtml(prep, typLabel, ersteller) {
+  const zeilen = [
+    prep.batchSizeMl ? `${formatNumberDe(prep.batchSizeMl)} ml` : "",
+    prep.abv !== "" && prep.abv != null ? `${formatNumberDe(prep.abv)} % vol` : "",
+    prep.location,
+  ].filter(Boolean);
+
+  return `
+    <div class="label-card">
+      <div class="label-name">${escapeHtml(prep.label)}</div>
+      <div class="label-type">${escapeHtml(typLabel)}${zeilen.length ? " · " + escapeHtml(zeilen.join(" · ")) : ""}</div>
+      <div class="label-dates">
+        <span>Angesetzt<strong>${formatLabelDate(prep.madeAt)}</strong></span>
+        <span>Haltbar bis<strong>${formatLabelDate(prep.expiresAt)}</strong></span>
+      </div>
+      ${prep.notes ? `<div class="label-note">${escapeHtml(prep.notes)}</div>` : ""}
+      ${ersteller ? `<div class="label-note">Angesetzt von ${escapeHtml(ersteller)}</div>` : ""}
+    </div>`;
+}
+
+// anzahl = wie oft dasselbe Etikett gedruckt wird (mehrere Flaschen je Ansatz).
+export function printLabels(prep, typLabel, anzahl = 1, ersteller = "") {
+  if (!prep) return;
+  const menge = Math.max(1, Math.min(60, Number(anzahl) || 1));
+  const karten = Array.from({ length: menge }, () => labelHtml(prep, typLabel, ersteller)).join("");
+  printAreaEl.innerHTML = `<div class="label-sheet">${karten}</div>`;
+  document.body.classList.add("printing", "printing-labels");
+
+  const cleanUp = () => {
+    document.body.classList.remove("printing", "printing-labels");
+    printAreaEl.innerHTML = "";
+    window.removeEventListener("afterprint", cleanUp);
+  };
+  window.addEventListener("afterprint", cleanUp);
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(cleanUp, 2000);
+  }, 50);
 }
