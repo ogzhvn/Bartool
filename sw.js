@@ -1,10 +1,11 @@
-const CACHE = "bartool-v3";
+const CACHE = "bartool-v4";
 
 const APP_SHELL = [
   "./",
   "index.html",
   "manifest.json",
   "css/styles.css",
+  "js/abv.js",
   "js/adminPanel.js",
   "js/auditLog.js",
   "js/auth.js",
