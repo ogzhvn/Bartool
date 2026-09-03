@@ -37,8 +37,11 @@ export function exportRecipesToExcel(recipes) {
   XLSX.writeFile(workbook, timestampedFilename("Bartool-Rezepte", "xlsx"));
 }
 
-export function exportRecipesToWord(recipes) {
-  const blocks = recipes
+// Baut die Rezeptblöcke als HTML. Wird sowohl vom Word-Export als auch von
+// der Druckansicht (js/printView.js) genutzt, damit beide Ausgaben identisch
+// aufgebaut sind und nicht auseinanderlaufen.
+export function buildRecipeBlocks(recipes) {
+  return recipes
     .map((recipe, index) => {
       const metaRows = [
         ["Glas", recipe.glass],
@@ -67,6 +70,10 @@ export function exportRecipesToWord(recipes) {
       `;
     })
     .join("");
+}
+
+export function exportRecipesToWord(recipes) {
+  const blocks = buildRecipeBlocks(recipes);
 
   const html = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">

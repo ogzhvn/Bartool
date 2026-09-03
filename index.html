@@ -291,6 +291,7 @@
           <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
           <button type="button" id="recipe-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
           <button type="button" id="recipe-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+          <button type="button" id="recipe-print" class="btn-secondary" disabled>Auswahl drucken</button>
         </div>
 
         <div id="recipe-list" class="recipe-accordion"></div>
@@ -404,6 +405,7 @@
           <button type="button" id="product-select-none" class="btn-secondary">Auswahl aufheben</button>
           <button type="button" id="product-export-excel" class="btn-secondary" disabled>Als Excel exportieren</button>
           <button type="button" id="product-export-word" class="btn-secondary" disabled>Als Word exportieren</button>
+          <button type="button" id="product-print" class="btn-secondary" disabled>Auswahl drucken</button>
         </div>
 
         <div id="product-list" class="recipe-accordion"></div>
@@ -851,6 +853,9 @@
     </main>
   </div>
   </div>
+
+  <!-- Wird nur beim Drucken einer Auswahl befüllt (js/printView.js) -->
+  <div id="print-area" class="print-area" aria-hidden="true"></div>
 
   <footer class="app-footer">
     <p>Bartool</p>

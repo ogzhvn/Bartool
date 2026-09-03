@@ -1,6 +1,7 @@
 import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
+import { printProducts } from "./printView.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
@@ -137,6 +138,7 @@ const selectAllBtn = document.getElementById("product-select-all");
 const selectNoneBtn = document.getElementById("product-select-none");
 const exportExcelBtn = document.getElementById("product-export-excel");
 const exportWordBtn = document.getElementById("product-export-word");
+const printBtn = document.getElementById("product-print");
 
 // Namen der für den Export angehakten Produkte (überlebt Neurendern der Liste).
 const selectedNames = new Set();
@@ -145,6 +147,7 @@ function updateExportBar() {
   selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
   exportExcelBtn.disabled = selectedNames.size === 0;
   exportWordBtn.disabled = selectedNames.size === 0;
+  printBtn.disabled = selectedNames.size === 0;
 }
 
 let editingOriginalName = null;
@@ -679,6 +682,9 @@ export function initProducts() {
   exportWordBtn.addEventListener("click", () => {
     const products = getAllProducts().filter((p) => selectedNames.has(p.name));
     if (products.length > 0) exportProductsToWord(products);
+  });
+  printBtn.addEventListener("click", () => {
+    printProducts(getAllProducts().filter((p) => selectedNames.has(p.name)));
   });
   // "Produkte" direkt anklicken (Sidebar-Button, Start-Kachel) zeigt wieder
   // den vollen Katalog statt in der zuletzt gewählten Kategorie zu bleiben.

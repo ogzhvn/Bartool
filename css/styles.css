@@ -1529,6 +1529,52 @@ select {
     padding: 4px 6px !important;
   }
 
+  /* Wird eine Auswahl aus Rezepten oder Produkten gedruckt, kommt nur der
+     eigens aufgebaute Druckbereich aufs Papier – die Bedienoberfläche mit
+     Auswahlkästchen und Formularfeldern bleibt komplett draußen. */
+  body.printing > *:not(.print-area) {
+    display: none !important;
+  }
+  body.printing .print-area {
+    display: block !important;
+  }
+
+  .print-area h1 {
+    font-size: 20pt;
+    margin: 0 0 16pt;
+    border-bottom: 2px solid #000;
+    padding-bottom: 4pt;
+  }
+  .print-area h2 {
+    font-size: 15pt;
+    margin: 0 0 8pt;
+    border-bottom: 1px solid #999;
+    padding-bottom: 3pt;
+  }
+  .print-area .recipe-block,
+  .print-area .product-block {
+    margin-bottom: 18pt;
+  }
+  .print-area .recipe-block.pagebreak,
+  .print-area .product-block.pagebreak {
+    page-break-before: always;
+  }
+  .print-area .meta {
+    margin: 2pt 0;
+  }
+  .print-area .meta strong {
+    display: inline-block;
+    min-width: 90pt;
+  }
+  .print-area .history {
+    margin-top: 6pt;
+    font-size: 9pt;
+  }
+  .print-area td.label {
+    font-weight: bold;
+    width: 30%;
+  }
+
   /* Nichts mitten im Eintrag umbrechen */
   details,
   .result-card,
@@ -1537,4 +1583,10 @@ select {
     page-break-inside: avoid;
     break-inside: avoid;
   }
+}
+
+/* Der Druckbereich (js/printView.js) ist am Bildschirm nie zu sehen –
+   er wird nur für den Ausdruck einer Auswahl befüllt. */
+.print-area {
+  display: none;
 }

@@ -57,8 +57,10 @@ export function exportProductsToExcel(products) {
   XLSX.writeFile(workbook, timestampedFilename("Bartool-Produkte", "xlsx"));
 }
 
-export function exportProductsToWord(products) {
-  const blocks = products
+// Baut die Produktblöcke als HTML. Wird von Word-Export und Druckansicht
+// (js/printView.js) gemeinsam genutzt.
+export function buildProductBlocks(products) {
+  return products
     .map((product, index) => {
       const rows = FIELDS.filter(([label]) => label !== "Name")
         .map(([label, read]) => [label, read(product)])
@@ -77,6 +79,10 @@ export function exportProductsToWord(products) {
       `;
     })
     .join("");
+}
+
+export function exportProductsToWord(products) {
+  const blocks = buildProductBlocks(products);
 
   const html = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">

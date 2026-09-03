@@ -4,6 +4,7 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
+import { printRecipes } from "./printView.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
@@ -53,6 +54,7 @@ const selectAllBtn = document.getElementById("recipe-select-all");
 const selectNoneBtn = document.getElementById("recipe-select-none");
 const exportExcelBtn = document.getElementById("recipe-export-excel");
 const exportWordBtn = document.getElementById("recipe-export-word");
+const printBtn = document.getElementById("recipe-print");
 
 const editor = createIngredientEditor(ingredientsEl);
 
@@ -253,6 +255,7 @@ function updateExportBar() {
   selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
   exportExcelBtn.disabled = selectedNames.size === 0;
   exportWordBtn.disabled = selectedNames.size === 0;
+  printBtn.disabled = selectedNames.size === 0;
 }
 
 function renderRecipeItem(recipe) {
@@ -479,6 +482,9 @@ export function initRecipes() {
   exportWordBtn.addEventListener("click", () => {
     const recipes = getAllRecipes().filter((r) => selectedNames.has(r.name));
     if (recipes.length > 0) exportRecipesToWord(recipes);
+  });
+  printBtn.addEventListener("click", () => {
+    printRecipes(getAllRecipes().filter((r) => selectedNames.has(r.name)));
   });
   onRecipesChanged(() => {
     populateCategoryFilter();

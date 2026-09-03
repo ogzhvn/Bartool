@@ -201,7 +201,12 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 6. Drucken muss über **eigene Schaltflächen in der App** erreichbar sein, nicht über das
    Browser-Menü: in der installierten App (Homescreen, Standalone-Modus) gibt es keine Menüleiste.
    Umgesetzt als Drucker-Symbol im Header (`#print-btn`) plus Eintrag „Drucken" im Seitenmenü
-   (`#print-nav-btn`), beide rufen `window.print()`. Für Paket 10 (Etiketten) wiederverwenden.
+   (`#print-nav-btn`), beide rufen `window.print()`.
+7. In Rezepten und Produkten gibt es zusätzlich „Auswahl drucken" in der Export-Leiste.
+   Zuständig ist `js/printView.js`: es füllt `#print-area` mit den Blöcken aus
+   `buildRecipeBlocks()` / `buildProductBlocks()` (aus den Export-Modulen, damit Ausdruck und
+   Word-Datei identisch aufgebaut sind), setzt `body.printing` und räumt nach `afterprint`
+   wieder auf. **Für Paket 10 (Etiketten) genau dieses Muster wiederverwenden**, nicht neu bauen.
 
 **Abnahme**
 - [ ] Druckvorschau in Rezepte (aufgeklapptes Rezept), Batching (mit Ergebnis) und Kalkulation: lesbar, ohne Navigation, keine abgeschnittenen Tabellen.
