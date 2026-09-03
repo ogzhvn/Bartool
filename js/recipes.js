@@ -271,6 +271,8 @@ function renderRecipeItem(recipe) {
 
   const item = document.createElement("details");
   item.className = "recipe-item";
+  // Ermöglicht der globalen Suche, direkt zu diesem Eintrag zu springen.
+  item.dataset.name = recipe.name;
   item.innerHTML = `
     <summary>
       <span class="recipe-item-title">
@@ -437,6 +439,21 @@ export function openRecipeForEdit(name) {
   if (!recipe) return;
   loadIntoForm(recipe);
   showEditView();
+}
+
+// Springt aus der globalen Suche (js/quickSearch.js) zu einem Rezept in der
+// Leseansicht: Filter zurücksetzen, nach dem Namen suchen, Eintrag aufklappen.
+// Bewusst nicht die Bearbeiten-Ansicht – die ist nur für Admins gedacht.
+export function focusRecipe(name) {
+  showListView();
+  categoryFilterEl.value = "";
+  searchEl.value = name;
+  renderSidebarCategoryTree();
+  renderBrowseList();
+  const item = listEl.querySelector(`[data-name="${CSS.escape(name)}"]`);
+  if (!item) return;
+  item.open = true;
+  item.scrollIntoView({ block: "start" });
 }
 
 export function initRecipes() {

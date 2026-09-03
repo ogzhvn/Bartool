@@ -1591,3 +1591,109 @@ select {
 .print-area {
   display: none;
 }
+
+/* ── Globale Suche (js/quickSearch.js) ───────────────────── */
+
+.quick-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0.35rem !important;
+  font-size: 1.1rem !important;
+  line-height: 1;
+}
+
+.quick-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 4rem 1rem 1rem;
+  background: rgba(8, 8, 10, 0.72);
+}
+
+.quick-search-overlay[hidden] {
+  display: none;
+}
+
+.quick-search-box {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 6rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.quick-search-head {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.quick-search-head input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.quick-search-results {
+  overflow-y: auto;
+  padding: 0.4rem;
+}
+
+.quick-search-group {
+  margin: 0.6rem 0 0.3rem;
+  padding: 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* Mindestens 44px hoch: hinterm Tresen wird mit dem Daumen getroffen. */
+.quick-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.quick-search-item:hover,
+.quick-search-item.marked {
+  background: var(--accent-900);
+  color: var(--accent);
+}
+
+.quick-search-item-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 899px) {
+  .quick-search-overlay {
+    padding: 1rem 0.6rem;
+  }
+
+  .quick-search-box {
+    max-height: calc(100vh - 2rem);
+  }
+}

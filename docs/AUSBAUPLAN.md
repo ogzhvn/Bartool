@@ -87,7 +87,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 1 | PWA installierbar + App-Shell offline | erledigt |
 | 2 | Daten-Cache offline + Offline-Banner | erledigt |
 | 3 | Druckansicht (`@media print`) | erledigt |
-| 4 | Globale Suche (Cmd/Ctrl+K) | offen |
+| 4 | Globale Suche (Cmd/Ctrl+K) | erledigt |
 | 5 | `js/abv.js` – ABV-Mathematik zentralisieren | offen |
 | 6 | Bottled-Cocktail-Modus im Batching | offen |
 | 7 | Allergene pro Rezept | offen |

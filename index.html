@@ -24,6 +24,7 @@
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
       <span id="current-user-info"></span>
+      <button type="button" id="quick-search-open" class="btn-secondary quick-search-btn" title="Suchen (Strg+K)" aria-label="Rezepte und Produkte durchsuchen"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></button>
       <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
     </div>
   </header>
@@ -850,6 +851,17 @@
 
     </main>
   </div>
+  </div>
+
+  <!-- GLOBALE SUCHE über Rezepte und Produkte (js/quickSearch.js) -->
+  <div id="quick-search-overlay" class="quick-search-overlay" hidden>
+    <div class="quick-search-box" role="dialog" aria-modal="true" aria-label="Rezepte und Produkte durchsuchen">
+      <div class="quick-search-head">
+        <input type="text" id="quick-search-input" placeholder="Rezept oder Produkt suchen…" autocomplete="off" />
+        <button type="button" id="quick-search-close" class="btn-secondary" aria-label="Suche schließen">Schließen</button>
+      </div>
+      <div id="quick-search-results" class="quick-search-results" role="listbox"></div>
+    </div>
   </div>
 
   <!-- Wird nur beim Drucken einer Auswahl befüllt (js/printView.js) -->

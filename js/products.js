@@ -454,6 +454,8 @@ function renderProductItem(product) {
   const usedIn = getRecipesUsingProduct(product.name);
 
   const item = document.createElement("details");
+  // Ermöglicht der globalen Suche, direkt zu diesem Eintrag zu springen.
+  item.dataset.name = product.name;
   item.className = "recipe-item";
   item.innerHTML = `
     <summary>
@@ -647,6 +649,24 @@ export function openProductForEdit(name) {
   if (!product) return;
   loadIntoForm(product);
   showEditView();
+}
+
+// Gegenstück zu focusRecipe in js/recipes.js: Sprung aus der globalen Suche
+// zu einem Produkt in der Leseansicht.
+export function focusProduct(name) {
+  showListView();
+  activeOberkategorie = null;
+  activeWeinTyp = null;
+  groupFilterEl.value = "";
+  updateGroupFilterVisibility();
+  populateGroupFilter();
+  searchEl.value = name;
+  renderSidebarCategoryTree();
+  renderBrowseList();
+  const item = listEl.querySelector(`[data-name="${CSS.escape(name)}"]`);
+  if (!item) return;
+  item.open = true;
+  item.scrollIntoView({ block: "start" });
 }
 
 export function initProducts() {
