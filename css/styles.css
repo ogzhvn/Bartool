@@ -740,23 +740,25 @@ select {
   grid-template-columns: 2fr 1fr 1fr auto;
 }
 
-/* Die Alkohol-Spalte im Batching wird nur im Flaschen-Modus gebraucht.
+/* Die Alkohol-Spalte wird nur im Flaschen-Modus des Batchings gebraucht.
    Sie steht immer im Markup, damit eingetragene Werte beim Moduswechsel
-   nicht verloren gehen – sie wird nur ein- und ausgeblendet. */
-.ingredient-list:not(.show-abv) .ing-abv {
+   nicht verloren gehen – sie wird nur ein- und ausgeblendet.
+   Bewusst auf #batch-ingredients begrenzt: der Verdünnungs-Rechner hat eine
+   eigene Zutatenliste, in der das ABV-Feld immer sichtbar bleiben muss. */
+#batch-ingredients:not(.show-abv) .ing-abv {
   display: none;
 }
 
-.ingredient-list.show-abv .ingredient-row {
+#batch-ingredients.show-abv .ingredient-row {
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
 }
 
 @media (max-width: 599px) {
-  .ingredient-list.show-abv .ingredient-row {
+  #batch-ingredients.show-abv .ingredient-row {
     grid-template-columns: 1fr 1fr auto;
   }
 
-  .ingredient-list.show-abv .ing-name {
+  #batch-ingredients.show-abv .ing-name {
     grid-column: 1 / -1;
   }
 }
