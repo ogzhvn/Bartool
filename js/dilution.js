@@ -1,4 +1,5 @@
 import { formatNumber } from "./utils.js";
+import { alcoholMl, abvAfterWater } from "./abv.js";
 
 const panelEl = document.getElementById("dilution");
 const ingredientsEl = document.getElementById("dil-ingredients");
@@ -61,8 +62,8 @@ function calculate() {
   }
 
   const preVolume = ingredients.reduce((sum, i) => sum + i.amount, 0);
-  const totalAlcohol = ingredients.reduce((sum, i) => sum + (i.amount * i.abv) / 100, 0);
-  const preAbv = (totalAlcohol / preVolume) * 100;
+  const totalAlcohol = alcoholMl(ingredients.map((i) => ({ amountMl: i.amount, abv: i.abv })));
+  const preAbv = abvAfterWater(totalAlcohol, preVolume, 0);
 
   const mode = currentMode();
   let dilutionMl;
@@ -80,7 +81,7 @@ function calculate() {
     finalVolume = preVolume + dilutionMl;
   }
 
-  const finalAbv = (totalAlcohol / finalVolume) * 100;
+  const finalAbv = abvAfterWater(totalAlcohol, preVolume, dilutionMl);
   const dilutionPercentOfFinal = (dilutionMl / finalVolume) * 100;
 
   resultEl.hidden = false;
