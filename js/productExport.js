@@ -23,7 +23,14 @@ const FIELDS = [
   ["Einkaufspreis", (p) => formatPrice(p)],
   ["Kurzer Pitch", (p) => p.quickPitch],
   ["Passt gut zu", (p) => (p.pairsWith ?? []).join(", ")],
+  ["Soll-Bestand", (p) => p.parLevel],
+  ["Lieferant", (p) => p.supplier],
+  ["Bestelleinheit", (p) => p.orderUnit],
 ];
+
+// Die Spaltennamen werden vom Import (js/productImport.js) gebraucht, damit
+// eine exportierte Datei ohne Umbenennen wieder eingelesen werden kann.
+export const PRODUCT_COLUMNS = FIELDS.map(([label]) => label);
 
 function formatPrice(product) {
   if (!product.priceValue) return "";

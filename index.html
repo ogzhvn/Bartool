@@ -614,6 +614,16 @@
           <button type="button" id="product-print" class="btn-secondary" disabled>Auswahl drucken</button>
         </div>
 
+        <div class="import-bar no-print" data-admin-only hidden>
+          <label class="btn-secondary import-label">
+            <i class="ph ph-upload-simple" aria-hidden="true"></i> Aus Excel importieren
+            <input type="file" id="product-import-file" accept=".xlsx,.xls,.csv" hidden />
+          </label>
+          <button type="button" id="product-import-apply" class="btn-primary" hidden>Übernehmen</button>
+          <button type="button" id="product-import-cancel" class="btn-secondary" hidden>Abbrechen</button>
+        </div>
+        <div id="product-import-preview"></div>
+
         <div id="product-list" class="recipe-accordion"></div>
       </div>
 

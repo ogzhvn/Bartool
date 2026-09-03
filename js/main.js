@@ -10,6 +10,7 @@ import { initCalculation } from "./calculation.js";
 import { initMenuCosting } from "./menuCosting.js";
 import { initPreparations } from "./preparations.js";
 import { initInventory } from "./inventory.js";
+import { initProductImport } from "./productImport.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
 import { initDataQuality } from "./dataQuality.js";
@@ -86,6 +87,7 @@ async function bootstrapAppOnce() {
   initMenuCosting();
   initPreparations();
   initInventory();
+  initProductImport();
   initAdminPanel();
   initAuditLog();
   initDataQuality();
