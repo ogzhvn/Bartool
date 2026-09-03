@@ -1,0 +1,16 @@
+{
+  "name": "Bartool – Rechner für Barkeeper",
+  "short_name": "Bartool",
+  "description": "Batching, ABV, Kalkulation sowie Rezept- und Produktbibliothek für die Bar.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

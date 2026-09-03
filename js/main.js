@@ -199,3 +199,12 @@ passwordModalForm.addEventListener("submit", async (e) => {
 
 onAuthChange(handleAuthState);
 initAuth();
+
+// Service Worker: macht Bartool installierbar und die Oberfläche offline
+// startklar. Bewusst defensiv – schlägt die Registrierung fehl (file://,
+// altes Gerät, blockierter Storage), läuft die App unverändert weiter.
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
+  });
+}

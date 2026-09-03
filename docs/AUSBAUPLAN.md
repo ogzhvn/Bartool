@@ -73,7 +73,7 @@ Sie ist so geschrieben, dass sie ohne den Chat funktioniert, in dem sie entstand
 
 | # | Paket | Status |
 |---|---|---|
-| 1 | PWA installierbar + App-Shell offline | offen |
+| 1 | PWA installierbar + App-Shell offline | erledigt |
 | 2 | Daten-Cache offline + Offline-Banner | offen |
 | 3 | Druckansicht (`@media print`) | offen |
 | 4 | Globale Suche (Cmd/Ctrl+K) | offen |
