@@ -197,6 +197,19 @@ passwordModalForm.addEventListener("submit", async (e) => {
   passwordModalOverlay.hidden = true;
 });
 
+// Offline-Hinweis: zeigt an, dass gerade nur gelesen und gerechnet werden
+// kann. Die eigentliche Sperre beim Speichern sitzt in storage.js – dieses
+// Banner ist nur die sichtbare Ansage dazu.
+const offlineBanner = document.getElementById("offline-banner");
+
+function updateOfflineBanner() {
+  offlineBanner.hidden = navigator.onLine;
+}
+
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
+
 onAuthChange(handleAuthState);
 initAuth();
 

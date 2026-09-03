@@ -9,6 +9,45 @@ let recipesChannel = null;
 let productsChannel = null;
 
 // ---------------------------------------------------------------------
+// Offline-Puffer
+//
+// Der Tresen hat nicht überall Empfang. Rezepte und Produkte werden daher
+// zusätzlich in localStorage gespiegelt: beim Start wird zuerst der Puffer
+// gerendert, das Netz aktualisiert danach. Alle Zugriffe sind bewusst in
+// try/catch – ein volles oder gesperrtes localStorage (privater Modus,
+// Speicherlimit) darf die App nie kippen.
+// ---------------------------------------------------------------------
+
+const RECIPES_CACHE_KEY = "bartool:recipes";
+const PRODUCTS_CACHE_KEY = "bartool:products";
+
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Kein Platz oder kein Zugriff: der Puffer ist Komfort, kein Muss.
+  }
+}
+
+export function isOffline() {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
+function offlineWriteError() {
+  return new Error("Offline – Änderungen sind erst wieder mit Netzverbindung möglich.");
+}
+
+// ---------------------------------------------------------------------
 // Rezepte (Tabelle "recipes" in Supabase)
 // ---------------------------------------------------------------------
 
@@ -46,8 +85,22 @@ function fromRecipeRow(row) {
 
 async function refreshRecipes() {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from("recipes").select("*").order("name");
-  if (!error) recipesCache = (data ?? []).map(fromRecipeRow);
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("recipes").select("*").order("name"));
+  } catch (err) {
+    // Offline wirft der Fetch, statt nur `error` zu setzen.
+    error = err;
+  }
+  if (!error) {
+    recipesCache = (data ?? []).map(fromRecipeRow);
+    writeCache(RECIPES_CACHE_KEY, recipesCache);
+  } else {
+    // Netz weg: lieber den letzten bekannten Stand zeigen als eine leere Liste.
+    const buffered = readCache(RECIPES_CACHE_KEY);
+    if (buffered) recipesCache = buffered;
+  }
   window.dispatchEvent(new CustomEvent(RECIPES_UPDATED_EVENT));
 }
 
@@ -55,6 +108,13 @@ async function refreshRecipes() {
 // und hält ihn per Realtime synchron, damit Änderungen von anderen
 // Geräten/Nutzern automatisch ankommen.
 export async function initRecipeSync() {
+  // Erst den Offline-Puffer anzeigen, damit die App sofort etwas rendert,
+  // dann erst das Netz abwarten.
+  const buffered = readCache(RECIPES_CACHE_KEY);
+  if (buffered) {
+    recipesCache = buffered;
+    window.dispatchEvent(new CustomEvent(RECIPES_UPDATED_EVENT));
+  }
   await refreshRecipes();
   const supabase = getSupabaseClient();
   if (recipesChannel) supabase.removeChannel(recipesChannel);
@@ -69,6 +129,7 @@ export function loadRecipes() {
 }
 
 export async function saveRecipe(recipe) {
+  if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("recipes").upsert(toRecipeRecord(recipe), { onConflict: "name" });
   if (error) throw error;
@@ -76,6 +137,7 @@ export async function saveRecipe(recipe) {
 }
 
 export async function deleteRecipe(name) {
+  if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("recipes").delete().eq("name", name);
   if (error) throw error;
@@ -147,12 +209,29 @@ function fromProductRow(row) {
 
 async function refreshProducts() {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from("products").select("*").order("name");
-  if (!error) productsCache = (data ?? []).map(fromProductRow);
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("products").select("*").order("name"));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    productsCache = (data ?? []).map(fromProductRow);
+    writeCache(PRODUCTS_CACHE_KEY, productsCache);
+  } else {
+    const buffered = readCache(PRODUCTS_CACHE_KEY);
+    if (buffered) productsCache = buffered;
+  }
   window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
 }
 
 export async function initProductSync() {
+  const buffered = readCache(PRODUCTS_CACHE_KEY);
+  if (buffered) {
+    productsCache = buffered;
+    window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
+  }
   await refreshProducts();
   const supabase = getSupabaseClient();
   if (productsChannel) supabase.removeChannel(productsChannel);
@@ -167,6 +246,7 @@ export function loadProducts() {
 }
 
 export async function saveProduct(product) {
+  if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("products").upsert(toProductRecord(product), { onConflict: "name" });
   if (error) throw error;
@@ -174,6 +254,7 @@ export async function saveProduct(product) {
 }
 
 export async function deleteProduct(name) {
+  if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("products").delete().eq("name", name);
   if (error) throw error;

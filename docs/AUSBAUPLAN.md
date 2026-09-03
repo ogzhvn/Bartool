@@ -39,8 +39,19 @@ Sie ist so geschrieben, dass sie ohne den Chat funktioniert, in dem sie entstand
   `ingredient.name.toLowerCase().includes(product.name.toLowerCase())`.
   Generisch („Gin") matcht nicht, es braucht die Hausmarke („Bombay Sapphire Gin").
   Produktnamen vor dem Schreiben per `grep -n` verifizieren, nie aus dem Kopf tippen.
+- **Bei JEDER Änderung an Frontend-Dateien die Konstante `CACHE` in `sw.js` hochzählen**
+  (`bartool-v1` → `bartool-v2` → …). Ohne das liefert der Service Worker den Geräten hinterm
+  Tresen alte Stände aus, und die Änderung ist live unsichtbar.
+  Ebenso: wird in `index.html` eine CDN-Version geändert, muss `CDN_PRECACHE` in `sw.js` mitgezogen werden.
 - Kein Commit auf einem nicht lauffähigen Stand. Vorher `python3 -m http.server 8000` und die betroffenen Tabs durchklicken.
 - Commit-Messages auf Deutsch: kurzer Titel, bei Bedarf 1–2 Zeilen Kontext. Entwicklung und Push auf `main`.
+
+**Wie mit dem Nutzer geredet wird**
+Der Nutzer ist Barkeeper, kein Entwickler, und Quereinsteiger ins Thema Technik.
+Rückmeldungen deshalb in normaler Sprache: was jetzt anders ist und was er selbst
+prüfen oder tun muss. Fachbegriffe nur, wenn sie unvermeidbar sind – dann in einem
+Halbsatz erklären. Im Code selbst bleibt alles normal (englische Bezeichner,
+deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 **Wann anhalten und den Nutzer fragen (nicht raten, nicht erfinden)**
 - Produktdaten, Dichten, Haltbarkeiten, Preise, Allergene: **niemals schätzen oder erfinden.** Nur was in den echten
@@ -74,7 +85,7 @@ Sie ist so geschrieben, dass sie ohne den Chat funktioniert, in dem sie entstand
 | # | Paket | Status |
 |---|---|---|
 | 1 | PWA installierbar + App-Shell offline | erledigt |
-| 2 | Daten-Cache offline + Offline-Banner | offen |
+| 2 | Daten-Cache offline + Offline-Banner | erledigt |
 | 3 | Druckansicht (`@media print`) | offen |
 | 4 | Globale Suche (Cmd/Ctrl+K) | offen |
 | 5 | `js/abv.js` – ABV-Mathematik zentralisieren | offen |
