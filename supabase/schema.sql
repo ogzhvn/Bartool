@@ -284,6 +284,61 @@ create policy "products: admin write"
 -- ---------------------------------------------------------------------
 -- Audit-Log: Änderungshistorie für recipes/products/profiles
 -- ---------------------------------------------------------------------
+-- Ansätze / Mise en Place
+-- ---------------------------------------------------------------------
+
+create table if not exists public.preparations (
+  id uuid primary key default gen_random_uuid(),
+  label text not null,
+  recipe_name text,
+  -- superjuice | sirup | batch | batch_juice | sonstiges
+  prep_type text not null default 'sonstiges',
+  batch_size_ml numeric,
+  abv numeric,
+  location text,
+  made_at timestamptz not null default now(),
+  made_by uuid references public.profiles (id) on delete set null,
+  expires_at timestamptz,
+  -- aktiv | verbraucht
+  status text not null default 'aktiv',
+  notes text,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists preparations_expires_at_idx on public.preparations (expires_at);
+
+alter table public.preparations enable row level security;
+
+drop trigger if exists preparations_set_updated_at on public.preparations;
+create trigger preparations_set_updated_at
+  before update on public.preparations
+  for each row execute function public.set_updated_at();
+
+-- Ansätze macht das ganze Team, nicht nur Admins: lesen, anlegen und
+-- ändern darf jeder eingeloggte Nutzer. Löschen bleibt Admin-Sache,
+-- damit nichts unbemerkt aus der Übersicht verschwindet.
+drop policy if exists "preparations: any authenticated user can read" on public.preparations;
+create policy "preparations: any authenticated user can read"
+  on public.preparations for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "preparations: any authenticated user can insert" on public.preparations;
+create policy "preparations: any authenticated user can insert"
+  on public.preparations for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "preparations: any authenticated user can update" on public.preparations;
+create policy "preparations: any authenticated user can update"
+  on public.preparations for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "preparations: admin deletes" on public.preparations;
+create policy "preparations: admin deletes"
+  on public.preparations for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 
 create table if not exists public.audit_log (
   id uuid primary key default gen_random_uuid(),

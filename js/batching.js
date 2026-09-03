@@ -4,6 +4,8 @@ import { createIngredientEditor } from "./ingredientEditor.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { alcoholMl, abvAfterWater } from "./abv.js";
+import { prefillPreparation } from "./preparations.js";
+import { switchTab } from "./tabs.js";
 
 const panelEl = document.getElementById("batching");
 const ingredientsEl = document.getElementById("batch-ingredients");
@@ -16,6 +18,9 @@ const recipeSelectEl = document.getElementById("batch-recipe-select");
 const recipeInfoEl = document.getElementById("batch-recipe-info");
 
 const editor = createIngredientEditor(ingredientsEl);
+
+// Kennzahlen der letzten Berechnung – Grundlage für "Als Ansatz".
+let letztesErgebnis = { volumeMl: null, abv: null };
 
 function currentMode() {
   return document.querySelector('input[name="batch-mode"]:checked').value;
@@ -150,6 +155,7 @@ function calculateBottles(ingredients, basePortions) {
     }
   `;
 
+  letztesErgebnis = { volumeMl: finalVolume, abv: finalAbv };
   totalEl.hidden = false;
   totalLabelEl.textContent = "Alkoholgehalt";
   totalValueEl.textContent = `${formatNumber(finalAbv)} % ABV`;
@@ -229,6 +235,7 @@ function calculateScale() {
   `;
 
   totalLabelEl.textContent = "Gesamtvolumen";
+  letztesErgebnis = { volumeMl: totalVolumeMl > 0 ? totalVolumeMl : null, abv: null };
   if (totalVolumeMl > 0) {
     totalEl.hidden = false;
     totalValueEl.textContent = `${formatNumber(totalVolumeMl)} ml`;
@@ -238,6 +245,27 @@ function calculateScale() {
     totalValueEl.textContent = `${formatNumber(resultingPortions)} Portionen`;
     totalSubEl.textContent = "Kein Volumen berechenbar – nur Stückzutaten";
   }
+}
+
+// Übernimmt das Ergebnis in die Mise-en-Place-Erfassung. Die Art wird nur
+// vorgeschlagen; ob es wirklich ein alkoholischer Batch ist, entscheidet der
+// Mensch im Formular.
+function handleToPreparation() {
+  const name = document.getElementById("batch-name").value.trim();
+  if (!name && editor.getIngredients().length === 0) {
+    alert("Erst ein Rezept eingeben oder laden.");
+    return;
+  }
+  const abv = letztesErgebnis.abv;
+  const vorschlag = abv === null ? "sonstiges" : abv >= 15 ? "batch" : "batch_juice";
+  switchTab("preparations");
+  prefillPreparation({
+    label: name || "Batch",
+    prepType: vorschlag,
+    batchSizeMl: letztesErgebnis.volumeMl ?? "",
+    abv: abv === null ? "" : Number(abv.toFixed(1)),
+    recipeName: name,
+  });
 }
 
 function stepPortions(delta) {
@@ -331,6 +359,7 @@ export function initBatching() {
   document.getElementById("batch-portions-minus").addEventListener("click", () => stepPortions(-1));
   document.getElementById("batch-portions-plus").addEventListener("click", () => stepPortions(1));
   document.getElementById("batch-share").addEventListener("click", shareResult);
+  document.getElementById("batch-to-prep").addEventListener("click", handleToPreparation);
   document.querySelectorAll('input[name="batch-mode"]').forEach((el) => el.addEventListener("change", updateModeInputs));
   document.querySelectorAll('input[name="batch-dilution-mode"]').forEach((el) =>
     el.addEventListener("change", () => {

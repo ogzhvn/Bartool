@@ -66,6 +66,10 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 - `products.abv` ist **Text**, Format u. a. `"40 % vol"`, `"43,1 % vol"`, `"42 % vol (bitte gegen Flasche prüfen)"`.
   → Immer robust parsen: erste Zahl, Komma zu Punkt, sonst „unbekannt".
 - `products.allergens` ist Text, häufig `"Keine bekannten"`.
+- **Vom Nutzer festgelegte Haltbarkeiten** (Tage ab Ansatzdatum, gekühlt), stehen in
+  `HALTBARKEIT_TAGE` in `js/preparations.js`: Superjuice 7 · Zuckersirup 28 ·
+  Batch alkoholisch 90 · Batch mit Frischsaft 3 · Sonstiges 7.
+  Nicht eigenmächtig ändern – das hat der Nutzer entschieden.
 - `products.price_value` ist `numeric`, `products.price_unit` ist Text (`"liter"` oder Stück).
 - Vorhandene Exports, die wiederverwendet werden:
   - `js/tabs.js`: `switchTab(tabId, opts)`, `closeMobileNav()`, `setPendingEditReturn()`, `takePendingEditReturn()`
@@ -99,7 +103,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 6 | Bottled-Cocktail-Modus im Batching | erledigt |
 | 7 | Allergene pro Rezept | erledigt |
 | 8 | Kartenkalkulation | erledigt |
-| 9 | Ansätze / Mise en Place | offen |
+| 9 | Ansätze / Mise en Place | erledigt |
 | 10 | Etiketten drucken | offen |
 | 11 | Inventur – Erfassung | offen |
 | 12 | Inventur – Auswertung & Bestellvorschlag | offen |

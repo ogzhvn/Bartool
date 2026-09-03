@@ -8,12 +8,13 @@ import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
 import { initMenuCosting } from "./menuCosting.js";
+import { initPreparations } from "./preparations.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
 import { initDataQuality } from "./dataQuality.js";
 import { initQuickSearch } from "./quickSearch.js";
 import { initChangeRequestsAdmin, initMyChangeRequests } from "./changeRequests.js";
-import { initRecipeSync, initProductSync } from "./storage.js";
+import { initRecipeSync, initProductSync, initPreparationSync } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
@@ -71,7 +72,7 @@ function startSessionTimeoutWatch() {
 async function bootstrapAppOnce() {
   if (appInitialized) return;
   appInitialized = true;
-  await Promise.all([initRecipeSync(), initProductSync()]);
+  await Promise.all([initRecipeSync(), initProductSync(), initPreparationSync()]);
   initTabs();
   initHome();
   initRecipes();
@@ -82,6 +83,7 @@ async function bootstrapAppOnce() {
   initDilution();
   initCalculation();
   initMenuCosting();
+  initPreparations();
   initAdminPanel();
   initAuditLog();
   initDataQuality();

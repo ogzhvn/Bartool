@@ -1811,3 +1811,92 @@ select {
 .table-scroll {
   overflow-x: auto;
 }
+
+/* ── Mise en Place (js/preparations.js) ──────────────────── */
+
+.prep-group {
+  margin: 1.4rem 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.prep-item {
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-700);
+  border-radius: var(--radius);
+}
+
+/* Abgelaufen fällt auf, Verbrauchtes tritt zurück. */
+.prep-item.prep-expired {
+  border-left-color: var(--danger);
+}
+
+.prep-item.prep-expired .prep-status {
+  color: var(--danger);
+}
+
+.prep-item.prep-soon {
+  border-left-color: var(--accent);
+}
+
+.prep-item.prep-soon .prep-status {
+  color: var(--accent);
+}
+
+.prep-item.prep-done {
+  opacity: 0.55;
+  border-left-color: var(--border-strong);
+}
+
+.prep-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.prep-status {
+  flex: none;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.prep-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+}
+
+.prep-item .actions {
+  margin-top: 0.5rem;
+}
+
+.prep-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prep-toggle input {
+  width: auto;
+  margin: 0;
+}
+
+/* Die nativen Datums- und Zeitfelder folgen nicht dem Seiten-CSS, sondern
+   dem Farbschema des Browsers. Ohne color-scheme stünden sie als weiße
+   Kästen im dunklen Layout. */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}

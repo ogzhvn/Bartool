@@ -2,11 +2,14 @@ import { getSupabaseClient } from "./supabaseClient.js";
 
 const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
+const PREPARATIONS_UPDATED_EVENT = "bartool:preparations-updated";
 
 let recipesCache = [];
 let productsCache = [];
+let preparationsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
+let preparationsChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -20,6 +23,7 @@ let productsChannel = null;
 
 const RECIPES_CACHE_KEY = "bartool:recipes";
 const PRODUCTS_CACHE_KEY = "bartool:products";
+const PREPARATIONS_CACHE_KEY = "bartool:preparations";
 
 function readCache(key) {
   try {
@@ -266,4 +270,105 @@ export async function deleteProduct(name) {
 
 export function onProductsChanged(callback) {
   window.addEventListener(PRODUCTS_UPDATED_EVENT, callback);
+}
+
+// ---------------------------------------------------------------------
+// Ansätze / Mise en Place (Tabelle "preparations" in Supabase)
+//
+// Gleiches Muster wie Rezepte und Produkte. Unterschied: hier ist der
+// Schlüssel die id, nicht der Name – denselben Ansatz kann es mehrfach
+// geben (jede Charge ist ein eigener Eintrag).
+// ---------------------------------------------------------------------
+
+function toPreparationRecord(prep) {
+  const record = {
+    label: prep.label,
+    recipe_name: prep.recipeName || null,
+    prep_type: prep.prepType || "sonstiges",
+    batch_size_ml: prep.batchSizeMl === "" || prep.batchSizeMl == null ? null : Number(prep.batchSizeMl),
+    abv: prep.abv === "" || prep.abv == null ? null : Number(prep.abv),
+    location: prep.location || null,
+    made_at: prep.madeAt || new Date().toISOString(),
+    expires_at: prep.expiresAt || null,
+    status: prep.status || "aktiv",
+    notes: prep.notes || null,
+  };
+  if (prep.id) record.id = prep.id;
+  if (prep.madeBy) record.made_by = prep.madeBy;
+  return record;
+}
+
+function fromPreparationRow(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    recipeName: row.recipe_name ?? "",
+    prepType: row.prep_type ?? "sonstiges",
+    batchSizeMl: row.batch_size_ml ?? "",
+    abv: row.abv ?? "",
+    location: row.location ?? "",
+    madeAt: row.made_at,
+    madeBy: row.made_by ?? null,
+    expiresAt: row.expires_at ?? null,
+    status: row.status ?? "aktiv",
+    notes: row.notes ?? "",
+  };
+}
+
+async function refreshPreparations() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("preparations").select("*").order("expires_at", { nullsFirst: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    preparationsCache = (data ?? []).map(fromPreparationRow);
+    writeCache(PREPARATIONS_CACHE_KEY, preparationsCache);
+  } else {
+    const buffered = readCache(PREPARATIONS_CACHE_KEY);
+    if (buffered) preparationsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(PREPARATIONS_UPDATED_EVENT));
+}
+
+export async function initPreparationSync() {
+  const buffered = readCache(PREPARATIONS_CACHE_KEY);
+  if (buffered) {
+    preparationsCache = buffered;
+    window.dispatchEvent(new CustomEvent(PREPARATIONS_UPDATED_EVENT));
+  }
+  await refreshPreparations();
+  const supabase = getSupabaseClient();
+  if (preparationsChannel) supabase.removeChannel(preparationsChannel);
+  preparationsChannel = supabase
+    .channel("public:preparations")
+    .on("postgres_changes", { event: "*", schema: "public", table: "preparations" }, refreshPreparations)
+    .subscribe();
+}
+
+export function loadPreparations() {
+  return preparationsCache;
+}
+
+export async function savePreparation(prep) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("preparations").upsert(toPreparationRecord(prep));
+  if (error) throw error;
+  await refreshPreparations();
+}
+
+export async function deletePreparation(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("preparations").delete().eq("id", id);
+  if (error) throw error;
+  await refreshPreparations();
+}
+
+export function onPreparationsChanged(callback) {
+  window.addEventListener(PREPARATIONS_UPDATED_EVENT, callback);
 }

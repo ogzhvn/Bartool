@@ -115,6 +115,10 @@
         <button class="tab-btn" data-tab="menu-costing" role="tab" aria-selected="false"><i class="ph ph-list-checks" aria-hidden="true"></i>Karte</button>
       </div>
       <div class="sidebar-group">
+        <h3 class="sidebar-group-title">Betrieb</h3>
+        <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
+      </div>
+      <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
         <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false"><i class="ph ph-book-open" aria-hidden="true"></i>Rezepte</button>
         <div id="recipe-category-tree" class="sidebar-subnav"></div>
@@ -295,8 +299,84 @@
           <strong id="batch-total-value">–</strong>
           <span id="batch-total-sub" class="result-bar-sub"></span>
         </div>
+        <button type="button" id="batch-to-prep" class="btn-secondary"><i class="ph ph-timer" aria-hidden="true"></i> Als Ansatz</button>
         <button type="button" id="batch-share" class="btn-primary"><i class="ph ph-export" aria-hidden="true"></i> Teilen</button>
       </div>
+    </section>
+
+    <!-- MISE EN PLACE / ANSÄTZE -->
+    <section id="preparations" class="tab-panel">
+      <h2>Mise en Place</h2>
+      <p class="hint">Angesetzte Superjuices, Sirups und Batches mit Haltbarkeit. Abgelaufenes bleibt sichtbar, bis es abgehakt ist – so verschwindet nichts unbemerkt.</p>
+
+      <form id="prep-form">
+        <h3>Neuer Ansatz</h3>
+        <div class="field-row">
+          <label>
+            Bezeichnung
+            <input type="text" id="prep-label" placeholder="z. B. Superjuice Limette" required />
+          </label>
+          <label>
+            Art
+            <select id="prep-type">
+              <option value="superjuice">Superjuice</option>
+              <option value="sirup">Zuckersirup</option>
+              <option value="batch">Batch (alkoholisch)</option>
+              <option value="batch_juice">Batch mit Frischsaft</option>
+              <option value="sonstiges" selected>Sonstiges</option>
+            </select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Menge (ml)
+            <input type="number" id="prep-size" min="0" step="10" placeholder="z. B. 1000" />
+          </label>
+          <label>
+            Alkoholgehalt (%)
+            <input type="number" id="prep-abv" min="0" max="100" step="0.1" placeholder="optional" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Wo steht es
+            <input type="text" id="prep-location" list="prep-location-options" placeholder="z. B. Kühlschrank Bar" />
+          </label>
+        </div>
+        <datalist id="prep-location-options">
+          <option value="Kühlschrank Bar"></option>
+          <option value="Speed Rail"></option>
+          <option value="Lager"></option>
+          <option value="Kühlhaus"></option>
+        </datalist>
+        <div class="field-row">
+          <label>
+            Angesetzt am
+            <input type="date" id="prep-made-at" />
+          </label>
+          <label>
+            Haltbar bis
+            <input type="date" id="prep-expires" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Notiz
+            <input type="text" id="prep-notes" placeholder="optional, z. B. Charge 2, etwas säurebetont" />
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit" id="prep-submit" class="btn-primary">Ansatz speichern</button>
+          <button type="button" id="prep-cancel" class="btn-secondary" hidden>Abbrechen</button>
+        </div>
+      </form>
+
+      <h3>Übersicht</h3>
+      <label class="prep-toggle no-print">
+        <input type="checkbox" id="prep-show-done" />
+        <span>Verbrauchte anzeigen</span>
+      </label>
+      <div id="prep-list"></div>
     </section>
 
     <!-- KARTENKALKULATION -->
