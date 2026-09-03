@@ -154,19 +154,6 @@ a:hover {
   font-size: 0.8rem;
 }
 
-/* Reine Icon-Schaltfläche (z. B. Drucken). Mindestens 40px, damit sie
-   hinterm Tresen auch mit nassen Fingern zu treffen ist. */
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0.35rem !important;
-  font-size: 1.1rem !important;
-  line-height: 1;
-}
-
 /* ── Layout ──────────────────────────────────────────────── */
 
 .app-layout {
@@ -1213,6 +1200,20 @@ select {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin-right: 0.2rem;
+}
+
+/* Auf dem Handy stehen die Aktionen untereinander und über die volle
+   Breite: nebeneinander bricht die Zeile unsauber um, und breite Flächen
+   sind hinterm Tresen leichter zu treffen. */
+@media (max-width: 899px) {
+  .export-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-bar .btn-secondary {
+    width: 100%;
+  }
 }
 
 .product-group-header {
