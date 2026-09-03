@@ -154,6 +154,19 @@ a:hover {
   font-size: 0.8rem;
 }
 
+/* Reine Icon-Schaltfläche (z. B. Drucken). Mindestens 40px, damit sie
+   hinterm Tresen auch mit nassen Fingern zu treffen ist. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0.35rem !important;
+  font-size: 1.1rem !important;
+  line-height: 1;
+}
+
 /* ── Layout ──────────────────────────────────────────────── */
 
 .app-layout {

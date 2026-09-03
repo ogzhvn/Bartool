@@ -198,6 +198,10 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 4. Lesbar machen: Hintergrund weiß, Schrift schwarz, `box-shadow: none`, Tabellen mit dünnen Linien,
    `page-break-inside: avoid` für Rezept-/Ergebnisblöcke.
 5. Das Bildschirm-Theme dabei **nicht** anfassen.
+6. Drucken muss über **eigene Schaltflächen in der App** erreichbar sein, nicht über das
+   Browser-Menü: in der installierten App (Homescreen, Standalone-Modus) gibt es keine Menüleiste.
+   Umgesetzt als Drucker-Symbol im Header (`#print-btn`) plus Eintrag „Drucken" im Seitenmenü
+   (`#print-nav-btn`), beide rufen `window.print()`. Für Paket 10 (Etiketten) wiederverwenden.
 
 **Abnahme**
 - [ ] Druckvorschau in Rezepte (aufgeklapptes Rezept), Batching (mit Ergebnis) und Kalkulation: lesbar, ohne Navigation, keine abgeschnittenen Tabellen.

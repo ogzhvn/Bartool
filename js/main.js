@@ -139,6 +139,19 @@ loginForm.addEventListener("submit", async (e) => {
 
 logoutBtn.addEventListener("click", () => signOut());
 
+// Drucken über einen eigenen Knopf, nicht über das Browser-Menü: in der
+// installierten App (Homescreen, Standalone-Modus) gibt es keine Menüleiste,
+// über die man sonst an die Druckfunktion käme.
+function printCurrentView() {
+  closeMobileNav();
+  // Kurz warten, damit das Menü auf dem Handy erst zugeht und nicht im
+  // Ausdruck landet.
+  setTimeout(() => window.print(), 150);
+}
+
+document.getElementById("print-btn").addEventListener("click", printCurrentView);
+document.getElementById("print-nav-btn").addEventListener("click", printCurrentView);
+
 forcedPasswordForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   forcedPasswordError.hidden = true;

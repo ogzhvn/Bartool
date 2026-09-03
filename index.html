@@ -24,6 +24,7 @@
     <p class="subtitle">Rechner für die Bar</p>
     <div id="header-user" class="header-user" hidden>
       <span id="current-user-info"></span>
+      <button type="button" id="print-btn" class="btn-secondary icon-btn" title="Aktuelle Ansicht drucken" aria-label="Aktuelle Ansicht drucken"><i class="ph ph-printer" aria-hidden="true"></i></button>
       <button type="button" id="logout-btn" class="btn-secondary">Abmelden</button>
     </div>
   </header>
@@ -123,6 +124,7 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Verwaltung</h3>
         <button class="tab-btn" data-tab="admin" data-admin-only role="tab" aria-selected="false"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
+        <button type="button" class="tab-btn" id="print-nav-btn"><i class="ph ph-printer" aria-hidden="true"></i>Drucken</button>
         <button type="button" class="tab-btn" id="change-password-nav-btn"><i class="ph ph-lock-key" aria-hidden="true"></i>Passwort ändern</button>
       </div>
     </nav>
