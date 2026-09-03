@@ -1404,3 +1404,55 @@ select {
   font-size: 0.85rem;
   padding: 0.6rem 1rem;
 }
+
+/* ── Druckansicht ───────────────────────────────────────── */
+
+@media print {
+  .no-print,
+  button,
+  select {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  #app-shell,
+  .tab-panel.active {
+    box-shadow: none;
+    background: #fff;
+  }
+
+  * {
+    box-shadow: none !important;
+    color: #000;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: #000;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #999;
+  }
+
+  .recipe-item,
+  .result-box,
+  .result-bar {
+    page-break-inside: avoid;
+    border: none;
+    background: #fff;
+  }
+}

@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
 </head>
 <body>
-  <header class="app-header">
+  <header class="app-header no-print">
     <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar" hidden><i class="ph ph-list" aria-hidden="true"></i></button>
     <h1 id="app-title" class="app-title"><i class="ph ph-martini brand-mark" aria-hidden="true"></i>Bar<em>tool</em></h1>
     <p class="subtitle">Rechner für die Bar</p>
@@ -24,7 +24,7 @@
     </div>
   </header>
 
-  <div id="offline-banner" class="offline-banner" hidden>Offline – nur Lesen und Rechnen möglich.</div>
+  <div id="offline-banner" class="offline-banner no-print" hidden>Offline – nur Lesen und Rechnen möglich.</div>
 
   <!-- LOGIN -->
   <section id="auth-screen" class="auth-screen">
@@ -93,7 +93,7 @@
   <div id="app-shell" hidden>
   <div class="app-layout">
     <div id="nav-backdrop" class="nav-backdrop" hidden></div>
-    <nav class="sidebar" id="sidebar" role="tablist">
+    <nav class="sidebar no-print" id="sidebar" role="tablist">
       <div class="sidebar-group">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
       </div>
@@ -184,7 +184,7 @@
       <h2>Rezept-Hochrechner (Batching)</h2>
       <p class="hint">Rezept eingeben oder laden, Ziel setzen – gerechnet wird live. Das Ergebnis steht unten in der Leiste.</p>
 
-      <div class="field-row">
+      <div class="field-row no-print">
         <label>
           Rezept aus Rezeptbuch laden
           <select id="batch-recipe-select">
@@ -192,7 +192,7 @@
           </select>
         </label>
       </div>
-      <div class="actions">
+      <div class="actions no-print">
         <button type="button" id="batch-load-recipe" class="btn-secondary">Einfügen</button>
       </div>
 
@@ -239,7 +239,7 @@
 
       <h3>Zutaten</h3>
       <div id="batch-ingredients" class="ingredient-list"></div>
-      <div class="actions">
+      <div class="actions no-print">
         <button type="button" id="batch-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
         <button type="button" id="batch-clear" class="btn-secondary">Zurücksetzen</button>
       </div>
@@ -252,7 +252,7 @@
           <strong id="batch-total-value">–</strong>
           <span id="batch-total-sub" class="result-bar-sub"></span>
         </div>
-        <button type="button" id="batch-share" class="btn-primary"><i class="ph ph-export" aria-hidden="true"></i> Teilen</button>
+        <button type="button" id="batch-share" class="btn-primary no-print"><i class="ph ph-export" aria-hidden="true"></i> Teilen</button>
       </div>
     </section>
 
@@ -264,18 +264,18 @@
       <div id="recipes-list-view" class="recipe-subview active">
         <p class="hint">133 Cocktail-Klassiker (nach Basis-Spirituose kategorisiert) und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. "Gin"), der Filter grenzt nach Kategorie ein.</p>
 
-        <div class="actions">
+        <div class="actions no-print">
           <button type="button" id="recipe-list-new" class="btn-primary"><i class="ph ph-plus" aria-hidden="true"></i> Neues Rezept</button>
         </div>
 
-        <div class="field-row">
+        <div class="field-row no-print">
           <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" />
           <select id="recipe-category-filter">
             <option value="">Alle Kategorien</option>
           </select>
         </div>
 
-        <div class="export-bar">
+        <div class="export-bar no-print">
           <span id="recipe-selected-count" class="export-count">0 ausgewählt</span>
           <button type="button" id="recipe-select-all" class="btn-secondary">Alle auswählen</button>
           <button type="button" id="recipe-select-none" class="btn-secondary">Auswahl aufheben</button>
@@ -377,18 +377,18 @@
       <div id="products-list-view" class="recipe-subview active">
         <p class="hint">Der komplette Produktbestand als Nachschlagewerk – Geschmack, Herkunft, Service-Tipps und Verkaufswissen. Auf einen Namen klicken zeigt alle Details.</p>
 
-        <div class="actions">
+        <div class="actions no-print">
           <button type="button" id="product-list-new" class="btn-primary"><i class="ph ph-plus" aria-hidden="true"></i> Neues Produkt</button>
         </div>
 
-        <div class="field-row">
+        <div class="field-row no-print">
           <input type="text" id="product-search" placeholder="Produkte durchsuchen…" />
           <select id="product-group-filter">
             <option value="">Alle Kategorien</option>
           </select>
         </div>
 
-        <div class="export-bar">
+        <div class="export-bar no-print">
           <span id="product-selected-count" class="export-count">0 ausgewählt</span>
           <button type="button" id="product-select-all" class="btn-secondary">Alle auswählen</button>
           <button type="button" id="product-select-none" class="btn-secondary">Auswahl aufheben</button>
@@ -713,7 +713,7 @@
       <h2>Kalkulations-Rechner</h2>
       <p class="hint">Wareneinsatz und empfohlener Verkaufspreis, live gerechnet aus Ziel-Wareneinsatzquote und MwSt.</p>
 
-      <div class="field-row">
+      <div class="field-row no-print">
         <label>
           Rezept aus Rezeptbuch laden
           <select id="calc-recipe-select">
@@ -721,7 +721,7 @@
           </select>
         </label>
       </div>
-      <div class="actions">
+      <div class="actions no-print">
         <button type="button" id="calc-load-recipe" class="btn-secondary">Einfügen</button>
       </div>
 
@@ -740,7 +740,7 @@
       <h3>Zutaten</h3>
       <p class="hint">Preis pro Liter bei ml/cl/oz/BL/Dash, Preis pro Stück bei Stück/Teile.</p>
       <div id="calc-ingredients" class="calc-ingredient-list"></div>
-      <div class="actions">
+      <div class="actions no-print">
         <button type="button" id="calc-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
         <button type="button" id="calc-clear" class="btn-secondary">Zurücksetzen</button>
       </div>
@@ -842,7 +842,7 @@
   </div>
   </div>
 
-  <footer class="app-footer">
+  <footer class="app-footer no-print">
     <p>Bartool</p>
   </footer>
 

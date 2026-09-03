@@ -75,7 +75,7 @@ Sie ist so geschrieben, dass sie ohne den Chat funktioniert, in dem sie entstand
 |---|---|---|
 | 1 | PWA installierbar + App-Shell offline | erledigt |
 | 2 | Daten-Cache offline + Offline-Banner | erledigt |
-| 3 | Druckansicht (`@media print`) | offen |
+| 3 | Druckansicht (`@media print`) | erledigt |
 | 4 | Globale Suche (Cmd/Ctrl+K) | offen |
 | 5 | `js/abv.js` – ABV-Mathematik zentralisieren | offen |
 | 6 | Bottled-Cocktail-Modus im Batching | offen |
