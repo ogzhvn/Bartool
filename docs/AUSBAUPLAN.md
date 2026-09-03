@@ -98,7 +98,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 5 | `js/abv.js` – ABV-Mathematik zentralisieren | erledigt |
 | 6 | Bottled-Cocktail-Modus im Batching | erledigt |
 | 7 | Allergene pro Rezept | erledigt |
-| 8 | Kartenkalkulation | offen |
+| 8 | Kartenkalkulation | erledigt |
 | 9 | Ansätze / Mise en Place | offen |
 | 10 | Etiketten drucken | offen |
 | 11 | Inventur – Erfassung | offen |

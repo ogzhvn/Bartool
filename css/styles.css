@@ -1747,3 +1747,67 @@ select {
   color: var(--text-muted);
   font-size: 0.83rem;
 }
+
+/* ── Kartenkalkulation (js/menuCosting.js) ───────────────── */
+
+.menu-pick-list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+/* Mindestens 44px hoch, damit die Zeilen hinterm Tresen treffbar sind.
+   flex-direction und text-align ausdrücklich gesetzt: die allgemeine
+   label-Regel stellt Beschriftungen sonst untereinander und zentriert. */
+.menu-pick {
+  display: flex;
+  flex-direction: row;
+  text-align: left;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.menu-pick:hover {
+  background: var(--bg-elevated);
+}
+
+.menu-pick input[type="checkbox"] {
+  flex: none;
+  width: auto;
+  margin: 0;
+}
+
+.menu-pick span:nth-of-type(1) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.menu-pick-price {
+  flex: none;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.menu-pick-missing {
+  color: var(--danger);
+}
+
+.menu-quote-ok {
+  color: #6fbf73;
+}
+
+.menu-quote-high {
+  color: var(--danger);
+}
+
+/* Breite Tabellen dürfen scrollen, statt die Seite auseinanderzuziehen. */
+.table-scroll {
+  overflow-x: auto;
+}

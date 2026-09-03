@@ -112,6 +112,7 @@
         <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false"><i class="ph ph-drop-half" aria-hidden="true"></i>Zuckersirup</button>
         <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false"><i class="ph ph-drop" aria-hidden="true"></i>Verdünnung &amp; ABV</button>
         <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false"><i class="ph ph-currency-eur" aria-hidden="true"></i>Kalkulation</button>
+        <button class="tab-btn" data-tab="menu-costing" role="tab" aria-selected="false"><i class="ph ph-list-checks" aria-hidden="true"></i>Karte</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
@@ -298,6 +299,40 @@
       </div>
     </section>
 
+    <!-- KARTENKALKULATION -->
+    <section id="menu-costing" class="tab-panel">
+      <h2>Kartenkalkulation</h2>
+      <p class="hint">Mehrere Drinks nebeneinander: Wareneinsatz, Rohertrag und Wareneinsatzquote auf einen Blick. Der Verkaufspreis wird im jeweiligen Rezept gepflegt.</p>
+
+      <p id="menu-data-status" class="empty-note" hidden></p>
+
+      <div class="field-row">
+        <label>
+          Ziel-Wareneinsatzquote (%)
+          <input type="number" id="menu-target-quote" value="20" min="1" max="100" step="1" />
+        </label>
+        <label>
+          MwSt. (%)
+          <input type="number" id="menu-vat" value="19" min="0" max="100" step="1" />
+        </label>
+      </div>
+
+      <h3>Drinks auswählen</h3>
+      <div class="field-row no-print">
+        <input type="text" id="menu-search" placeholder="Drink oder Kategorie suchen…" />
+      </div>
+      <div class="export-bar no-print">
+        <span id="menu-selected-count" class="export-count">0 ausgewählt</span>
+        <button type="button" id="menu-select-all" class="btn-secondary">Alle auswählen</button>
+        <button type="button" id="menu-select-none" class="btn-secondary">Auswahl aufheben</button>
+        <button type="button" id="menu-export-excel" class="btn-secondary">Als Excel exportieren</button>
+      </div>
+      <div id="menu-recipe-list" class="menu-pick-list no-print"></div>
+
+      <h3>Kalkulation</h3>
+      <div id="menu-result" class="result-box"></div>
+    </section>
+
     <!-- RECIPES (browse list + edit, in one tab) -->
     <section id="recipes" class="tab-panel">
       <h2>Rezeptbuch</h2>
@@ -363,6 +398,12 @@
               <label>
                 Zubereitung
                 <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Verkaufspreis brutto (€)
+                <input type="number" id="recipe-sales-price" min="0" step="0.1" placeholder="z. B. 14.50" />
               </label>
             </div>
             <div class="field-row">
@@ -785,6 +826,8 @@
       </div>
 
       <h3>Preisziel</h3>
+      <p id="menu-data-status" class="empty-note" hidden></p>
+
       <div class="field-row">
         <label>
           Ziel-Wareneinsatzquote (%)

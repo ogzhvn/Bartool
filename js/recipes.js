@@ -44,6 +44,7 @@ const garnishEl = document.getElementById("recipe-garnish");
 const iceEl = document.getElementById("recipe-ice");
 const historyEl = document.getElementById("recipe-history");
 const quickPitchEl = document.getElementById("recipe-quick-pitch");
+const salesPriceEl = document.getElementById("recipe-sales-price");
 const pairsWithEl = document.getElementById("recipe-pairs-with");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
@@ -110,6 +111,7 @@ function resetForm() {
   iceEl.value = "";
   historyEl.value = "";
   quickPitchEl.value = "";
+  salesPriceEl.value = "";
   pairsWithEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
@@ -126,6 +128,7 @@ function loadIntoForm(recipe) {
   iceEl.value = recipe.ice ?? "";
   historyEl.value = recipe.history ?? "";
   quickPitchEl.value = recipe.quickPitch ?? "";
+  salesPriceEl.value = recipe.salesPrice ?? "";
   pairsWithEl.value = (recipe.pairsWith ?? []).join(", ");
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
@@ -155,6 +158,7 @@ async function handleSave() {
     ice: iceEl.value.trim(),
     history: historyEl.value.trim(),
     quickPitch: quickPitchEl.value.trim(),
+    salesPrice: salesPriceEl.value === "" ? "" : parseFloat(salesPriceEl.value),
   };
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) recipe.pairsWith = pairsWith;

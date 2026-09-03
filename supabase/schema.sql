@@ -168,6 +168,8 @@ create table if not exists public.recipes (
   history text,
   quick_pitch text,
   pairs_with jsonb,
+  -- Verkaufspreis brutto in Euro, Grundlage der Kartenkalkulation.
+  sales_price numeric,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
@@ -175,6 +177,7 @@ create table if not exists public.recipes (
 alter table public.recipes add column if not exists quick_pitch text;
 alter table public.recipes add column if not exists pairs_with jsonb;
 alter table public.recipes add column if not exists category text;
+alter table public.recipes add column if not exists sales_price numeric;
 
 alter table public.recipes enable row level security;
 

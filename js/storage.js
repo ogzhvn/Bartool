@@ -64,6 +64,8 @@ function toRecipeRecord(recipe) {
     history: recipe.history || null,
     quick_pitch: recipe.quickPitch || null,
     pairs_with: recipe.pairsWith ?? null,
+    sales_price:
+      recipe.salesPrice === "" || recipe.salesPrice == null ? null : Number(recipe.salesPrice),
   };
 }
 
@@ -80,6 +82,7 @@ function fromRecipeRow(row) {
     history: row.history ?? "",
     quickPitch: row.quick_pitch ?? "",
     pairsWith: row.pairs_with ?? [],
+    salesPrice: row.sales_price ?? "",
   };
 }
 

@@ -7,6 +7,7 @@ import { initSuperjuice } from "./superjuice.js";
 import { initSyrup } from "./syrup.js";
 import { initDilution } from "./dilution.js";
 import { initCalculation } from "./calculation.js";
+import { initMenuCosting } from "./menuCosting.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
 import { initDataQuality } from "./dataQuality.js";
@@ -80,6 +81,7 @@ async function bootstrapAppOnce() {
   initSyrup();
   initDilution();
   initCalculation();
+  initMenuCosting();
   initAdminPanel();
   initAuditLog();
   initDataQuality();
