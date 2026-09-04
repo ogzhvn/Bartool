@@ -125,7 +125,6 @@ ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 | 18 | Checklisten Opening/Closing + Nachweisdokumentation | offen |
 | 19 | Einkaufspreis-Historie + Kalkulations-Warnung | offen |
 | 20 | „Was kann ich bauen?" (Bestand × Rezepte) | offen |
-| 21 | Bestellvorschlag exportieren | offen |
 
 ---
 
@@ -896,35 +895,10 @@ oder `js/home.js` (Kachel), `index.html`, `js/main.js`, `sw.js`
 - [ ] Ein auf 0 gezähltes Produkt schiebt die betroffenen Drinks in „eine Zutat fehlt".
 - [ ] Nicht zuordenbare Zutaten sind sichtbar gelistet.
 
----
-
-# Paket 21 – Bestellvorschlag exportieren
-
-**Abhängigkeit:** Paket 12 – steht.
-**Ziel:** Der Bestellvorschlag aus `js/ordering.js` verlässt das Tool: druckbar und als Text zum
-Einfügen in eine Mail, getrennt je Lieferant.
-
-**Dateien:** geändert `js/ordering.js`, `js/inventory.js`, `js/printView.js`, `sw.js`
-
-**Schritte**
-1. `printOrderProposal(vorschlag)` in `printView.js` – ein Blatt je Lieferant (`page-break-after`),
-   Kopf mit Datum und Besteller aus `getCurrentProfile()`.
-2. Button „Als Text kopieren" je Lieferant: Zeilen `Menge Einheit – Produktname (Artikel/Gebinde)`,
-   über `navigator.clipboard.writeText()`, mit sichtbarer Rückmeldung „kopiert".
-3. Produkte ohne `supplier` in einer Gruppe „Lieferant fehlt" ausweisen, nicht unterschlagen.
-
-**Abnahme-Checkliste**
-- [ ] Druckansicht: je Lieferant eine Seite, keine Navigation.
-- [ ] Kopieren funktioniert auf dem Handy (HTTPS bzw. localhost).
-- [ ] Produkte ohne Lieferant erscheinen sichtbar in einer eigenen Gruppe.
-
----
-
 ## Backlog Runde 3 (bewusst noch nicht eingeplant)
 
 Reihenfolge offen, erst nach Runde 2 entscheiden:
 - **Reporting-Startseite:** Wareneinsatzquote über Zeit, Inventurhistorie, ablaufende Ansätze.
-- **Barcode-Scan bei der Inventur:** `BarcodeDetector` bzw. CDN-Lib, EAN-Feld an `products`.
 - **Fotos zu Rezepten/Produkten:** Supabase Storage, Garnitur- und Glasbild.
 - **Schwund-/Bruch-/Verkostungsbuch:** erklärt Inventurdifferenzen.
 - **Mehrsprachigkeit (EN)** für Saisonkräfte.
@@ -942,3 +916,7 @@ Kassen- oder Warenwirtschaftsanbindung, Frontend-Framework oder Build-Schritt.
 also Menu-Engineering-Matrix (Deckungsbeitrag × Absatz), Soll-/Ist-Verbrauch und echte Pouring-Cost.
 Grund: es gibt keine geklärte Datenquelle. Wenn später ein CSV-/Excel-Export aus der Kasse vorliegt,
 wird das als eigenes Paket neu bewertet – vorher nicht anfangen.
+
+**Ebenfalls am 04.09.2026 gestrichen** (waren als Paket 21 bzw. im Backlog geplant, vom Nutzer
+ausdrücklich abgewählt): Export des Bestellvorschlags als Druck-/Mailtext und Barcode-Scan bei
+der Inventur. Nicht wieder vorschlagen, ohne dass der Nutzer von sich aus danach fragt.
