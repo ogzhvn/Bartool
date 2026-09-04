@@ -10,6 +10,7 @@ import { initCalculation } from "./calculation.js";
 import { initMenuCosting } from "./menuCosting.js";
 import { initPreparations } from "./preparations.js";
 import { initInventory } from "./inventory.js";
+import { initBuildable } from "./buildable.js";
 import { initEvents } from "./events.js";
 import { initShiftLog } from "./shiftLog.js";
 import { initChecklists } from "./checklists.js";
@@ -110,6 +111,7 @@ async function bootstrapAppOnce() {
   initMenuCosting();
   initPreparations();
   initInventory();
+  initBuildable();
   initEvents();
   initShiftLog();
   initChecklists();

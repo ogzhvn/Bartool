@@ -121,6 +121,7 @@
         <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
         <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
+        <button class="tab-btn" data-tab="buildable" role="tab" aria-selected="false"><i class="ph ph-martini" aria-hidden="true"></i>Was kann ich bauen?</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Bibliothek</h3>
@@ -628,6 +629,7 @@
         <h3>Auswertung</h3>
         <div class="actions no-print">
           <button type="button" id="inv-analyse" class="btn-secondary">Auswertung anzeigen</button>
+          <button type="button" id="inv-buildable" class="btn-secondary">Was kann ich bauen?</button>
           <button type="button" id="inv-export-count" class="btn-secondary">Zählung als Excel</button>
         </div>
         <div id="inv-analysis"></div>
@@ -639,6 +641,29 @@
         </div>
         <div id="inv-order-result"></div>
       </div>
+    </section>
+
+    <!-- WAS KANN ICH BAUEN? -->
+    <section id="buildable" class="tab-panel">
+      <h2>Was kann ich bauen?</h2>
+      <p class="hint">Vergleicht den letzten Zählstand aus der Inventur mit dem Rezeptbuch: Welche Drinks sind komplett auf Bestand, und bei welchen fehlt genau eine Zutat. Ein Produkt, das auf 0 gezählt wurde, gilt als leer – ein Produkt, das gar nicht gezählt wurde, gilt als vorhanden.</p>
+
+      <div class="field-row" id="build-count-wrap">
+        <label>
+          Zählung
+          <select id="build-count-select"></select>
+        </label>
+      </div>
+      <div class="actions no-print">
+        <button type="button" id="build-reload" class="btn-secondary">Zählstand neu laden</button>
+      </div>
+      <p id="build-status" class="empty-note" hidden></p>
+
+      <div class="field-row no-print">
+        <input type="text" id="build-search" placeholder="Drink oder Zutat suchen…" />
+      </div>
+
+      <div id="build-result"></div>
     </section>
 
     <!-- KARTENKALKULATION -->

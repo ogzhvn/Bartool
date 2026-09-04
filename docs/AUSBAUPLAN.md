@@ -124,7 +124,7 @@ ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 | 17 | Schichtübergabe / Barbuch | erledigt |
 | 18 | Checklisten Opening/Closing + Nachweisdokumentation | erledigt |
 | 19 | Einkaufspreis-Historie + Kalkulations-Warnung | erledigt |
-| 20 | „Was kann ich bauen?" (Bestand × Rezepte) | offen |
+| 20 | „Was kann ich bauen?" (Bestand × Rezepte) | erledigt |
 
 ### Runde 3 – Produktwissen & Quiz (geplant am 04.09.2026)
 

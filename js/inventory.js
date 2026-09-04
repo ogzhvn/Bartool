@@ -10,6 +10,8 @@ import {
 import { getAllProducts } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
 import { isAdmin, getCurrentUser } from "./auth.js";
+import { switchTab } from "./tabs.js";
+import { openBuildableForCount } from "./buildable.js";
 import { escapeHtml } from "./utils.js";
 import {
   auswertung,
@@ -39,6 +41,7 @@ const closeBtn = document.getElementById("inv-close-count");
 const backBtn = document.getElementById("inv-back");
 const statusEl = document.getElementById("inv-status");
 const analyseBtn = document.getElementById("inv-analyse");
+const buildableBtn = document.getElementById("inv-buildable");
 const analysisEl = document.getElementById("inv-analysis");
 const orderBtn = document.getElementById("inv-order");
 const orderResultEl = document.getElementById("inv-order-result");
@@ -334,6 +337,15 @@ async function zeigeAuswertung() {
   analysisEl.innerHTML = renderAuswertungHtml(a, differenz(stand, vorher));
 }
 
+// Aus der Zählung heraus in die Auswertung "Was kann ich bauen?".
+// Der lokale Stand wird mitgegeben, damit auch gerade erst eingetippte,
+// noch nicht hochgeladene Mengen zählen.
+function zeigeMachbares() {
+  if (!aktuelleZaehlung) return;
+  switchTab("buildable");
+  openBuildableForCount(aktuelleZaehlung.id, stand);
+}
+
 function zeigeBestellvorschlag() {
   if (!aktuelleZaehlung) return;
   orderResultEl.innerHTML = renderBestellvorschlagHtml(bestellvorschlag(stand));
@@ -416,6 +428,7 @@ export function initInventory() {
   closeBtn.addEventListener("click", handleCloseCount);
   searchEl.addEventListener("input", renderItems);
   analyseBtn.addEventListener("click", zeigeAuswertung);
+  buildableBtn.addEventListener("click", zeigeMachbares);
   orderBtn.addEventListener("click", zeigeBestellvorschlag);
   exportCountBtn.addEventListener("click", exportZaehlung);
   exportOrderBtn.addEventListener("click", exportBestellliste);
