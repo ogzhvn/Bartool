@@ -897,9 +897,52 @@
                 Alkoholgehalt (% vol)
                 <input type="text" id="product-abv" placeholder="z. B. 25 % vol" />
               </label>
+              <label>
+                Alkoholgehalt als Zahl
+                <input type="number" id="product-abv-value" min="0" max="100" step="0.1" placeholder="z. B. 25" />
+              </label>
+              <label>
+                … bis (nur bei Bereichsangabe)
+                <input type="number" id="product-abv-max" min="0" max="100" step="0.1" placeholder="z. B. 43" />
+              </label>
             </div>
 
-            <h3>Wein-Details (nur für Wein/Schaumwein)</h3>
+            <h3>Produktwissen</h3>
+            <div class="field-row">
+              <label>
+                Herkunftsland
+                <input type="text" id="product-origin-country" placeholder="z. B. Schottland" />
+              </label>
+              <label>
+                Herkunftsregion
+                <input type="text" id="product-origin-region" placeholder="z. B. Speyside" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Grundstoff
+                <input type="text" id="product-base-material" placeholder="z. B. Gerstenmalz, Melasse, Agave" />
+              </label>
+              <label>
+                Herstellungsverfahren
+                <input type="text" id="product-production-method" placeholder="z. B. Pot Still, Kolonnenbrand, Mazeration" />
+              </label>
+              <label>
+                Altersangabe
+                <input type="text" id="product-age-statement" placeholder="z. B. 12 Jahre, ohne Altersangabe" />
+              </label>
+            </div>
+            <label>
+              Aroma-Schlagworte (kommagetrennt)
+              <input type="text" id="product-flavor-tags" placeholder="z. B. Wacholder, Zitrus, Koriander" />
+            </label>
+            <label class="radio-label">
+              <input type="checkbox" id="product-verified" />
+              Angaben geprüft (nur geprüfte Produkte werden später im Quiz abgefragt)
+            </label>
+
+            <div id="product-wine-fields">
+            <h3>Wein-Details</h3>
             <div class="field-row">
               <label>
                 Region
@@ -929,6 +972,31 @@
                 Trinkfenster (nur Jahrgangs-Champagner/Prestige-Cuvées)
                 <input type="text" id="product-drinking-window" placeholder="z. B. jetzt bis ca. 2035" />
               </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Erzeuger / Weingut
+                <input type="text" id="product-producer" placeholder="z. B. Weingut Spreitzer" />
+              </label>
+              <label>
+                Geschmacksrichtung
+                <input type="text" id="product-sweetness" placeholder="z. B. trocken, brut, halbtrocken" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Klassifikation
+                <input type="text" id="product-classification" placeholder="z. B. VDP.Gutswein, AOC Sancerre" />
+              </label>
+              <label>
+                Serviertemperatur
+                <input type="text" id="product-serving-temp" placeholder="z. B. 8–10 °C" />
+              </label>
+              <label>
+                Körper
+                <input type="text" id="product-body" placeholder="z. B. leicht, mittel, kräftig" />
+              </label>
+            </div>
             </div>
 
             <h3>Geschmack</h3>

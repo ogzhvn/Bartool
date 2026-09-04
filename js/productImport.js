@@ -20,12 +20,26 @@ const SPALTEN = {
   Gruppe: "group",
   Untergruppe: "subGroup",
   Alkoholgehalt: "abv",
+  "Alkoholgehalt (Zahl)": "abvValue",
+  "Alkoholgehalt bis": "abvMax",
+  Herkunftsland: "originCountry",
+  Herkunftsregion: "originRegion",
+  Grundstoff: "baseMaterial",
+  Herstellungsverfahren: "productionMethod",
+  Altersangabe: "ageStatement",
+  "Aroma-Schlagworte": "flavorTags",
   Region: "region",
   Rebsorte: "grapeVariety",
   Lage: "vineyard",
   Jahrgang: "vintage",
   Ausbau: "aging",
   Trinkfenster: "drinkingWindow",
+  Erzeuger: "producer",
+  Geschmacksrichtung: "sweetness",
+  Klassifikation: "classification",
+  Serviertemperatur: "servingTemp",
+  "Körper": "body",
+  "Geprüft": "verified",
   "Tasting Notes": "tastingNotes",
   Speiseempfehlung: "foodPairing",
   Serviervorschlag: "service",
@@ -75,12 +89,22 @@ function parseZahl(wert) {
 // Vergleicht die Felder, die aus der Datei kommen, mit dem vorhandenen
 // Produkt. Nur diese Felder – der Import darf nichts überschreiben, wozu die
 // Datei gar keine Spalte hat.
+// Felder, die als Haken gepflegt werden: hier zählt nur ja/nein, sonst würde
+// ein nie gesetzter Haken ("") gegen false als Änderung gewertet.
+const BOOL_FELDER = new Set(["verified"]);
+
 function unterschiede(vorhanden, neu) {
   const diffs = [];
   Object.keys(neu).forEach((feld) => {
     if (feld === "name") return;
     const alt = vorhanden?.[feld] ?? "";
     const jetzt = neu[feld] ?? "";
+    if (BOOL_FELDER.has(feld)) {
+      if (Boolean(alt) !== Boolean(jetzt)) {
+        diffs.push({ feld, alt: alt ? "ja" : "nein", neu: jetzt ? "ja" : "nein" });
+      }
+      return;
+    }
     const altText = Array.isArray(alt) ? alt.join(", ") : String(alt);
     const neuText = Array.isArray(jetzt) ? jetzt.join(", ") : String(jetzt);
     if (altText !== neuText) diffs.push({ feld, alt: altText, neu: neuText });
@@ -93,13 +117,15 @@ function zeileZuProdukt(zeile) {
   Object.entries(SPALTEN).forEach(([spalte, feld]) => {
     if (!(spalte in zeile)) return;
     const wert = zeile[spalte];
-    if (feld === "pairsWith") {
-      produkt.pairsWith = String(wert ?? "")
+    if (feld === "pairsWith" || feld === "flavorTags") {
+      produkt[feld] = String(wert ?? "")
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    } else if (feld === "parLevel") {
-      produkt.parLevel = parseZahl(wert);
+    } else if (feld === "parLevel" || feld === "abvValue" || feld === "abvMax") {
+      produkt[feld] = parseZahl(wert);
+    } else if (feld === "verified") {
+      produkt.verified = /^(ja|x|wahr|true|1)$/i.test(String(wert ?? "").trim());
     } else {
       produkt[feld] = wert == null ? "" : String(wert).trim();
     }

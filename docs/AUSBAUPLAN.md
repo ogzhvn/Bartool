@@ -133,7 +133,7 @@ untereinander tauschen, 21 nicht.
 
 | # | Paket | Status |
 |---|---|---|
-| 21 | Produktwissen: Datenmodell erweitern | offen |
+| 21 | Produktwissen: Datenmodell erweitern | erledigt |
 | 22 | Textausbau Liköre & Aperitifs (46) | offen |
 | 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | offen |
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | offen |

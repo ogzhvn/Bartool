@@ -238,6 +238,30 @@ create table if not exists public.products (
   food_pairing text,
   -- Nur für Jahrgangs-Champagner/Prestige-Cuvées relevant.
   drinking_window text,
+  -- Produktwissen (Paket 21): strukturierte, abfragbare Felder als Grundlage
+  -- für Textausbau und Quiz. "abv" bleibt der Anzeigetext, hier steht die Zahl;
+  -- bei Bereichsangaben ("40–43 % vol") ist abv_value die Unter- und abv_max
+  -- die Obergrenze.
+  abv_value numeric,
+  abv_max numeric,
+  -- Herkunft, bisher nur im Freitext "category" hinter dem Mittelpunkt.
+  origin_country text,
+  origin_region text,
+  base_material text,
+  production_method text,
+  age_statement text,
+  -- Liste kurzer Aromabegriffe, z. B. ["Wacholder", "Zitrus", "Koriander"].
+  flavor_tags jsonb,
+  -- Nur für Wein/Schaumwein befüllt (siehe Produkte-Tab, Kategorie "Wein").
+  producer text,
+  sweetness text,
+  classification text,
+  serving_temp text,
+  body text,
+  -- Redaktionsstand: nur geprüfte Produkte werden im Quiz abgefragt.
+  -- Maschinell Abgeleitetes bleibt bewusst auf false.
+  verified boolean not null default false,
+  verified_at timestamptz,
   -- Bestellwesen: Soll-Bestand, Lieferant und Bestelleinheit.
   par_level numeric,
   supplier text,
@@ -269,6 +293,21 @@ alter table public.products add column if not exists vintage text;
 alter table public.products add column if not exists aging text;
 alter table public.products add column if not exists food_pairing text;
 alter table public.products add column if not exists drinking_window text;
+alter table public.products add column if not exists abv_value numeric;
+alter table public.products add column if not exists abv_max numeric;
+alter table public.products add column if not exists origin_country text;
+alter table public.products add column if not exists origin_region text;
+alter table public.products add column if not exists base_material text;
+alter table public.products add column if not exists production_method text;
+alter table public.products add column if not exists age_statement text;
+alter table public.products add column if not exists flavor_tags jsonb;
+alter table public.products add column if not exists producer text;
+alter table public.products add column if not exists sweetness text;
+alter table public.products add column if not exists classification text;
+alter table public.products add column if not exists serving_temp text;
+alter table public.products add column if not exists body text;
+alter table public.products add column if not exists verified boolean not null default false;
+alter table public.products add column if not exists verified_at timestamptz;
 
 alter table public.products enable row level security;
 

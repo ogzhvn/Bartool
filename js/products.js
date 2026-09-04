@@ -99,9 +99,24 @@ const categoryEl = document.getElementById("product-category");
 const groupEl = document.getElementById("product-group");
 const subgroupEl = document.getElementById("product-subgroup");
 const abvEl = document.getElementById("product-abv");
+const abvValueEl = document.getElementById("product-abv-value");
+const abvMaxEl = document.getElementById("product-abv-max");
+const originCountryEl = document.getElementById("product-origin-country");
+const originRegionEl = document.getElementById("product-origin-region");
+const baseMaterialEl = document.getElementById("product-base-material");
+const productionMethodEl = document.getElementById("product-production-method");
+const ageStatementEl = document.getElementById("product-age-statement");
+const flavorTagsEl = document.getElementById("product-flavor-tags");
+const verifiedEl = document.getElementById("product-verified");
+const wineFieldsEl = document.getElementById("product-wine-fields");
 const regionEl = document.getElementById("product-region");
 const grapeVarietyEl = document.getElementById("product-grape-variety");
 const vineyardEl = document.getElementById("product-vineyard");
+const producerEl = document.getElementById("product-producer");
+const sweetnessEl = document.getElementById("product-sweetness");
+const classificationEl = document.getElementById("product-classification");
+const servingTempEl = document.getElementById("product-serving-temp");
+const bodyEl = document.getElementById("product-body");
 const vintageEl = document.getElementById("product-vintage");
 const agingEl = document.getElementById("product-aging");
 const drinkingWindowEl = document.getElementById("product-drinking-window");
@@ -120,6 +135,7 @@ const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
 
+// Kommagetrennte Liste (Aroma-Schlagworte, "Passt gut zu") in ein Array.
 function parsePairsWith(value) {
   return value
     .split(",")
@@ -155,6 +171,9 @@ function updateExportBar() {
 }
 
 let editingOriginalName = null;
+// Zeitpunkt der letzten Prüfung des geladenen Produkts – bleibt erhalten,
+// solange der Haken „Angaben geprüft" gesetzt bleibt.
+let editingVerifiedAt = "";
 // Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
 // Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
 // gleichen Stelle landet statt oben in der Liste.
@@ -193,12 +212,22 @@ const FIELDS = [
   ["group", groupEl],
   ["subGroup", subgroupEl],
   ["abv", abvEl],
+  ["originCountry", originCountryEl],
+  ["originRegion", originRegionEl],
+  ["baseMaterial", baseMaterialEl],
+  ["productionMethod", productionMethodEl],
+  ["ageStatement", ageStatementEl],
   ["region", regionEl],
   ["grapeVariety", grapeVarietyEl],
   ["vineyard", vineyardEl],
   ["vintage", vintageEl],
   ["aging", agingEl],
   ["drinkingWindow", drinkingWindowEl],
+  ["producer", producerEl],
+  ["sweetness", sweetnessEl],
+  ["classification", classificationEl],
+  ["servingTemp", servingTempEl],
+  ["body", bodyEl],
   ["tastingNotes", tastingNotesEl],
   ["foodPairing", foodPairingEl],
   ["service", serviceEl],
@@ -212,12 +241,27 @@ const FIELDS = [
   ["orderUnit", document.getElementById("product-order-unit")],
 ];
 
+// Wein-spezifische Felder (Region, Rebsorte, Erzeuger, Klassifikation …)
+// stehen nur bei Wein und Schaumwein im Formular – bei einem Gin wären sie
+// nur Ballast.
+const WINE_GROUPS = ["Wein", "Schaumwein"];
+
+function updateWineFieldsVisibility() {
+  wineFieldsEl.hidden = !WINE_GROUPS.includes(groupEl.value.trim());
+}
+
 function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
   priceValueEl.value = "";
   parLevelEl.value = "";
   pairsWithEl.value = "";
+  abvValueEl.value = "";
+  abvMaxEl.value = "";
+  flavorTagsEl.value = "";
+  verifiedEl.checked = false;
+  editingVerifiedAt = "";
   editingOriginalName = null;
+  updateWineFieldsVisibility();
   renderSidebarList();
 }
 
@@ -226,7 +270,13 @@ function loadIntoForm(product) {
   priceValueEl.value = product.priceValue || "";
   parLevelEl.value = product.parLevel ?? "";
   pairsWithEl.value = (product.pairsWith ?? []).join(", ");
+  abvValueEl.value = product.abvValue ?? "";
+  abvMaxEl.value = product.abvMax ?? "";
+  flavorTagsEl.value = (product.flavorTags ?? []).join(", ");
+  verifiedEl.checked = Boolean(product.verified);
+  editingVerifiedAt = product.verifiedAt ?? "";
   editingOriginalName = product.name;
+  updateWineFieldsVisibility();
   renderSidebarList();
 }
 
@@ -239,6 +289,15 @@ async function handleSave() {
   const product = {};
   FIELDS.forEach(([key, el]) => (product[key] = key === "name" ? name : el.value.trim()));
   product.priceValue = parseFloat(priceValueEl.value) || 0;
+  // Leere Zahlenfelder bleiben leer statt zu 0 zu werden – "kein Wert
+  // gepflegt" ist etwas anderes als "0 % vol".
+  product.abvValue = abvValueEl.value === "" ? "" : parseFloat(abvValueEl.value);
+  product.abvMax = abvMaxEl.value === "" ? "" : parseFloat(abvMaxEl.value);
+  product.flavorTags = parsePairsWith(flavorTagsEl.value);
+  product.verified = verifiedEl.checked;
+  // Prüfdatum nur setzen, wenn der Haken frisch gesetzt wurde; beim Entfernen
+  // fällt es weg.
+  product.verifiedAt = verifiedEl.checked ? editingVerifiedAt || new Date().toISOString() : "";
   // Leer lassen ist erlaubt und heißt "kein Soll-Bestand gepflegt" – dann
   // taucht das Produkt im Bestellvorschlag unter "Soll-Bestand fehlt" auf,
   // statt stillschweigend mit 0 gerechnet zu werden.
@@ -481,12 +540,25 @@ function renderProductItem(product) {
   const metaRows = [
     ["Kategorie & Herkunft", product.category],
     ["Alkoholgehalt", product.abv],
+    ["Herkunftsland", product.originCountry],
+    ["Herkunftsregion", product.originRegion],
+    ["Grundstoff", product.baseMaterial],
+    ["Herstellungsverfahren", product.productionMethod],
+    ["Altersangabe", product.ageStatement],
+    ["Aroma-Schlagworte", (product.flavorTags ?? []).join(", ")],
     ["Region", product.region],
     ["Rebsorte", product.grapeVariety],
     ["Lage", product.vineyard],
     ["Jahrgang", product.vintage],
     ["Ausbau", product.aging],
     ["Trinkfenster", product.drinkingWindow],
+    ["Erzeuger", product.producer],
+    ["Geschmacksrichtung", product.sweetness],
+    ["Klassifikation", product.classification],
+    ["Serviertemperatur", product.servingTemp],
+    ["Körper", product.body],
+    // Leer statt "nein": nur der gesetzte Prüfvermerk ist eine Aussage.
+    ["Geprüft", product.verified ? "ja" : ""],
     ["Tasting Notes", product.tastingNotes],
     ["Speiseempfehlung", product.foodPairing],
     ["Serviervorschlag", product.service],
@@ -743,6 +815,8 @@ export function initProducts() {
     document.getElementById("product-save").textContent = "Vorschlag einreichen";
     document.getElementById("product-delete").textContent = "Löschung vorschlagen";
   }
+  groupEl.addEventListener("input", updateWineFieldsVisibility);
+  updateWineFieldsVisibility();
   document.getElementById("product-save").addEventListener("click", handleSave);
   document.getElementById("product-new").addEventListener("click", resetForm);
   document.getElementById("product-delete").addEventListener("click", handleDelete);

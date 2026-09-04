@@ -12,6 +12,18 @@ const PRODUCT_METRICS = [
   { field: "Einkaufspreis", missing: (p) => !p.priceValue },
   { field: "Kurzpitch", missing: (p) => !p.quickPitch },
   { field: "Tasting Notes", missing: (p) => !p.tastingNotes },
+  // Produktwissen (Paket 21): Grundlage für Schulung und Quiz.
+  { field: "Herkunftsland", missing: (p) => !p.originCountry },
+  { field: "Grundstoff", missing: (p) => !p.baseMaterial },
+  { field: "Aroma-Schlagworte", missing: (p) => (p.flavorTags ?? []).length === 0 },
+  // Nur dort ein Mangel, wo eine Textangabe existiert, aus der sich keine Zahl
+  // ableiten ließ – "0 % vol" ist ein gepflegter Wert, kein fehlender.
+  {
+    field: "Alkoholgehalt als Zahl",
+    missing: (p) => Boolean(p.abv) && (p.abvValue === "" || p.abvValue == null),
+  },
+  // Ohne Prüfvermerk wird ein Produkt später im Quiz nicht abgefragt.
+  { field: "Prüfvermerk", missing: (p) => !p.verified },
 ];
 
 const RECIPE_METRICS = [
