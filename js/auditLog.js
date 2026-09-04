@@ -1,5 +1,7 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { escapeHtml } from "./utils.js";
+import { saveRecipe, saveProduct, fromRecipeRow, fromProductRow, loadRecipes, loadProducts } from "./storage.js";
+import { isAdmin } from "./auth.js";
 
 const filterEl = document.getElementById("audit-log-filter");
 const dateFilterEl = document.getElementById("audit-log-date-filter");
@@ -7,6 +9,8 @@ const sectionEl = document.getElementById("audit-log-section");
 const listEl = document.getElementById("audit-log-list");
 
 let loaded = false;
+// Zuletzt geladene Einträge – der Wiederherstellen-Knopf greift darauf zu.
+let entriesCache = [];
 
 const TABLE_LABELS = { recipes: "Rezept", products: "Produkt", profiles: "Konto" };
 const ACTION_LABELS = { insert: "angelegt", update: "geändert", delete: "gelöscht" };
@@ -36,6 +40,20 @@ function computeDiff(entry) {
   return rows;
 }
 
+// Wiederherstellbar ist alles, wovon ein früherer Stand vorliegt – also
+// Änderungen und Löschungen an Rezepten und Produkten. Bei einem Neuanlegen
+// gibt es keinen Vorzustand; Konten bleiben außen vor, die gehören ins
+// Admin-Panel.
+const RESTORABLE_TABLES = { recipes: saveRecipe, products: saveProduct };
+
+// Prüft nur die Daten, nicht die Rechte – der Admin-Check sitzt bewusst
+// getrennt davon beim Rendern und beim Ausführen.
+export function istWiederherstellbar(entry) {
+  if (!RESTORABLE_TABLES[entry.table_name]) return false;
+  if (!entry.old_data || !entry.old_data.name) return false;
+  return entry.action === "update" || entry.action === "delete";
+}
+
 function entryLabel(entry) {
   const data = entry.new_data ?? entry.old_data ?? {};
   return data.name ?? data.email ?? "";
@@ -61,7 +79,8 @@ async function loadAuditLog() {
     listEl.innerHTML = `<p class="empty-note">Änderungsverlauf konnte nicht geladen werden: ${escapeHtml(error.message)}</p>`;
     return;
   }
-  renderAuditLog(data ?? []);
+  entriesCache = data ?? [];
+  renderAuditLog(entriesCache);
 }
 
 function renderAuditLog(entries) {
@@ -85,6 +104,11 @@ function renderAuditLog(entries) {
         label ? " · " + escapeHtml(label) : ""
       } · ${escapeHtml(who)}</summary>
           ${
+            isAdmin() && istWiederherstellbar(entry)
+              ? `<div class="actions"><button type="button" class="btn-secondary audit-restore" data-id="${escapeHtml(entry.id)}">Diesen Stand wiederherstellen</button></div>`
+              : ""
+          }
+          ${
             rows.length === 0
               ? `<p class="empty-note">Keine inhaltlichen Feldänderungen erkennbar.</p>`
               : `<table>
@@ -105,7 +129,72 @@ function renderAuditLog(entries) {
     .join("");
 }
 
+// Baut den Bestätigungstext: was sich durch das Wiederherstellen ändert.
+export function bestaetigungsText(entry, alterStand) {
+  const name = alterStand.name;
+  const aktuell =
+    entry.table_name === "recipes"
+      ? loadRecipes().find((r) => r.name === name)
+      : loadProducts().find((p) => p.name === name);
+
+  const zeilen = [];
+  Object.keys(alterStand).forEach((feld) => {
+    if (feld === "id") return;
+    const jetzt = aktuell?.[feld];
+    const zurueck = alterStand[feld];
+    if (JSON.stringify(jetzt ?? "") === JSON.stringify(zurueck ?? "")) return;
+    const kurz = (v) => {
+      const t = v === null || v === undefined || v === "" ? "–" : JSON.stringify(v);
+      return t.length > 60 ? t.slice(0, 57) + "…" : t;
+    };
+    zeilen.push(`  ${feld}: ${kurz(jetzt)}  ->  ${kurz(zurueck)}`);
+  });
+
+  const teile = [`"${name}" auf den Stand von diesem Eintrag zurücksetzen?`, ""];
+  teile.push(zeilen.length > 0 ? zeilen.join("\n") : "  (keine Unterschiede zum aktuellen Stand)");
+
+  // Umbenennung: Wiederherstellen legt den alten Namen wieder an, der neue
+  // bleibt daneben stehen. Das muss man vorher wissen.
+  const neuerName = entry.new_data?.name;
+  if (entry.action === "update" && neuerName && neuerName !== name) {
+    teile.push(
+      "",
+      `Achtung: Der Eintrag wurde in "${neuerName}" umbenannt.`,
+      `Wiederherstellen legt "${name}" wieder an – "${neuerName}" bleibt bestehen`,
+      "und muss danach von Hand gelöscht werden."
+    );
+  }
+  if (entry.action === "delete") {
+    teile.push("", "Der gelöschte Eintrag wird neu angelegt.");
+  }
+  return teile.join("\n");
+}
+
+async function handleRestore(id) {
+  const entry = entriesCache.find((e) => e.id === id);
+  if (!entry || !isAdmin() || !istWiederherstellbar(entry)) return;
+
+  const alterStand =
+    entry.table_name === "recipes" ? fromRecipeRow(entry.old_data) : fromProductRow(entry.old_data);
+
+  if (!confirm(bestaetigungsText(entry, alterStand))) return;
+
+  try {
+    // Über die normale Speicherfunktion: so landet auch die
+    // Wiederherstellung selbst wieder im Änderungsverlauf.
+    await RESTORABLE_TABLES[entry.table_name](alterStand);
+    alert(`"${alterStand.name}" wurde wiederhergestellt.`);
+    await loadAuditLog();
+  } catch (error) {
+    alert("Wiederherstellen fehlgeschlagen: " + error.message);
+  }
+}
+
 export function initAuditLog() {
+  listEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".audit-restore");
+    if (btn) handleRestore(btn.dataset.id);
+  });
   filterEl.addEventListener("change", loadAuditLog);
   dateFilterEl.addEventListener("change", loadAuditLog);
   sectionEl.addEventListener("toggle", () => {

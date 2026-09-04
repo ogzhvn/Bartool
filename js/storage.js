@@ -73,7 +73,7 @@ function toRecipeRecord(recipe) {
   };
 }
 
-function fromRecipeRow(row) {
+export function fromRecipeRow(row) {
   return {
     name: row.name,
     category: row.category ?? "",
@@ -189,7 +189,7 @@ function toProductRecord(product) {
   };
 }
 
-function fromProductRow(row) {
+export function fromProductRow(row) {
   return {
     id: row.id,
     name: row.name,

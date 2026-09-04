@@ -93,6 +93,10 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
+**Alle 15 Pakete sind umgesetzt.** Was danach kam, steht nicht mehr in dieser
+Tabelle – neue Aufgaben bitte unten als Paket 16 ff. ergänzen, damit die
+Reihenfolge und die Spielregeln aus Kapitel 0 weiter gelten.
+
 | # | Paket | Status |
 |---|---|---|
 | 1 | PWA installierbar + App-Shell offline | erledigt |
@@ -109,7 +113,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 | 12 | Inventur – Auswertung & Bestellvorschlag | erledigt |
 | 13 | Excel-Import für Produkte | erledigt |
 | 14 | Startseite: Favoriten & zuletzt benutzt | erledigt |
-| 15 | Audit-Log: Wiederherstellen | offen |
+| 15 | Audit-Log: Wiederherstellen | erledigt |
 
 ---
 
