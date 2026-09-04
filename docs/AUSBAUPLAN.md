@@ -93,9 +93,10 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Alle 15 Pakete sind umgesetzt.** Was danach kam, steht nicht mehr in dieser
-Tabelle – neue Aufgaben bitte unten als Paket 16 ff. ergänzen, damit die
-Reihenfolge und die Spielregeln aus Kapitel 0 weiter gelten.
+**Runde 1 (Pakete 1–15) ist vollständig umgesetzt.** Runde 2 (Pakete 16–21) ist
+geplant und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
+`erledigt` setzen und mitcommitten.
 
 | # | Paket | Status |
 |---|---|---|
@@ -114,6 +115,17 @@ Reihenfolge und die Spielregeln aus Kapitel 0 weiter gelten.
 | 13 | Excel-Import für Produkte | erledigt |
 | 14 | Startseite: Favoriten & zuletzt benutzt | erledigt |
 | 15 | Audit-Log: Wiederherstellen | erledigt |
+
+### Runde 2 (geplant am 04.09.2026)
+
+| # | Paket | Status |
+|---|---|---|
+| 16 | Event-/Bankett-Planer | offen |
+| 17 | Schichtübergabe / Barbuch | offen |
+| 18 | Checklisten Opening/Closing + Nachweisdokumentation | offen |
+| 19 | Einkaufspreis-Historie + Kalkulations-Warnung | offen |
+| 20 | „Was kann ich bauen?" (Bestand × Rezepte) | offen |
+| 21 | Bestellvorschlag exportieren | offen |
 
 ---
 
@@ -634,9 +646,299 @@ Danach `supabase/schema.sql` nachziehen und die drei Felder in `toProductRecord`
 
 ---
 
+# Paket 16 – Event-/Bankett-Planer
+
+**Abhängigkeit:** Pakete 6 (Batching/Flaschenmodus), 8 (Kartenkalkulation), 9 (Ansätze) müssen stehen – tun sie.
+**Ziel:** Für eine Veranstaltung (Gästezahl, Dauer, Drinkauswahl) rechnet das Tool in einem Rutsch
+Drinkzahl, Batch-Mengen je Rezept, Entnahme-/Einkaufsliste je Produkt, Wareneinsatz und Eisbedarf aus.
+Ergebnis speicherbar, druckbar und als Ansätze ins Mise en Place übernehmbar.
+
+**Dateien**
+- neu: `js/events.js`
+- geändert: `index.html` (Nav-Button + `<section id="events">`), `js/main.js` (Import + `initEvents()`),
+  `js/storage.js` (Sync-Block nach dem Muster von `preparations`), `js/printView.js` (`printEventPlan()`),
+  `sw.js` (`js/events.js` in `PRECACHE`, `CACHE`-Zahl hochzählen), `supabase/schema.sql`
+
+**Schema (per Supabase-MCP `apply_migration`, danach in `supabase/schema.sql` nachziehen)**
+```sql
+create table if not exists public.events (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  event_date date,
+  guests numeric,
+  duration_hours numeric,
+  drinks_per_guest numeric,
+  buffer_percent numeric not null default 10,
+  -- [{ recipeName: "...", share: 40 }] – Anteile in Prozent, Summe soll 100 sein
+  drink_mix jsonb not null default '[]'::jsonb,
+  ice_kg_per_drink numeric,
+  notes text,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+RLS **exakt nach dem Muster von `preparations`** (Zeilen ~325–350 in `supabase/schema.sql`):
+lesen/anlegen/ändern für jeden eingeloggten Nutzer, löschen nur Admin. Plus
+`events_set_updated_at`-Trigger.
+
+**Schritte**
+1. `storage.js`: Block `initEventSync / loadEvents / saveEvent / deleteEvent / onEventsChanged`
+   1:1 nach dem Preparations-Block bauen (inkl. Offline-Cache-Key und Realtime-Kanal).
+   In `main.js` in das `Promise.all(...)` in Zeile ~77 aufnehmen.
+2. Nav-Button in `index.html` neben „Mise en Place" (Zeile ~119) einhängen:
+   `<button class="tab-btn" data-tab="events" role="tab" aria-selected="false"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>`
+   und `<section id="events" class="tab-panel">` nach dem Preparations-Panel (~Zeile 319 ff.).
+3. Eingabemaske: Name, Datum, Gäste, Dauer (h), **Drinks pro Gast**, Puffer in %, Eis in kg/Drink,
+   Notiz. Darunter die Drinkauswahl: Rezept aus `getAllRecipes()` wählen + Anteil in Prozent,
+   beliebig viele Zeilen, Summenanzeige mit Warnung wenn ≠ 100 %.
+4. **Vorbelegte Planungswerte sind Vorschläge, keine Wahrheit.** Vorbelegen mit
+   `drinksProGast = 2 + max(0, dauer - 1)` und `iceKgPerDrink = 0,25`, beide Felder frei
+   editierbar und im UI mit dem Hinweis „Faustwert – bitte an euren Betrieb anpassen" versehen.
+   **Beim Bau des Pakets den Nutzer einmal fragen**, welche Werte im A-ROSA realistisch sind, und
+   seine Antwort als Default eintragen. Nicht selbst festlegen.
+5. Rechenkern (reine Funktionen, ohne DOM, damit testbar):
+   - `gesamtDrinks = round(gäste * drinksProGast * (1 + puffer/100))`
+   - je Rezept: `anzahl = round(gesamtDrinks * anteil/100)`, Skalierungsfaktor `anzahl / base_portions`
+   - Zutaten aller Rezepte aggregieren, Schlüssel `name + einheit`; über `UNIT_TO_ML` aus `js/units.js`
+     auf ml normalisieren. **Stückzutaten (Scheibe, Zweig, Stk.) nicht in ml zwingen**, sondern
+     getrennt als Stückliste ausgeben – gleiches Verhalten wie in `js/dilution.js`.
+   - Kosten je Zutat über `priceForIngredient()` + `ingredientCost()` aus `js/costing.js`;
+     Zutaten ohne Produkttreffer sichtbar als „kein Preis hinterlegt" listen, nicht stillschweigend mit 0 rechnen.
+   - Ausgabe: Wareneinsatz gesamt, Wareneinsatz pro Gast, Eisbedarf gesamt.
+6. Entnahmeliste je Produkt: Menge in l/ml plus Lieferant aus `product.supplier`.
+   Eine Flaschenzahl **nur** ausgeben, wenn aus `product.orderUnit` eine Gebindegröße als Zahl
+   parsebar ist (Text-Feld, Format uneinheitlich). Sonst Literzahl + Hinweis „Gebinde unbekannt".
+   Nicht schätzen.
+7. Button **„Batches als Ansätze anlegen"**: pro Rezept mit Batchmenge `prefillPreparation({...})`
+   aus `js/preparations.js` aufrufen und über `switchTab("preparations")` dorthin springen.
+8. `printEventPlan(event, ergebnis)` in `js/printView.js` nach dem Muster von `printLabels()`:
+   Kopf (Event, Datum, Gäste), Tabelle Drinks, Tabelle Entnahmeliste, Wareneinsatz.
+9. Gespeicherte Events als Liste (kommende zuerst), Klick lädt zurück in die Maske.
+
+**Abnahme-Checkliste**
+- [ ] Tab „Events" erscheint, Panel öffnet, Layout auf Handy einspaltig.
+- [ ] Event mit 3 Rezepten (Anteile 50/30/20) rechnet plausibel; Summenwarnung bei 90 % erscheint.
+- [ ] Zutat ohne Produkttreffer wird als „kein Preis hinterlegt" gemeldet, Gesamtsumme bleibt nachvollziehbar.
+- [ ] Stückzutaten stehen in einer eigenen Liste, nicht in Millilitern.
+- [ ] Speichern → Neuladen → Event ist noch da (Realtime + Offline-Cache).
+- [ ] „Batches als Ansätze anlegen" landet mit vorbelegten Werten im Mise en Place.
+- [ ] Druckansicht ohne Navigation, passt auf A4.
+- [ ] `sw.js`: `js/events.js` in `PRECACHE`, `CACHE` hochgezählt.
+- [ ] `supabase/schema.sql` enthält Tabelle + RLS identisch zur Migration.
+
+---
+
+# Paket 17 – Schichtübergabe / Barbuch
+
+**Abhängigkeit:** Paket 16 abgeschlossen (nur wegen Reihenfolge, technisch unabhängig).
+**Ziel:** Digitales Übergabebuch statt Zettel: was ist leer, was muss angesetzt werden, was ist offen
+geblieben. Jeder Eintrag mit Autor und Zeitstempel, offene Punkte übernimmt die nächste Schicht.
+
+**Dateien:** neu `js/shiftLog.js`; geändert `index.html`, `js/main.js`, `js/storage.js`, `sw.js`, `supabase/schema.sql`
+
+**Schema**
+```sql
+create table if not exists public.shift_logs (
+  id uuid primary key default gen_random_uuid(),
+  shift_date date not null default current_date,
+  -- frueh | spaet | nacht
+  shift text not null default 'spaet',
+  summary text,
+  -- [{ text: "...", done: false, doneBy: null, doneAt: null }]
+  open_items jsonb not null default '[]'::jsonb,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists shift_logs_date_idx on public.shift_logs (shift_date desc);
+```
+RLS wie `preparations`.
+
+**Schritte**
+1. Storage-Block + Sync wie gehabt.
+2. Ansicht: letzte 14 Tage als Liste, neuester zuerst; „Neue Übergabe" öffnet Formular.
+3. Beim Anlegen automatisch vorschlagen (jeweils abwählbar, nichts wird ungefragt gespeichert):
+   - offene Punkte der letzten Schicht, die noch nicht abgehakt sind
+   - Ansätze aus `loadPreparations()`, deren `expires_at` in den nächsten 2 Tagen liegt oder abgelaufen ist
+4. Offene Punkte abhakbar mit Name + Zeit (`getCurrentProfile()`), Anzeige „erledigt von … um …".
+5. Startseite (`js/home.js`): Kachel „Offene Punkte aus der letzten Schicht: n".
+
+**Abnahme-Checkliste**
+- [ ] Übergabe anlegen, offener Punkt bleibt zum nächsten Tag sichtbar.
+- [ ] Abgelaufener Ansatz taucht als Vorschlag auf, lässt sich abwählen.
+- [ ] Abhaken schreibt Name und Zeitstempel, auch nach Neuladen sichtbar.
+- [ ] Mitarbeiter (nicht Admin) darf anlegen und abhaken; löschen nur Admin.
+- [ ] `sw.js` aktualisiert, `schema.sql` nachgezogen.
+
+---
+
+# Paket 18 – Checklisten Opening/Closing + Nachweisdokumentation
+
+**Abhängigkeit:** Paket 17.
+**Ziel:** Wiederkehrende Abläufe (Öffnen, Schließen, Reinigung, Kühltemperaturen) als abhakbare
+Vorlage mit Nachweis: wer, wann, welcher Messwert. Druckbar für Kontrollen.
+
+**Dateien:** neu `js/checklists.js`; geändert `index.html`, `js/main.js`, `js/storage.js`,
+`js/printView.js`, `sw.js`, `supabase/schema.sql`
+
+**Schema**
+```sql
+create table if not exists public.checklist_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  -- opening | closing | reinigung | temperatur | sonstiges
+  kind text not null default 'sonstiges',
+  -- [{ id, label, type: "check" | "wert", unit: "°C", hint: "" }]
+  items jsonb not null default '[]'::jsonb,
+  active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.checklist_runs (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid references public.checklist_templates (id) on delete cascade,
+  run_date date not null default current_date,
+  -- [{ itemId, done, value, note, by, at }]
+  entries jsonb not null default '[]'::jsonb,
+  finished_at timestamptz,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+Templates: lesen alle, schreiben nur Admin (Muster `recipes`). Runs: wie `preparations`.
+
+**Schritte**
+1. Admin-Ansicht zum Pflegen der Vorlagen (Items hinzufügen/sortieren/löschen), Item-Typ
+   `check` oder `wert` (Zahl + Einheit, z. B. Kühlschranktemperatur).
+2. Team-Ansicht: aktive Vorlage wählen → heutigen Lauf öffnen oder fortsetzen → abhaken/Wert eintragen.
+   Jeder Eintrag speichert Name und Uhrzeit.
+3. Bei Item-Typ `wert` optional Grenzwerte (`min`/`max` im Template) → Wert außerhalb wird rot markiert
+   und verlangt eine Notiz. **Grenzwerte nicht selbst festlegen**, der Nutzer trägt sie in der Vorlage ein.
+4. Verlauf: letzte 30 Läufe, druckbar über ein `printChecklistRuns()` nach `printView.js`-Muster.
+
+**Abnahme-Checkliste**
+- [ ] Admin legt Vorlage „Closing" mit 5 Items an, davon eins vom Typ Wert.
+- [ ] Mitarbeiter füllt den Lauf aus, Werte und Namen stehen nach Neuladen noch drin.
+- [ ] Wert außerhalb der Grenzen ist markiert und verlangt eine Notiz.
+- [ ] Druckansicht zeigt Datum, Items, Werte, Namen.
+- [ ] `sw.js` aktualisiert, `schema.sql` nachgezogen.
+
+---
+
+# Paket 19 – Einkaufspreis-Historie + Kalkulations-Warnung
+
+**Abhängigkeit:** Paket 8 (Kartenkalkulation) – steht.
+**Ziel:** Preise werden nicht mehr stillschweigend überschrieben. Jede Preisänderung wird als Zeile
+mit Datum festgehalten, und die Kalkulation warnt, wenn ein Drink über die Zielquote läuft.
+
+**Dateien:** neu `js/priceHistory.js`; geändert `js/storage.js` (in `saveProduct`), `js/products.js`
+(Verlaufsanzeige im Detail), `js/menuCosting.js` (Zielquote + Warnung), `sw.js`, `supabase/schema.sql`
+
+**Schema**
+```sql
+create table if not exists public.product_prices (
+  id uuid primary key default gen_random_uuid(),
+  product_name text not null,
+  price_value numeric,
+  price_unit text,
+  valid_from date not null default current_date,
+  source text,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists product_prices_name_idx on public.product_prices (product_name, valid_from desc);
+```
+Lesen: alle eingeloggten. Schreiben: Admin.
+
+**Schritte**
+1. In `saveProduct()` (`js/storage.js`, ~Zeile 261) vor dem Schreiben den alten Preis vergleichen;
+   bei Änderung zusätzlich eine Zeile in `product_prices` schreiben. Kein zweiter Schreibpfad im UI.
+2. Einmalig den Ist-Stand als Startpunkt sichern: für alle Produkte mit `price_value` eine Zeile mit
+   `valid_from = <heute>`, `source = 'Bestand bei Einführung'` per Skript/SQL erzeugen.
+3. Produktdetail: kleine Tabelle „Preisverlauf" (Datum, Preis, Differenz zum Vorwert in %).
+4. `menuCosting.js`: Eingabefeld **Zielquote in %** (Vorbelegung 25 %, editierbar, gespeichert in
+   `localStorage`). Drinks über der Quote werden markiert. **Beim Bau nachfragen**, welche Quote im
+   Betrieb gilt – nicht selbst setzen.
+5. Warnliste „Kalkulation prüfen": Drinks, deren Wareneinsatz seit dem letzten gespeicherten Preisstand
+   um mehr als 10 % gestiegen ist.
+
+**Abnahme-Checkliste**
+- [ ] Preisänderung an einem Produkt erzeugt genau eine neue Zeile in `product_prices`.
+- [ ] Speichern ohne Preisänderung erzeugt keine Zeile.
+- [ ] Preisverlauf im Produktdetail sichtbar, Prozentdifferenz stimmt.
+- [ ] Kartenkalkulation markiert Drinks über der Zielquote.
+- [ ] `schema.sql` nachgezogen.
+
+---
+
+# Paket 20 – „Was kann ich bauen?" (Bestand × Rezepte)
+
+**Abhängigkeit:** Paket 11/12 (Inventur) – steht.
+**Ziel:** Aus dem letzten Inventurstand ableiten, welche Drinks aktuell machbar sind und bei welchen
+genau eine Zutat fehlt. Kein neues Schema, reine Auswertung.
+
+**Dateien:** neu `js/buildable.js`; geändert `js/inventory.js` (Einstiegspunkt in der Auswertung)
+oder `js/home.js` (Kachel), `index.html`, `js/main.js`, `sw.js`
+
+**Schritte**
+1. Letzten Zählstand über `loadInventoryCounts()` + `loadInventoryItems(countId)` holen.
+2. Für jedes Rezept aus `getAllRecipes()` die Zutaten über dieselbe Teilstring-Logik wie
+   `priceForIngredient()` auf Produkte mappen. **Nicht neu erfinden** – Matching-Funktion aus
+   `js/costing.js` wiederverwenden bzw. dorthin auslagern und importieren.
+3. Drei Gruppen ausgeben: „machbar", „eine Zutat fehlt" (mit Namen der fehlenden), „nicht zuordenbar"
+   (Zutat ohne Produkttreffer – wichtig für die Datenpflege, nicht verstecken).
+4. Klick auf ein Rezept springt über `focusRecipe(name)` in die Leseansicht.
+
+**Abnahme-Checkliste**
+- [ ] Ohne Inventurstand erscheint ein verständlicher Hinweis, kein Fehler.
+- [ ] Ein auf 0 gezähltes Produkt schiebt die betroffenen Drinks in „eine Zutat fehlt".
+- [ ] Nicht zuordenbare Zutaten sind sichtbar gelistet.
+
+---
+
+# Paket 21 – Bestellvorschlag exportieren
+
+**Abhängigkeit:** Paket 12 – steht.
+**Ziel:** Der Bestellvorschlag aus `js/ordering.js` verlässt das Tool: druckbar und als Text zum
+Einfügen in eine Mail, getrennt je Lieferant.
+
+**Dateien:** geändert `js/ordering.js`, `js/inventory.js`, `js/printView.js`, `sw.js`
+
+**Schritte**
+1. `printOrderProposal(vorschlag)` in `printView.js` – ein Blatt je Lieferant (`page-break-after`),
+   Kopf mit Datum und Besteller aus `getCurrentProfile()`.
+2. Button „Als Text kopieren" je Lieferant: Zeilen `Menge Einheit – Produktname (Artikel/Gebinde)`,
+   über `navigator.clipboard.writeText()`, mit sichtbarer Rückmeldung „kopiert".
+3. Produkte ohne `supplier` in einer Gruppe „Lieferant fehlt" ausweisen, nicht unterschlagen.
+
+**Abnahme-Checkliste**
+- [ ] Druckansicht: je Lieferant eine Seite, keine Navigation.
+- [ ] Kopieren funktioniert auf dem Handy (HTTPS bzw. localhost).
+- [ ] Produkte ohne Lieferant erscheinen sichtbar in einer eigenen Gruppe.
+
+---
+
+## Backlog Runde 3 (bewusst noch nicht eingeplant)
+
+Reihenfolge offen, erst nach Runde 2 entscheiden:
+- **Reporting-Startseite:** Wareneinsatzquote über Zeit, Inventurhistorie, ablaufende Ansätze.
+- **Barcode-Scan bei der Inventur:** `BarcodeDetector` bzw. CDN-Lib, EAN-Feld an `products`.
+- **Fotos zu Rezepten/Produkten:** Supabase Storage, Garnitur- und Glasbild.
+- **Schwund-/Bruch-/Verkostungsbuch:** erklärt Inventurdifferenzen.
+- **Mehrsprachigkeit (EN)** für Saisonkräfte.
+
+---
+
 ## Bewusst nicht im Scope
 
 Nicht bauen, auch wenn es naheliegt – erst nachfragen:
 Schulungs-/Quizmodus, Gäste- oder Öffentlichkeitsansicht ohne Login, dritte Rolle für Service/Restaurant,
 Offline-Warteschlange für Schreibzugriffe, Batchen nach Gewicht (dafür fehlen belastbare Dichtewerte),
 Kassen- oder Warenwirtschaftsanbindung, Frontend-Framework oder Build-Schritt.
+
+**Zusätzlich entschieden am 04.09.2026:** Alles, was Verkaufszahlen braucht, bleibt vorerst draußen –
+also Menu-Engineering-Matrix (Deckungsbeitrag × Absatz), Soll-/Ist-Verbrauch und echte Pouring-Cost.
+Grund: es gibt keine geklärte Datenquelle. Wenn später ein CSV-/Excel-Export aus der Kasse vorliegt,
+wird das als eigenes Paket neu bewertet – vorher nicht anfangen.
