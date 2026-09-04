@@ -108,3 +108,90 @@ export function printLabels(prep, typLabel, anzahl = 1, ersteller = "") {
     setTimeout(cleanUp, 2000);
   }, 50);
 }
+
+// ---------------------------------------------------------------------
+// Eventplan
+//
+// Was am Veranstaltungstag gebraucht wird, auf Papier: was gemixt wird,
+// was aus dem Lager geholt werden muss und was es kostet. Bewusst ohne
+// Bedienelemente – gedruckt wird der aufbereitete Bereich, nicht der Tab.
+// ---------------------------------------------------------------------
+
+function formatMengePrint(ml) {
+  return ml >= 1000 ? `${formatNumberDe(ml / 1000)} l` : `${formatNumberDe(ml)} ml`;
+}
+
+function tabelle(kopf, zeilen) {
+  if (zeilen.length === 0) return "";
+  return `<table>
+      <thead><tr>${kopf.map((k) => `<th>${escapeHtml(k)}</th>`).join("")}</tr></thead>
+      <tbody>${zeilen.map((z) => `<tr>${z.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>`;
+}
+
+export function printEventPlan(event, ergebnis) {
+  if (!event || !ergebnis) return;
+
+  const datum = event.eventDate
+    ? new Date(event.eventDate).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : "–";
+
+  const kopf = [
+    ["Datum", escapeHtml(datum)],
+    ["Gäste", event.guests ? formatNumberDe(event.guests) : "–"],
+    ["Dauer", event.durationHours ? `${formatNumberDe(event.durationHours)} h` : "–"],
+    ["Drinks gesamt", `${ergebnis.totalDrinks} (inkl. ${formatNumberDe(Number(event.bufferPercent) || 0)} % Puffer)`],
+    ["Eisbedarf", `${formatNumberDe(ergebnis.iceKg)} kg`],
+    ["Wareneinsatz", `${formatNumberDe(ergebnis.totalCost)} € · pro Gast ${formatNumberDe(ergebnis.costPerGuest)} €`],
+  ]
+    .map(([label, wert]) => `<p class="meta"><strong>${escapeHtml(label)}</strong> ${wert}</p>`)
+    .join("");
+
+  const drinks = tabelle(
+    ["Rezept", "Anteil", "Anzahl", "Batchmenge", "ABV"],
+    ergebnis.drinks.map((d) => [
+      escapeHtml(d.recipeName),
+      `${formatNumberDe(d.share)} %`,
+      String(d.count),
+      d.found ? formatMengePrint(d.batchMl) : "–",
+      d.found && d.abv !== null ? `${formatNumberDe(d.abv)} % vol` : "–",
+    ])
+  );
+
+  const entnahme = tabelle(
+    ["Zutat", "Menge", "Gebinde", "Lieferant", "Kosten"],
+    ergebnis.volumeLines.map((l) => [
+      escapeHtml(l.name),
+      formatMengePrint(l.ml),
+      l.bottles !== null ? `${l.bottles} × ${formatMengePrint(l.bottleSizeMl)}` : "Gebinde unbekannt",
+      l.supplier ? escapeHtml(l.supplier) : "–",
+      l.priceKnown ? `${formatNumberDe(l.cost)} €` : "kein Preis hinterlegt",
+    ])
+  );
+
+  const stueck = tabelle(
+    ["Zutat", "Menge", "Lieferant"],
+    ergebnis.pieceLines.map((l) => [
+      escapeHtml(l.name),
+      `${formatNumberDe(Math.ceil(l.amount))} ${escapeHtml(l.unit)}`,
+      l.supplier ? escapeHtml(l.supplier) : "–",
+    ])
+  );
+
+  const notiz = event.notes ? `<p class="meta"><strong>Notiz</strong> ${escapeHtml(event.notes)}</p>` : "";
+  const hinweis =
+    ergebnis.missingPrices.length > 0
+      ? `<p class="history">Ohne hinterlegten Einkaufspreis und deshalb mit 0 € gerechnet: ${escapeHtml(
+          ergebnis.missingPrices.join(", ")
+        )}.</p>`
+      : "";
+
+  printBlocks(
+    event.name || "Eventplan",
+    `${kopf}${notiz}
+     <h2>Drinks</h2>${drinks}
+     <h2>Entnahme-/Einkaufsliste</h2>${entnahme || "<p>Keine Volumenzutaten.</p>"}
+     ${stueck ? `<h2>Stückzutaten</h2>${stueck}` : ""}
+     ${hinweis}`
+  );
+}

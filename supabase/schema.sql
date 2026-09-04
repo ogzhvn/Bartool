@@ -346,6 +346,60 @@ create policy "preparations: admin deletes"
   using (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Event-/Bankett-Planer
+-- ---------------------------------------------------------------------
+
+create table if not exists public.events (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  event_date date,
+  guests numeric,
+  duration_hours numeric,
+  drinks_per_guest numeric,
+  buffer_percent numeric not null default 10,
+  -- [{ recipeName: "...", share: 40 }] – Anteile in Prozent, Summe soll 100 sein
+  drink_mix jsonb not null default '[]'::jsonb,
+  ice_kg_per_drink numeric,
+  notes text,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists events_event_date_idx on public.events (event_date);
+
+alter table public.events enable row level security;
+
+drop trigger if exists events_set_updated_at on public.events;
+create trigger events_set_updated_at
+  before update on public.events
+  for each row execute function public.set_updated_at();
+
+-- Gleiches Muster wie bei den Ansätzen: Events plant das ganze Team.
+-- Lesen, anlegen und ändern darf jeder eingeloggte Nutzer, löschen bleibt
+-- Admin-Sache, damit keine Planung unbemerkt verschwindet.
+drop policy if exists "events: any authenticated user can read" on public.events;
+create policy "events: any authenticated user can read"
+  on public.events for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "events: any authenticated user can insert" on public.events;
+create policy "events: any authenticated user can insert"
+  on public.events for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "events: any authenticated user can update" on public.events;
+create policy "events: any authenticated user can update"
+  on public.events for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "events: admin deletes" on public.events;
+create policy "events: admin deletes"
+  on public.events for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Inventur
 -- ---------------------------------------------------------------------
 

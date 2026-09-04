@@ -120,7 +120,7 @@ ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 
 | # | Paket | Status |
 |---|---|---|
-| 16 | Event-/Bankett-Planer | offen |
+| 16 | Event-/Bankett-Planer | erledigt |
 | 17 | Schichtübergabe / Barbuch | offen |
 | 18 | Checklisten Opening/Closing + Nachweisdokumentation | offen |
 | 19 | Einkaufspreis-Historie + Kalkulations-Warnung | offen |

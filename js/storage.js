@@ -3,13 +3,16 @@ import { getSupabaseClient } from "./supabaseClient.js";
 const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
 const PREPARATIONS_UPDATED_EVENT = "bartool:preparations-updated";
+const EVENTS_UPDATED_EVENT = "bartool:events-updated";
 
 let recipesCache = [];
 let productsCache = [];
 let preparationsCache = [];
+let eventsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
+let eventsChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -24,6 +27,7 @@ let preparationsChannel = null;
 const RECIPES_CACHE_KEY = "bartool:recipes";
 const PRODUCTS_CACHE_KEY = "bartool:products";
 const PREPARATIONS_CACHE_KEY = "bartool:preparations";
+const EVENTS_CACHE_KEY = "bartool:events";
 
 function readCache(key) {
   try {
@@ -378,6 +382,109 @@ export async function deletePreparation(id) {
 export function onPreparationsChanged(callback) {
   window.addEventListener(PREPARATIONS_UPDATED_EVENT, callback);
 }
+
+// ---------------------------------------------------------------------
+// Events / Bankette (Tabelle "events" in Supabase)
+//
+// Gleiches Muster wie die Ansätze: Schlüssel ist die id, denn denselben
+// Veranstaltungsnamen kann es mehrfach geben (jede Feier ist ein eigener
+// Eintrag). Die Drinkauswahl liegt als JSON in einer Spalte – sie gehört
+// immer zu genau einem Event und wird nie einzeln abgefragt.
+// ---------------------------------------------------------------------
+
+function toEventRecord(ev) {
+  const zahl = (wert) => (wert === "" || wert == null ? null : Number(wert));
+  const record = {
+    name: ev.name,
+    event_date: ev.eventDate || null,
+    guests: zahl(ev.guests),
+    duration_hours: zahl(ev.durationHours),
+    drinks_per_guest: zahl(ev.drinksPerGuest),
+    buffer_percent: zahl(ev.bufferPercent) ?? 10,
+    drink_mix: Array.isArray(ev.drinkMix) ? ev.drinkMix : [],
+    ice_kg_per_drink: zahl(ev.iceKgPerDrink),
+    notes: ev.notes || null,
+  };
+  if (ev.id) record.id = ev.id;
+  if (ev.createdBy) record.created_by = ev.createdBy;
+  return record;
+}
+
+function fromEventRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    eventDate: row.event_date ?? "",
+    guests: row.guests ?? "",
+    durationHours: row.duration_hours ?? "",
+    drinksPerGuest: row.drinks_per_guest ?? "",
+    bufferPercent: row.buffer_percent ?? 10,
+    drinkMix: Array.isArray(row.drink_mix) ? row.drink_mix : [],
+    iceKgPerDrink: row.ice_kg_per_drink ?? "",
+    notes: row.notes ?? "",
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? null,
+  };
+}
+
+async function refreshEvents() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("events").select("*").order("event_date", { nullsFirst: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    eventsCache = (data ?? []).map(fromEventRow);
+    writeCache(EVENTS_CACHE_KEY, eventsCache);
+  } else {
+    const buffered = readCache(EVENTS_CACHE_KEY);
+    if (buffered) eventsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(EVENTS_UPDATED_EVENT));
+}
+
+export async function initEventSync() {
+  const buffered = readCache(EVENTS_CACHE_KEY);
+  if (buffered) {
+    eventsCache = buffered;
+    window.dispatchEvent(new CustomEvent(EVENTS_UPDATED_EVENT));
+  }
+  await refreshEvents();
+  const supabase = getSupabaseClient();
+  if (eventsChannel) supabase.removeChannel(eventsChannel);
+  eventsChannel = supabase
+    .channel("public:events")
+    .on("postgres_changes", { event: "*", schema: "public", table: "events" }, refreshEvents)
+    .subscribe();
+}
+
+export function loadEvents() {
+  return eventsCache;
+}
+
+export async function saveEvent(ev) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("events").upsert(toEventRecord(ev));
+  if (error) throw error;
+  await refreshEvents();
+}
+
+export async function deleteEvent(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) throw error;
+  await refreshEvents();
+}
+
+export function onEventsChanged(callback) {
+  window.addEventListener(EVENTS_UPDATED_EVENT, callback);
+}
+
 
 // ---------------------------------------------------------------------
 // Inventur (Tabellen "inventory_counts" und "inventory_items")

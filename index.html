@@ -117,6 +117,7 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Betrieb</h3>
         <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
+        <button class="tab-btn" data-tab="events" role="tab" aria-selected="false"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
       </div>
       <div class="sidebar-group">
@@ -394,6 +395,75 @@
         </label>
       </div>
       <div id="prep-list"></div>
+    </section>
+
+    <!-- EVENTS / BANKETTE -->
+    <section id="events" class="tab-panel">
+      <h2>Event- &amp; Bankettplaner</h2>
+      <p class="hint">Gästezahl, Dauer und Drinkauswahl eintragen – daraus fallen Drinkzahl, Batchmengen, Entnahmeliste, Wareneinsatz und Eisbedarf. Es wird laufend mitgerechnet, gespeichert wird erst auf Knopfdruck.</p>
+
+      <form id="event-form">
+        <h3>Veranstaltung</h3>
+        <div class="field-row">
+          <label>
+            Name
+            <input type="text" id="event-name" placeholder="z. B. Hochzeit Meier, Sonnendeck" required />
+          </label>
+          <label>
+            Datum
+            <input type="date" id="event-date" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Gäste
+            <input type="number" id="event-guests" min="0" step="1" placeholder="z. B. 80" />
+          </label>
+          <label>
+            Dauer (Stunden)
+            <input type="number" id="event-duration" min="0" step="0.5" placeholder="z. B. 4" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Drinks pro Gast
+            <input type="number" id="event-drinks-per-guest" min="0" step="0.1" />
+          </label>
+          <label>
+            Puffer (%)
+            <input type="number" id="event-buffer" min="0" step="5" value="10" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Eis (kg pro Drink)
+            <input type="number" id="event-ice" min="0" step="0.05" />
+          </label>
+          <label>
+            Notiz
+            <input type="text" id="event-notes" placeholder="optional, z. B. Aperitif ab 18 Uhr auf der Terrasse" />
+          </label>
+        </div>
+        <p class="hint">Drinks pro Gast und Eis pro Drink sind Faustwerte – bitte an euren Betrieb anpassen. Vorbelegt: 2 Drinks in der ersten Stunde und 1 je weiterer Stunde, 0,35 kg Eis pro Drink. Wird „Drinks pro Gast“ von Hand geändert, bleibt der Wert stehen.</p>
+
+        <h3>Drinkauswahl</h3>
+        <div id="event-mix" class="ingredient-list"></div>
+        <div class="actions">
+          <button type="button" id="event-add-drink" class="btn-secondary">Rezept hinzufügen</button>
+        </div>
+        <p id="event-share-sum" class="hint"></p>
+
+        <div class="actions">
+          <button type="submit" id="event-submit" class="btn-primary">Event speichern</button>
+          <button type="button" id="event-cancel" class="btn-secondary" hidden>Abbrechen</button>
+        </div>
+      </form>
+
+      <h3>Ergebnis</h3>
+      <div id="event-result"></div>
+
+      <h3>Gespeicherte Events</h3>
+      <div id="event-list"></div>
     </section>
 
     <!-- INVENTUR -->
