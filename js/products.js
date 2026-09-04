@@ -7,6 +7,7 @@ import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } f
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { isAdmin } from "./auth.js";
+import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 
@@ -440,6 +441,42 @@ function formatPrice(product) {
   return `${product.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${unitLabel}`;
 }
 
+// Preisverlauf als kleine Tabelle: wann galt welcher Einkaufspreis und wie
+// viel Prozent war das mehr oder weniger als davor. Zeigt sich nur, wenn es
+// überhaupt einen gespeicherten Stand gibt.
+function renderPriceHistory(product) {
+  const entries = priceHistoryFor(product.name);
+  if (entries.length === 0) return "";
+
+  const rows = entries
+    .map((entry, index) => {
+      const vorher = entries[index + 1];
+      const einheit = entry.priceUnit === "stueck" ? "Stück" : "Liter";
+      const preis =
+        entry.priceValue == null
+          ? "–"
+          : `${entry.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${einheit}`;
+      let diff = "–";
+      if (vorher && vorher.priceValue && entry.priceValue != null) {
+        const prozent = ((entry.priceValue - vorher.priceValue) / vorher.priceValue) * 100;
+        const vorzeichen = prozent > 0 ? "+" : "";
+        diff = `<span class="${prozent > 0 ? "menu-quote-high" : "menu-quote-ok"}">${vorzeichen}${prozent.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %</span>`;
+      }
+      const datum = entry.validFrom ? entry.validFrom.split("-").reverse().join(".") : "–";
+      return `<tr><td>${datum}</td><td>${preis}</td><td>${diff}</td><td>${escapeHtml(entry.source)}</td></tr>`;
+    })
+    .join("");
+
+  return `
+    <p><strong>Preisverlauf:</strong></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Gültig ab</th><th>Einkaufspreis</th><th>Differenz</th><th>Quelle</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
 function renderProductItem(product) {
   const metaRows = [
     ["Kategorie & Herkunft", product.category],
@@ -478,6 +515,7 @@ function renderProductItem(product) {
     </summary>
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+      ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>

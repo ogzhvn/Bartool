@@ -535,6 +535,50 @@ create policy "checklist_runs: admin deletes"
   using (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Einkaufspreis-Historie
+--
+-- Jede Änderung des Einkaufspreises eines Produkts wird als eigene Zeile
+-- festgehalten, statt den alten Wert zu überschreiben. Geschrieben wird
+-- ausschließlich aus saveProduct() (js/storage.js) heraus.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.product_prices (
+  id uuid primary key default gen_random_uuid(),
+  product_name text not null,
+  price_value numeric,
+  price_unit text,
+  valid_from date not null default current_date,
+  source text,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists product_prices_name_idx
+  on public.product_prices (product_name, valid_from desc);
+
+alter table public.product_prices enable row level security;
+
+-- Preisstände sind Arbeitsgrundlage für die Kalkulation: lesen darf jeder
+-- eingeloggte Nutzer, schreiben nur Admins (Muster products).
+drop policy if exists "product_prices: any authenticated user can read" on public.product_prices;
+create policy "product_prices: any authenticated user can read"
+  on public.product_prices for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "product_prices: admin write" on public.product_prices;
+create policy "product_prices: admin write"
+  on public.product_prices for all
+  using (private.is_admin())
+  with check (private.is_admin());
+
+-- Startpunkt: der Ist-Stand aller gepflegten Einkaufspreise als erste Zeile.
+insert into public.product_prices (product_name, price_value, price_unit, valid_from, source)
+select p.name, p.price_value, p.price_unit, current_date, 'Bestand bei Einführung'
+from public.products p
+where p.price_value is not null
+  and not exists (select 1 from public.product_prices pp where pp.product_name = p.name);
+
+-- ---------------------------------------------------------------------
 -- Inventur
 -- ---------------------------------------------------------------------
 
@@ -759,6 +803,13 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.checklist_runs;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.product_prices;
 exception
   when duplicate_object then null;
 end $$;

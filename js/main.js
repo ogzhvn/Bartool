@@ -29,6 +29,7 @@ import {
   initChecklistTemplateSync,
   initChecklistRunSync,
 } from "./storage.js";
+import { initPriceHistorySync } from "./priceHistory.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
@@ -95,6 +96,7 @@ async function bootstrapAppOnce() {
     initShiftLogSync(),
     initChecklistTemplateSync(),
     initChecklistRunSync(),
+    initPriceHistorySync(),
   ]);
   initTabs();
   initHome();

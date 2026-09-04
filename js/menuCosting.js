@@ -1,6 +1,8 @@
 import { getAllRecipes } from "./recipeLibrary.js";
 import { getAllProducts } from "./productLibrary.js";
-import { calculateRecipeCost } from "./costing.js";
+import { calculateRecipeCost, ingredientCost } from "./costing.js";
+import { getProduct } from "./productLibrary.js";
+import { previousPriceFor, onPricesChanged } from "./priceHistory.js";
 import { onRecipesChanged, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 
@@ -24,6 +26,34 @@ const statusEl = document.getElementById("menu-data-status");
 
 // Überlebt das Neuzeichnen der Liste (z. B. beim Suchen).
 const selectedNames = new Set();
+
+// Zielquote: im Betrieb sind 22 % Wareneinsatz die Vorgabe. Der Wert bleibt
+// im Feld änderbar und wird pro Gerät gemerkt, damit ihn niemand bei jedem
+// Öffnen der Karte neu eintippen muss.
+const QUOTE_STORAGE_KEY = "bartool:menu-target-quote";
+const DEFAULT_QUOTE = 22;
+
+// Ab wie viel Prozent Anstieg des Wareneinsatzes ein Drink in die Warnliste
+// wandert. 10 % ist die Schwelle, ab der sich Nachrechnen lohnt.
+const WARN_SCHWELLE_PROZENT = 10;
+
+function ladeZielquote() {
+  try {
+    const gespeichert = parseFloat(localStorage.getItem(QUOTE_STORAGE_KEY));
+    if (Number.isFinite(gespeichert) && gespeichert > 0) return gespeichert;
+  } catch {
+    // Kein Zugriff auf localStorage: dann eben mit der Vorgabe arbeiten.
+  }
+  return DEFAULT_QUOTE;
+}
+
+function speichereZielquote(wert) {
+  try {
+    localStorage.setItem(QUOTE_STORAGE_KEY, String(wert));
+  } catch {
+    // Speichern ist Komfort, kein Muss.
+  }
+}
 
 function formatEuro(n) {
   return `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -80,6 +110,64 @@ function berechneZeile(recipe, vat) {
   };
 }
 
+// Wareneinsatz eines Rezepts, wahlweise mit den aktuellen Einkaufspreisen
+// oder mit dem jeweils vorherigen gespeicherten Preisstand. Der Vergleich
+// beider Werte zeigt, welcher Drink durch Preiserhöhungen teurer geworden ist.
+// Zutaten ohne Vorwert werden mit dem aktuellen Preis gerechnet, sonst sähe
+// jede Preiserhöhung größer aus, als sie ist.
+function wareneinsatzMitVorpreisen(recipe) {
+  let total = 0;
+  let hatVorwert = false;
+  for (const ing of recipe.ingredients ?? []) {
+    const produkt = getProduct(ing.name);
+    const aktuell = produkt && produkt.priceValue ? Number(produkt.priceValue) : 0;
+    const vorher = produkt ? previousPriceFor(produkt.name) : null;
+    if (vorher) hatVorwert = true;
+    total += ingredientCost(ing.amount, ing.unit, vorher ? vorher.priceValue : aktuell);
+  }
+  return hatVorwert ? total : null;
+}
+
+function preisWarnungen() {
+  return getAllRecipes()
+    .map((recipe) => {
+      const vorher = wareneinsatzMitVorpreisen(recipe);
+      if (vorher === null || vorher <= 0) return null;
+      const jetzt = calculateRecipeCost(recipe).total;
+      const anstieg = ((jetzt - vorher) / vorher) * 100;
+      return anstieg > WARN_SCHWELLE_PROZENT ? { name: recipe.name, jetzt, vorher, anstieg } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.anstieg - a.anstieg);
+}
+
+// Steht bewusst unabhängig von der Auswahl unter der Tabelle: die Frage
+// "welcher Drink muss neu kalkuliert werden" stellt sich für die ganze Karte,
+// nicht nur für die gerade angehakten Drinks.
+function renderPreisWarnungen() {
+  const warnungen = preisWarnungen();
+  if (warnungen.length === 0) return "";
+  const zeilen = warnungen
+    .map(
+      (w) => `
+      <tr>
+        <td>${escapeHtml(w.name)}</td>
+        <td>${formatEuro(w.vorher)}</td>
+        <td>${formatEuro(w.jetzt)}</td>
+        <td><span class="menu-quote-high">+${formatProzent(w.anstieg)}</span></td>
+      </tr>`
+    )
+    .join("");
+  return `
+    <p class="summary">Kalkulation prüfen: bei ${warnungen.length} Drink(s) ist der Wareneinsatz seit dem letzten gespeicherten Preisstand um mehr als ${WARN_SCHWELLE_PROZENT} % gestiegen.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Drink</th><th>Wareneinsatz vorher</th><th>Wareneinsatz jetzt</th><th>Anstieg</th></tr></thead>
+        <tbody>${zeilen}</tbody>
+      </table>
+    </div>`;
+}
+
 // Ohne gepflegte Preise rechnet die Karte lauter Nullen. Statt das
 // unkommentiert anzuzeigen, steht oben, wie vollständig die Datenbasis ist.
 function renderDataStatus() {
@@ -113,7 +201,7 @@ function berechnen() {
   const rezepte = getAllRecipes().filter((r) => selectedNames.has(r.name));
 
   if (rezepte.length === 0) {
-    resultEl.innerHTML = `<p class="empty-note">Noch keine Drinks ausgewählt.</p>`;
+    resultEl.innerHTML = `<p class="empty-note">Noch keine Drinks ausgewählt.</p>${renderPreisWarnungen()}`;
     return;
   }
 
@@ -184,6 +272,7 @@ function berechnen() {
         ? `<p class="empty-note">${unvollstaendig} Drink(s) mit unvollständigem Wareneinsatz: bei mindestens einer Zutat fehlt der Einkaufspreis im Produktkatalog. Die Quote ist dort zu gut.</p>`
         : ""
     }
+    ${renderPreisWarnungen()}
   `;
 }
 
@@ -214,6 +303,7 @@ function exportExcel() {
 }
 
 export function initMenuCosting() {
+  quoteEl.value = ladeZielquote();
   renderList();
   renderDataStatus();
   berechnen();
@@ -245,6 +335,11 @@ export function initMenuCosting() {
 
   [quoteEl, vatEl].forEach((el) => el.addEventListener("input", berechnen));
 
+  quoteEl.addEventListener("change", () => {
+    const wert = parseFloat(quoteEl.value);
+    if (Number.isFinite(wert) && wert > 0) speichereZielquote(wert);
+  });
+
   // Preise können sich jederzeit ändern (anderes Gerät, anderer Nutzer).
   onRecipesChanged(() => {
     renderList();
@@ -255,4 +350,7 @@ export function initMenuCosting() {
     renderDataStatus();
     berechnen();
   });
+  // Ein neuer Preisstand verschiebt die Warnliste, auch wenn sich am Produkt
+  // sonst nichts geändert hat.
+  onPricesChanged(berechnen);
 }

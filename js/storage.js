@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "./supabaseClient.js";
+import { recordPriceChange } from "./priceHistory.js";
 
 const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
@@ -274,11 +275,15 @@ export function loadProducts() {
   return productsCache;
 }
 
-export async function saveProduct(product) {
+export async function saveProduct(product, options = {}) {
   if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
+  // Stand vor dem Speichern merken: nur so lässt sich erkennen, ob sich der
+  // Einkaufspreis geändert hat und ein neuer Preisstand fällig ist.
+  const previous = productsCache.find((p) => p.name === product.name) ?? null;
   const { error } = await supabase.from("products").upsert(toProductRecord(product), { onConflict: "name" });
   if (error) throw error;
+  await recordPriceChange(product, previous, options.priceSource);
   await refreshProducts();
 }
 
