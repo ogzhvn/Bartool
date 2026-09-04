@@ -5,17 +5,23 @@ const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
 const PREPARATIONS_UPDATED_EVENT = "bartool:preparations-updated";
 const EVENTS_UPDATED_EVENT = "bartool:events-updated";
 const SHIFT_LOGS_UPDATED_EVENT = "bartool:shift-logs-updated";
+const CHECKLIST_TEMPLATES_UPDATED_EVENT = "bartool:checklist-templates-updated";
+const CHECKLIST_RUNS_UPDATED_EVENT = "bartool:checklist-runs-updated";
 
 let recipesCache = [];
 let productsCache = [];
 let preparationsCache = [];
 let eventsCache = [];
 let shiftLogsCache = [];
+let checklistTemplatesCache = [];
+let checklistRunsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
 let eventsChannel = null;
 let shiftLogsChannel = null;
+let checklistTemplatesChannel = null;
+let checklistRunsChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -32,6 +38,8 @@ const PRODUCTS_CACHE_KEY = "bartool:products";
 const PREPARATIONS_CACHE_KEY = "bartool:preparations";
 const EVENTS_CACHE_KEY = "bartool:events";
 const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
+const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
+const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
 
 function readCache(key) {
   try {
@@ -584,6 +592,196 @@ export async function deleteShiftLog(id) {
 export function onShiftLogsChanged(callback) {
   window.addEventListener(SHIFT_LOGS_UPDATED_EVENT, callback);
 }
+
+
+// ---------------------------------------------------------------------
+// Checklisten (Tabellen "checklist_templates" und "checklist_runs")
+//
+// Zwei Datenarten, die zusammengehören: die Vorlage sagt, was zu prüfen
+// ist, der Lauf ist der ausgefüllte Nachweis eines Tages. Beide sind
+// klein genug für den üblichen Cache – gelesen werden immer alle
+// Vorlagen und die letzten Läufe, nie einzelne Zeilen.
+// ---------------------------------------------------------------------
+
+// Wie viele Läufe geladen werden. Der Verlauf zeigt 30 – etwas Reserve,
+// damit auch bei mehreren Vorlagen pro Tag genug zusammenkommt.
+const CHECKLIST_RUNS_LIMIT = 300;
+
+function toChecklistTemplateRecord(template) {
+  const record = {
+    name: template.name,
+    kind: template.kind || "sonstiges",
+    items: Array.isArray(template.items) ? template.items : [],
+    active: template.active !== false,
+  };
+  if (template.id) record.id = template.id;
+  return record;
+}
+
+function fromChecklistTemplateRow(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    kind: row.kind ?? "sonstiges",
+    items: Array.isArray(row.items) ? row.items : [],
+    active: row.active !== false,
+    updatedAt: row.updated_at ?? null,
+  };
+}
+
+async function refreshChecklistTemplates() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("checklist_templates").select("*").order("name"));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    checklistTemplatesCache = (data ?? []).map(fromChecklistTemplateRow);
+    writeCache(CHECKLIST_TEMPLATES_CACHE_KEY, checklistTemplatesCache);
+  } else {
+    const buffered = readCache(CHECKLIST_TEMPLATES_CACHE_KEY);
+    if (buffered) checklistTemplatesCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(CHECKLIST_TEMPLATES_UPDATED_EVENT));
+}
+
+export async function initChecklistTemplateSync() {
+  const buffered = readCache(CHECKLIST_TEMPLATES_CACHE_KEY);
+  if (buffered) {
+    checklistTemplatesCache = buffered;
+    window.dispatchEvent(new CustomEvent(CHECKLIST_TEMPLATES_UPDATED_EVENT));
+  }
+  await refreshChecklistTemplates();
+  const supabase = getSupabaseClient();
+  if (checklistTemplatesChannel) supabase.removeChannel(checklistTemplatesChannel);
+  checklistTemplatesChannel = supabase
+    .channel("public:checklist_templates")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "checklist_templates" },
+      refreshChecklistTemplates
+    )
+    .subscribe();
+}
+
+export function loadChecklistTemplates() {
+  return checklistTemplatesCache;
+}
+
+export async function saveChecklistTemplate(template) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("checklist_templates").upsert(toChecklistTemplateRecord(template));
+  if (error) throw error;
+  await refreshChecklistTemplates();
+}
+
+export async function deleteChecklistTemplate(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("checklist_templates").delete().eq("id", id);
+  if (error) throw error;
+  await refreshChecklistTemplates();
+  // Läufe hängen per "on delete cascade" an der Vorlage – der lokale
+  // Cache weiß davon nichts und muss nachgezogen werden.
+  await refreshChecklistRuns();
+}
+
+export function onChecklistTemplatesChanged(callback) {
+  window.addEventListener(CHECKLIST_TEMPLATES_UPDATED_EVENT, callback);
+}
+
+function toChecklistRunRecord(run) {
+  const record = {
+    template_id: run.templateId || null,
+    run_date: run.runDate || null,
+    entries: Array.isArray(run.entries) ? run.entries : [],
+    finished_at: run.finishedAt || null,
+  };
+  if (run.id) record.id = run.id;
+  if (run.createdBy) record.created_by = run.createdBy;
+  return record;
+}
+
+function fromChecklistRunRow(row) {
+  return {
+    id: row.id,
+    templateId: row.template_id ?? null,
+    runDate: row.run_date ?? "",
+    entries: Array.isArray(row.entries) ? row.entries : [],
+    finishedAt: row.finished_at ?? null,
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  };
+}
+
+async function refreshChecklistRuns() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase
+      .from("checklist_runs")
+      .select("*")
+      .order("run_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(CHECKLIST_RUNS_LIMIT));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    checklistRunsCache = (data ?? []).map(fromChecklistRunRow);
+    writeCache(CHECKLIST_RUNS_CACHE_KEY, checklistRunsCache);
+  } else {
+    const buffered = readCache(CHECKLIST_RUNS_CACHE_KEY);
+    if (buffered) checklistRunsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(CHECKLIST_RUNS_UPDATED_EVENT));
+}
+
+export async function initChecklistRunSync() {
+  const buffered = readCache(CHECKLIST_RUNS_CACHE_KEY);
+  if (buffered) {
+    checklistRunsCache = buffered;
+    window.dispatchEvent(new CustomEvent(CHECKLIST_RUNS_UPDATED_EVENT));
+  }
+  await refreshChecklistRuns();
+  const supabase = getSupabaseClient();
+  if (checklistRunsChannel) supabase.removeChannel(checklistRunsChannel);
+  checklistRunsChannel = supabase
+    .channel("public:checklist_runs")
+    .on("postgres_changes", { event: "*", schema: "public", table: "checklist_runs" }, refreshChecklistRuns)
+    .subscribe();
+}
+
+export function loadChecklistRuns() {
+  return checklistRunsCache;
+}
+
+export async function saveChecklistRun(run) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("checklist_runs").upsert(toChecklistRunRecord(run));
+  if (error) throw error;
+  await refreshChecklistRuns();
+}
+
+export async function deleteChecklistRun(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("checklist_runs").delete().eq("id", id);
+  if (error) throw error;
+  await refreshChecklistRuns();
+}
+
+export function onChecklistRunsChanged(callback) {
+  window.addEventListener(CHECKLIST_RUNS_UPDATED_EVENT, callback);
+}
+
 
 
 

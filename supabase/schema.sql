@@ -450,6 +450,91 @@ create policy "shift_logs: admin deletes"
   using (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Checklisten Opening/Closing + Nachweisdokumentation
+-- ---------------------------------------------------------------------
+
+create table if not exists public.checklist_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  -- opening | closing | reinigung | temperatur | sonstiges
+  kind text not null default 'sonstiges',
+  -- [{ id, label, type: "check" | "wert", unit: "°C", hint: "", min, max }]
+  items jsonb not null default '[]'::jsonb,
+  active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.checklist_templates enable row level security;
+
+drop trigger if exists checklist_templates_set_updated_at on public.checklist_templates;
+create trigger checklist_templates_set_updated_at
+  before update on public.checklist_templates
+  for each row execute function public.set_updated_at();
+
+-- Vorlagen sind die Regel, nach der gearbeitet wird: lesen alle, pflegen
+-- nur Admins (Muster recipes/products).
+drop policy if exists "checklist_templates: any authenticated user can read" on public.checklist_templates;
+create policy "checklist_templates: any authenticated user can read"
+  on public.checklist_templates for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "checklist_templates: admin write" on public.checklist_templates;
+create policy "checklist_templates: admin write"
+  on public.checklist_templates for all
+  using (private.is_admin())
+  with check (private.is_admin());
+
+create table if not exists public.checklist_runs (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid references public.checklist_templates (id) on delete cascade,
+  run_date date not null default current_date,
+  -- [{ itemId, done, value, note, by, at }]
+  entries jsonb not null default '[]'::jsonb,
+  finished_at timestamptz,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Pro Vorlage und Tag genau ein Lauf: sonst führen zwei Geräte, die
+-- gleichzeitig "Lauf öffnen" drücken, zwei getrennte Nachweise.
+create unique index if not exists checklist_runs_template_date_idx
+  on public.checklist_runs (template_id, run_date);
+
+create index if not exists checklist_runs_date_idx on public.checklist_runs (run_date desc);
+
+alter table public.checklist_runs enable row level security;
+
+drop trigger if exists checklist_runs_set_updated_at on public.checklist_runs;
+create trigger checklist_runs_set_updated_at
+  before update on public.checklist_runs
+  for each row execute function public.set_updated_at();
+
+-- Abgehakt wird von der ganzen Schicht: lesen, anlegen und ändern darf
+-- jeder eingeloggte Nutzer, löschen bleibt Admin-Sache, damit kein
+-- Nachweis unbemerkt verschwindet (Muster preparations/shift_logs).
+drop policy if exists "checklist_runs: any authenticated user can read" on public.checklist_runs;
+create policy "checklist_runs: any authenticated user can read"
+  on public.checklist_runs for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "checklist_runs: any authenticated user can insert" on public.checklist_runs;
+create policy "checklist_runs: any authenticated user can insert"
+  on public.checklist_runs for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "checklist_runs: any authenticated user can update" on public.checklist_runs;
+create policy "checklist_runs: any authenticated user can update"
+  on public.checklist_runs for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "checklist_runs: admin deletes" on public.checklist_runs;
+create policy "checklist_runs: admin deletes"
+  on public.checklist_runs for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Inventur
 -- ---------------------------------------------------------------------
 
@@ -660,6 +745,20 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.shift_logs;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.checklist_templates;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.checklist_runs;
 exception
   when duplicate_object then null;
 end $$;

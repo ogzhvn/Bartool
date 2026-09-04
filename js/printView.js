@@ -195,3 +195,38 @@ export function printEventPlan(event, ergebnis) {
      ${hinweis}`
   );
 }
+
+// ---------------------------------------------------------------------
+// Checklisten-Nachweis
+//
+// Was bei einer Kontrolle gefragt wird: welche Liste, an welchem Tag,
+// welcher Punkt, welcher Messwert, von wem und wann. Die Läufe kommen
+// fertig aufbereitet aus js/checklists.js herein – wie beim Eventplan
+// rechnet und formatiert das Fachmodul, hier passiert nur der Druck.
+// Erwartetes Format je Lauf:
+// { titel, meta: [[label, wert], ...], zeilen: [[punkt, ergebnis, von, zeitpunkt, notiz], ...] }
+// ---------------------------------------------------------------------
+
+export function printChecklistRuns(laeufe, titel = "Checklisten-Nachweis") {
+  if (!Array.isArray(laeufe) || laeufe.length === 0) return;
+
+  // Bei einem einzelnen Lauf steht der Name schon in der Überschrift –
+  // dann keine zweite gleichlautende Zeile darunter.
+  const einzeln = laeufe.length === 1;
+
+  const bloecke = laeufe
+    .map((lauf) => {
+      const kopf = (lauf.meta ?? [])
+        .map(([label, wert]) => `<p class="meta"><strong>${escapeHtml(label)}</strong> ${escapeHtml(wert)}</p>`)
+        .join("");
+      const zeilen = tabelle(
+        ["Punkt", "Ergebnis", "Von", "Zeitpunkt", "Notiz"],
+        (lauf.zeilen ?? []).map((z) => z.map((c) => escapeHtml(c)))
+      );
+      const ueberschrift = einzeln ? "" : `<h2>${escapeHtml(lauf.titel)}</h2>`;
+      return `${ueberschrift}${kopf}${zeilen || "<p>Keine Punkte in dieser Vorlage.</p>"}`;
+    })
+    .join("");
+
+  printBlocks(laeufe.length === 1 ? laeufe[0].titel : titel, bloecke);
+}

@@ -122,7 +122,7 @@ ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 |---|---|---|
 | 16 | Event-/Bankett-Planer | erledigt |
 | 17 | Schichtübergabe / Barbuch | erledigt |
-| 18 | Checklisten Opening/Closing + Nachweisdokumentation | offen |
+| 18 | Checklisten Opening/Closing + Nachweisdokumentation | erledigt |
 | 19 | Einkaufspreis-Historie + Kalkulations-Warnung | offen |
 | 20 | „Was kann ich bauen?" (Bestand × Rezepte) | offen |
 

@@ -119,6 +119,7 @@
         <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
         <button class="tab-btn" data-tab="events" role="tab" aria-selected="false"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>
         <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
+        <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
       </div>
       <div class="sidebar-group">
@@ -517,6 +518,81 @@
 
       <h3>Letzte Übergaben</h3>
       <div id="shift-log-list"></div>
+    </section>
+
+    <!-- CHECKLISTEN -->
+    <section id="checklists" class="tab-panel">
+      <h2>Checklisten</h2>
+      <p class="hint">Opening, Closing, Reinigung, Kühltemperaturen: abhaken und Messwerte eintragen. Jeder Eintrag speichert Name und Uhrzeit – der Nachweis ist für Kontrollen ausdruckbar.</p>
+
+      <div class="field-row">
+        <label>
+          Vorlage
+          <select id="checklist-template-pick"></select>
+        </label>
+        <label>
+          Datum
+          <input type="date" id="checklist-run-date" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="checklist-open-run" class="btn-primary">Liste öffnen</button>
+      </div>
+
+      <div id="checklist-run"></div>
+
+      <h3>Verlauf</h3>
+      <p class="hint">Die letzten 30 Läufe.</p>
+      <div class="actions no-print">
+        <button type="button" id="checklist-print-history" class="btn-secondary">Verlauf drucken</button>
+      </div>
+      <div id="checklist-history"></div>
+
+      <div id="checklist-admin" data-admin-only hidden>
+        <h3>Vorlagen verwalten</h3>
+        <p class="hint">Nur für Admins. Punkte vom Typ „Messwert“ können Grenzwerte bekommen – ein Wert außerhalb wird rot markiert und verlangt eine Notiz.</p>
+
+        <div class="actions">
+          <button type="button" id="checklist-template-new" class="btn-primary">Neue Vorlage</button>
+        </div>
+
+        <form id="checklist-template-form" hidden>
+          <div class="field-row">
+            <label>
+              Name
+              <input type="text" id="checklist-template-name" placeholder="z. B. Closing Bar" required />
+            </label>
+            <label>
+              Art
+              <select id="checklist-template-kind">
+                <option value="opening">Opening</option>
+                <option value="closing">Closing</option>
+                <option value="reinigung">Reinigung</option>
+                <option value="temperatur">Temperatur</option>
+                <option value="sonstiges" selected>Sonstiges</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="radio-label">
+            <input type="checkbox" id="checklist-template-active" checked />
+            Aktiv – steht dem Team zur Auswahl
+          </label>
+
+          <h3>Punkte</h3>
+          <div id="checklist-template-items"></div>
+          <div class="actions">
+            <button type="button" id="checklist-template-add-item" class="btn-secondary">Punkt hinzufügen</button>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary">Vorlage speichern</button>
+            <button type="button" id="checklist-template-cancel" class="btn-secondary">Abbrechen</button>
+          </div>
+        </form>
+
+        <div id="checklist-template-list"></div>
+      </div>
     </section>
 
     <!-- INVENTUR -->
