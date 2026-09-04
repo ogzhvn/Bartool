@@ -400,6 +400,56 @@ create policy "events: admin deletes"
   using (private.is_admin());
 
 -- ---------------------------------------------------------------------
+-- Schichtübergabe / Barbuch
+-- ---------------------------------------------------------------------
+
+create table if not exists public.shift_logs (
+  id uuid primary key default gen_random_uuid(),
+  shift_date date not null default current_date,
+  -- frueh | spaet | nacht
+  shift text not null default 'spaet',
+  summary text,
+  -- [{ text: "...", done: false, doneBy: null, doneAt: null }]
+  open_items jsonb not null default '[]'::jsonb,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists shift_logs_date_idx on public.shift_logs (shift_date desc);
+
+alter table public.shift_logs enable row level security;
+
+drop trigger if exists shift_logs_set_updated_at on public.shift_logs;
+create trigger shift_logs_set_updated_at
+  before update on public.shift_logs
+  for each row execute function public.set_updated_at();
+
+-- Wie bei den Ansätzen: die Übergabe schreibt das ganze Team. Lesen,
+-- anlegen und ändern (Punkte abhaken) darf jeder eingeloggte Nutzer,
+-- löschen bleibt Admin-Sache, damit nichts unbemerkt verschwindet.
+drop policy if exists "shift_logs: any authenticated user can read" on public.shift_logs;
+create policy "shift_logs: any authenticated user can read"
+  on public.shift_logs for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "shift_logs: any authenticated user can insert" on public.shift_logs;
+create policy "shift_logs: any authenticated user can insert"
+  on public.shift_logs for insert
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "shift_logs: any authenticated user can update" on public.shift_logs;
+create policy "shift_logs: any authenticated user can update"
+  on public.shift_logs for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "shift_logs: admin deletes" on public.shift_logs;
+create policy "shift_logs: admin deletes"
+  on public.shift_logs for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Inventur
 -- ---------------------------------------------------------------------
 
@@ -603,6 +653,13 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.products;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.shift_logs;
 exception
   when duplicate_object then null;
 end $$;

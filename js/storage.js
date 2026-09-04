@@ -4,15 +4,18 @@ const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
 const PREPARATIONS_UPDATED_EVENT = "bartool:preparations-updated";
 const EVENTS_UPDATED_EVENT = "bartool:events-updated";
+const SHIFT_LOGS_UPDATED_EVENT = "bartool:shift-logs-updated";
 
 let recipesCache = [];
 let productsCache = [];
 let preparationsCache = [];
 let eventsCache = [];
+let shiftLogsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
 let eventsChannel = null;
+let shiftLogsChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -28,6 +31,7 @@ const RECIPES_CACHE_KEY = "bartool:recipes";
 const PRODUCTS_CACHE_KEY = "bartool:products";
 const PREPARATIONS_CACHE_KEY = "bartool:preparations";
 const EVENTS_CACHE_KEY = "bartool:events";
+const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
 
 function readCache(key) {
   try {
@@ -484,6 +488,103 @@ export async function deleteEvent(id) {
 export function onEventsChanged(callback) {
   window.addEventListener(EVENTS_UPDATED_EVENT, callback);
 }
+
+// ---------------------------------------------------------------------
+// Schichtübergabe / Barbuch (Tabelle "shift_logs" in Supabase)
+//
+// Wie bei den Events ist der Schlüssel die id: pro Tag kann es mehrere
+// Übergaben geben (früh, spät, nacht). Die offenen Punkte liegen als JSON
+// am Eintrag – sie gehören immer zu genau einer Schicht und werden nie
+// einzeln abgefragt.
+// ---------------------------------------------------------------------
+
+function toShiftLogRecord(log) {
+  const record = {
+    shift_date: log.shiftDate || null,
+    shift: log.shift || "spaet",
+    summary: log.summary || null,
+    open_items: Array.isArray(log.openItems) ? log.openItems : [],
+  };
+  if (log.id) record.id = log.id;
+  if (log.createdBy) record.created_by = log.createdBy;
+  return record;
+}
+
+function fromShiftLogRow(row) {
+  return {
+    id: row.id,
+    shiftDate: row.shift_date ?? "",
+    shift: row.shift ?? "spaet",
+    summary: row.summary ?? "",
+    openItems: Array.isArray(row.open_items) ? row.open_items : [],
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  };
+}
+
+async function refreshShiftLogs() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase
+      .from("shift_logs")
+      .select("*")
+      .order("shift_date", { ascending: false })
+      .order("created_at", { ascending: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    shiftLogsCache = (data ?? []).map(fromShiftLogRow);
+    writeCache(SHIFT_LOGS_CACHE_KEY, shiftLogsCache);
+  } else {
+    const buffered = readCache(SHIFT_LOGS_CACHE_KEY);
+    if (buffered) shiftLogsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(SHIFT_LOGS_UPDATED_EVENT));
+}
+
+export async function initShiftLogSync() {
+  const buffered = readCache(SHIFT_LOGS_CACHE_KEY);
+  if (buffered) {
+    shiftLogsCache = buffered;
+    window.dispatchEvent(new CustomEvent(SHIFT_LOGS_UPDATED_EVENT));
+  }
+  await refreshShiftLogs();
+  const supabase = getSupabaseClient();
+  if (shiftLogsChannel) supabase.removeChannel(shiftLogsChannel);
+  shiftLogsChannel = supabase
+    .channel("public:shift_logs")
+    .on("postgres_changes", { event: "*", schema: "public", table: "shift_logs" }, refreshShiftLogs)
+    .subscribe();
+}
+
+export function loadShiftLogs() {
+  return shiftLogsCache;
+}
+
+export async function saveShiftLog(log) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("shift_logs").upsert(toShiftLogRecord(log));
+  if (error) throw error;
+  await refreshShiftLogs();
+}
+
+export async function deleteShiftLog(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("shift_logs").delete().eq("id", id);
+  if (error) throw error;
+  await refreshShiftLogs();
+}
+
+export function onShiftLogsChanged(callback) {
+  window.addEventListener(SHIFT_LOGS_UPDATED_EVENT, callback);
+}
+
 
 
 // ---------------------------------------------------------------------

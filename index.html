@@ -118,6 +118,7 @@
         <h3 class="sidebar-group-title">Betrieb</h3>
         <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
         <button class="tab-btn" data-tab="events" role="tab" aria-selected="false"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>
+        <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
       </div>
       <div class="sidebar-group">
@@ -464,6 +465,58 @@
 
       <h3>Gespeicherte Events</h3>
       <div id="event-list"></div>
+    </section>
+
+    <!-- SCHICHTÜBERGABE / BARBUCH -->
+    <section id="shift-log" class="tab-panel">
+      <h2>Schichtübergabe</h2>
+      <p class="hint">Das Barbuch: was leer ist, was angesetzt werden muss, was offen geblieben ist. Offene Punkte wandern in die nächste Übergabe, bis sie jemand abhakt – mit Name und Uhrzeit.</p>
+
+      <div class="actions">
+        <button type="button" id="shift-log-new" class="btn-primary">Neue Übergabe</button>
+      </div>
+
+      <form id="shift-log-form" hidden>
+        <div class="field-row">
+          <label>
+            Datum
+            <input type="date" id="shift-log-date" required />
+          </label>
+          <label>
+            Schicht
+            <select id="shift-log-shift">
+              <option value="frueh">Frühschicht</option>
+              <option value="spaet" selected>Spätschicht</option>
+              <option value="nacht">Nachtschicht</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Notiz zur Schicht
+          <textarea id="shift-log-summary" rows="3" placeholder="z. B. Ruhiger Abend, Eismaschine läuft wieder, Sonnendeck bis 23 Uhr besetzt"></textarea>
+        </label>
+
+        <div id="shift-log-suggestions-wrap" hidden>
+          <h3>Vorschläge übernehmen</h3>
+          <p class="hint">Offene Punkte der letzten Schicht und Ansätze, die ablaufen. Abwählen, was nicht mehr gilt – gespeichert wird erst mit „Übergabe speichern“.</p>
+          <div id="shift-log-suggestions" class="menu-pick-list"></div>
+        </div>
+
+        <h3>Offene Punkte</h3>
+        <div id="shift-log-items"></div>
+        <div class="actions">
+          <button type="button" id="shift-log-add-item" class="btn-secondary">Punkt hinzufügen</button>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Übergabe speichern</button>
+          <button type="button" id="shift-log-cancel" class="btn-secondary">Abbrechen</button>
+        </div>
+      </form>
+
+      <h3>Letzte Übergaben</h3>
+      <div id="shift-log-list"></div>
     </section>
 
     <!-- INVENTUR -->

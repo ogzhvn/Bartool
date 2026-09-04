@@ -11,6 +11,7 @@ import { initMenuCosting } from "./menuCosting.js";
 import { initPreparations } from "./preparations.js";
 import { initInventory } from "./inventory.js";
 import { initEvents } from "./events.js";
+import { initShiftLog } from "./shiftLog.js";
 import { initProductImport } from "./productImport.js";
 import { initAdminPanel } from "./adminPanel.js";
 import { initAuditLog } from "./auditLog.js";
@@ -23,6 +24,7 @@ import {
   initPreparationSync,
   initInventorySync,
   initEventSync,
+  initShiftLogSync,
 } from "./storage.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
 
@@ -87,6 +89,7 @@ async function bootstrapAppOnce() {
     initPreparationSync(),
     initInventorySync(),
     initEventSync(),
+    initShiftLogSync(),
   ]);
   initTabs();
   initHome();
@@ -101,6 +104,7 @@ async function bootstrapAppOnce() {
   initPreparations();
   initInventory();
   initEvents();
+  initShiftLog();
   initProductImport();
   initAdminPanel();
   initAuditLog();

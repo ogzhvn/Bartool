@@ -1,8 +1,16 @@
 import { switchTab } from "./tabs.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { loadRecipes, loadProducts, onRecipesChanged, onProductsChanged } from "./storage.js";
+import {
+  loadRecipes,
+  loadProducts,
+  loadShiftLogs,
+  onRecipesChanged,
+  onProductsChanged,
+  onShiftLogsChanged,
+} from "./storage.js";
 import { getCurrentProfile, getCurrentUser } from "./auth.js";
 import { getFavorites, getRecent, onFavoritesChanged } from "./favorites.js";
+import { offeneAusLetzterSchicht } from "./shiftLog.js";
 import { focusRecipe } from "./recipes.js";
 import { focusProduct } from "./products.js";
 import { escapeHtml } from "./utils.js";
@@ -26,6 +34,7 @@ function renderStats() {
     [getAllRecipes().length, "Rezepte im Buch"],
     [loadRecipes().length, "davon eigene"],
     [loadProducts().length, "Produkte im Katalog"],
+    [offeneAusLetzterSchicht(loadShiftLogs()).length, "offene Punkte aus der letzten Schicht"],
   ];
   statsEl.innerHTML = stats
     .map(
@@ -75,6 +84,7 @@ export function initHome() {
   renderShortcuts();
   onRecipesChanged(renderStats);
   onProductsChanged(renderStats);
+  onShiftLogsChanged(renderStats);
   onFavoritesChanged(renderShortcuts);
 
   [favListEl, recentListEl].forEach((el) =>
