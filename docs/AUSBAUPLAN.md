@@ -126,6 +126,21 @@ ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 | 19 | Einkaufspreis-Historie + Kalkulations-Warnung | offen |
 | 20 | „Was kann ich bauen?" (Bestand × Rezepte) | offen |
 
+### Runde 3 – Produktwissen & Quiz (geplant am 04.09.2026)
+
+Reihenfolge zwingend: 21 vor 22–25, 21+26 vor 27. Die Textpakete 22–25 lassen sich
+untereinander tauschen, 21 nicht.
+
+| # | Paket | Status |
+|---|---|---|
+| 21 | Produktwissen: Datenmodell erweitern | offen |
+| 22 | Textausbau Liköre & Aperitifs (46) | offen |
+| 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | offen |
+| 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | offen |
+| 25 | Wein & Schaumwein ausbauen (30) | offen |
+| 26 | Quiz-Modul (Generator + kuratierte Fragen) | offen |
+| 27 | Quiz-Auswertung und Team-Übersicht | offen |
+
 ---
 
 # Paket 1 – PWA installierbar + App-Shell offline
@@ -895,9 +910,250 @@ oder `js/home.js` (Kachel), `index.html`, `js/main.js`, `sw.js`
 - [ ] Ein auf 0 gezähltes Produkt schiebt die betroffenen Drinks in „eine Zutat fehlt".
 - [ ] Nicht zuordenbare Zutaten sind sichtbar gelistet.
 
-## Backlog Runde 3 (bewusst noch nicht eingeplant)
+---
 
-Reihenfolge offen, erst nach Runde 2 entscheiden:
+# Paket 21 – Produktwissen: Datenmodell erweitern
+
+**Abhängigkeit:** keine. **Muss vor 22–27 laufen.**
+**Ziel:** Strukturierte, abfragbare Felder als Grundlage für den Textausbau (22–25) und das
+Quiz (26–27). Ohne dieses Paket erzeugen die Textpakete nur Prosa, aus der sich keine
+Quizfrage mit Antwortoptionen bauen lässt – dann müsste man alle 176 Produkte zweimal anfassen.
+
+**Ausgangslage (gemessen am 04.09.2026):** 310 Produkte, davon 176 alkoholisch.
+`quick_pitch` 0/310 befüllt. `abv` ist Freitext (145 eindeutig parsebar, 29 unsauber).
+Herkunftsland steckt bei Spirituosen nur im Freitext `category` („London Dry Gin · England").
+
+**Dateien:** Migration per Supabase-MCP (project_ref-gescoped), `supabase/schema.sql`,
+`js/storage.js` (Mapping ~Z. 173/204), `js/products.js` (Feldliste ~Z. 195, Detailrender ~Z. 447),
+`index.html` (Produktformular), `js/dataQuality.js`, `js/productExport.js`
+
+**Schritte**
+1. Migration `produktwissen_felder` auf `products`:
+   `abv_value numeric`, `abv_max numeric`, `origin_country text`, `origin_region text`,
+   `base_material text`, `production_method text`, `age_statement text`, `flavor_tags jsonb`,
+   `producer text`, `sweetness text`, `classification text`, `serving_temp text`, `body text`,
+   `verified boolean default false`, `verified_at timestamptz`.
+2. `supabase/schema.sql` nachziehen (Regel 3), Kommentare wie bei den Weinfeldern.
+3. Mapping in `js/storage.js` in **beide** Richtungen ergänzen (snake_case ↔ camelCase).
+4. Formularfelder in `index.html` + Feldliste/Detailrender in `js/products.js`.
+   Weinfelder (`producer`, `sweetness`, `classification`, `serving_temp`, `body`) nur bei
+   Gruppe `Wein`/`Schaumwein` einblenden, analog zu `region`/`grapeVariety`.
+5. Backfill per SQL, nur wo verlustfrei ableitbar:
+   `abv_value` aus `abv` (Bereich „12–13 % vol" → `abv_value` = 12, `abv_max` = 13),
+   `origin_country` aus dem Teil hinter „·" in `category`, `producer` aus der Klammer im Weinnamen.
+   **Alles Abgeleitete bleibt `verified = false`.**
+6. `js/dataQuality.js` um die neuen Pflichtfelder erweitern (Kurzpitch ist bereits als Metrik drin
+   und wird nach dem Backfill mit 310/310 fehlend sichtbar).
+7. `verified` steuert später das Quiz: was nicht verifiziert ist, wird nie abgefragt (Regel 6).
+
+**Abnahme**
+- [ ] Produkt speichern → Reload → alle neuen Felder unverändert vorhanden.
+- [ ] `select count(*) from products where abv_value is not null` ≥ 145.
+- [ ] Weinfelder erscheinen nur bei Wein/Schaumwein, nicht bei Gin.
+- [ ] Excel-Export enthält die neuen Spalten; Reimport derselben Datei meldet „unverändert".
+
+**Commit:** `Produktwissen: strukturierte Felder für Herkunft, ABV-Wert und Aromen`
+
+---
+
+# Paket 22 – Textausbau: Liköre & Aperitifs (46 Produkte)
+
+**Abhängigkeit:** Paket 21.
+**Ziel:** Die Gruppe mit der schlechtesten Quote auf das Niveau der Gin-Einträge heben.
+Ist-Stand: ⌀ 96 Zeichen `story`, **alle 46 unter 200 Zeichen**, `production` nur 20/46.
+Gin (⌀ 323) und Rum (⌀ 261) sind der Goldstandard – vor dem Schreiben zwei Gin-Einträge lesen.
+
+## Zielraster pro Produkt (gilt auch für Paket 23–25)
+
+| Feld | Vorgabe |
+|---|---|
+| `quickPitch` | **Ein** Satz, ≤ 120 Zeichen, wörtlich so, wie man es dem Gast sagt |
+| `story` | 350–500 Zeichen, drei Bausteine: Haus/Herkunft · Besonderheit im Verfahren · Einordnung gegen das Nachbarprodukt im Regal |
+| `production` | 1–2 konkrete Sätze: Brennverfahren, Botanicals/Rohstoff, Fasstyp, Filterung |
+| `productionMethod` | Kurzwert aus fester Liste: Pot Still · Column Still · Mazeration · Dampfinfusion · Perkolation · Solera · Flaschengärung · Tankgärung |
+| `tastingNotes` | 3–5 Deskriptoren aus festem Vokabular, identisch mit `flavorTags` |
+| `flavorTags` | dieselben Deskriptoren als Array, kleingeschrieben |
+| `baseMaterial` | Wacholder · Getreide · Melasse · Zuckerrohrsaft · Agave · Traube · Obst · Kräuter · Zitrus · Anis |
+| `service` | Serviervorschlag + zwei Standardcocktails |
+| `alternatives` | 1–2 Produkte **aus dem eigenen Sortiment**, Namen vorher per DB/`grep` verifiziert (Regel 8) |
+| `pairsWith` | mindestens zwei Rezepte, die es in `getAllRecipes()` wirklich gibt |
+
+**Schritte**
+1. Liste ziehen: `select name, sub_group, abv, story from products where group_name = 'Liköre & Aperitifs' order by sub_group, name;`
+2. Texte in **einem** JS-Objekt sammeln (Scratchpad), nicht einzeln in die Dateien tippen.
+3. Skript erzeugt daraus `UPDATE products SET ... WHERE name = '...'` **und** patcht
+   `js/productsData.js`. Beides in einem Lauf – eine Änderung nur in der JS-Datei ist im
+   Live-Tool unsichtbar (Regel 7).
+4. Namen von `alternatives`/`pairsWith` vor dem Schreiben gegen DB prüfen; ein falscher Name
+   bricht das Zutaten-Matching still.
+5. `verified = true` nur setzen, wo der Wert entweder allgemein belegtes Markenwissen ist oder
+   auf der Flasche steht. ABV im Zweifel offen lassen und auf die Prüfliste setzen.
+6. Am Ende: Prüfliste „gegen Flasche prüfen" als Markdown ausgeben, für den Tresen.
+
+**Abnahme**
+- [ ] `select count(*) from products where group_name = 'Liköre & Aperitifs' and length(story) >= 300` = 46.
+- [ ] `quick_pitch` bei allen 46 gefüllt, keiner länger als 120 Zeichen.
+- [ ] Jedes `pairsWith`-Rezept und jede `alternatives`-Angabe existiert wirklich.
+- [ ] Produkte-Tab: drei Stichproben zeigen alle neuen Felder korrekt an.
+- [ ] `js/productsData.js` und DB sind für alle 46 identisch.
+
+**Commit:** `Liköre und Aperitifs: Produktwissen ausgebaut`
+
+---
+
+# Paket 23 – Textausbau: Whisky, Vodka, Tequila, Absinth, Bitters (36 Produkte)
+
+**Abhängigkeit:** Paket 22 (Zielraster steht dort).
+**Ist-Stand:** Whisky 27 (⌀ 160, `production` nur 6/27), Vodka 4 (⌀ 99), Tequila & Mezcal 3,
+Absinth 1, Bitters 1.
+
+**Schritte**
+1. Vorgehen identisch zu Paket 22 (Sammelobjekt → Skript → DB + `productsData.js`).
+2. Beim Whisky zusätzlich `ageStatement` (`12 Jahre`, `NAS`) und `originRegion`
+   (Speyside, Islay, Highland, Kentucky …) füllen – das ist die Grundlage für die
+   Regionen-Fragen im Quiz und die Regionensortierung, die `js/products.js` schon kennt.
+3. `baseMaterial` konsequent: Gerstenmalz · Mais · Roggen · Weizen · Agave · Kartoffel.
+
+**Abnahme**
+- [ ] Alle 36 mit `story` ≥ 300 Zeichen, `quickPitch`, `productionMethod`, `baseMaterial`.
+- [ ] Jeder Whisky hat `originRegion` und `ageStatement`.
+- [ ] Regionen-Gruppierung im Produkte-Tab bleibt korrekt.
+
+**Commit:** `Whisky und weiße Spirituosen: Produktwissen ausgebaut`
+
+---
+
+# Paket 24 – Textausbau: Brände, Wermut + Strukturnachtrag Gin/Rum (64 Produkte)
+
+**Abhängigkeit:** Paket 23.
+**Ist-Stand:** Brände 19 (⌀ 71 Zeichen – der schwächste Wert im ganzen Katalog),
+Wermut & Aperitif-Wein 16 (⌀ 92). Gin (13) und Rum (16) haben gute Texte, aber keine
+strukturierten Felder aus Paket 21.
+
+**Schritte**
+1. Brände und Wermut nach dem Zielraster aus Paket 22 neu schreiben.
+2. Bei Wermut zusätzlich `baseMaterial` = Traube und die Bitterstoffe im `production`-Feld
+   benennen (Wermutkraut, Enzian, Chinarinde).
+3. Gin und Rum **nicht neu texten**, nur die Felder aus Paket 21 nachtragen:
+   `abvValue`, `originCountry`, `baseMaterial`, `productionMethod`, `flavorTags`, `quickPitch`.
+4. Danach ist der Spirituosen-Katalog vollständig – Zwischenstand per SQL dokumentieren.
+
+**Abnahme**
+- [ ] Alle 176 alkoholischen Produkte haben `quickPitch`, `baseMaterial`, `abvValue`, `originCountry`.
+- [ ] Keine Gruppe mehr mit ⌀ `story` unter 300 Zeichen.
+- [ ] Gin/Rum-Texte unverändert (Diff prüfen).
+
+**Commit:** `Brände und Wermut ausgebaut, Gin und Rum strukturell nachgezogen`
+
+---
+
+# Paket 25 – Wein & Schaumwein ausbauen (30 Produkte)
+
+**Abhängigkeit:** Paket 21.
+**Ausgangslage:** strukturell die beste Gruppe – `region` 30/30, `foodPairing` 29/30,
+`grapeVariety` 24/30, `aging` 24/30 – aber `production` nur 4/30 und `story` mit ⌀ 161
+bzw. 104 Zeichen zu dünn.
+
+**Hier ist weniger Prosa und mehr Struktur gefragt als bei den Spirituosen.**
+
+**Schritte**
+1. `producer` aus dem Produktnamen herauslösen („Riesling (Weingut Spreitzer)" → Weingut Spreitzer),
+   Namen selbst **nicht** ändern – daran hängt das Zutaten-Matching.
+2. `sweetness` (trocken · halbtrocken · feinherb · lieblich · brut nature · extra brut · brut · sec),
+   `classification` (QbA · Prädikat · VDP.Gutswein … · AOC · DOCG), `servingTemp`, `body` füllen.
+3. `production`/`productionMethod` auffüllen: Flaschengärung vs. Tankgärung, Barrique vs. Edelstahl,
+   Hefelager-Dauer. Bei Champagner gehört die Dosage dazu.
+4. `story` auf 300–450 Zeichen: Betrieb, Lage/Boden, Ausbau, was den Wein von seinem Nachbarn
+   auf der Karte unterscheidet.
+5. `foodPairing` bleibt bewusst allgemein (keine konkreten Gerichte) – so steht es im Schema-Kommentar.
+6. **Jahrgänge, Dosage-Angaben und exakte ABV nur von der Flasche.** Was nicht belegt ist:
+   `verified = false` lassen und auf die Prüfliste.
+
+**Abnahme**
+- [ ] Alle 30 mit `producer`, `sweetness`, `classification`, `servingTemp`.
+- [ ] `production` 30/30 statt 4/30.
+- [ ] Produktnamen unverändert; Wein-Herkunftsgruppierung im Tab funktioniert weiter.
+- [ ] Prüfliste für den Tresen liegt als Markdown vor.
+
+**Commit:** `Wein und Schaumwein: Struktur und Beschreibungen ausgebaut`
+
+---
+
+# Paket 26 – Quiz-Modul (Hybrid: Generator + kuratierte Fragen)
+
+**Abhängigkeit:** Paket 21 zwingend, 22–25 für die Fragenqualität.
+**Ziel:** Schulungswerkzeug für das Barteam aus dem vorhandenen Katalog –
+kein zweiter Datenbestand, der gepflegt werden muss.
+**Entscheidung vom 04.09.2026:** Hybrid ab v1. Der Generator deckt die 176 Produkte und
+163 Rezepte ab; kuratierte Fragen ergänzen alles, was nicht in Produktfeldern steht
+(Servicewissen, Hausregeln, Trainee-Prüfungsstoff).
+
+**Dateien:** neu `js/quiz.js`, `js/quizGenerator.js`; geändert `js/main.js` (`initQuiz()`),
+`index.html` (Tab + Panel), `css/styles.css`, `supabase/schema.sql`
+
+**Schritte**
+1. Migration: `quiz_questions` (`question`, `options jsonb`, `correct_index int`, `explanation`,
+   `topic`, `difficulty int`, `ref_product`, `ref_recipe`, `active boolean default true`)
+   und `quiz_attempts` (`user_id`, `question_key text`, `topic`, `correct boolean`, `answered_at`).
+   RLS: `quiz_questions` lesbar für alle Eingeloggten, schreibbar nur Admin;
+   `quiz_attempts` – jeder sieht und schreibt nur eigene Zeilen, Admin liest alle.
+2. `js/quizGenerator.js` erzeugt Fragen ausschließlich aus `getAllProducts()` / `getAllRecipes()`
+   (Regel 9), nie direkt aus den Datendateien. Fragetypen:
+   1. ABV → `abvValue`
+   2. Herkunftsland → `originCountry`
+   3. Rohstoff → `baseMaterial`
+   4. Tasting Notes → welches Produkt passt
+   5. Rezept → Zutat („Was gehört in einen Negroni?", aus `ingredients`)
+   6. Rezept → Glas / Methode / Garnitur
+   7. Herstellungsverfahren → `productionMethod`
+3. **Distraktoren immer aus derselben Produktgruppe bzw. Rezeptkategorie**, sonst ist jede
+   Frage durch Ausschluss lösbar. Mindestens drei plausible Ablenker, sonst Frage überspringen.
+4. Produkte mit `verified = false` liefern keine Faktenfragen (Regel 6).
+5. Stabiler `question_key` pro Frage (`gen:abv:<produktname>` bzw. `db:<uuid>`), damit
+   Wiederholung und Schwächenanalyse über Sessions hinweg funktionieren.
+6. UI: Schnellrunde (10 Fragen) · Themenrunde (Gruppe/Kategorie wählbar) · Prüfungsmodus (25 Fragen,
+   Auswertung am Ende). Antwortoptionen als Buttons mit großen Touch-Targets.
+   Nach falscher Antwort: Erklärung + Sprung auf die Produkt-/Rezeptseite.
+7. Fragen und Optionen ausschließlich per `textContent` setzen (Regel 5).
+8. Admin-Maske für kuratierte Fragen in `js/adminPanel.js`, mit Vorschau vor dem Speichern.
+
+**Abnahme**
+- [ ] Schnellrunde liefert 10 Fragen ohne Dubletten und ohne leere Optionen.
+- [ ] Kein Produkt mit `verified = false` taucht in einer Faktenfrage auf.
+- [ ] Distraktoren stammen immer aus derselben Gruppe.
+- [ ] Falsche Antwort → Erklärung sichtbar, Link führt auf den richtigen Eintrag.
+- [ ] Bedienbar auf dem Handy mit einer Hand.
+- [ ] Kuratierte Frage im Admin anlegen → erscheint in der Themenrunde.
+
+**Commit:** `Quiz-Modul: Fragen aus Produkt- und Rezeptwissen`
+
+---
+
+# Paket 27 – Quiz-Auswertung und Team-Übersicht
+
+**Abhängigkeit:** Paket 26.
+**Ziel:** Aus dem Quiz wird ein Schulungsinstrument für die Barleitung.
+
+**Schritte**
+1. Eigene Auswertung im Quiz-Tab: Trefferquote gesamt, pro Thema, Verlauf der letzten Runden,
+   „deine fünf schwächsten Themen" mit direktem Einstieg in eine Übungsrunde.
+2. Wiederholungslogik: Fragen, die zuletzt falsch beantwortet wurden, kommen bevorzugt wieder.
+3. Team-Übersicht im Admin-Tab: pro Person Anzahl Runden, Trefferquote, schwächste Themen.
+   **Bewusst nur Aggregate – keine einzelnen Antworten einsehbar.**
+4. Themen-Heatmap über das ganze Team: wo hakt es bei allen? Das ist die Vorlage fürs Teammeeting.
+
+**Abnahme**
+- [ ] Nicht-Admin sieht ausschließlich die eigenen Zahlen (RLS gegenprüfen, nicht nur die UI).
+- [ ] Admin sieht Aggregate, aber keine Einzelantworten.
+- [ ] Schwächste Themen führen per Klick in eine passende Übungsrunde.
+
+**Commit:** `Quiz-Auswertung und Team-Übersicht für die Barleitung`
+
+---
+
+## Backlog Runde 4 (bewusst noch nicht eingeplant)
+
+Reihenfolge offen, erst nach Runde 3 entscheiden:
 - **Reporting-Startseite:** Wareneinsatzquote über Zeit, Inventurhistorie, ablaufende Ansätze.
 - **Fotos zu Rezepten/Produkten:** Supabase Storage, Garnitur- und Glasbild.
 - **Schwund-/Bruch-/Verkostungsbuch:** erklärt Inventurdifferenzen.
@@ -908,7 +1164,7 @@ Reihenfolge offen, erst nach Runde 2 entscheiden:
 ## Bewusst nicht im Scope
 
 Nicht bauen, auch wenn es naheliegt – erst nachfragen:
-Schulungs-/Quizmodus, Gäste- oder Öffentlichkeitsansicht ohne Login, dritte Rolle für Service/Restaurant,
+Gäste- oder Öffentlichkeitsansicht ohne Login, dritte Rolle für Service/Restaurant,
 Offline-Warteschlange für Schreibzugriffe, Batchen nach Gewicht (dafür fehlen belastbare Dichtewerte),
 Kassen- oder Warenwirtschaftsanbindung, Frontend-Framework oder Build-Schritt.
 
@@ -916,6 +1172,10 @@ Kassen- oder Warenwirtschaftsanbindung, Frontend-Framework oder Build-Schritt.
 also Menu-Engineering-Matrix (Deckungsbeitrag × Absatz), Soll-/Ist-Verbrauch und echte Pouring-Cost.
 Grund: es gibt keine geklärte Datenquelle. Wenn später ein CSV-/Excel-Export aus der Kasse vorliegt,
 wird das als eigenes Paket neu bewertet – vorher nicht anfangen.
+
+**Am 04.09.2026 freigegeben:** Der Schulungs-/Quizmodus stand hier als „erst nachfragen" –
+der Nutzer hat von sich aus danach gefragt. Er ist jetzt als Pakete 26–27 eingeplant,
+zusammen mit dem Produktwissen-Ausbau (21–25), der die Datengrundlage dafür liefert.
 
 **Ebenfalls am 04.09.2026 gestrichen** (waren als Paket 21 bzw. im Backlog geplant, vom Nutzer
 ausdrücklich abgewählt): Export des Bestellvorschlags als Druck-/Mailtext und Barcode-Scan bei
