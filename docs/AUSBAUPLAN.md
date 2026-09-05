@@ -134,7 +134,7 @@ untereinander tauschen, 21 nicht.
 | # | Paket | Status |
 |---|---|---|
 | 21 | Produktwissen: Datenmodell erweitern | erledigt |
-| 22 | Textausbau Liköre & Aperitifs (46) | offen |
+| 22 | Textausbau Liköre & Aperitifs (46) | erledigt |
 | 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | offen |
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | offen |
 | 25 | Wein & Schaumwein ausbauen (30) | offen |
@@ -998,6 +998,14 @@ Gin (⌀ 323) und Rum (⌀ 261) sind der Goldstandard – vor dem Schreiben zwei
 - [ ] `js/productsData.js` und DB sind für alle 46 identisch.
 
 **Commit:** `Liköre und Aperitifs: Produktwissen ausgebaut`
+
+**Ergebnis (04.09.2026):** Alle 46 Produkte auf das Zielraster gebracht (story 350–500
+Zeichen, `quick_pitch` ≤ 120 Zeichen, `production`, `productionMethod`, `baseMaterial`,
+`flavorTags`, `service`, `alternatives`, `pairsWith`). Zusätzlich neu angelegt:
+`Lav'a Belle Liberté (alkoholfrei)` – die alkoholfreie Variante ist im Sortiment,
+damit stehen 47 Produkte in der Gruppe. 31 davon auf `verified = true`; die übrigen 16
+stehen mit Grund in `docs/PRUEFLISTE_LIKOERE.md`. DB und `js/productsData.js` sind
+über eine Prüfsumme über alle Wissensfelder als identisch verifiziert.
 
 ---
 
