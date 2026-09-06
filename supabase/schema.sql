@@ -808,6 +808,94 @@ exception
 end $$;
 
 -- ---------------------------------------------------------------------
+-- Quiz (Paket 26)
+--
+-- quiz_questions = kuratierte Fragen. Der Generator im Frontend
+-- (js/quizGenerator.js) baut seine Fragen direkt aus products/recipes und
+-- braucht keine Tabelle; hier steht nur, was in keinem Produktfeld steht:
+-- Servicewissen, Hausregeln, Trainee-Prüfungsstoff.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.quiz_questions (
+  id uuid primary key default gen_random_uuid(),
+  question text not null,
+  -- ["Antwort A", "Antwort B", ...] – mindestens 2 Einträge
+  options jsonb not null default '[]'::jsonb,
+  correct_index int not null default 0,
+  explanation text not null default '',
+  topic text not null default 'Servicewissen',
+  -- 1 = leicht, 2 = mittel, 3 = schwer
+  difficulty int not null default 2,
+  -- optionaler Sprung in die Bibliothek nach einer falschen Antwort
+  ref_product text,
+  ref_recipe text,
+  active boolean not null default true,
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.quiz_questions drop constraint if exists quiz_questions_correct_index_check;
+alter table public.quiz_questions add constraint quiz_questions_correct_index_check check (correct_index >= 0);
+
+alter table public.quiz_questions drop constraint if exists quiz_questions_difficulty_check;
+alter table public.quiz_questions add constraint quiz_questions_difficulty_check check (difficulty between 1 and 3);
+
+alter table public.quiz_questions enable row level security;
+
+drop trigger if exists quiz_questions_set_updated_at on public.quiz_questions;
+create trigger quiz_questions_set_updated_at
+  before update on public.quiz_questions
+  for each row execute function public.set_updated_at();
+
+-- Fragen sind Lernstoff für alle, gepflegt werden sie von der Barleitung.
+drop policy if exists "quiz_questions: any authenticated user can read" on public.quiz_questions;
+create policy "quiz_questions: any authenticated user can read"
+  on public.quiz_questions for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "quiz_questions: admin write" on public.quiz_questions;
+create policy "quiz_questions: admin write"
+  on public.quiz_questions for all
+  using (private.is_admin())
+  with check (private.is_admin());
+
+-- quiz_attempts = eine Zeile pro beantworteter Frage. Grundlage für die
+-- Auswertung in Paket 27; question_key ist über Sessions hinweg stabil
+-- ("gen:abv:<Produktname>" für generierte, "db:<uuid>" für kuratierte).
+create table if not exists public.quiz_attempts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  question_key text not null,
+  topic text not null default '',
+  correct boolean not null,
+  answered_at timestamptz not null default now()
+);
+
+create index if not exists quiz_attempts_user_answered_idx
+  on public.quiz_attempts (user_id, answered_at desc);
+create index if not exists quiz_attempts_question_key_idx
+  on public.quiz_attempts (question_key);
+
+alter table public.quiz_attempts enable row level security;
+
+-- Jeder sieht nur die eigenen Versuche, Admins sehen alle (Team-Übersicht).
+drop policy if exists "quiz_attempts: own or admin select" on public.quiz_attempts;
+create policy "quiz_attempts: own or admin select"
+  on public.quiz_attempts for select
+  using (user_id = auth.uid() or private.is_admin());
+
+drop policy if exists "quiz_attempts: own insert" on public.quiz_attempts;
+create policy "quiz_attempts: own insert"
+  on public.quiz_attempts for insert
+  with check (user_id = auth.uid());
+
+drop policy if exists "quiz_attempts: admin deletes" on public.quiz_attempts;
+create policy "quiz_attempts: admin deletes"
+  on public.quiz_attempts for delete
+  using (private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
 -- ---------------------------------------------------------------------
 

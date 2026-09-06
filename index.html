@@ -129,6 +129,7 @@
         <div id="recipe-category-tree" class="sidebar-subnav"></div>
         <button class="tab-btn" data-tab="products" role="tab" aria-selected="false"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
         <div id="product-category-tree" class="sidebar-subnav"></div>
+        <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false"><i class="ph ph-brain" aria-hidden="true"></i>Quiz</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Verwaltung</h3>
@@ -664,6 +665,65 @@
       </div>
 
       <div id="build-result"></div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="tab-panel">
+      <h2>Quiz</h2>
+      <p class="hint">Trainiert Produkt- und Rezeptwissen aus der Bibliothek. Die Fragen entstehen automatisch aus den geprüften Katalogeinträgen; kuratierte Fragen zu Servicewissen und Hausregeln kommen aus dem Admin-Bereich dazu.</p>
+
+      <div id="quiz-start">
+        <div class="quiz-modes">
+          <button type="button" id="quiz-start-quick" class="btn-primary">Schnellrunde · 10 Fragen</button>
+          <button type="button" id="quiz-start-exam" class="btn-secondary">Prüfungsmodus · 25 Fragen</button>
+        </div>
+
+        <div class="field-row">
+          <label>
+            Thema
+            <select id="quiz-topic"></select>
+          </label>
+        </div>
+        <div class="actions">
+          <button type="button" id="quiz-start-topic" class="btn-secondary">Themenrunde starten</button>
+        </div>
+
+        <p id="quiz-start-note" class="empty-note" hidden></p>
+      </div>
+
+      <div id="quiz-round" hidden>
+        <div class="quiz-progress">
+          <span id="quiz-progress-text"></span>
+          <span id="quiz-score-text"></span>
+        </div>
+        <div class="quiz-progress-bar"><div id="quiz-progress-fill"></div></div>
+
+        <p class="quiz-topic-label" id="quiz-question-topic"></p>
+        <h3 class="quiz-question" id="quiz-question-text"></h3>
+        <div class="quiz-options" id="quiz-options"></div>
+
+        <div class="quiz-feedback" id="quiz-feedback" hidden>
+          <p class="quiz-feedback-title" id="quiz-feedback-title"></p>
+          <p class="quiz-feedback-explanation" id="quiz-feedback-explanation"></p>
+          <div class="actions">
+            <button type="button" id="quiz-next" class="btn-primary">Weiter</button>
+            <button type="button" id="quiz-jump" class="btn-secondary" hidden></button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="quiz-abort" class="btn-secondary">Runde abbrechen</button>
+        </div>
+      </div>
+
+      <div id="quiz-result" hidden>
+        <h3 id="quiz-result-title"></h3>
+        <p class="hint" id="quiz-result-summary"></p>
+        <div id="quiz-result-list"></div>
+        <div class="actions">
+          <button type="button" id="quiz-again" class="btn-primary">Neue Runde</button>
+        </div>
+      </div>
     </section>
 
     <!-- KARTENKALKULATION -->
@@ -1366,6 +1426,65 @@
       <h3>Offene Vorschläge</h3>
       <p class="hint">Änderungsvorschläge von Mitarbeitenden zu Rezepten und Produkten. Annehmen übernimmt den Vorschlag direkt, Ablehnen kann mit einem Kommentar begründet werden.</p>
       <div id="change-requests-list"></div>
+
+      <h3>Quiz-Fragen</h3>
+      <p class="hint">Kuratierte Fragen für alles, was nicht in Produktfeldern steht: Servicewissen, Hausregeln, Prüfungsstoff. Die richtige Antwort wird über die Auswahl links neben dem Feld markiert; die Reihenfolge wird im Quiz gemischt.</p>
+      <form id="quiz-admin-form">
+        <div class="field-row">
+          <label>
+            Frage
+            <input type="text" id="quiz-admin-question" required />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Thema
+            <input type="text" id="quiz-admin-topic" placeholder="Servicewissen" />
+          </label>
+          <label>
+            Schwierigkeit
+            <select id="quiz-admin-difficulty">
+              <option value="1">leicht</option>
+              <option value="2" selected>mittel</option>
+              <option value="3">schwer</option>
+            </select>
+          </label>
+        </div>
+        <div id="quiz-admin-options"></div>
+        <div class="actions">
+          <button type="button" id="quiz-admin-add-option" class="btn-secondary">Antwort hinzufügen</button>
+        </div>
+        <div class="field-row">
+          <label>
+            Erklärung
+            <input type="text" id="quiz-admin-explanation" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            Sprungziel Produkt (optional)
+            <input type="text" id="quiz-admin-ref-product" list="quiz-admin-product-list" />
+          </label>
+          <label>
+            Sprungziel Rezept (optional)
+            <input type="text" id="quiz-admin-ref-recipe" list="quiz-admin-recipe-list" />
+          </label>
+        </div>
+        <datalist id="quiz-admin-product-list"></datalist>
+        <datalist id="quiz-admin-recipe-list"></datalist>
+        <label class="radio-label">
+          <input type="checkbox" id="quiz-admin-active" checked />
+          aktiv (erscheint im Quiz)
+        </label>
+        <div id="quiz-admin-error" class="error-note" hidden></div>
+        <div class="actions">
+          <button type="button" id="quiz-admin-preview" class="btn-secondary">Vorschau</button>
+          <button type="submit" class="btn-primary">Frage speichern</button>
+          <button type="button" id="quiz-admin-reset" class="btn-secondary">Formular leeren</button>
+        </div>
+      </form>
+      <div id="quiz-admin-preview-box" class="quiz-preview" hidden></div>
+      <div id="quiz-admin-list"></div>
 
       <h3>Datenqualität</h3>
       <p class="hint">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>

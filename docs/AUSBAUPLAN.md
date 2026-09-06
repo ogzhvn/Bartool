@@ -138,7 +138,7 @@ untereinander tauschen, 21 nicht.
 | 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | erledigt |
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | erledigt |
 | 25 | Wein & Schaumwein ausbauen (30) | erledigt |
-| 26 | Quiz-Modul (Generator + kuratierte Fragen) | offen |
+| 26 | Quiz-Modul (Generator + kuratierte Fragen) | erledigt |
 | 27 | Quiz-Auswertung und Team-Übersicht | offen |
 
 ---
