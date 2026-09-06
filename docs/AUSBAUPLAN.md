@@ -135,7 +135,7 @@ untereinander tauschen, 21 nicht.
 |---|---|---|
 | 21 | Produktwissen: Datenmodell erweitern | erledigt |
 | 22 | Textausbau Liköre & Aperitifs (46) | erledigt |
-| 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | offen |
+| 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | erledigt |
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | offen |
 | 25 | Wein & Schaumwein ausbauen (30) | offen |
 | 26 | Quiz-Modul (Generator + kuratierte Fragen) | offen |
@@ -1028,6 +1028,20 @@ Absinth 1, Bitters 1.
 - [ ] Regionen-Gruppierung im Produkte-Tab bleibt korrekt.
 
 **Commit:** `Whisky und weiße Spirituosen: Produktwissen ausgebaut`
+
+**Ergebnis (05.09.2026):** Alle 36 Produkte auf das Zielraster aus Paket 22 gebracht
+(`story` 350–500 Zeichen, `quickPitch` ≤ 120 Zeichen, `production`, `productionMethod`,
+`baseMaterial`, `flavorTags` = `tastingNotes`, `service`, `alternatives`, `pairsWith`)
+plus die Paket-21-Felder `abvValue`/`abvMax`, `originCountry`, `originRegion`,
+`ageStatement`, `verified`/`verifiedAt`. Alle 27 Whiskys haben `originRegion` und
+`ageStatement`; einzige Ausnahme ist `Stork Smoky Rye`, zu dem es keine belegten
+Herstellerangaben gibt – dort sind `productionMethod`, `originRegion` und
+`ageStatement` bewusst leer geblieben statt geraten. Die Whisky-Untergruppen wurden
+nicht angefasst, die Regionen-Sortierung im Produkte-Tab bleibt damit unverändert.
+24 Produkte stehen auf `verified = true`, die übrigen 12 mit Begründung im Kapitel
+„Whisky, Vodka, Tequila, Absinth, Bitters (Paket 23)" in `docs/PRUEFLISTE_LIKOERE.md`.
+DB und `js/productsData.js` sind über eine Prüfsumme über alle Wissensfelder als
+identisch verifiziert.
 
 ---
 
