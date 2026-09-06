@@ -137,7 +137,7 @@ untereinander tauschen, 21 nicht.
 | 22 | Textausbau Liköre & Aperitifs (46) | erledigt |
 | 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | erledigt |
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | erledigt |
-| 25 | Wein & Schaumwein ausbauen (30) | offen |
+| 25 | Wein & Schaumwein ausbauen (30) | erledigt |
 | 26 | Quiz-Modul (Generator + kuratierte Fragen) | offen |
 | 27 | Quiz-Auswertung und Team-Übersicht | offen |
 
@@ -1130,6 +1130,23 @@ bzw. 104 Zeichen zu dünn.
 - [ ] Prüfliste für den Tresen liegt als Markdown vor.
 
 **Commit:** `Wein und Schaumwein: Struktur und Beschreibungen ausgebaut`
+
+**Ergebnis (06.09.2026):** Alle 30 Produkte der Gruppen `Wein` und `Schaumwein`
+haben jetzt `producer`, `sweetness`, `classification`, `servingTemp` und `body`;
+`production` steht bei 30/30 statt 4/30, `story` bei allen zwischen 300 und 450
+Zeichen, `quick_pitch` ≤ 120 Zeichen. Ergänzt wurden außerdem `baseMaterial`,
+`flavorTags`, überarbeitete `service`- und `alternatives`-Angaben und – wo
+sinnvoll – `pairsWith`. Untergruppen und Produktnamen blieben unangetastet, die
+Wein-Herkunftsgruppierung im Produkte-Tab funktioniert unverändert.
+3 Produkte stehen auf `verified = true`; die übrigen 27 bleiben bewusst auf
+`false`, weil Alkohol, Restsüße und Jahrgang bei Wein von Jahrgang zu Jahrgang
+wechseln – mit Begründung je Produkt im Kapitel „Wein und Schaumwein (Paket 25)"
+in `docs/PRUEFLISTE_LIKOERE.md`. Sachlich korrigiert: der falsche Prosecco-Text
+beim alkoholfreien PriSecco und die Gründungsgeschichte von Bodega Kaiken.
+Offen geblieben und dokumentiert: `Chapeau Secco` existiert nur in
+`js/productsData.js` und hat keinen DB-Eintrag. DB und `js/productsData.js` sind
+über eine Prüfsumme über alle Wissensfelder als identisch verifiziert (29 Zeilen;
+`Apfelsinfonie Prisecco Jörg Geiger` liegt regelkonform nur in der DB).
 
 ---
 

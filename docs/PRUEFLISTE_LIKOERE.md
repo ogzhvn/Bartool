@@ -143,3 +143,97 @@ nachziehen.
   Das ist Absicht und kein Tippfehler.
 - Obstbrände und Digestifs ohne Cocktail-Bezug (Scheibel-Linie, Ports, Sherrys,
   Hennessy X.O.) haben bewusst keine Rezept-Zuordnung.
+
+---
+
+# Wein und Schaumwein (Paket 25)
+
+Stand 06.09.2026. 30 Produkte überarbeitet, 3 davon auf `verified = true`
+(Taittinger Brut Réserve, Ruinart Blanc de Blancs, Apfelsinfonie PriSecco).
+Die übrigen 27 stehen bewusst auf `verified = false`. Grund ist bei Wein ein
+anderer als bei Spirituosen: **Alkoholgehalt, Restsüße und Jahrgang ändern sich
+bei fast jedem Wein von Jahrgang zu Jahrgang.** Was im Katalog steht, ist der
+Hausstil des Erzeugers – der konkrete Wert gehört vom Etikett der Flasche, die
+gerade im Haus steht. Erzeuger, Anbaugebiet, Klassifikation und Ausbau sind
+dagegen recherchiert und stabil.
+
+## Vom Etikett übernehmen (Jahrgang, Alkohol, Restsüße)
+
+| Produkt | Im Katalog | Was zu prüfen ist |
+|---|---|---|
+| Riesling (Weingut Spreitzer) | trocken, VDP.Gutswein, 12 % vol | Spreitzer füllt den Gutsriesling trocken **und** feinherb ab. Steht die feinherbe Flasche im Haus, muss `sweetness` geändert werden. Jahrgang eintragen. |
+| Drei³ Weissweincuvée (Weingut Spreitzer) | trocken, 12 % vol | Geschmacksrichtung ist beim Drei³-Projekt nicht öffentlich dokumentiert – Etikett entscheidet. |
+| Drei³ Roséecuvée (Weingut Pfannebecker) | trocken, 12 % vol | dito. |
+| Drei³ Rotweincuvée (Weingut Klumpp) | trocken, 13 % vol | Sortenanteile der Cuvée sind nicht veröffentlicht; beim Weingut erfragen. |
+| Drei³ Zero (Weingut Spreitzer, alkoholfrei) | halbtrocken, 0,0 % vol | Entalkoholisierte Weine sind meist leicht nachgesüßt. Restzucker und genaues Entalkoholisierungsverfahren vom Etikett. |
+| Natureo Sekt 0,0 (alkoholfrei) | trocken bis halbtrocken, 0,0 % vol | Geschmacksrichtung und Verfahren (Spinning Cone?) gegen das aktuelle Torres-Datenblatt prüfen. |
+| 3³ Secco (Weingut Pfannebecker) | halbtrocken, 11 % vol | Verkostungsnotiz sagt „leicht süß", das Etikett sagt die amtliche Geschmacksangabe. |
+| Pfannebecker Pinot Cuvée (Winzersekt) | brut, 12 % vol | Dosage vom Etikett; außerdem beim Winzer erfragen, ob flaschen- oder tankvergoren. Das ist der Preis- und Qualitätsunterschied. |
+| Primitivo (Italien) | trocken, 13,5–14,5 % vol | Salento-Primitivo wird oft halbtrocken ausgebaut. Etikett entscheidet, außerdem fehlt die DOC-/IGT-Angabe. |
+| Sauvignon Blanc (Weingut Pfannebecker) | 12–13 % vol | Spanne durch den echten Wert ersetzen. |
+| Grauburgunder (Weingut Gröhl) | 12,5–13 % vol | dito. |
+| Malbec (Kaiken), Cabernet Franc „Obertura", Tempranillo Crianza „Altos Ibéricos" | je 13,5–14 % vol | dito, jahrgangsabhängig. |
+| Shiraz Cabernet „Koonunga Hill" (Penfolds) | 14 % vol | jahrgangsabhängig, gegen Etikett prüfen. |
+| Sancerre Blanc, „La Vie en Rosé", „Scalabrone Rosato", Viognier Réserve | 13 % vol | jahrgangsabhängig, gegen Etikett prüfen. |
+
+## Dosage und Jahrgangsangaben bei Champagner
+
+Bei allen elf Champagnern steht als Geschmacksrichtung `brut`, die konkrete
+Dosage in Gramm pro Liter ist bewusst **nicht** eingetragen – die Häuser passen
+sie von Abfüllung zu Abfüllung an und veröffentlichen sie nicht durchgängig.
+Wer die Flasche in der Hand hat, findet Dosage und Degorgierdatum meist auf dem
+Rückenetikett.
+
+| Produkt | Was zu prüfen ist |
+|---|---|
+| Ruinart R de Ruinart Brut | Die Rebsortenverteilung wird vom Haus nicht einheitlich veröffentlicht; der alte Eintrag „Chardonnay-betont, Pinot Noir, Pinot Meunier" war nicht belegbar und steht jetzt neutral als „Chardonnay und Pinot Noir". Aktuelles Datenblatt prüfen. |
+| Ruinart Rosé, Taittinger Prestige Rosé | Der Anteil an stillem Rotwein für die Färbung ist nicht öffentlich beziffert. |
+| Taittinger Prelude Grand Cru | Dauer des Hefelagers beziffert das Haus nicht. |
+| Taittinger Comtes de Champagne Blanc de Blancs 2011 | Anteil der Grundweine im neuen Holzfass und die exakte Hefelager-Dauer gegen das Haus-Datenblatt prüfen. |
+| Taittinger Comtes de Champagne Rosé 2007 | Exakte Assemblage (Anteil Pinot Noir/Chardonnay) prüfen. |
+| Dom Pérignon Vintage Brut 2013 / Rosé 2008 | Dosage und Degorgierdatum vom Rückenetikett. |
+
+## Offene Lücken außerhalb dieses Pakets
+
+- **Primitivo (Italien):** Der Erzeuger ist in unseren Unterlagen nicht
+  vermerkt. Im Feld `producer` steht deshalb ausdrücklich „Nicht dokumentiert".
+  Beim nächsten Wareneingang bitte vom Etikett nachtragen – dann können auch
+  Anbaugebiet und Klassifikation präzisiert werden.
+- **Chapeau Secco:** steht nur in der statischen Datei `js/productsData.js`,
+  hat **keinen** Eintrag in der Datenbank und gehörte damit nicht zu den 30
+  Produkten dieses Pakets. Bitte klären, ob der Secco noch im Sortiment ist.
+  Falls ja, gehört er als DB-Eintrag angelegt und mit ausgebaut; falls nein,
+  raus aus der Datei.
+- **Apfelsinfonie PriSecco (Jörg Geiger):** existiert umgekehrt nur in der
+  Datenbank, nicht in der statischen Datei. Das ist so gewollt (neue Produkte
+  gehören laut Projektregel in die DB) und kein Fehler.
+
+## Nebenbei korrigiert
+
+- **Apfelsinfonie PriSecco:** Im Katalog stand „Klassischer italienischer
+  Prosecco für Aperol Spritz & Co." – das war offensichtlich ein
+  hängengebliebener Textbaustein. PriSecco ist eine alkoholfreie Cuvée der
+  Manufaktur Jörg Geiger aus Schlat am Rand der Schwäbischen Alb, Basis der
+  Apfelsinfonie ist die alte Apfelsorte Bittenfelder Sämling mit Rhabarber,
+  Brunnenkresse und rotem Senf. Auch der Serviervorschlag „Aperol Spritz" ist
+  raus, das passt zu einem alkoholfreien Produkt nicht.
+- **Bodega Kaiken:** Im Katalog stand, die Bodega sei von der „chilenischen
+  Winzerfamilie Aresti" gegründet worden. Kaiken wurde 2001 von **Aurelio
+  Montes** (Viña Montes, Chile) in Mendoza gegründet; das ist korrigiert.
+- **Chapeau Secco als Alternative:** Bei „3³ Secco" und „Pfannebecker Pinot
+  Cuvée" stand jeweils der Chapeau Secco als Alternativprodukt. Weil der keinen
+  DB-Eintrag hat, verweisen beide jetzt aufeinander.
+
+## Hinweise ohne Handlungsbedarf
+
+- Die Untergruppen (Weißwein, Rotwein, Roséwein) und alle Produktnamen wurden
+  **nicht** angefasst – an beidem hängen die Sortierung im Produkte-Tab und das
+  Zutaten-Matching.
+- `foodPairing` bleibt bewusst allgemein gehalten (keine konkreten Gerichte), so
+  steht es im Schema-Kommentar.
+- Bei den Stillweinen steht als Verfahren teilweise nichts, weil die feste
+  Werteliste für `productionMethod` nur Tank- und Flaschengärung kennt. Wo im
+  Holzfass ausgebaut wird (Viognier Réserve, die Rotweine), steht der Ausbau im
+  Freitextfeld `production` statt in der Kurzliste.
+- Serviertemperaturen sind Spannen nach Weintyp (Schaumwein 6–10 °C,
+  Weißwein/Rosé 8–12 °C, Rotwein 14–18 °C), keine Herstellerangaben.
