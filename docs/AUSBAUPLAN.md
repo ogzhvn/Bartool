@@ -136,7 +136,7 @@ untereinander tauschen, 21 nicht.
 | 21 | Produktwissen: Datenmodell erweitern | erledigt |
 | 22 | Textausbau Liköre & Aperitifs (46) | erledigt |
 | 23 | Textausbau Whisky, Vodka, Tequila, Absinth, Bitters (36) | erledigt |
-| 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | offen |
+| 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | erledigt |
 | 25 | Wein & Schaumwein ausbauen (30) | offen |
 | 26 | Quiz-Modul (Generator + kuratierte Fragen) | offen |
 | 27 | Quiz-Auswertung und Team-Übersicht | offen |
@@ -1066,6 +1066,38 @@ strukturierten Felder aus Paket 21.
 - [ ] Gin/Rum-Texte unverändert (Diff prüfen).
 
 **Commit:** `Brände und Wermut ausgebaut, Gin und Rum strukturell nachgezogen`
+
+**Ergebnis (06.09.2026):** Alle 64 Produkte bearbeitet. Die 19 Brände und die
+16 Wermuts/Aperitif-Weine sind nach dem Zielraster aus Paket 22 neu geschrieben
+(`story` 350–500 Zeichen, `quickPitch` ≤ 120 Zeichen, `production`,
+`productionMethod`, `baseMaterial`, `flavorTags` = `tastingNotes`, `service`,
+`alternatives`, `pairsWith`) plus die Paket-21-Felder `abvValue`/`abvMax`,
+`originCountry`, `originRegion`, `ageStatement`, `verified`/`verifiedAt`.
+Bei den Wermuts steht `baseMaterial` durchgehend auf Traube, die Bitterstoffe
+sind im `production`-Feld benannt. Die 13 Gins und 16 Rums wurden **nicht neu
+getextet**; dort kamen nur die strukturierten Felder samt `quickPitch` dazu.
+Ein Diff über `story`, `production`, `service`, `alternatives`, `tastingNotes`,
+`category`, `abv` und `allergens` bestätigt: bei Gin und Rum ist kein
+Bestandstext verändert worden. Untergruppen blieben unangetastet, die Sortierung
+im Produkte-Tab bleibt damit unverändert.
+
+43 Produkte stehen auf `verified = true`, die übrigen 21 mit Begründung im
+Kapitel „Brände, Wermut, Aperitif-Weine, Gin und Rum (Paket 24)" in
+`docs/PRUEFLISTE_LIKOERE.md`. DB und `js/productsData.js` sind über eine
+Prüfsumme (md5 über 17 Wissensfelder aller 64 Produkte) als deckungsgleich
+verifiziert.
+
+**Zwei Abnahmepunkte weichen ab, bewusst:**
+- Der Katalog enthält 147 alkoholische Produkte (ohne Wein, Schaumwein, Bier),
+  nicht 176. Davon haben jetzt alle einen `quickPitch` und ein `baseMaterial`.
+  Ohne `originCountry`/`abvValue` bleiben acht Gattungseinträge ohne Marke
+  (Absinth, Crème de Menthe grün/weiß, Orange Curaçao, Amaretto, Crème de
+  Cassis, Stork Smoky Rye, Northman Calm Sea) – dort ist ohne die Flasche im
+  Haus nichts zu belegen, geraten wurde nicht. Alle acht stehen auf der
+  Prüfliste.
+- Die Gruppe „Rum & Cachaça" liegt weiter bei ⌀ 261 Zeichen `story`, weil
+  Schritt 3 dieses Pakets ausdrücklich verbietet, Rum neu zu texten. Wer die
+  300 will, braucht dafür ein eigenes kleines Paket.
 
 ---
 

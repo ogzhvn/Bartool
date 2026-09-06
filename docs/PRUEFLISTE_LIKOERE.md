@@ -83,3 +83,63 @@ den Eintrag im Produkte-Tab auf „geprüft" setzen (Admin: Bearbeiten → Häkc
   Verschnitt stecken. Das ist Absicht und kein Tippfehler.
 - Johnnie Walker Blue Label und Glenmorangie Signet haben bewusst keine bzw. nur
   eine Cocktail-Empfehlung: Beide sind zum Pur-Trinken gedacht.
+
+---
+
+# Brände, Wermut, Aperitif-Weine, Gin und Rum (Paket 24)
+
+Stand 06.09.2026. 64 Produkte überarbeitet, 43 davon auf `verified = true`.
+Die folgenden 21 stehen bewusst auf `verified = false` – die Angabe stammt aus
+allgemeinem Fachwissen zur Gattung, nicht von der Flasche im Haus. Wer die
+Flasche in der Hand hat, kann das in einer Minute klären.
+
+## Alkoholgehalt gegen Flasche prüfen
+
+| Produkt | Im Katalog | Was zu prüfen ist |
+|---|---|---|
+| Scheibel Williams, Kirsche, Mirabelle, Himbeere, Haselnuss | 40–43 % vol | Scheibel führt mehrere Linien mit unterschiedlicher Trinkstärke. Für alle fünf gilt: Prozentzahl vom Etikett übernehmen und die Spanne durch den echten Wert ersetzen. |
+| Lepanto 12 Y.O. Solera | 36–40 % vol | Die Bezeichnung „12 Y.O." ist für Lepanto ungewöhnlich. Genaue Abfüllung und Prozentzahl prüfen. |
+| Pisco | 38–48 % vol | Gattungsspanne, keine Marke hinterlegt. Marke, Herkunftsland (Peru **oder** Chile) und Prozentzahl eintragen. |
+| Sambuca | 38–42 % vol | Gattungsspanne. Marke und Prozentzahl eintragen. |
+| Lustau Amontillado Medium | 18–19 % vol | Prozentzahl vom Etikett. |
+| Lustau Cream P.X. | 18–20 % vol | Prozentzahl vom Etikett. |
+| Bene Dry Gin | „42 % vol (bitte gegen Flasche prüfen)" | Steht seit dem Erstimport ungeprüft im Katalog. |
+| Northman Calm Sea | keine Angabe | **Wichtigster Punkt dieser Liste.** Weder Alkoholgehalt noch Herkunftsland sind bekannt. Herkunft, Verfahren und Prozentzahl sind deshalb leer geblieben statt geraten. Flasche holen. |
+
+## Marke, Herkunft oder Verfahren bestätigen
+
+| Produkt | Angenommen | Was zu prüfen ist |
+|---|---|---|
+| Martini Florale | 14,4 % vol, aromatisierter Wermut | Martini führt unter ähnlichem Namen auch eine **alkoholfreie** Aperitivo-Linie. Steht auf der Flasche im Haus ein Alkoholgehalt oder „0,0"? Danach richtet sich der ganze Eintrag. |
+| Martini Vibrante | 14,4 % vol, aromatisierter Wermut | Gleiche Frage wie beim Florale: alkoholfreie Linie oder nicht? |
+| Carlos No.1 | Brandy de Jerez, Solera, 36 % vol | Die Schreibweise passt zu keinem bekannten Haus – vermutlich ist „Carlos I" gemeint. Haus, korrekte Bezeichnung und Prozentzahl eintragen. Die Story ist bewusst ohne Herstellernamen geschrieben. |
+| Marzadro Giare Amarone | Grappa aus Amarone-Trauben, im Holzfass gereift | Offen ist, ob die Amarone-Angabe den **Trester** meint oder eine Nachreifung in Amarone-Fässern. Etikett lesen, dann `story` und `production` präzisieren. |
+| Lustau Cream P.X. | Cream-Sherry mit Pedro Ximénez | „Cream" und „P.X." sind zwei verschiedene Stile: Ein Cream ist ein gesüßter Oloroso, ein reiner P.X. ein Süßwein. Welche der beiden Flaschen steht im Regal? |
+| Armagnac V.S.O.P. | Gascogne, Column Still, 40 % vol | Kein Haus hinterlegt. Erzeuger und Unterzone (Bas-Armagnac, Ténarèze) eintragen. |
+| Calvados | Normandie, 40 % vol | Kein Haus hinterlegt, und die Appellation entscheidet über das Brennverfahren: Pays d'Auge wird doppelt gebrannt, die Basis-Appellation meist kontinuierlich. Deshalb ist `productionMethod` leer geblieben. |
+| Scheibel Himbeere | Geist-Verfahren (Mazeration) | Himbeeren sind zu zuckerarm für eine Maischegärung, deshalb ist Himbeere fast immer ein **Geist**. Steht auf dem Etikett „Geist" oder „Brand"? |
+| Ron Botucal | Venezuela, 40 % vol | Botucal führt mehrere Abfüllungen (Mantuano, Reserva Exclusiva). Welche ist es? Danach richten sich Reifezeit und Fasstyp. |
+| Don Papa Barokko | Philippinen, 43 % vol | Die Abfüllung heißt beim Hersteller „Baroko" (ein k). Schreibweise im Katalog gegen das Etikett prüfen. |
+| Nega Fulo | Brasilien, Zuckerrohr, 40 % vol | Im Katalog als „Gewürzrum/Cachaça-Stil" geführt. Ist es eine Cachaça oder ein aromatisierter Rum? Das Brennverfahren ist deshalb leer geblieben. |
+
+## Offene Lücken außerhalb dieses Pakets
+
+Vier Gattungseinträge ohne Marke haben weiterhin kein Herkunftsland und keinen
+festen Alkoholwert, weil ohne Flasche nichts zu belegen ist: **Absinth**,
+**Grüner** und **Weißer Crème de Menthe**, **Orange Curaçao**, **Amaretto**,
+**Crème de Cassis** (alle aus Paket 22) sowie **Stork Smoky Rye** (Paket 23).
+Sobald die echten Marken feststehen, lassen sich die Einträge in einem Rutsch
+nachziehen.
+
+## Hinweise ohne Handlungsbedarf
+
+- Die Untergruppen von Gin, Rum, Brand und Wermut wurden **nicht** angefasst –
+  die Sortierung im Produkte-Tab hängt daran.
+- Gin- und Rum-Texte sind unverändert geblieben. Ergänzt wurden dort nur die
+  strukturierten Felder (Alkoholwert, Herkunft, Grundstoff, Verfahren,
+  Aroma-Schlagworte, Kurzpitch) und, wo sie fehlten, passende Rezepte.
+- Bei Portwein steht als Verfahren „Aufspritung (Mutage)", weil Port kein
+  Destillat ist, sondern ein Wein, dessen Gärung mit Weinbrand gestoppt wird.
+  Das ist Absicht und kein Tippfehler.
+- Obstbrände und Digestifs ohne Cocktail-Bezug (Scheibel-Linie, Ports, Sherrys,
+  Hennessy X.O.) haben bewusst keine Rezept-Zuordnung.
