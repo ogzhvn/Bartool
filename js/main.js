@@ -14,6 +14,8 @@ import { initBuildable } from "./buildable.js";
 import { initQuiz } from "./quiz.js";
 import { initEvents } from "./events.js";
 import { initShiftLog } from "./shiftLog.js";
+import { initLosses } from "./losses.js";
+import { initReporting } from "./reporting.js";
 import { initChecklists } from "./checklists.js";
 import { initProductImport } from "./productImport.js";
 import { initAdminPanel } from "./adminPanel.js";
@@ -28,6 +30,7 @@ import {
   initInventorySync,
   initEventSync,
   initShiftLogSync,
+  initLossSync,
   initChecklistTemplateSync,
   initChecklistRunSync,
 } from "./storage.js";
@@ -99,6 +102,7 @@ async function bootstrapAppOnce() {
     initInventorySync(),
     initEventSync(),
     initShiftLogSync(),
+    initLossSync(),
     initChecklistTemplateSync(),
     initChecklistRunSync(),
     initPriceHistorySync(),
@@ -119,6 +123,8 @@ async function bootstrapAppOnce() {
   initQuiz();
   initEvents();
   initShiftLog();
+  initLosses();
+  initReporting();
   initChecklists();
   initProductImport();
   initAdminPanel();

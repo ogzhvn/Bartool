@@ -12,6 +12,7 @@ import { onProductsChanged } from "./storage.js";
 import { isAdmin, getCurrentUser } from "./auth.js";
 import { switchTab } from "./tabs.js";
 import { openBuildableForCount } from "./buildable.js";
+import { verlusteImZeitraum } from "./losses.js";
 import { escapeHtml } from "./utils.js";
 import {
   auswertung,
@@ -316,7 +317,7 @@ async function ladeVorzaehlung() {
     .sort((a, b) => new Date(b.countedOn) - new Date(a.countedOn));
   if (alle.length === 0) return null;
   try {
-    return await loadInventoryItems(alle[0].id);
+    return { meta: alle[0], items: await loadInventoryItems(alle[0].id) };
   } catch {
     return null;
   }
@@ -326,7 +327,11 @@ async function zeigeAuswertung() {
   if (!aktuelleZaehlung) return;
   const a = auswertung(stand);
   const vorher = await ladeVorzaehlung();
-  analysisEl.innerHTML = renderAuswertungHtml(a, differenz(stand, vorher));
+  // Was zwischen den beiden Zählungen als Bruch, Verkostung oder Schulung
+  // gebucht wurde, erklärt einen Teil der Differenz. Ohne Vorzählung gibt es
+  // keinen Zeitraum – dann bleibt die Spalte weg, statt irgendetwas zu zeigen.
+  const erklaert = vorher ? verlusteImZeitraum(vorher.meta.countedOn, aktuelleZaehlung.countedOn) : null;
+  analysisEl.innerHTML = renderAuswertungHtml(a, differenz(stand, vorher?.items ?? null), erklaert);
 }
 
 // Aus der Zählung heraus in die Auswertung "Was kann ich bauen?".

@@ -62,7 +62,7 @@
       <p class="hint" data-i18n="ui.dein_konto_wurde_mit_einem_temporaeren_1230">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte wähle jetzt einen eigenen Benutzernamen und ein eigenes Passwort, bevor es weitergeht.</p>
       <label data-i18n="ui.benutzername">
         Benutzername
-        <input type="text" id="forced-password-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required / data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6">
+        <input type="text" id="forced-password-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
       </label>
       <label data-i18n="ui.neues_passwort">
         Neues Passwort
@@ -105,6 +105,7 @@
     <nav class="sidebar" id="sidebar" role="tablist">
       <div class="sidebar-group">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true" data-i18n="ui.start"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
+        <button class="tab-btn" data-tab="reporting" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title" data-i18n="ui.rechner">Rechner</h3>
@@ -122,6 +123,7 @@
         <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false" data-i18n="ui.uebergabe"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
         <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false" data-i18n="ui.checklisten"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false" data-i18n="ui.inventur"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
+        <button class="tab-btn" data-tab="losses" role="tab" aria-selected="false" data-i18n="ui.schwund_und_bruch"><i class="ph ph-warning" aria-hidden="true"></i>Schwund &amp; Bruch</button>
         <button class="tab-btn" data-tab="buildable" role="tab" aria-selected="false" data-i18n="ui.was_kann_ich_bauen"><i class="ph ph-martini" aria-hidden="true"></i>Was kann ich bauen?</button>
       </div>
       <div class="sidebar-group">
@@ -210,6 +212,19 @@
       </div>
     </section>
 
+    <section id="reporting" class="tab-panel">
+      <h2 data-i18n="ui.reporting">Reporting</h2>
+      <p class="hint" data-i18n="ui.vor_der_schicht_auf_einen_blick_laeuft_der_a8a2">Vor der Schicht auf einen Blick: läuft der Wareneinsatz weg, was läuft ab, was hat die letzte Inventur ergeben. Nur vorhandene Daten – keine Kachel schätzt.</p>
+
+      <div class="report-period-filter no-print" role="group" aria-label="Zeitraum" data-i18n-aria-label="ui.zeitraum">
+        <button type="button" class="report-period-btn" data-days="30" data-i18n="ui.30_tage">30 Tage</button>
+        <button type="button" class="report-period-btn" data-days="90" data-i18n="ui.90_tage">90 Tage</button>
+        <button type="button" class="report-period-btn" data-days="365" data-i18n="ui.365_tage">365 Tage</button>
+      </div>
+
+      <div class="report-grid" id="report-grid"></div>
+    </section>
+
     <!-- BATCHING -->
     <section id="batching" class="tab-panel">
       <h2 data-i18n="ui.rezept_hochrechner_batching">Rezept-Hochrechner (Batching)</h2>
@@ -232,7 +247,7 @@
       <div class="field-row">
         <label data-i18n="ui.rezeptname">
           Rezeptname
-          <input type="text" id="batch-name" placeholder="z. B. Whiskey Sour" / data-i18n-placeholder="ui.z_b_whiskey_sour">
+          <input type="text" id="batch-name" placeholder="z. B. Whiskey Sour" data-i18n-placeholder="ui.z_b_whiskey_sour" />
         </label>
         <label data-i18n="ui.ergibt_portionen_basis">
           Ergibt Portionen (Basis)
@@ -259,7 +274,7 @@
       <div class="stepper" data-mode-field="portions">
         <button type="button" id="batch-portions-minus" class="stepper-btn" aria-label="Eine Portion weniger" data-i18n-aria-label="ui.eine_portion_weniger"><i class="ph ph-minus" aria-hidden="true"></i></button>
         <label class="stepper-value">
-          <input type="number" id="batch-target-portions" value="10" min="0.01" step="1" aria-label="Ziel-Portionen" / data-i18n-aria-label="ui.ziel_portionen">
+          <input type="number" id="batch-target-portions" value="10" min="0.01" step="1" aria-label="Ziel-Portionen" data-i18n-aria-label="ui.ziel_portionen" />
           <span data-i18n="ui.portionen">Portionen</span>
         </label>
         <button type="button" id="batch-portions-plus" class="stepper-btn" aria-label="Eine Portion mehr" data-i18n-aria-label="ui.eine_portion_mehr"><i class="ph ph-plus" aria-hidden="true"></i></button>
@@ -267,7 +282,7 @@
 
       <div class="stepper" data-mode-field="volume" hidden>
         <label class="stepper-value">
-          <input type="number" id="batch-target-volume" value="1000" min="1" step="10" aria-label="Ziel-Volumen in ml" / data-i18n-aria-label="ui.ziel_volumen_in_ml">
+          <input type="number" id="batch-target-volume" value="1000" min="1" step="10" aria-label="Ziel-Volumen in ml" data-i18n-aria-label="ui.ziel_volumen_in_ml" />
           <span data-i18n="ui.ml_zielvolumen">ml Zielvolumen</span>
         </label>
       </div>
@@ -296,7 +311,7 @@
 
       <div class="stepper" data-mode-field="bottles" hidden>
         <label class="stepper-value">
-          <input type="number" id="batch-dilution-value" value="20" min="0" max="99" step="1" aria-label="Verdünnung oder Ziel-Alkoholgehalt in Prozent" / data-i18n-aria-label="ui.verduennung_oder_ziel_alkoholgehalt_in_985c">
+          <input type="number" id="batch-dilution-value" value="20" min="0" max="99" step="1" aria-label="Verdünnung oder Ziel-Alkoholgehalt in Prozent" data-i18n-aria-label="ui.verduennung_oder_ziel_alkoholgehalt_in_985c" />
           <span id="batch-dilution-unit" data-i18n="ui.wasseranteil">% Wasseranteil</span>
         </label>
       </div>
@@ -331,7 +346,7 @@
         <div class="field-row">
           <label data-i18n="ui.bezeichnung">
             Bezeichnung
-            <input type="text" id="prep-label" placeholder="z. B. Superjuice Limette" required / data-i18n-placeholder="ui.z_b_superjuice_limette">
+            <input type="text" id="prep-label" placeholder="z. B. Superjuice Limette" required data-i18n-placeholder="ui.z_b_superjuice_limette" />
           </label>
           <label data-i18n="ui.art">
             Art
@@ -347,17 +362,17 @@
         <div class="field-row">
           <label data-i18n="ui.menge_ml">
             Menge (ml)
-            <input type="number" id="prep-size" min="0" step="10" placeholder="z. B. 1000" / data-i18n-placeholder="ui.z_b_1000">
+            <input type="number" id="prep-size" min="0" step="10" placeholder="z. B. 1000" data-i18n-placeholder="ui.z_b_1000" />
           </label>
           <label data-i18n="ui.alkoholgehalt">
             Alkoholgehalt (%)
-            <input type="number" id="prep-abv" min="0" max="100" step="0.1" placeholder="optional" / data-i18n-placeholder="ui.optional">
+            <input type="number" id="prep-abv" min="0" max="100" step="0.1" placeholder="optional" data-i18n-placeholder="ui.optional" />
           </label>
         </div>
         <div class="field-row">
           <label data-i18n="ui.wo_steht_es">
             Wo steht es
-            <input type="text" id="prep-location" list="prep-location-options" placeholder="z. B. Kühlschrank Bar" / data-i18n-placeholder="ui.z_b_kuehlschrank_bar">
+            <input type="text" id="prep-location" list="prep-location-options" placeholder="z. B. Kühlschrank Bar" data-i18n-placeholder="ui.z_b_kuehlschrank_bar" />
           </label>
         </div>
         <datalist id="prep-location-options">
@@ -379,7 +394,7 @@
         <div class="field-row">
           <label data-i18n="ui.notiz">
             Notiz
-            <input type="text" id="prep-notes" placeholder="optional, z. B. Charge 2, etwas säurebetont" / data-i18n-placeholder="ui.optional_z_b_charge_2_etwas_saeurebetont">
+            <input type="text" id="prep-notes" placeholder="optional, z. B. Charge 2, etwas säurebetont" data-i18n-placeholder="ui.optional_z_b_charge_2_etwas_saeurebetont" />
           </label>
         </div>
         <div class="actions">
@@ -412,7 +427,7 @@
         <div class="field-row">
           <label data-i18n="ui.name">
             Name
-            <input type="text" id="event-name" placeholder="z. B. Hochzeit Meier, Sonnendeck" required / data-i18n-placeholder="ui.z_b_hochzeit_meier_sonnendeck">
+            <input type="text" id="event-name" placeholder="z. B. Hochzeit Meier, Sonnendeck" required data-i18n-placeholder="ui.z_b_hochzeit_meier_sonnendeck" />
           </label>
           <label data-i18n="ui.datum">
             Datum
@@ -422,11 +437,11 @@
         <div class="field-row">
           <label data-i18n="ui.gaeste">
             Gäste
-            <input type="number" id="event-guests" min="0" step="1" placeholder="z. B. 80" / data-i18n-placeholder="ui.z_b_80">
+            <input type="number" id="event-guests" min="0" step="1" placeholder="z. B. 80" data-i18n-placeholder="ui.z_b_80" />
           </label>
           <label data-i18n="ui.dauer_stunden">
             Dauer (Stunden)
-            <input type="number" id="event-duration" min="0" step="0.5" placeholder="z. B. 4" / data-i18n-placeholder="ui.z_b_4">
+            <input type="number" id="event-duration" min="0" step="0.5" placeholder="z. B. 4" data-i18n-placeholder="ui.z_b_4" />
           </label>
         </div>
         <div class="field-row">
@@ -446,7 +461,7 @@
           </label>
           <label data-i18n="ui.notiz">
             Notiz
-            <input type="text" id="event-notes" placeholder="optional, z. B. Aperitif ab 18 Uhr auf der Terrasse" / data-i18n-placeholder="ui.optional_z_b_aperitif_ab_18_uhr_auf_der_4ee1">
+            <input type="text" id="event-notes" placeholder="optional, z. B. Aperitif ab 18 Uhr auf der Terrasse" data-i18n-placeholder="ui.optional_z_b_aperitif_ab_18_uhr_auf_der_4ee1" />
           </label>
         </div>
         <p class="hint" data-i18n="ui.drinks_pro_gast_und_eis_pro_drink_sind_09c9">Drinks pro Gast und Eis pro Drink sind Faustwerte – bitte an euren Betrieb anpassen. Vorbelegt: 2 Drinks in der ersten Stunde und 1 je weiterer Stunde, 0,35 kg Eis pro Drink. Wird „Drinks pro Gast“ von Hand geändert, bleibt der Wert stehen.</p>
@@ -563,7 +578,7 @@
           <div class="field-row">
             <label data-i18n="ui.name">
               Name
-              <input type="text" id="checklist-template-name" placeholder="z. B. Closing Bar" required / data-i18n-placeholder="ui.z_b_closing_bar">
+              <input type="text" id="checklist-template-name" placeholder="z. B. Closing Bar" required data-i18n-placeholder="ui.z_b_closing_bar" />
             </label>
             <label data-i18n="ui.art">
               Art
@@ -578,7 +593,7 @@
           </div>
 
           <label class="radio-label">
-            <input type="checkbox" id="checklist-template-active" checked / data-i18n="ui.aktiv_steht_dem_team_zur_auswahl">
+            <input type="checkbox" id="checklist-template-active" checked data-i18n="ui.aktiv_steht_dem_team_zur_auswahl" />
             Aktiv – steht dem Team zur Auswahl
           </label>
 
@@ -619,7 +634,7 @@
         <p id="inv-status" class="empty-note" hidden></p>
 
         <div class="field-row">
-          <input type="text" id="inv-search" placeholder="Produkt oder Kategorie suchen…" / data-i18n-placeholder="ui.produkt_oder_kategorie_suchen">
+          <input type="text" id="inv-search" placeholder="Produkt oder Kategorie suchen…" data-i18n-placeholder="ui.produkt_oder_kategorie_suchen" />
         </div>
         <div class="actions">
           <button type="button" id="inv-save" class="btn-primary" data-i18n="ui.speichern">Speichern</button>
@@ -645,6 +660,65 @@
       </div>
     </section>
 
+    <!-- SCHWUND, BRUCH UND VERKOSTUNG -->
+    <section id="losses" class="tab-panel">
+      <h2 data-i18n="ui.schwund_und_bruch">Schwund &amp; Bruch</h2>
+      <p class="hint" data-i18n="ui.jeder_milliliter_der_nicht_ueber_den_8ad4">Jeder Milliliter, der nicht über den Tresen verkauft wurde, bekommt hier einen Grund: Bruch, Verkostung, Schulung, Retoure. Damit ist die Inventurdifferenz später erklärbar statt geschätzt.</p>
+
+      <form id="loss-form">
+        <h3 data-i18n="ui.grund">Grund</h3>
+        <div id="loss-reasons" class="loss-reasons"></div>
+
+        <label data-i18n="ui.produkt">
+          Produkt
+          <input type="text" id="loss-product" list="loss-product-options" placeholder="Produkt aus dem Katalog wählen…" autocomplete="off" data-i18n-placeholder="ui.produkt_aus_dem_katalog_waehlen" />
+        </label>
+        <datalist id="loss-product-options"></datalist>
+        <p id="loss-product-warning" class="empty-note" hidden></p>
+
+        <div class="field-row">
+          <label data-i18n="ui.menge">
+            Menge
+            <input type="number" id="loss-amount" min="0" step="0.1" inputmode="decimal" />
+          </label>
+          <label data-i18n="ui.einheit">
+            Einheit
+            <select id="loss-unit"></select>
+          </label>
+          <label id="loss-size-wrap" hidden data-i18n="ui.groesse_in_ml">
+            Größe in ml
+            <input type="number" id="loss-size" min="0" step="1" inputmode="numeric" placeholder="z. B. 700" data-i18n-placeholder="ui.z_b_700" />
+          </label>
+        </div>
+        <p class="hint" data-i18n="ui.bei_flasche_und_glas_ist_die_groesse_3ab9">Bei „Flasche“ und „Glas“ ist die Größe nötig, sonst lässt sich der Verlust nicht in Euro und nicht gegen die Inventur rechnen. Ohne Größe wird trotzdem gebucht – dann eben ohne Wert.</p>
+
+        <div class="field-row">
+          <label data-i18n="ui.datum">
+            Datum
+            <input type="date" id="loss-date" />
+          </label>
+          <label data-i18n="ui.notiz_optional">
+            Notiz (optional)
+            <input type="text" id="loss-note" placeholder="z. B. Glas beim Abräumen gefallen" data-i18n-placeholder="ui.z_b_glas_beim_abraeumen_gefallen" />
+          </label>
+        </div>
+
+        <p id="loss-value-preview" class="prep-meta"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary" data-i18n="ui.verlust_buchen">Verlust buchen</button>
+        </div>
+      </form>
+
+      <h3 data-i18n="ui.letzte_30_tage">Letzte 30 Tage</h3>
+      <div class="field-row">
+        <select id="loss-filter-reason" aria-label="Nach Grund filtern" data-i18n-aria-label="ui.nach_grund_filtern"></select>
+        <input type="text" id="loss-filter-product" placeholder="Produkt filtern…" aria-label="Nach Produkt filtern" data-i18n-placeholder="ui.produkt_filtern" data-i18n-aria-label="ui.nach_produkt_filtern" />
+      </div>
+      <div id="loss-summary"></div>
+      <div id="loss-list"></div>
+    </section>
+
     <!-- WAS KANN ICH BAUEN? -->
     <section id="buildable" class="tab-panel">
       <h2 data-i18n="ui.was_kann_ich_bauen">Was kann ich bauen?</h2>
@@ -662,7 +736,7 @@
       <p id="build-status" class="empty-note" hidden></p>
 
       <div class="field-row no-print">
-        <input type="text" id="build-search" placeholder="Drink oder Zutat suchen…" / data-i18n-placeholder="ui.drink_oder_zutat_suchen">
+        <input type="text" id="build-search" placeholder="Drink oder Zutat suchen…" data-i18n-placeholder="ui.drink_oder_zutat_suchen" />
       </div>
 
       <div id="build-result"></div>
@@ -769,7 +843,7 @@
 
       <h3 data-i18n="ui.drinks_auswaehlen">Drinks auswählen</h3>
       <div class="field-row no-print">
-        <input type="text" id="menu-search" placeholder="Drink oder Kategorie suchen…" / data-i18n-placeholder="ui.drink_oder_kategorie_suchen">
+        <input type="text" id="menu-search" placeholder="Drink oder Kategorie suchen…" data-i18n-placeholder="ui.drink_oder_kategorie_suchen" />
       </div>
       <div class="export-bar no-print">
         <span id="menu-selected-count" class="export-count" data-i18n="ui.0_ausgewaehlt">0 ausgewählt</span>
@@ -796,7 +870,7 @@
         </div>
 
         <div class="field-row no-print">
-          <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" / data-i18n-placeholder="ui.rezepte_oder_zutaten_durchsuchen">
+          <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" data-i18n-placeholder="ui.rezepte_oder_zutaten_durchsuchen" />
           <select id="recipe-category-filter">
             <option value="" data-i18n="ui.alle_kategorien">Alle Kategorien</option>
           </select>
@@ -826,7 +900,7 @@
             <div class="field-row">
               <label data-i18n="ui.rezeptname">
                 Rezeptname
-                <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" / data-i18n-placeholder="ui.z_b_whiskey_sour">
+                <input type="text" id="recipe-name" placeholder="z. B. Whiskey Sour" data-i18n-placeholder="ui.z_b_whiskey_sour" />
               </label>
               <label data-i18n="ui.ergibt_portionen_basis">
                 Ergibt Portionen (Basis)
@@ -834,9 +908,35 @@
               </label>
               <label data-i18n="ui.kategorie">
                 Kategorie
-                <input type="text" id="recipe-category" list="recipe-category-options" placeholder="z. B. Gin" / data-i18n-placeholder="ui.z_b_gin">
+                <input type="text" id="recipe-category" list="recipe-category-options" placeholder="z. B. Gin" data-i18n-placeholder="ui.z_b_gin" />
                 <datalist id="recipe-category-options"></datalist>
               </label>
+            </div>
+
+            <h3 data-i18n="ui.fotos">Fotos</h3>
+            <div class="field-row">
+              <div class="photo-field" id="recipe-photo-field">
+                <p class="photo-field-label" data-i18n="ui.aufbau_fertiger_drink">Aufbau (fertiger Drink)</p>
+                <div class="photo-preview" id="recipe-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+                <div class="photo-field-actions">
+                  <label class="btn-secondary photo-upload-label" data-i18n="ui.foto_waehlen">
+                    Foto wählen
+                    <input type="file" id="recipe-photo-input" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="recipe-photo-remove" class="btn-secondary" hidden data-i18n="ui.foto_entfernen">Foto entfernen</button>
+                </div>
+              </div>
+              <div class="photo-field" id="recipe-garnish-photo-field">
+                <p class="photo-field-label" data-i18n="ui.garnitur_detail">Garnitur (Detail)</p>
+                <div class="photo-preview" id="recipe-garnish-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+                <div class="photo-field-actions">
+                  <label class="btn-secondary photo-upload-label" data-i18n="ui.foto_waehlen">
+                    Foto wählen
+                    <input type="file" id="recipe-garnish-photo-input" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="recipe-garnish-photo-remove" class="btn-secondary" hidden data-i18n="ui.foto_entfernen">Foto entfernen</button>
+                </div>
+              </div>
             </div>
 
             <h3 data-i18n="ui.zutaten">Zutaten</h3>
@@ -847,29 +947,29 @@
             <div class="field-row">
               <label data-i18n="ui.zubereitung">
                 Zubereitung
-                <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" / data-i18n-placeholder="ui.z_b_mit_eis_schuetteln_und_abseihen">
+                <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" data-i18n-placeholder="ui.z_b_mit_eis_schuetteln_und_abseihen" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.verkaufspreis_brutto">
                 Verkaufspreis brutto (€)
-                <input type="number" id="recipe-sales-price" min="0" step="0.1" placeholder="z. B. 14.50" / data-i18n-placeholder="ui.z_b_14_50">
+                <input type="number" id="recipe-sales-price" min="0" step="0.1" placeholder="z. B. 14.50" data-i18n-placeholder="ui.z_b_14_50" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.glas">
                 Glas
-                <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" / data-i18n-placeholder="ui.z_b_tumbler">
+                <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" data-i18n-placeholder="ui.z_b_tumbler" />
               </label>
               <label data-i18n="ui.garnitur">
                 Garnitur
-                <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" / data-i18n-placeholder="ui.z_b_orangenzeste">
+                <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" data-i18n-placeholder="ui.z_b_orangenzeste" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.eis">
                 Eis
-                <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" / data-i18n-placeholder="ui.z_b_wuerfel_crushed_ice">
+                <input type="text" id="recipe-ice" placeholder="z. B. Würfel, Crushed Ice" data-i18n-placeholder="ui.z_b_wuerfel_crushed_ice" />
               </label>
             </div>
             <label data-i18n="ui.geschichte">
@@ -878,11 +978,11 @@
             </label>
             <label data-i18n="ui.kurzer_pitch_zum_nachsprechen_im_service">
               Kurzer Pitch (zum Nachsprechen im Service)
-              <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" / data-i18n-placeholder="ui.z_b_unser_fruchtigster_sour_sehr_beliebt_d1ed">
+              <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" data-i18n-placeholder="ui.z_b_unser_fruchtigster_sour_sehr_beliebt_d1ed" />
             </label>
             <label data-i18n="ui.passt_gut_zu_produkte_rezepte_kommagetrennt">
               Passt gut zu (Produkte/Rezepte, kommagetrennt)
-              <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" / data-i18n-placeholder="ui.z_b_espresso_martini">
+              <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" data-i18n-placeholder="ui.z_b_espresso_martini" />
             </label>
 
             <div class="actions">
@@ -896,7 +996,7 @@
             <div class="actions">
               <button type="button" id="recipe-sidebar-new" class="btn-secondary" data-i18n="ui.neu"><i class="ph ph-plus" aria-hidden="true"></i> Neu</button>
             </div>
-            <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" / data-i18n-placeholder="ui.name_oder_zutat_suchen">
+            <input type="text" id="recipe-sidebar-search" placeholder="Name oder Zutat suchen…" data-i18n-placeholder="ui.name_oder_zutat_suchen" />
             <div id="recipe-sidebar-list" class="recipe-name-list"></div>
           </aside>
         </div>
@@ -916,7 +1016,7 @@
         </div>
 
         <div class="field-row no-print">
-          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" / data-i18n-placeholder="ui.produkte_durchsuchen">
+          <input type="text" id="product-search" placeholder="Produkte durchsuchen…" data-i18n-placeholder="ui.produkte_durchsuchen" />
           <select id="product-group-filter">
             <option value="" data-i18n="ui.alle_kategorien">Alle Kategorien</option>
           </select>
@@ -956,37 +1056,55 @@
             <div class="field-row">
               <label data-i18n="ui.produktname">
                 Produktname
-                <input type="text" id="product-name" placeholder="z. B. Campari" / data-i18n-placeholder="ui.z_b_campari">
+                <input type="text" id="product-name" placeholder="z. B. Campari" data-i18n-placeholder="ui.z_b_campari" />
               </label>
               <label data-i18n="ui.kategorie_und_herkunft">
                 Kategorie &amp; Herkunft
-                <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" / data-i18n-placeholder="ui.z_b_bitterlikoer_italien">
+                <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" data-i18n-placeholder="ui.z_b_bitterlikoer_italien" />
               </label>
+            </div>
+
+            <div class="field-row">
+              <div class="product-photo-field">
+                <span class="product-photo-label" data-i18n="ui.foto">Foto</span>
+                <div class="product-photo-preview">
+                  <img id="product-photo-img" alt="" hidden />
+                  <i class="ph ph-wine" id="product-photo-placeholder" aria-hidden="true"></i>
+                </div>
+                <div class="product-photo-actions" data-admin-only hidden>
+                  <label class="btn-secondary import-label" data-i18n="ui.foto_hochladen">
+                    <i class="ph ph-upload-simple" aria-hidden="true"></i> Foto hochladen
+                    <input type="file" id="product-photo-file" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="product-photo-delete" class="btn-secondary" hidden data-i18n="ui.foto_loeschen">Foto löschen</button>
+                </div>
+                <p id="product-photo-status" class="hint" hidden></p>
+              </div>
             </div>
             <div class="field-row">
               <label data-i18n="ui.gruppe">
                 Gruppe
-                <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" / data-i18n-placeholder="ui.z_b_rum_und_cachaca">
+                <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" data-i18n-placeholder="ui.z_b_rum_und_cachaca" />
                 <datalist id="product-group-options"></datalist>
               </label>
               <label data-i18n="ui.untergruppe_optional">
                 Untergruppe (optional)
-                <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" / data-i18n-placeholder="ui.z_b_dunkler_rum">
+                <input type="text" id="product-subgroup" list="product-subgroup-options" placeholder="z. B. Dunkler Rum" data-i18n-placeholder="ui.z_b_dunkler_rum" />
                 <datalist id="product-subgroup-options"></datalist>
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.alkoholgehalt_vol">
                 Alkoholgehalt (% vol)
-                <input type="text" id="product-abv" placeholder="z. B. 25 % vol" / data-i18n-placeholder="ui.z_b_25_vol">
+                <input type="text" id="product-abv" placeholder="z. B. 25 % vol" data-i18n-placeholder="ui.z_b_25_vol" />
               </label>
               <label data-i18n="ui.alkoholgehalt_als_zahl">
                 Alkoholgehalt als Zahl
-                <input type="number" id="product-abv-value" min="0" max="100" step="0.1" placeholder="z. B. 25" / data-i18n-placeholder="ui.z_b_25">
+                <input type="number" id="product-abv-value" min="0" max="100" step="0.1" placeholder="z. B. 25" data-i18n-placeholder="ui.z_b_25" />
               </label>
               <label data-i18n="ui.bis_nur_bei_bereichsangabe">
                 … bis (nur bei Bereichsangabe)
-                <input type="number" id="product-abv-max" min="0" max="100" step="0.1" placeholder="z. B. 43" / data-i18n-placeholder="ui.z_b_43">
+                <input type="number" id="product-abv-max" min="0" max="100" step="0.1" placeholder="z. B. 43" data-i18n-placeholder="ui.z_b_43" />
               </label>
             </div>
 
@@ -994,33 +1112,33 @@
             <div class="field-row">
               <label data-i18n="ui.herkunftsland">
                 Herkunftsland
-                <input type="text" id="product-origin-country" placeholder="z. B. Schottland" / data-i18n-placeholder="ui.z_b_schottland">
+                <input type="text" id="product-origin-country" placeholder="z. B. Schottland" data-i18n-placeholder="ui.z_b_schottland" />
               </label>
               <label data-i18n="ui.herkunftsregion">
                 Herkunftsregion
-                <input type="text" id="product-origin-region" placeholder="z. B. Speyside" / data-i18n-placeholder="ui.z_b_speyside">
+                <input type="text" id="product-origin-region" placeholder="z. B. Speyside" data-i18n-placeholder="ui.z_b_speyside" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.grundstoff">
                 Grundstoff
-                <input type="text" id="product-base-material" placeholder="z. B. Gerstenmalz, Melasse, Agave" / data-i18n-placeholder="ui.z_b_gerstenmalz_melasse_agave">
+                <input type="text" id="product-base-material" placeholder="z. B. Gerstenmalz, Melasse, Agave" data-i18n-placeholder="ui.z_b_gerstenmalz_melasse_agave" />
               </label>
               <label data-i18n="ui.herstellungsverfahren">
                 Herstellungsverfahren
-                <input type="text" id="product-production-method" placeholder="z. B. Pot Still, Kolonnenbrand, Mazeration" / data-i18n-placeholder="ui.z_b_pot_still_kolonnenbrand_mazeration">
+                <input type="text" id="product-production-method" placeholder="z. B. Pot Still, Kolonnenbrand, Mazeration" data-i18n-placeholder="ui.z_b_pot_still_kolonnenbrand_mazeration" />
               </label>
               <label data-i18n="ui.altersangabe">
                 Altersangabe
-                <input type="text" id="product-age-statement" placeholder="z. B. 12 Jahre, ohne Altersangabe" / data-i18n-placeholder="ui.z_b_12_jahre_ohne_altersangabe">
+                <input type="text" id="product-age-statement" placeholder="z. B. 12 Jahre, ohne Altersangabe" data-i18n-placeholder="ui.z_b_12_jahre_ohne_altersangabe" />
               </label>
             </div>
             <label data-i18n="ui.aroma_schlagworte_kommagetrennt">
               Aroma-Schlagworte (kommagetrennt)
-              <input type="text" id="product-flavor-tags" placeholder="z. B. Wacholder, Zitrus, Koriander" / data-i18n-placeholder="ui.z_b_wacholder_zitrus_koriander">
+              <input type="text" id="product-flavor-tags" placeholder="z. B. Wacholder, Zitrus, Koriander" data-i18n-placeholder="ui.z_b_wacholder_zitrus_koriander" />
             </label>
             <label class="radio-label">
-              <input type="checkbox" id="product-verified" / data-i18n="ui.angaben_geprueft_nur_gepruefte_produkte_3d2e">
+              <input type="checkbox" id="product-verified" data-i18n="ui.angaben_geprueft_nur_gepruefte_produkte_3d2e" />
               Angaben geprüft (nur geprüfte Produkte werden später im Quiz abgefragt)
             </label>
 
@@ -1029,55 +1147,55 @@
             <div class="field-row">
               <label data-i18n="ui.region">
                 Region
-                <input type="text" id="product-region" placeholder="z. B. Rheingau, Loire" / data-i18n-placeholder="ui.z_b_rheingau_loire">
+                <input type="text" id="product-region" placeholder="z. B. Rheingau, Loire" data-i18n-placeholder="ui.z_b_rheingau_loire" />
               </label>
               <label data-i18n="ui.rebsorte">
                 Rebsorte
-                <input type="text" id="product-grape-variety" placeholder="z. B. Riesling" / data-i18n-placeholder="ui.z_b_riesling">
+                <input type="text" id="product-grape-variety" placeholder="z. B. Riesling" data-i18n-placeholder="ui.z_b_riesling" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.lage">
                 Lage
-                <input type="text" id="product-vineyard" placeholder="z. B. Erbacher Marcobrunn" / data-i18n-placeholder="ui.z_b_erbacher_marcobrunn">
+                <input type="text" id="product-vineyard" placeholder="z. B. Erbacher Marcobrunn" data-i18n-placeholder="ui.z_b_erbacher_marcobrunn" />
               </label>
               <label data-i18n="ui.jahrgang">
                 Jahrgang
-                <input type="text" id="product-vintage" placeholder="z. B. 2021" / data-i18n-placeholder="ui.z_b_2021">
+                <input type="text" id="product-vintage" placeholder="z. B. 2021" data-i18n-placeholder="ui.z_b_2021" />
               </label>
               <label data-i18n="ui.ausbau">
                 Ausbau
-                <input type="text" id="product-aging" placeholder="z. B. Barrique, Stahltank" / data-i18n-placeholder="ui.z_b_barrique_stahltank">
+                <input type="text" id="product-aging" placeholder="z. B. Barrique, Stahltank" data-i18n-placeholder="ui.z_b_barrique_stahltank" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.trinkfenster_nur_jahrgangs_champagner_7a47">
                 Trinkfenster (nur Jahrgangs-Champagner/Prestige-Cuvées)
-                <input type="text" id="product-drinking-window" placeholder="z. B. jetzt bis ca. 2035" / data-i18n-placeholder="ui.z_b_jetzt_bis_ca_2035">
+                <input type="text" id="product-drinking-window" placeholder="z. B. jetzt bis ca. 2035" data-i18n-placeholder="ui.z_b_jetzt_bis_ca_2035" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.erzeuger_weingut">
                 Erzeuger / Weingut
-                <input type="text" id="product-producer" placeholder="z. B. Weingut Spreitzer" / data-i18n-placeholder="ui.z_b_weingut_spreitzer">
+                <input type="text" id="product-producer" placeholder="z. B. Weingut Spreitzer" data-i18n-placeholder="ui.z_b_weingut_spreitzer" />
               </label>
               <label data-i18n="ui.geschmacksrichtung">
                 Geschmacksrichtung
-                <input type="text" id="product-sweetness" placeholder="z. B. trocken, brut, halbtrocken" / data-i18n-placeholder="ui.z_b_trocken_brut_halbtrocken">
+                <input type="text" id="product-sweetness" placeholder="z. B. trocken, brut, halbtrocken" data-i18n-placeholder="ui.z_b_trocken_brut_halbtrocken" />
               </label>
             </div>
             <div class="field-row">
               <label data-i18n="ui.klassifikation">
                 Klassifikation
-                <input type="text" id="product-classification" placeholder="z. B. VDP.Gutswein, AOC Sancerre" / data-i18n-placeholder="ui.z_b_vdp_gutswein_aoc_sancerre">
+                <input type="text" id="product-classification" placeholder="z. B. VDP.Gutswein, AOC Sancerre" data-i18n-placeholder="ui.z_b_vdp_gutswein_aoc_sancerre" />
               </label>
               <label data-i18n="ui.serviertemperatur">
                 Serviertemperatur
-                <input type="text" id="product-serving-temp" placeholder="z. B. 8–10 °C" / data-i18n-placeholder="ui.z_b_8_10_c">
+                <input type="text" id="product-serving-temp" placeholder="z. B. 8–10 °C" data-i18n-placeholder="ui.z_b_8_10_c" />
               </label>
               <label data-i18n="ui.koerper">
                 Körper
-                <input type="text" id="product-body" placeholder="z. B. leicht, mittel, kräftig" / data-i18n-placeholder="ui.z_b_leicht_mittel_kraeftig">
+                <input type="text" id="product-body" placeholder="z. B. leicht, mittel, kräftig" data-i18n-placeholder="ui.z_b_leicht_mittel_kraeftig" />
               </label>
             </div>
             </div>
@@ -1089,7 +1207,7 @@
             </label>
             <label data-i18n="ui.speiseempfehlung_allgemein_keine_konkreten_86a9">
               Speiseempfehlung (allgemein, keine konkreten Gerichte)
-              <input type="text" id="product-food-pairing" placeholder="z. B. passt zu hellem Fleisch, Fisch, milden Käsesorten" / data-i18n-placeholder="ui.z_b_passt_zu_hellem_fleisch_fisch_milden_7643">
+              <input type="text" id="product-food-pairing" placeholder="z. B. passt zu hellem Fleisch, Fisch, milden Käsesorten" data-i18n-placeholder="ui.z_b_passt_zu_hellem_fleisch_fisch_milden_7643" />
             </label>
 
             <h3 data-i18n="ui.einkauf">Einkauf</h3>
@@ -1109,15 +1227,15 @@
             <div class="field-row">
               <label data-i18n="ui.soll_bestand">
                 Soll-Bestand
-                <input type="number" id="product-par-level" min="0" step="1" placeholder="z. B. 6" / data-i18n-placeholder="ui.z_b_6">
+                <input type="number" id="product-par-level" min="0" step="1" placeholder="z. B. 6" data-i18n-placeholder="ui.z_b_6" />
               </label>
               <label data-i18n="ui.lieferant">
                 Lieferant
-                <input type="text" id="product-supplier" list="product-supplier-options" placeholder="z. B. Getränke Meyer" / data-i18n-placeholder="ui.z_b_getraenke_meyer">
+                <input type="text" id="product-supplier" list="product-supplier-options" placeholder="z. B. Getränke Meyer" data-i18n-placeholder="ui.z_b_getraenke_meyer" />
               </label>
               <label data-i18n="ui.bestelleinheit">
                 Bestelleinheit
-                <input type="text" id="product-order-unit" placeholder="z. B. Flasche, 6er-Kiste" / data-i18n-placeholder="ui.z_b_flasche_6er_kiste">
+                <input type="text" id="product-order-unit" placeholder="z. B. Flasche, 6er-Kiste" data-i18n-placeholder="ui.z_b_flasche_6er_kiste" />
               </label>
             </div>
             <datalist id="product-supplier-options"></datalist>
@@ -1126,11 +1244,11 @@
             <div class="field-row">
               <label data-i18n="ui.serviervorschlag">
                 Serviervorschlag
-                <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" / data-i18n-placeholder="ui.glas_pur_on_the_rocks_temperatur">
+                <input type="text" id="product-service" placeholder="Glas, pur/on the rocks, Temperatur" data-i18n-placeholder="ui.glas_pur_on_the_rocks_temperatur" />
               </label>
               <label data-i18n="ui.alternativen_substitute">
                 Alternativen/Substitute
-                <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" / data-i18n-placeholder="ui.was_nehme_ich_wenn_nicht_vorraetig">
+                <input type="text" id="product-alternatives" placeholder="Was nehme ich, wenn nicht vorrätig?" data-i18n-placeholder="ui.was_nehme_ich_wenn_nicht_vorraetig" />
               </label>
             </div>
 
@@ -1141,19 +1259,19 @@
             </label>
             <label data-i18n="ui.besonderheiten_der_herstellung">
               Besonderheiten der Herstellung
-              <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" / data-i18n-placeholder="ui.z_b_fassreifung_destillationsverfahren">
+              <input type="text" id="product-production" placeholder="z. B. Fassreifung, Destillationsverfahren" data-i18n-placeholder="ui.z_b_fassreifung_destillationsverfahren" />
             </label>
             <label data-i18n="ui.allergene_unvertraeglichkeiten">
               Allergene/Unverträglichkeiten
-              <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" / data-i18n-placeholder="ui.z_b_sulfite_gluten_nuesse">
+              <input type="text" id="product-allergens" placeholder="z. B. Sulfite, Gluten, Nüsse" data-i18n-placeholder="ui.z_b_sulfite_gluten_nuesse" />
             </label>
             <label data-i18n="ui.kurzer_pitch_zum_nachsprechen_im_service">
               Kurzer Pitch (zum Nachsprechen im Service)
-              <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" / data-i18n-placeholder="ui.z_b_der_ist_deutlich_milder_als_campari_a4b6">
+              <input type="text" id="product-quick-pitch" placeholder="z. B. „Der ist deutlich milder als Campari, probier den mal.“" data-i18n-placeholder="ui.z_b_der_ist_deutlich_milder_als_campari_a4b6" />
             </label>
             <label data-i18n="ui.passt_gut_zu_produkte_rezepte_kommagetrennt">
               Passt gut zu (Produkte/Rezepte, kommagetrennt)
-              <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" / data-i18n-placeholder="ui.z_b_tonic_water_aperol_spritz">
+              <input type="text" id="product-pairs-with" list="pairs-with-options" placeholder="z. B. Tonic Water, Aperol Spritz" data-i18n-placeholder="ui.z_b_tonic_water_aperol_spritz" />
             </label>
             <datalist id="pairs-with-options"></datalist>
 
@@ -1168,7 +1286,7 @@
             <div class="actions">
               <button type="button" id="product-sidebar-new" class="btn-secondary" data-i18n="ui.neu"><i class="ph ph-plus" aria-hidden="true"></i> Neu</button>
             </div>
-            <input type="text" id="product-sidebar-search" placeholder="Suchen…" / data-i18n-placeholder="ui.suchen">
+            <input type="text" id="product-sidebar-search" placeholder="Suchen…" data-i18n-placeholder="ui.suchen" />
             <div id="product-sidebar-list" class="recipe-name-list"></div>
           </aside>
         </div>
@@ -1320,7 +1438,7 @@
       <div class="stepper" data-mode-field="percent">
         <button type="button" id="dil-percent-minus" class="stepper-btn" aria-label="Fünf Prozent weniger" data-i18n-aria-label="ui.fuenf_prozent_weniger"><i class="ph ph-minus" aria-hidden="true"></i></button>
         <label class="stepper-value">
-          <input type="number" id="dil-percent" value="25" min="0" max="95" step="5" aria-label="Verdünnung in Prozent" / data-i18n-aria-label="ui.verduennung_in_prozent">
+          <input type="number" id="dil-percent" value="25" min="0" max="95" step="5" aria-label="Verdünnung in Prozent" data-i18n-aria-label="ui.verduennung_in_prozent" />
           <span data-i18n="ui.verduennung_9c47">% Verdünnung</span>
         </label>
         <button type="button" id="dil-percent-plus" class="stepper-btn" aria-label="Fünf Prozent mehr" data-i18n-aria-label="ui.fuenf_prozent_mehr"><i class="ph ph-plus" aria-hidden="true"></i></button>
@@ -1328,7 +1446,7 @@
 
       <div class="stepper" data-mode-field="ml" hidden>
         <label class="stepper-value">
-          <input type="number" id="dil-ml" value="30" min="0" step="5" aria-label="Verdünnung in Millilitern" / data-i18n-aria-label="ui.verduennung_in_millilitern">
+          <input type="number" id="dil-ml" value="30" min="0" step="5" aria-label="Verdünnung in Millilitern" data-i18n-aria-label="ui.verduennung_in_millilitern" />
           <span data-i18n="ui.ml_wasser">ml Wasser</span>
         </label>
       </div>
@@ -1415,7 +1533,7 @@
           </label>
           <label data-i18n="ui.benutzername">
             Benutzername
-            <input type="text" id="admin-new-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required / data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6">
+            <input type="text" id="admin-new-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
           </label>
         </div>
         <div class="field-row">
@@ -1462,7 +1580,7 @@
         <div class="field-row">
           <label data-i18n="ui.thema">
             Thema
-            <input type="text" id="quiz-admin-topic" placeholder="Servicewissen" / data-i18n-placeholder="ui.servicewissen">
+            <input type="text" id="quiz-admin-topic" placeholder="Servicewissen" data-i18n-placeholder="ui.servicewissen" />
           </label>
           <label data-i18n="ui.schwierigkeit">
             Schwierigkeit
@@ -1496,7 +1614,7 @@
         <datalist id="quiz-admin-product-list"></datalist>
         <datalist id="quiz-admin-recipe-list"></datalist>
         <label class="radio-label">
-          <input type="checkbox" id="quiz-admin-active" checked / data-i18n="ui.aktiv_erscheint_im_quiz">
+          <input type="checkbox" id="quiz-admin-active" checked data-i18n="ui.aktiv_erscheint_im_quiz" />
           aktiv (erscheint im Quiz)
         </label>
         <div id="quiz-admin-error" class="error-note" hidden></div>
@@ -1562,7 +1680,7 @@
   <div id="quick-search-overlay" class="quick-search-overlay" hidden>
     <div class="quick-search-box" role="dialog" aria-modal="true" aria-label="Rezepte und Produkte durchsuchen" data-i18n-aria-label="ui.rezepte_und_produkte_durchsuchen">
       <div class="quick-search-head">
-        <input type="text" id="quick-search-input" placeholder="Rezept oder Produkt suchen…" autocomplete="off" / data-i18n-placeholder="ui.rezept_oder_produkt_suchen">
+        <input type="text" id="quick-search-input" placeholder="Rezept oder Produkt suchen…" autocomplete="off" data-i18n-placeholder="ui.rezept_oder_produkt_suchen" />
         <button type="button" id="quick-search-close" class="btn-secondary" aria-label="Suche schließen" data-i18n="ui.schliessen" data-i18n-aria-label="ui.suche_schliessen">Schließen</button>
       </div>
       <div id="quick-search-results" class="quick-search-results" role="listbox"></div>

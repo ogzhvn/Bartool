@@ -151,10 +151,10 @@ eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
 
 | # | Paket | Status |
 |---|---|---|
-| 28 | Schwund-, Bruch- und Verkostungsbuch | offen |
-| 29 | Reporting-Übersicht | offen |
-| 30 | Fotos: Storage-Grundlage und Produktbilder | offen |
-| 31 | Fotos zu Rezepten: Aufbau und Garnitur | offen |
+| 28 | Schwund-, Bruch- und Verkostungsbuch | erledigt |
+| 29 | Reporting-Übersicht | erledigt |
+| 30 | Fotos: Storage-Grundlage und Produktbilder | erledigt |
+| 31 | Fotos zu Rezepten: Aufbau und Garnitur | erledigt |
 | 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | erledigt |
 | 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | offen |
 
@@ -1345,11 +1345,11 @@ wäre einfacher und offline-tauglicher, die Bilder wären dann aber ohne Login a
    `CACHE` in `sw.js` trotzdem hochzählen.
 
 **Abnahme**
-- [ ] Foto vom Handy hochladen → landet verkleinert im Storage, die Originalgröße wird nicht übertragen.
-- [ ] Bild-URL ohne Login nicht abrufbar.
-- [ ] Nicht-Admin kann kein Bild hochladen oder löschen (gegen die Policy geprüft).
-- [ ] Produktliste bleibt mit 176 Einträgen flüssig scrollbar.
-- [ ] Offline: Platzhalter, kein Fehler in der Konsole.
+- [x] Foto vom Handy hochladen → landet verkleinert im Storage, die Originalgröße wird nicht übertragen.
+- [x] Bild-URL ohne Login nicht abrufbar.
+- [x] Nicht-Admin kann kein Bild hochladen oder löschen (gegen die Policy geprüft).
+- [x] Produktliste bleibt mit 176 Einträgen flüssig scrollbar.
+- [x] Offline: Platzhalter, kein Fehler in der Konsole.
 
 **Commit:** `Produktfotos über Supabase Storage`
 
@@ -1379,10 +1379,10 @@ damit die Einarbeitung nicht am „so ungefähr" hängt.
 7. `CACHE` in `sw.js` hochzählen.
 
 **Abnahme**
-- [ ] Beide Bilder pro Rezept anleg- und wieder entfernbar.
-- [ ] Rezept ohne Bild sieht unverändert aus, kein Leerraum.
-- [ ] Druckansicht bleibt einseitig pro Rezept.
-- [ ] Rezept löschen entfernt auch die Dateien im Storage (keine Karteileichen).
+- [x] Beide Bilder pro Rezept anleg- und wieder entfernbar.
+- [x] Rezept ohne Bild sieht unverändert aus, kein Leerraum.
+- [x] Druckansicht bleibt einseitig pro Rezept.
+- [x] Rezept löschen entfernt auch die Dateien im Storage (keine Karteileichen).
 
 **Commit:** `Aufbau- und Garniturbilder für Rezepte`
 

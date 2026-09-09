@@ -119,7 +119,22 @@ export function bestellvorschlag(stand) {
   };
 }
 
-export function renderAuswertungHtml(a, diff) {
+// Wie viel der Differenz durch gebuchte Verluste erklärt ist – in der
+// Einheit, in der auch gezählt wurde: Liter bei Produkten mit Literpreis,
+// Stück bei allen anderen. Verluste in einer nicht umrechenbaren Einheit
+// werden gezählt, aber nicht heimlich mitgerechnet.
+function erklaerteMenge(name, erklaert, produkte) {
+  if (!erklaert) return null;
+  const e = erklaert.get(name);
+  if (!e) return null;
+  const produkt = produkte.find((p) => p.name === name);
+  const proLiter = !produkt || produkt.priceUnit === "liter";
+  const menge = proLiter ? e.ml / 1000 : e.stueck;
+  const nichtGerechnet = e.unklar + (proLiter ? (e.stueck > 0 ? 1 : 0) : e.ml > 0 ? 1 : 0);
+  return { menge, nichtGerechnet };
+}
+
+export function renderAuswertungHtml(a, diff, erklaert = null) {
   const gruppenZeilen = a.gruppen
     .map(
       ([gruppe, d]) =>
@@ -127,20 +142,37 @@ export function renderAuswertungHtml(a, diff) {
     )
     .join("");
 
+  const produkte = getAllProducts();
+  const diffZeile = (d) => {
+    const e = erklaerteMenge(d.name, erklaert, produkte);
+    const erklaertZelle = !erklaert
+      ? ""
+      : e === null
+        ? "<td>–</td><td>–</td>"
+        : `<td>${formatNumberDe(Number(e.menge.toFixed(2)))}${
+            e.nichtGerechnet > 0 ? ` <span class="prep-status">(${e.nichtGerechnet} ${t("ui.ohne_menge")}</span>` : ""
+          }</td><td>${
+            d.delta < 0 ? formatNumberDe(Number(Math.min(0, d.delta + e.menge).toFixed(2))) : "–"
+          }</td>`;
+    return `<tr><td>${escapeHtml(d.name)}</td><td>${formatNumberDe(d.alt)}</td><td>${formatNumberDe(d.jetzt)}</td><td class="${d.delta < 0 ? "menu-quote-high" : "menu-quote-ok"}">${d.delta > 0 ? "+" : ""}${formatNumberDe(d.delta)}</td>${erklaertZelle}</tr>`;
+  };
+
   const diffBlock =
     diff && diff.length > 0
       ? `
       <h4 class="prep-group">${t("ui.veraenderung_zur_letzten_zaehlung")}${diff.length})</h4>
+      ${
+        erklaert
+          ? `<p class="prep-meta">${t("ui.davon_erklaert_sind_die_verluste_4d1e")}</p>`
+          : `<p class="prep-meta">${t("ui.ohne_fruehere_zaehlung_gibt_es_keinen_9c3a")}</p>`
+      }
       <div class="table-scroll">
         <table>
-          <thead><tr><th>${t("ui.produkt")}</th><th>vorher</th><th>jetzt</th><th>${t("ui.differenz")}</th></tr></thead>
+          <thead><tr><th>${t("ui.produkt")}</th><th>${t("ui.vorher_klein")}</th><th>${t("ui.jetzt")}</th><th>${t("ui.differenz")}</th>${
+            erklaert ? `<th>${t("ui.davon_erklaert")}</th><th>${t("ui.ungeklaert")}</th>` : ""
+          }</tr></thead>
           <tbody>
-            ${diff
-              .map(
-                (d) =>
-                  `<tr><td>${escapeHtml(d.name)}</td><td>${formatNumberLocal(d.alt)}</td><td>${formatNumberLocal(d.jetzt)}</td><td class="${d.delta < 0 ? "menu-quote-high" : "menu-quote-ok"}">${d.delta > 0 ? "+" : ""}${formatNumberLocal(d.delta)}</td></tr>`
-              )
-              .join("")}
+            ${diff.map(diffZeile).join("")}
           </tbody>
         </table>
       </div>`

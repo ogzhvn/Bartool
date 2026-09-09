@@ -11,6 +11,7 @@ import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 import { getLocale, onLanguageChanged, t } from "./i18n.js";
+import { uploadRecipePhoto, deleteRecipePhoto, resolveImageUrl } from "./photos.js";
 
 const CATEGORY_ORDER = [
   "Gin",
@@ -48,6 +49,14 @@ const historyEl = document.getElementById("recipe-history");
 const quickPitchEl = document.getElementById("recipe-quick-pitch");
 const salesPriceEl = document.getElementById("recipe-sales-price");
 const pairsWithEl = document.getElementById("recipe-pairs-with");
+const photoFieldEl = document.getElementById("recipe-photo-field");
+const photoPreviewEl = document.getElementById("recipe-photo-preview");
+const photoInputEl = document.getElementById("recipe-photo-input");
+const photoRemoveBtn = document.getElementById("recipe-photo-remove");
+const garnishPhotoFieldEl = document.getElementById("recipe-garnish-photo-field");
+const garnishPhotoPreviewEl = document.getElementById("recipe-garnish-photo-preview");
+const garnishPhotoInputEl = document.getElementById("recipe-garnish-photo-input");
+const garnishPhotoRemoveBtn = document.getElementById("recipe-garnish-photo-remove");
 const listEl = document.getElementById("recipe-list");
 const ingredientsEl = document.getElementById("recipe-ingredients");
 const searchEl = document.getElementById("recipe-search");
@@ -103,6 +112,94 @@ function parsePairsWith(value) {
     .filter(Boolean);
 }
 
+// Steuert ein Foto-Feld (Datei wählen, Vorschau, entfernen). Für Aufbau- und
+// Garniturbild wiederverwendet, statt den Ablauf zweimal zu bauen.
+function createPhotoField({ fieldEl, previewEl, inputEl, removeBtn }) {
+  let existingPath = "";
+  let pendingFile = null;
+  let pendingRemoved = false;
+
+  function showPlaceholder() {
+    previewEl.innerHTML = '<i class="ph ph-image" aria-hidden="true"></i>';
+  }
+  function showImage(url) {
+    previewEl.innerHTML = `<img src="${url}" alt="" />`;
+  }
+  function updateVisibility() {
+    fieldEl.hidden = !isAdmin();
+    removeBtn.hidden = !pendingFile && (pendingRemoved || !existingPath);
+  }
+  function reset() {
+    existingPath = "";
+    pendingFile = null;
+    pendingRemoved = false;
+    inputEl.value = "";
+    showPlaceholder();
+    updateVisibility();
+  }
+  async function load(path) {
+    existingPath = path || "";
+    pendingFile = null;
+    pendingRemoved = false;
+    inputEl.value = "";
+    updateVisibility();
+    showPlaceholder();
+    if (!existingPath) return;
+    const url = await resolveImageUrl(existingPath);
+    // Zwischenzeitlich könnte schon ein anderes Rezept geladen worden sein.
+    if (existingPath !== path) return;
+    if (url) showImage(url);
+  }
+  // Lädt ein neu gewähltes Foto hoch bzw. löscht das alte, falls entfernt,
+  // und liefert den Pfad, der im Rezept gespeichert werden soll.
+  async function resolveForSave() {
+    if (pendingFile) {
+      const newPath = await uploadRecipePhoto(pendingFile);
+      if (existingPath) await deleteRecipePhoto(existingPath).catch(() => {});
+      return newPath;
+    }
+    if (pendingRemoved) {
+      if (existingPath) await deleteRecipePhoto(existingPath).catch(() => {});
+      return "";
+    }
+    return existingPath;
+  }
+  async function deleteExisting() {
+    if (existingPath) await deleteRecipePhoto(existingPath).catch(() => {});
+  }
+
+  inputEl.addEventListener("change", () => {
+    const file = inputEl.files?.[0];
+    if (!file) return;
+    pendingFile = file;
+    pendingRemoved = false;
+    showImage(URL.createObjectURL(file));
+    updateVisibility();
+  });
+  removeBtn.addEventListener("click", () => {
+    pendingFile = null;
+    pendingRemoved = true;
+    inputEl.value = "";
+    showPlaceholder();
+    updateVisibility();
+  });
+
+  return { reset, load, resolveForSave, deleteExisting };
+}
+
+const photoField = createPhotoField({
+  fieldEl: photoFieldEl,
+  previewEl: photoPreviewEl,
+  inputEl: photoInputEl,
+  removeBtn: photoRemoveBtn,
+});
+const garnishPhotoField = createPhotoField({
+  fieldEl: garnishPhotoFieldEl,
+  previewEl: garnishPhotoPreviewEl,
+  inputEl: garnishPhotoInputEl,
+  removeBtn: garnishPhotoRemoveBtn,
+});
+
 function resetForm() {
   nameEl.value = "";
   categoryEl.value = "";
@@ -117,6 +214,8 @@ function resetForm() {
   pairsWithEl.value = "";
   editor.setIngredients([]);
   editingOriginalName = null;
+  photoField.reset();
+  garnishPhotoField.reset();
   renderSidebarList();
 }
 
@@ -134,6 +233,8 @@ function loadIntoForm(recipe) {
   pairsWithEl.value = (recipe.pairsWith ?? []).join(", ");
   editor.setIngredients(recipe.ingredients);
   editingOriginalName = recipe.name;
+  photoField.load(recipe.imagePath);
+  garnishPhotoField.load(recipe.garnishImagePath);
   renderSidebarList();
 }
 
@@ -180,6 +281,11 @@ async function handleSave() {
   }
 
   try {
+    // Fotos zuerst hochladen/löschen – schlägt das fehl, ist noch nichts am
+    // Rezept gespeichert.
+    recipe.imagePath = await photoField.resolveForSave();
+    recipe.garnishImagePath = await garnishPhotoField.resolveForSave();
+
     if (editingOriginalName && editingOriginalName !== name && isCustomRecipe(editingOriginalName)) {
       await deleteRecipe(editingOriginalName);
     }
@@ -216,6 +322,8 @@ async function handleDelete() {
 
   if (!confirm(`${t("ui.rezept_501c")}${editingOriginalName}${t("ui.wirklich_loeschen_b7a7")}`)) return;
   try {
+    await photoField.deleteExisting();
+    await garnishPhotoField.deleteExisting();
     await deleteRecipe(editingOriginalName);
     resetForm();
     exitEditView();
@@ -319,6 +427,10 @@ function renderRecipeItem(recipe) {
       <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
+      ${recipe.imagePath || recipe.garnishImagePath ? `<div class="item-photo-row">
+        ${recipe.imagePath ? `<figure><div class="item-photo-slot item-photo-slot-main"></div><figcaption>${t("ui.aufbau")}</figcaption></figure>` : ""}
+        ${recipe.garnishImagePath ? `<figure><div class="item-photo-slot item-photo-slot-garnish"></div><figcaption>${t("ui.garnitur")}</figcaption></figure>` : ""}
+      </div>` : ""}
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderAllergenBlock(recipe)}
@@ -328,6 +440,20 @@ function renderRecipeItem(recipe) {
       </div>
     </div>
   `;
+  if (recipe.imagePath) {
+    resolveImageUrl(recipe.imagePath).then((url) => {
+      if (!url) return;
+      const slot = item.querySelector(".item-photo-slot-main");
+      if (slot) slot.innerHTML = `<img class="item-photo" src="${url}" alt="${escapeHtml(recipe.name)}" loading="lazy" />`;
+    });
+  }
+  if (recipe.garnishImagePath) {
+    resolveImageUrl(recipe.garnishImagePath).then((url) => {
+      if (!url) return;
+      const slot = item.querySelector(".item-photo-slot-garnish");
+      if (slot) slot.innerHTML = `<img class="item-photo" src="${url}" alt="Garnitur – ${escapeHtml(recipe.name)}" loading="lazy" />`;
+    });
+  }
   const favBtn = item.querySelector(".fav-btn");
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -375,6 +501,8 @@ function renderRecipeItem(recipe) {
       }
       if (!confirm(`${t("ui.rezept_501c")}${recipe.name}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
+        if (recipe.imagePath) await deleteRecipePhoto(recipe.imagePath).catch(() => {});
+        if (recipe.garnishImagePath) await deleteRecipePhoto(recipe.garnishImagePath).catch(() => {});
         if (editingOriginalName === recipe.name) resetForm();
         await deleteRecipe(recipe.name);
       } catch (error) {

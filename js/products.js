@@ -11,6 +11,7 @@ import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 import { getLocale, onLanguageChanged, t } from "./i18n.js";
+import { uploadProductPhoto, deleteProductPhoto, resolveImageUrl } from "./photos.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -134,6 +135,11 @@ const parLevelEl = document.getElementById("product-par-level");
 const supplierOptionsEl = document.getElementById("product-supplier-options");
 const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
+const photoImgEl = document.getElementById("product-photo-img");
+const photoPlaceholderEl = document.getElementById("product-photo-placeholder");
+const photoFileEl = document.getElementById("product-photo-file");
+const photoDeleteBtn = document.getElementById("product-photo-delete");
+const photoStatusEl = document.getElementById("product-photo-status");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
 
 // Kommagetrennte Liste (Aroma-Schlagworte, "Passt gut zu") in ein Array.
@@ -175,6 +181,9 @@ let editingOriginalName = null;
 // Zeitpunkt der letzten Prüfung des geladenen Produkts – bleibt erhalten,
 // solange der Haken „Angaben geprüft" gesetzt bleibt.
 let editingVerifiedAt = "";
+// image_path des geladenen Produkts. Ein Upload/Löschen wirkt sofort im
+// Storage, landet aber wie alle anderen Felder erst mit "Speichern" in der DB.
+let editingImagePath = "";
 // Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
 // Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
 // gleichen Stelle landet statt oben in der Liste.
@@ -251,6 +260,31 @@ function updateWineFieldsVisibility() {
   wineFieldsEl.hidden = !WINE_GROUPS.includes(groupEl.value.trim());
 }
 
+function renderPhotoPreview() {
+  photoDeleteBtn.hidden = !editingImagePath;
+  photoStatusEl.hidden = true;
+  if (!editingImagePath) {
+    photoImgEl.hidden = true;
+    photoImgEl.removeAttribute("src");
+    photoPlaceholderEl.hidden = false;
+    return;
+  }
+  const requestedPath = editingImagePath;
+  resolveImageUrl(requestedPath).then((url) => {
+    // Nutzer könnte inzwischen ein anderes Produkt geladen haben.
+    if (editingImagePath !== requestedPath) return;
+    if (url) {
+      photoImgEl.src = url;
+      photoImgEl.hidden = false;
+      photoPlaceholderEl.hidden = true;
+    } else {
+      photoImgEl.hidden = true;
+      photoImgEl.removeAttribute("src");
+      photoPlaceholderEl.hidden = false;
+    }
+  });
+}
+
 function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
   priceValueEl.value = "";
@@ -262,6 +296,9 @@ function resetForm() {
   verifiedEl.checked = false;
   editingVerifiedAt = "";
   editingOriginalName = null;
+  editingImagePath = "";
+  photoFileEl.value = "";
+  renderPhotoPreview();
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -277,6 +314,9 @@ function loadIntoForm(product) {
   verifiedEl.checked = Boolean(product.verified);
   editingVerifiedAt = product.verifiedAt ?? "";
   editingOriginalName = product.name;
+  editingImagePath = product.imagePath ?? "";
+  photoFileEl.value = "";
+  renderPhotoPreview();
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -305,6 +345,7 @@ async function handleSave() {
   product.parLevel = parLevelEl.value === "" ? "" : parseFloat(parLevelEl.value);
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
+  product.imagePath = editingImagePath || "";
 
   // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
   // reichen den Vorschlag zur Prüfung ein.
@@ -357,6 +398,7 @@ async function handleDelete() {
 
   if (!confirm(`${t("ui.produkt_e1e4")}${editingOriginalName}${t("ui.wirklich_loeschen_b7a7")}`)) return;
   try {
+    if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
     await deleteProduct(editingOriginalName);
     resetForm();
     exitEditView();
@@ -582,11 +624,13 @@ function renderProductItem(product) {
     <summary>
       <span class="recipe-item-title">
         <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
+        <span class="product-thumb"><i class="ph ph-wine" aria-hidden="true"></i></span>
         ${escapeHtml(product.name)}
       </span>
       <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
+      ${product.imagePath ? `<img class="product-photo-large" alt="${escapeHtml(product.name)}" loading="lazy" hidden />` : ""}
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>${t("ui.verwendet_in")}</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
@@ -602,6 +646,26 @@ function renderProductItem(product) {
     e.stopPropagation();
     favBtn.classList.toggle("is-fav", toggleFavorite("product", product.name));
   });
+
+  if (product.imagePath) {
+    resolveImageUrl(product.imagePath).then((url) => {
+      if (!url) return;
+      const thumbWrap = item.querySelector(".product-thumb");
+      if (thumbWrap) {
+        thumbWrap.innerHTML = "";
+        const thumbImg = document.createElement("img");
+        thumbImg.src = url;
+        thumbImg.alt = "";
+        thumbImg.loading = "lazy";
+        thumbWrap.appendChild(thumbImg);
+      }
+      const largeImg = item.querySelector(".product-photo-large");
+      if (largeImg) {
+        largeImg.src = url;
+        largeImg.hidden = false;
+      }
+    });
+  }
 
   item.addEventListener("toggle", () => {
     if (item.open) pushRecent("product", product.name);
@@ -642,6 +706,7 @@ function renderProductItem(product) {
       }
       if (!confirm(`${t("ui.produkt_e1e4")}${product.name}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
+        if (product.imagePath) await deleteProductPhoto(product.imagePath).catch(() => {});
         if (editingOriginalName === product.name) resetForm();
         await deleteProduct(product.name);
       } catch (error) {
@@ -834,6 +899,36 @@ export function initProducts() {
     showEditView();
   });
   document.getElementById("product-back-to-list").addEventListener("click", exitEditView);
+  photoFileEl.addEventListener("change", async () => {
+    const file = photoFileEl.files?.[0];
+    photoFileEl.value = "";
+    if (!file) return;
+    const previousPath = editingImagePath;
+    photoStatusEl.hidden = false;
+    photoStatusEl.textContent = t("ui.foto_wird_verkleinert_und_hochgeladen");
+    try {
+      editingImagePath = await uploadProductPhoto(file);
+      renderPhotoPreview();
+      // Altes Foto ersetzen: das vorherige Bild wird jetzt nicht mehr
+      // gebraucht und darf aus dem Storage verschwinden.
+      if (previousPath) await deleteProductPhoto(previousPath);
+    } catch (error) {
+      photoStatusEl.hidden = false;
+      photoStatusEl.textContent = t("ui.foto_konnte_nicht_hochgeladen_werden") + error.message;
+    }
+  });
+  photoDeleteBtn.addEventListener("click", async () => {
+    if (!editingImagePath) return;
+    if (!confirm(t("ui.foto_wirklich_loeschen"))) return;
+    try {
+      await deleteProductPhoto(editingImagePath);
+      editingImagePath = "";
+      renderPhotoPreview();
+    } catch (error) {
+      photoStatusEl.hidden = false;
+      photoStatusEl.textContent = t("ui.foto_konnte_nicht_geloescht_werden") + error.message;
+    }
+  });
   document.getElementById("product-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
