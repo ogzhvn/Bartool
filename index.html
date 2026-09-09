@@ -1037,6 +1037,23 @@
               </label>
             </div>
             <div class="field-row">
+              <div class="product-photo-field">
+                <span class="product-photo-label">Foto</span>
+                <div class="product-photo-preview">
+                  <img id="product-photo-img" alt="" hidden />
+                  <i class="ph ph-wine" id="product-photo-placeholder" aria-hidden="true"></i>
+                </div>
+                <div class="product-photo-actions" data-admin-only hidden>
+                  <label class="btn-secondary import-label">
+                    <i class="ph ph-upload-simple" aria-hidden="true"></i> Foto hochladen
+                    <input type="file" id="product-photo-file" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="product-photo-delete" class="btn-secondary" hidden>Foto löschen</button>
+                </div>
+                <p id="product-photo-status" class="hint" hidden></p>
+              </div>
+            </div>
+            <div class="field-row">
               <label>
                 Gruppe
                 <input type="text" id="product-group" list="product-group-options" placeholder="z. B. Rum &amp; Cachaça" />

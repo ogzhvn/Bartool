@@ -308,6 +308,9 @@ alter table public.products add column if not exists serving_temp text;
 alter table public.products add column if not exists body text;
 alter table public.products add column if not exists verified boolean not null default false;
 alter table public.products add column if not exists verified_at timestamptz;
+-- Pfad im privaten Storage-Bucket "bilder", Schema "produkte/<uuid>.jpg".
+-- Bewusst nie der Produktname im Pfad, sonst bricht jede Umbenennung das Bild.
+alter table public.products add column if not exists image_path text;
 
 alter table public.products enable row level security;
 
@@ -1160,3 +1163,35 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- ---------------------------------------------------------------------
+-- Produktfotos: privater Storage-Bucket, Zugriff nur über signierte URLs
+-- ---------------------------------------------------------------------
+-- Bewusst kein öffentlicher Bucket: Bilder sollen nicht ohne Login abrufbar
+-- sein, auch nicht bei Kenntnis der URL. js/photos.js löst image_path daher
+-- immer über eine zeitlich begrenzte signierte URL auf.
+
+insert into storage.buckets (id, name, public)
+values ('bilder', 'bilder', false)
+on conflict (id) do nothing;
+
+drop policy if exists "bilder: eingeloggte lesen" on storage.objects;
+create policy "bilder: eingeloggte lesen"
+  on storage.objects for select
+  using (bucket_id = 'bilder' and auth.role() = 'authenticated');
+
+drop policy if exists "bilder: admin schreibt" on storage.objects;
+create policy "bilder: admin schreibt"
+  on storage.objects for insert
+  with check (bucket_id = 'bilder' and private.is_admin());
+
+drop policy if exists "bilder: admin aktualisiert" on storage.objects;
+create policy "bilder: admin aktualisiert"
+  on storage.objects for update
+  using (bucket_id = 'bilder' and private.is_admin())
+  with check (bucket_id = 'bilder' and private.is_admin());
+
+drop policy if exists "bilder: admin loescht" on storage.objects;
+create policy "bilder: admin loescht"
+  on storage.objects for delete
+  using (bucket_id = 'bilder' and private.is_admin());

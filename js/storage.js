@@ -223,6 +223,7 @@ function toProductRecord(product) {
     par_level: product.parLevel === "" || product.parLevel == null ? null : Number(product.parLevel),
     supplier: product.supplier || null,
     order_unit: product.orderUnit || null,
+    image_path: product.imagePath || null,
   };
 }
 
@@ -269,6 +270,7 @@ export function fromProductRow(row) {
     parLevel: row.par_level ?? "",
     supplier: row.supplier ?? "",
     orderUnit: row.order_unit ?? "",
+    imagePath: row.image_path ?? "",
   };
 }
 
