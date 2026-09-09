@@ -94,7 +94,8 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 ## 1. Fortschritt
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
-vollständig umgesetzt.** Es gelten weiter die Spielregeln aus Kapitel 0:
+vollständig umgesetzt.** Runde 5 (34–38) ist am 09.09.2026 geplant
+worden und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -157,6 +158,29 @@ eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
 | 31 | Fotos zu Rezepten: Aufbau und Garnitur | erledigt |
 | 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | erledigt |
 | 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | erledigt |
+
+---
+
+### Runde 5 – Adminbereich, Rollen & Rechte (geplant am 09.09.2026)
+
+Reihenfolge zwingend: 34 → 35 → 36 → 37. 34 schafft erst den Ort, an dem alles Weitere
+landet; 35 liefert das Datenmodell, ohne das 36 nichts anzuzeigen hat; 36 setzt die Rechte
+in RLS und Oberfläche durch; 37 darf erst danach kommen, weil der Reporting-Tab heute für
+alle sichtbar ist und ohne das Recht `reports.view` beim Umzug unter Admin still zur
+Admin-Funktion würde. 38 zuletzt, weil es reiner Feinschliff an den Konten ist.
+
+Gilt für jedes Paket dieser Runde: Alle neuen Beschriftungen laufen über `data-i18n` bzw.
+`t()` und werden in `js/i18n/de.js` **und** `js/i18n/en.js` eingetragen; Module, die in JS
+rendern, hängen sich an `onLanguageChanged()`. Kein deutscher Text hart im Markup oder in
+Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufgeweicht.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 34 | Adminbereich als Gruppe mit Submenü | offen | Opus 5, mittlerer Denkaufwand |
+| 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | offen | Opus 5, hoher Denkaufwand |
+| 36 | Rechte-Matrix im Adminbereich + Durchsetzung | offen | Opus 5, hoher Denkaufwand |
+| 37 | Reporting unter Admin + Betrieb & Team | offen | Sonnet 5, mittlerer Denkaufwand |
+| 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
 
 ---
 
@@ -1473,7 +1497,365 @@ bleiben bewusst deutsch, ebenso der ganze Produktkatalog (Backlog Runde 5).
 
 ---
 
-## Backlog Runde 5 (bewusst noch nicht eingeplant)
+# Paket 34 – Adminbereich als Gruppe mit Submenü
+
+**Abhängigkeit:** keine. Muss vor 35–38 laufen, weil es den Ort schafft, an dem die
+folgenden Pakete landen.
+**Modell:** Opus 5, mittlerer Denkaufwand. Viele Dateien gleichzeitig, aber keine kniffligen
+Entscheidungen – die Struktur steht unten, es ist sorgfältiges Umbauen.
+
+**Ziel:** Der Admin-Tab ist heute ein einziges Panel (`<section id="admin">` in `index.html`)
+mit sechs gestapelten Sektionen, das beim Login komplett initialisiert wird – Konten,
+Vorschläge, Quiz-Fragen, Quiz-Team, Datenqualität und Änderungsverlauf laden alle mit, auch
+wenn niemand hinschaut. Nach diesem Paket ist Admin eine Sidebar-Gruppe mit Unterpunkten,
+jeder Unterpunkt ein eigenes Panel, das erst beim ersten Öffnen lädt.
+
+**Entscheidung vom 09.09.2026:** Echte Sub-Tabs mit `data-tab`, kein zweiter Router.
+Begründung: `switchTab()` in `js/tabs.js` beherrscht bereits Panel-Umschaltung, Hash-Deep-Link
+und `localStorage`-Merker. Eigene Panels je Bereich erben das alles und halten das Modulmuster
+aus CLAUDE.md ein (ein Feature = ein Modul + `initX()` + `data-tab` + `.tab-panel`). Ein
+Sektions-Routing innerhalb eines Panels (`#admin/users`) bräuchte eine zweite, parallele
+Navigationslogik – abgelehnt.
+
+**Dateien:** neu `js/adminUsers.js`, `js/adminQuiz.js`; geändert `js/adminPanel.js` (bleibt als
+Übersicht und gemeinsame Helfer), `js/main.js`, `js/tabs.js`, `index.html`, `css/styles.css`,
+`js/i18n/de.js`, `js/i18n/en.js`, `sw.js`. **Keine Migration.**
+
+**Sub-Tabs**
+
+| `data-tab` | Inhalt | Herkunft |
+|---|---|---|
+| `admin` | Übersicht: Kacheln je Bereich mit Kennzahl (offene Vorschläge, Konten, Lücken aus der Datenqualität) | neu |
+| `admin-users` | Konto anlegen, Kontenliste | heutige Sektionen „Konto anlegen“ + „Konten“ |
+| `admin-roles` | Rollen & Rechte | leer, füllt Paket 36 |
+| `admin-requests` | Offene Änderungsvorschläge | heutige Sektion „Offene Vorschläge“ |
+| `admin-quiz` | Quiz-Fragen pflegen | heutige Sektion „Quiz-Fragen“ |
+| `admin-data` | Datenqualität | heutige Sektion „Datenqualität“ |
+| `admin-audit` | Änderungsverlauf | heutiges `<details id="audit-log-section">` |
+
+`admin-reports` entsteht erst in Paket 37, zusammen mit dem Umzug des vorhandenen
+Reporting-Tabs. Die Quiz-Team-Übersicht aus Paket 27 bleibt in diesem Paket, wo sie ist,
+und wandert ebenfalls erst in 37 – sie ist Auswertung, keine Fragenpflege.
+
+**Schritte**
+1. In der Sidebar-Gruppe „Verwaltung“ unter dem Admin-Button ein `<div class="sidebar-subnav">`
+   mit einem `.tab-btn.subnav-btn` je Sub-Tab, alle mit `data-admin-only` und `data-i18n`.
+   Die Klassen `.sidebar-subnav` / `.subnav-btn` existieren bereits in `css/styles.css` –
+   nicht neu erfinden, höchstens um eine Icon-Variante ergänzen.
+2. `js/tabs.js`: In `switchTab()` klappt der Block, der `.sidebar-subnav.expanded` zuklappt,
+   jede Subnav zu, deren `previousElementSibling` nicht der aktive Tab ist. Bedingung
+   erweitern: offen bleiben, wenn der aktive Button **innerhalb** dieser Subnav liegt. Das ist
+   der einzige nötige Eingriff in die Tab-Mechanik – der Kategoriebaum bei Rezepten und
+   Produkten muss sich danach unverändert verhalten.
+3. `<section id="admin">` in die Panels oben zerlegen. Markup 1:1 übernehmen, keine IDs
+   umbenennen – die Modul-Dateien greifen per `getElementById` darauf zu.
+4. `js/adminPanel.js` (rund 610 Zeilen) aufteilen: Kontenverwaltung nach `js/adminUsers.js`,
+   Quiz-Pflege nach `js/adminQuiz.js`, Rest bleibt Übersicht plus gemeinsame Helfer.
+   Funktionen verschieben, nicht neu schreiben.
+5. Lazy-Init: `js/main.js` ruft heute `initAdminPanel()`, `initAuditLog()`, `initDataQuality()`
+   und `initChangeRequestsAdmin()` beim Bootstrap. Stattdessen ein kleiner Registrar –
+   `initX()` läuft beim ersten `switchTab()` auf den zugehörigen Sub-Tab, danach nie wieder.
+   Für Konten ohne Adminrecht läuft nichts davon.
+6. Übersichtskacheln auf `admin` verlinken per `switchTab()` in die Sub-Tabs.
+7. Neue Schlüssel in `js/i18n/de.js` und `js/i18n/en.js`, `CACHE` in `sw.js` hochzählen,
+   neue JS-Dateien in die Precache-Liste.
+
+**Abnahme**
+- [ ] `#admin-users` als Direktlink öffnet den richtigen Sub-Tab, die Subnav bleibt offen.
+- [ ] Beim Wechsel auf einen anderen Hauptpunkt klappt die Admin-Subnav zu; der Rezept- und
+      Produkt-Kategoriebaum verhält sich unverändert.
+- [ ] Ein Konto ohne Adminrecht sieht weder Admin noch einen Unterpunkt und löst keinen der
+      Admin-Ladevorgänge aus.
+- [ ] Keine Sektion lädt, bevor ihr Sub-Tab zum ersten Mal geöffnet wurde.
+- [ ] Alle bisherigen Funktionen laufen wie vorher: Konto anlegen, Vorschlag annehmen und
+      ablehnen, Frage speichern, Sprung aus der Datenqualität ins Bearbeiten-Formular samt
+      Rücksprung, Wiederherstellen aus dem Änderungsverlauf.
+- [ ] Sprache umschalten beschriftet auch die neuen Unterpunkte, ohne Neuladen.
+- [ ] Auf dem Handy ist die Subnav bedienbar und schließt die mobile Navigation.
+
+**Commit:** `Adminbereich in Sub-Tabs aufgeteilt, Laden erst beim Öffnen`
+
+---
+
+# Paket 35 – Rollenmodell: Rollen, Rechte, Rangfolge (DB)
+
+**Abhängigkeit:** Paket 34.
+**Modell:** Opus 5, hoher Denkaufwand. Enum-Umbau an einer Spalte, an der jede RLS-Policy
+hängt, plus eine Edge Function. Fehler hier sperren Konten aus – kein Paket zum Nebenbei.
+
+**Ziel:** Statt des zweiwertigen `user_role`-Enums (`admin` | `mitarbeiter`) und der einen
+Funktion `private.is_admin()` gibt es abgestufte Rollen mit Rangfolge und einen Rechtekatalog.
+Dieses Paket macht ausschließlich die Datenbank fertig; die Oberfläche folgt in Paket 36.
+
+**Entscheidungen vom 09.09.2026**
+- `admin` und `barchef` sind **zwei getrennte Rollen**, `admin` steht über `barchef`. `admin`
+  ist die technische Rolle (Rollen, Rechte, alle Konten), `barchef` die fachliche Leitung
+  (alle Inhalte, Reporting, Konten der Ebenen darunter) ohne Rechtevergabe.
+- Rangfolge über eine Zahl `rank` auf der Rolle. Wer eine Rolle vergibt, ein Konto bearbeitet
+  oder Rechte ändert, kann das nur für Rollen mit **kleinerem** Rang als dem eigenen. Damit
+  ist „admin steht über barchef“ eine Regel in der Datenbank, keine Konvention in der Oberfläche.
+- Granularität: **ein Recht je Bereich**, nicht je Aktion. Rund 15 Rechte statt 40 – weniger
+  Policies, weniger Pflege, für einen Barbetrieb mit unter zehn Konten genug.
+- `admin` (rank 100) gilt in `has_permission()` **immer** als berechtigt, unabhängig von der
+  Rechtetabelle. Sonst sperrt ein falsch gesetztes Häkchen die Verwaltung aus.
+- `mitarbeiter` heißt künftig `barkeeper`.
+- Rollen-Labels stehen in der Datenbank und werden **nicht** übersetzt – wie Produktkatalog
+  und Kategorienamen (Entscheidung aus Paket 33). Die Rechte-Labels dagegen kommen aus dem
+  Frontend und laufen über `t()`.
+
+**Rollen**
+
+| key | Label | rank | Gedacht für |
+|---|---|---|---|
+| `admin` | Administrator | 100 | Systemverwaltung, Rollen und Rechte |
+| `barchef` | Barchef | 80 | Fachliche Leitung |
+| `stellv_barchef` | Stellv. Barchef | 60 | Vertretung, ohne Kontenverwaltung |
+| `barkeeper` | Barkeeper | 40 | Schichtbetrieb (ersetzt `mitarbeiter`) |
+| `azubi` | Auszubildende:r | 20 | Lesen, Quiz, Vorschläge |
+
+**Rechtekatalog:** `recipes.write`, `products.write`, `requests.review`, `inventory.manage`,
+`preparations.manage`, `events.manage`, `checklists.manage`, `shiftlog.manage`, `losses.manage`,
+`quiz.manage`, `reports.view`, `audit.view`, `audit.restore`, `data.manage`, `users.manage`,
+`roles.manage`.
+
+**Startbelegung**
+
+| Recht | admin | barchef | stellv_barchef | barkeeper |
+|---|---|---|---|---|
+| recipes.write, products.write, requests.review | ✓ | ✓ | ✓ | – |
+| inventory.manage, preparations.manage, events.manage | ✓ | ✓ | ✓ | – |
+| checklists.manage, shiftlog.manage, losses.manage | ✓ | ✓ | ✓ | – |
+| reports.view, audit.view | ✓ | ✓ | ✓ | – |
+| quiz.manage, audit.restore, data.manage | ✓ | ✓ | – | – |
+| users.manage | ✓ | ✓ | – | – |
+| roles.manage | ✓ | – | – | – |
+
+`barkeeper` behält alles, was heute für `authenticated` offen ist: lesen, Inventur erfassen,
+Übergabe schreiben, Checkliste abhaken, Verlust eintragen, Änderung vorschlagen.
+
+**Dateien:** Migration über die Supabase-MCP-Tools (project_ref-gescoped), danach
+`supabase/schema.sql` nachziehen; geändert `supabase/functions/admin-users/index.ts`.
+**Migration: ja.**
+
+**Schritte**
+1. Tabellen anlegen: `roles (key pk, label, rank int not null unique, is_system bool, sort int)`,
+   `permissions (key pk, label_key, group_key, sort)`,
+   `role_permissions (role_key fk, permission_key fk, primary key beider)`. RLS auf allen dreien
+   an: lesen für `authenticated` (die Oberfläche muss die eigenen Rechte kennen), schreiben nur
+   mit `roles.manage` und nur für Rollen unter dem eigenen Rang.
+2. Rollen und Rechtekatalog aus den Tabellen oben einspielen, `admin` und `barkeeper` als
+   `is_system = true` (nicht löschbar).
+3. `profiles.role` von `public.user_role` auf `text` mit FK auf `roles.key` umstellen. Bestand
+   abbilden: `admin` → `admin`, `mitarbeiter` → `barkeeper`. Reihenfolge in der Migration:
+   Spalte auf text casten → Werte mappen → FK setzen → Enum erst danach droppen.
+4. In `private` anlegen (SECURITY DEFINER, leerer `search_path`, nicht über PostgREST
+   erreichbar – genau wie `is_admin()` heute):
+   - `my_rank()` → Rang der eigenen Rolle, 0 wenn nicht angemeldet
+   - `has_permission(p text)` → true bei `my_rank() >= 100`, sonst Treffer in `role_permissions`
+   - `is_admin()` bleibt und liefert künftig `my_rank() >= 100`
+5. **Keine bestehende Policy in diesem Paket umschreiben.** Alle laufen weiter über
+   `is_admin()` und verhalten sich unverändert – dadurch ist der Zwischenstand jederzeit
+   lauffähig (Regel 10 aus CLAUDE.md). Die Umstellung auf `has_permission()` passiert
+   modulweise in Paket 36.
+6. `supabase/functions/admin-users/index.ts`: Der Aufrufer-Check prüft heute
+   `callerProfile?.role !== "admin"`, und die Rolle des neuen Kontos wird auf `"admin"` oder
+   `"mitarbeiter"` zurechtgebogen. Beides ersetzen: Aufrufer braucht `users.manage`, die
+   gewünschte Rolle muss existieren und einen **kleineren** Rang als der Aufrufer haben.
+   Zusätzlich: das letzte Konto mit `admin` lässt sich weder herabstufen noch löschen.
+7. `azubi` bekommt in diesem Paket **keine** eigenen Einschränkungen. Die heutigen
+   Schreibrechte für Inventur, Übergabe, Verluste und Checklisten hängen an `authenticated`,
+   nicht an einer Rolle; sie einzuschränken hieße, diese Policies auf ein neues Recht
+   `operations.write` umzubauen. Das ist ein eigener Schritt und gehört nicht hierher – bis
+   dahin verhält sich `azubi` wie `barkeeper`.
+8. `supabase/schema.sql` vollständig nachziehen (Regel 3 aus CLAUDE.md).
+
+**Abnahme**
+- [ ] Alle bestehenden Konten haben nach der Migration eine gültige Rolle, kein `null`.
+- [ ] Der eigene Admin-Zugang funktioniert unverändert, alle Admin-Funktionen wie vorher.
+- [ ] Ein Konto mit `barchef` kann kein Konto mit `admin` anlegen, ändern oder löschen –
+      geprüft gegen die Edge Function, nicht nur in der Oberfläche.
+- [ ] Das letzte Admin-Konto lässt sich nicht herabstufen und nicht löschen.
+- [ ] `select private.has_permission('roles.manage')` liefert für `barchef` false, für `admin` true.
+- [ ] `supabase/schema.sql` bildet den neuen Stand vollständig ab.
+- [ ] Der Supabase-Advisor meldet keine Tabelle ohne RLS.
+
+**Commit:** `Rollenmodell: Rollen mit Rangfolge, Rechtekatalog, has_permission()`
+
+---
+
+# Paket 36 – Rechte-Matrix im Adminbereich + Durchsetzung
+
+**Abhängigkeit:** Paket 35.
+**Modell:** Opus 5, hoher Denkaufwand. Das größte Paket der Runde: rund 15 Policies und
+etwa ebenso viele `isAdmin()`-Fundstellen in zehn Modulen, jeweils Datenbank und Oberfläche
+im Gleichschritt.
+
+**Ziel:** Rechte lassen sich im Sub-Tab `admin-roles` pro Rolle setzen, und sie wirken
+tatsächlich – in der Oberfläche und in den Policies.
+
+**Entscheidung vom 09.09.2026:** Die Sichtbarkeitslogik im Frontend ist reine Kosmetik.
+Durchgesetzt wird ausschließlich über RLS. Jedes Recht, das in der Matrix auftaucht, braucht
+in diesem Paket seine Policy – ein Recht ohne Policy ist ein leeres Versprechen und darf gar
+nicht erst angezeigt werden.
+
+**Dateien:** neu `js/adminRoles.js`, `js/permissions.js`; geändert `js/auth.js`, `js/main.js`,
+`index.html`, `css/styles.css`, `js/i18n/de.js`, `js/i18n/en.js`, `sw.js` sowie modulweise
+`js/recipes.js`, `js/products.js`, `js/inventory.js`, `js/events.js`, `js/preparations.js`,
+`js/checklists.js`, `js/shiftLog.js`, `js/auditLog.js`, `js/changeRequests.js`,
+`js/dataQuality.js`. **Migration: ja** (Policy-Umstellung).
+
+**Schritte**
+1. `js/auth.js`: beim Laden des Profils zusätzlich Rechte und Rang der eigenen Rolle holen.
+   Neu exportieren: `can(perm)`, `myRank()`, `getRoles()`. `isAdmin()` bleibt und liefert
+   `myRank() >= 100` – kein Bruch für bestehenden Code.
+2. `js/main.js`: `applyRoleVisibility()` erweitern. Neben dem heutigen `[data-admin-only]`
+   ein generisches `[data-perm="..."]`, das Elemente ausblendet, wenn das Recht fehlt.
+   `data-admin-only` bleibt für alles, was wirklich nur Administratoren sehen dürfen
+   (`admin-roles`).
+3. `js/permissions.js`: Rechtekatalog mit i18n-Schlüsseln und Gruppen, für die Matrix und für
+   Fehlermeldungen. Keys identisch zur Tabelle `permissions` aus Paket 35.
+4. `js/adminRoles.js`: Matrix Rollen × Rechte als Tabelle mit Checkboxen, Speichern je Zeile.
+   Rollen mit Rang ≥ dem eigenen sind ausgegraut und nicht editierbar. `admin` hat keine
+   Checkboxen, sondern den Hinweis „hat immer alle Rechte“. Eigene Rollen anlegen, umbenennen
+   und löschen – `is_system`-Rollen nicht löschbar, eine Rolle mit zugewiesenen Konten nicht
+   löschbar. Rang beim Anlegen frei wählbar, aber kleiner als der eigene. Alle Ausgaben mit
+   `textContent` (Regel 5 aus CLAUDE.md, es gab hier schon einen stored-XSS-Fix).
+5. Modulweise umstellen, ein Modul nach dem anderen, Policy **und** Frontend im selben
+   Schritt: `recipes` → `products` → `requests` → `inventory` → `preparations` → `events` →
+   `checklists` → `shiftlog` → `losses` → `quiz` → `audit` → `data`. Je Modul die
+   `is_admin()`-Policy auf `has_permission('<recht>')` umschreiben und die `isAdmin()`-Aufrufe
+   im JS auf `can('<recht>')`. `users.manage` und `roles.manage` bleiben bei der
+   Rang-Semantik.
+6. In `admin-users` (Paket 34) die Rollenauswahl aus `roles` füllen statt aus dem festen
+   Zweier-Dropdown, Rollen mit Rang ≥ dem eigenen ausblenden.
+7. `supabase/schema.sql` nachziehen, `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Häkchen entfernen wirkt für das betroffene Konto nach der nächsten Anmeldung.
+- [ ] Ein Konto ohne `recipes.write` sieht am Rezept „Änderung vorschlagen“ statt „Bearbeiten“ –
+      und ein direkter Schreibversuch scheitert an der Policy, nicht nur an der ausgeblendeten
+      Schaltfläche. Für jedes umgestellte Modul einzeln geprüft.
+- [ ] `barchef` sieht `admin-roles` nicht.
+- [ ] Ein Konto mit `roles.manage` kann die Rechte der eigenen Rolle und aller höheren nicht ändern.
+- [ ] Eine Rolle mit zugewiesenen Konten lässt sich nicht löschen.
+- [ ] Rollennamen mit HTML-Sonderzeichen werden als Text angezeigt, nicht ausgeführt.
+- [ ] Kein Recht in der Matrix ohne zugehörige Policy.
+- [ ] Rechte-Labels sind auf Deutsch und Englisch beschriftet.
+
+**Commit:** `Rechte-Matrix im Adminbereich, Rechte in Oberfläche und Policies durchgesetzt`
+
+---
+
+# Paket 37 – Reporting unter Admin + Betrieb & Team
+
+**Abhängigkeit:** Paket 34 (Ort), 36 (`reports.view`), 18 (Checklisten), 17 (Übergabe),
+27 (Quiz-Auswertung), 9 (Ansätze), 29 (bestehende Reporting-Kacheln).
+**Modell:** Sonnet 5, mittlerer Denkaufwand. Ein Tab-Umzug und weitere Kacheln nach einem
+Muster, das in `js/reporting.js` schon steht – Fleißarbeit, keine Architekturfrage.
+
+**Ziel:** Reporting liegt im Adminbereich statt als eigener Hauptpunkt, und beantwortet
+zusätzlich zur Warenwirtschaft aus Paket 29, wie der Betrieb läuft und wo das Team steht.
+
+**Entscheidungen vom 09.09.2026**
+- Paket 29 hat Reporting als eigenen Top-Level-Tab `reporting` gebaut (`js/reporting.js`,
+  Wareneinsatzquote, Bestandswert je Inventurstichtag, ablaufende Ansätze, Verluste,
+  Preissprünge). Dieses Paket **zieht diesen Tab um**, es baut ihn nicht neu. Die vorhandenen
+  Kacheln, der Zeitraumfilter und die Rechen-Helfer bleiben, wie sie sind.
+- Reporting hängt an `reports.view`, **nicht** an Administrator: die Barleitung soll Zahlen
+  sehen, ohne Konten verwalten zu dürfen. Deshalb kommt dieses Paket zwingend nach 36 – ein
+  Umzug davor würde dem Team eine heute frei zugängliche Ansicht still wegnehmen.
+- Zuerst Betrieb und Team, weil beide ausschließlich Daten lesen, die schon da sind.
+
+**Dateien:** neu `js/adminReports.js` (übernimmt `js/reporting.js`, alte Datei entfällt);
+geändert `js/main.js`, `index.html`, `css/styles.css`, `js/i18n/de.js`, `js/i18n/en.js`,
+`sw.js`. **Keine Migration.**
+
+**Schritte**
+1. Umzug: `js/reporting.js` → `js/adminReports.js`, `<section id="reporting">` →
+   `<section id="admin-reports">`, Sidebar-Eintrag aus der Hauptnavigation in die
+   Admin-Subnav, dort mit `data-perm="reports.view"` statt `data-admin-only`. Die
+   Init-Registrierung aus Paket 34 übernimmt das Lazy-Laden. Alter Hash `#reporting` soll
+   weiter funktionieren: in `js/tabs.js` auf `admin-reports` umleiten, damit gesetzte
+   Lesezeichen und der `bartool-last-tab`-Merker nicht ins Leere laufen.
+2. Betrieb ergänzen: Erfüllungsquote der Checklisten je Vorlage und Zeitraum, offene Punkte
+   in abgeschlossenen Läufen, Übergaben je Schicht mit sichtbaren Lücken, überfällige Ansätze.
+3. Team ergänzen: Quiz-Team-Übersicht und Themen-Heatmap aus Paket 27 aus `admin-quiz`
+   hierher umziehen – die Auswertung gehört ins Reporting, die Fragenpflege bleibt dort.
+   Die bestehende Aggregat-Abfrage übernehmen, nicht neu bauen. Es bleibt bei Summen je
+   Person; die Datenbank gibt Einzelantworten auch der Leitung nicht heraus, daran nichts ändern.
+4. Datenpflege ergänzen: Änderungsvorschläge im Zeitraum (eingegangen, angenommen, abgelehnt,
+   offen mit Alter des ältesten) und Aktivität aus `audit_log` je Person und Tabelle.
+5. Neue Kacheln über die vorhandenen Helfer `tile()`, `balken()`, `formatEuro()`,
+   `formatProzent()` bauen und an den bestehenden Zeitraumfilter (30 / 90 / 365 Tage) hängen.
+   Keine zweite Filterleiste, **keine neue CDN-Bibliothek**.
+6. Ausformulierte Leerzustände statt leerer Diagramme, wie in den vorhandenen Kacheln.
+7. Jede Kachel verlinkt per `switchTab()` in den zuständigen Tab.
+8. Export der sichtbaren Auswertung als CSV/XLSX über die bereits eingebundene xlsx-Bibliothek.
+9. Neue Schlüssel in `js/i18n/de.js` und `js/i18n/en.js`, `CACHE` in `sw.js` hochzählen,
+   Precache-Liste auf den neuen Dateinamen ziehen.
+
+**Abnahme**
+- [ ] Alle Kacheln aus Paket 29 funktionieren nach dem Umzug unverändert.
+- [ ] `#reporting` landet auf `admin-reports` statt auf einer leeren Seite.
+- [ ] Ein Konto mit `reports.view`, aber ohne `users.manage`, sieht unter Admin ausschließlich
+      `admin-reports`.
+- [ ] Ein Konto ohne `reports.view` sieht das Reporting gar nicht.
+- [ ] Jede Kennzahl ist auf eine vorhandene Tabelle zurückführbar, nichts geschätzt.
+- [ ] Bei leerer Datenlage steht überall ein erklärender Text, kein 0-Wert und kein Fehler.
+- [ ] Der Zeitraumfilter wirkt auf alte und neue Kacheln gleichzeitig.
+- [ ] Einzelne Quiz-Antworten sind auch als Administrator nicht einsehbar.
+- [ ] Ladezeit auf dem Handy unter zwei Sekunden.
+
+**Commit:** `Reporting in den Adminbereich verschoben, Betrieb und Team ergänzt`
+
+---
+
+# Paket 38 – Kontenverwaltung ausbauen
+
+**Abhängigkeit:** Paket 36.
+**Modell:** Sonnet 5, mittlerer Denkaufwand. Klar umrissene Einzelfunktionen, eine kleine
+Migration, keine offenen Entwurfsfragen.
+
+**Ziel:** Der Sub-Tab `admin-users` reicht für den Saisonbetrieb: Konten kommen und gehen,
+Passwörter werden vergessen, und ausgeschiedene Mitarbeitende sollen ihre Einträge nicht
+mitnehmen.
+
+**Dateien:** geändert `js/adminUsers.js`, `js/auditLog.js`,
+`supabase/functions/admin-users/index.ts`, `supabase/functions/login-with-username/index.ts`,
+`index.html`, `css/styles.css`, `js/i18n/de.js`, `js/i18n/en.js`.
+**Migration: ja** (`profiles.is_active`, `profiles.last_login_at`).
+
+**Schritte**
+1. Passwort zurücksetzen: neues temporäres Passwort setzen und `must_change_password` wieder
+   aktivieren – der bestehende Erst-Login-Zwang greift dann von selbst.
+2. Konto deaktivieren statt löschen: `profiles.is_active`. Deaktivierte Konten kommen durch
+   den Login nicht mehr durch; ihre Einträge (Übergaben, Inventuren, Vorschläge) bleiben
+   erhalten und lesbar. Löschen bleibt möglich, aber mit deutlicher Warnung.
+3. `last_login_at` in `login-with-username` mitschreiben und in der Kontenliste anzeigen –
+   sichtbar machen, wer das Tool gar nicht nutzt.
+4. Kontenliste mit Filter nach Rolle und Status, Sortierung nach letzter Anmeldung.
+5. Papierkorb: Die Wiederherstellung aus Paket 15 steckt heute im Änderungsverlauf. Als eigene
+   Ansicht in `admin-data` sichtbar machen – gelöschte Rezepte und Produkte der letzten
+   30 Tage mit einem Knopf zurückholen, gebunden an `audit.restore`. Bestehende Logik aus
+   `js/auditLog.js` nutzen, nicht doppeln.
+6. Import und Export einsammeln: Produkt-Import und die Export-Funktionen liegen heute
+   verstreut. Sammelstelle in `admin-data`, gebunden an `data.manage`. Die vorhandenen
+   Einstiegspunkte in den Fach-Tabs bleiben, wo sie sind – nur zusätzlich erreichbar.
+
+**Abnahme**
+- [ ] Nach dem Zurücksetzen muss die betroffene Person beim nächsten Login ein neues Passwort setzen.
+- [ ] Ein deaktiviertes Konto kommt nicht mehr durch den Login, seine bisherigen Einträge
+      bleiben sichtbar.
+- [ ] Das letzte aktive Admin-Konto lässt sich nicht deaktivieren.
+- [ ] `last_login_at` steht nach einer Anmeldung in der Liste.
+- [ ] Ein gelöschtes Rezept ist über den Papierkorb wiederherstellbar.
+- [ ] `supabase/schema.sql` bildet die neuen Spalten ab.
+
+**Commit:** `Kontenverwaltung: Passwort-Reset, Deaktivieren, letzte Anmeldung, Papierkorb`
+
+---
+
+## Backlog (bewusst noch nicht eingeplant)
 
 Reihenfolge offen, erst nach Runde 4 entscheiden:
 - **Produktkatalog auf Englisch** – die 176 Produkttexte. Bewusst aus Paket 33 herausgehalten:
@@ -1485,7 +1867,7 @@ Reihenfolge offen, erst nach Runde 4 entscheiden:
 ## Bewusst nicht im Scope
 
 Nicht bauen, auch wenn es naheliegt – erst nachfragen:
-Gäste- oder Öffentlichkeitsansicht ohne Login, dritte Rolle für Service/Restaurant,
+Gäste- oder Öffentlichkeitsansicht ohne Login,
 Offline-Warteschlange für Schreibzugriffe, Batchen nach Gewicht (dafür fehlen belastbare Dichtewerte),
 Kassen- oder Warenwirtschaftsanbindung, Frontend-Framework oder Build-Schritt.
 
@@ -1497,6 +1879,12 @@ wird das als eigenes Paket neu bewertet – vorher nicht anfangen.
 **Am 04.09.2026 freigegeben:** Der Schulungs-/Quizmodus stand hier als „erst nachfragen" –
 der Nutzer hat von sich aus danach gefragt. Er ist jetzt als Pakete 26–27 eingeplant,
 zusammen mit dem Produktwissen-Ausbau (21–25), der die Datengrundlage dafür liefert.
+
+**Am 09.09.2026 freigegeben:** „Dritte Rolle für Service/Restaurant" stand hier als „erst
+nachfragen". Der Nutzer hat von sich aus abgestufte Rollen mit eigener Rechtevergabe
+angefordert. Umgesetzt wird das allgemeiner als ursprünglich gedacht – nicht eine feste dritte
+Rolle, sondern ein Rollenmodell mit Rangfolge und Rechtekatalog (Pakete 35–36). Ausdrücklich
+mitentschieden: `admin` und `barchef` sind zwei getrennte Rollen, `admin` steht über `barchef`.
 
 **Ebenfalls am 04.09.2026 gestrichen** (waren als Paket 21 bzw. im Backlog geplant, vom Nutzer
 ausdrücklich abgewählt): Export des Bestellvorschlags als Druck-/Mailtext und Barcode-Scan bei
