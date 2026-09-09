@@ -6,7 +6,13 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { alcoholMl, abvAfterWater } from "./abv.js";
 import { prefillPreparation } from "./preparations.js";
 import { switchTab } from "./tabs.js";
-import { applyTranslations, onLanguageChanged, t } from "./i18n.js";
+import {
+  applyTranslations,
+  germanOnlyNote,
+  localizedContent,
+  onLanguageChanged,
+  t,
+} from "./i18n.js";
 
 const panelEl = document.getElementById("batching");
 const ingredientsEl = document.getElementById("batch-ingredients");
@@ -321,13 +327,19 @@ function handleLoadRecipe() {
 }
 
 function renderRecipeInfo(recipe) {
+  // Glas, Garnitur und Zubereitung haben eine englische Zweitfassung
+  // (Paket 33); Eis und Geschichte bleiben deutsch.
+  const inhalt = (label, field) => {
+    const { text, isGermanOnly } = localizedContent(recipe, field);
+    return { label, text, isGermanOnly };
+  };
   const rows = [
-    [t("ui.glas"), recipe.glass],
-    [t("ui.garnitur"), recipe.garnish],
-    ["Eis", recipe.ice],
-    [t("ui.zubereitung"), recipe.method],
-    [t("ui.geschichte"), recipe.history],
-  ].filter(([, value]) => value);
+    inhalt(t("ui.glas"), "glass"),
+    inhalt(t("ui.garnitur"), "garnish"),
+    { label: t("ui.eis"), text: recipe.ice ?? "", isGermanOnly: false },
+    inhalt(t("ui.zubereitung"), "method"),
+    { label: t("ui.geschichte"), text: recipe.history ?? "", isGermanOnly: false },
+  ].filter((row) => row.text);
 
   if (rows.length === 0) {
     recipeInfoEl.hidden = true;
@@ -335,7 +347,12 @@ function renderRecipeInfo(recipe) {
   }
   recipeInfoEl.hidden = false;
   recipeInfoEl.innerHTML = rows
-    .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`)
+    .map(
+      (row) =>
+        `<p><strong>${escapeHtml(row.label)}:</strong> ${escapeHtml(row.text)}${
+          row.isGermanOnly ? ` <span class="lang-note">(${escapeHtml(germanOnlyNote())})</span>` : ""
+        }</p>`
+    )
     .join("");
 }
 

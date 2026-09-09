@@ -11,7 +11,15 @@ import {
 import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { printChecklistRuns } from "./printView.js";
-import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
+import {
+  formatDate,
+  germanOnlyNote,
+  getLocale,
+  localizedContent,
+  localizedText,
+  onLanguageChanged,
+  t,
+} from "./i18n.js";
 
 // Checklisten für wiederkehrende Abläufe: Opening, Closing, Reinigung,
 // Kühltemperaturen. Eine Vorlage sagt, was zu prüfen ist; ein Lauf ist der
@@ -150,6 +158,7 @@ const printHistoryBtn = document.getElementById("checklist-print-history");
 const newTemplateBtn = document.getElementById("checklist-template-new");
 const templateFormEl = document.getElementById("checklist-template-form");
 const templateNameEl = document.getElementById("checklist-template-name");
+const templateNameEnEl = document.getElementById("checklist-template-name-en");
 const templateKindEl = document.getElementById("checklist-template-kind");
 const templateActiveEl = document.getElementById("checklist-template-active");
 const templateItemsEl = document.getElementById("checklist-template-items");
@@ -215,7 +224,7 @@ function renderVorlagenAuswahl() {
     ? vorlagen
         .map(
           (v) =>
-            `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)} · ${escapeHtml(
+            `<option value="${escapeHtml(v.id)}">${escapeHtml(localizedText(v, "name"))} · ${escapeHtml(
               kindLabel(v.kind)
             )}</option>`
         )
@@ -225,13 +234,26 @@ function renderVorlagenAuswahl() {
   openBtn.disabled = vorlagen.length === 0;
 }
 
+// Hinweis hinter Inhalten, die es nur auf Deutsch gibt (siehe js/i18n.js).
+function langHinweis(isGermanOnly) {
+  return isGermanOnly ? ` <span class="lang-note">(${escapeHtml(germanOnlyNote())})</span>` : "";
+}
+
+// Bezeichnung eines Checklistenpunkts als HTML, inklusive Hinweis, wenn der
+// Punkt nur auf Deutsch gepflegt ist.
+function itemLabelHtml(item) {
+  const { text, isGermanOnly } = localizedContent(item, "label");
+  return `${escapeHtml(text)}${langHinweis(isGermanOnly)}`;
+}
+
 function itemZusatz(item) {
   const teile = [];
   if (item.type === "wert") {
     const grenzen = grenzText(item);
     if (grenzen) teile.push(`${t("ui.sollbereich")} ${grenzen}`);
   }
-  if (item.hint) teile.push(item.hint);
+  const hinweis = localizedText(item, "hint");
+  if (hinweis) teile.push(hinweis);
   if (teile.length === 0) return "";
   return `<br /><span class="prep-status">${escapeHtml(teile.join(" · "))}</span>`;
 }
@@ -267,7 +289,7 @@ function itemZeileHtml(item, eintrag, gesperrt) {
     const zeigeNotiz = ausserhalb || notiz.trim() !== "";
     return `
       <div class="menu-pick${ausserhalb ? " menu-pick-missing" : ""}" style="flex-wrap: wrap">
-        <span style="flex: 1 1 11rem; min-width: 11rem">${escapeHtml(item.label)}${itemZusatz(item)}</span>
+        <span style="flex: 1 1 11rem; min-width: 11rem">${itemLabelHtml(item)}${itemZusatz(item)}</span>
         <input
           type="text"
           inputmode="decimal"
@@ -297,7 +319,7 @@ function itemZeileHtml(item, eintrag, gesperrt) {
       />
       <span style="flex: 1 1 11rem; min-width: 11rem${
         erledigt ? "; text-decoration: line-through; color: var(--text-muted)" : ""
-      }">${escapeHtml(item.label)}${itemZusatz(item)}</span>
+      }">${itemLabelHtml(item)}${itemZusatz(item)}</span>
       <span class="menu-pick-price">${escapeHtml(nachweis)}</span>
     </label>`;
 }
@@ -339,7 +361,9 @@ function laufHtml(template, run) {
       run.id
     )}">
       <div class="prep-item-head">
-        <strong>${escapeHtml(template.name)} · ${escapeHtml(formatDatum(run.runDate))}</strong>
+        <strong>${escapeHtml(localizedText(template, "name"))} · ${escapeHtml(
+          formatDatum(run.runDate)
+        )}</strong>
         <span class="prep-status">${escapeHtml(kindLabel(template.kind))}</span>
       </div>
       ${kacheln}
@@ -397,7 +421,7 @@ function renderLauf() {
   }
   const run = findeLauf(offenerLauf.templateId, offenerLauf.datum);
   if (!run) {
-    runEl.innerHTML = `<p class="empty-note">${t("ui.fuer")} ${escapeHtml(template.name)} am ${escapeHtml(
+    runEl.innerHTML = `<p class="empty-note">${t("ui.fuer")} ${escapeHtml(localizedText(template, "name"))} am ${escapeHtml(
       formatDatum(offenerLauf.datum)
     )} ${t("ui.ist_noch_nichts_eingetragen")}</p>`;
     return;
@@ -493,7 +517,7 @@ function druckLauf(template, run) {
       ergebnis = eintrag?.done ? "erledigt" : "offen";
     }
     return [
-      item.label,
+      localizedText(item, "label"),
       ergebnis,
       eintrag?.by ?? "–",
       eintrag?.at ? formatZeitpunkt(eintrag.at) : "–",
@@ -502,7 +526,7 @@ function druckLauf(template, run) {
   });
 
   return {
-    titel: `${template.name} · ${formatDatum(run.runDate)}`,
+    titel: `${localizedText(template, "name")} · ${formatDatum(run.runDate)}`,
     meta: [
       [t("ui.art"), kindLabel(template.kind)],
       [t("ui.erledigt"), `${status.erledigt} ${t("ui.von")} ${status.gesamt}`],
@@ -527,7 +551,9 @@ function verlaufHtml({ template, run }) {
       run.id
     )}">
       <div class="prep-item-head">
-        <strong>${escapeHtml(template.name)} · ${escapeHtml(formatDatum(run.runDate))}</strong>
+        <strong>${escapeHtml(localizedText(template, "name"))} · ${escapeHtml(
+          formatDatum(run.runDate)
+        )}</strong>
         <span class="prep-status">${escapeHtml(zustand)}</span>
       </div>
       <p class="prep-meta">${status.erledigt} ${t("ui.von")} ${status.gesamt} ${t("ui.erledigt_klein")}${
@@ -556,9 +582,15 @@ function templateItemRow(item = {}) {
   row.innerHTML = `
     <div class="field-row">
       <label>
-        ${t("ui.bezeichnung")}
+        ${t("ui.bezeichnung_deutsch")}
         <input type="text" class="ci-label" placeholder="${t("ui.z_b_kuehlschrank_bar_ablesen")}" />
       </label>
+      <label>
+        ${t("ui.bezeichnung_englisch")}
+        <input type="text" class="ci-label-en" placeholder="${t("ui.z_b_read_bar_fridge")}" />
+      </label>
+    </div>
+    <div class="field-row">
       <label>
         ${t("ui.typ")}
         <select class="ci-type">
@@ -579,10 +611,16 @@ function templateItemRow(item = {}) {
         <input type="text" inputmode="decimal" class="ci-max" placeholder="optional" />
       </label>
     </div>
-    <label>
-      ${t("ui.hinweis")}
-      <input type="text" class="ci-hint" placeholder="${t("ui.optional_z_b_thermometer_im_mittleren_fach")}" />
-    </label>
+    <div class="field-row">
+      <label>
+        ${t("ui.hinweis_deutsch")}
+        <input type="text" class="ci-hint" placeholder="${t("ui.optional_z_b_thermometer_im_mittleren_fach")}" />
+      </label>
+      <label>
+        ${t("ui.hinweis_englisch")}
+        <input type="text" class="ci-hint-en" placeholder="${t("ui.optional_z_b_thermometer_on_the_middle_shelf")}" />
+      </label>
+    </div>
     <div class="actions">
       <button type="button" class="btn-secondary ci-up" aria-label="${t("ui.nach_oben")}">↑</button>
       <button type="button" class="btn-secondary ci-down" aria-label="${t("ui.nach_unten")}">↓</button>
@@ -590,11 +628,13 @@ function templateItemRow(item = {}) {
     </div>`;
 
   row.querySelector(".ci-label").value = item.label ?? "";
+  row.querySelector(".ci-label-en").value = item.labelEn ?? "";
   row.querySelector(".ci-type").value = item.type === "wert" ? "wert" : "check";
   row.querySelector(".ci-unit").value = item.unit ?? "";
   row.querySelector(".ci-min").value = item.min === undefined || item.min === null ? "" : String(item.min);
   row.querySelector(".ci-max").value = item.max === undefined || item.max === null ? "" : String(item.max);
   row.querySelector(".ci-hint").value = item.hint ?? "";
+  row.querySelector(".ci-hint-en").value = item.hintEn ?? "";
   zeigeWertFelder(row);
   templateItemsEl.appendChild(row);
   return row;
@@ -613,8 +653,14 @@ function gesammelteItems() {
       const label = row.querySelector(".ci-label").value.trim();
       const type = row.querySelector(".ci-type").value === "wert" ? "wert" : "check";
       const item = { id: row.dataset.itemId, label, type };
+      // Englische Zweitfassung im selben Item (Paket 33); leere Felder werden
+      // gar nicht erst geschrieben.
+      const labelEn = row.querySelector(".ci-label-en").value.trim();
+      if (labelEn) item.labelEn = labelEn;
       const hint = row.querySelector(".ci-hint").value.trim();
       if (hint) item.hint = hint;
+      const hintEn = row.querySelector(".ci-hint-en").value.trim();
+      if (hintEn) item.hintEn = hintEn;
       if (type === "wert") {
         const unit = row.querySelector(".ci-unit").value.trim();
         if (unit) item.unit = unit;
@@ -634,6 +680,7 @@ function oeffneVorlagenFormular(template = null) {
   newTemplateBtn.hidden = true;
   templateItemsEl.innerHTML = "";
   templateNameEl.value = template?.name ?? "";
+  templateNameEnEl.value = template?.nameEn ?? "";
   templateKindEl.value = template?.kind ?? "sonstiges";
   templateActiveEl.checked = template ? template.active !== false : true;
   const items = template?.items ?? [];
@@ -665,6 +712,7 @@ async function speichereVorlage(e) {
   const template = {
     id: bearbeiteteVorlage?.id,
     name,
+    nameEn: templateNameEnEl.value.trim(),
     kind: templateKindEl.value,
     items,
     active: templateActiveEl.checked,
@@ -687,7 +735,7 @@ function vorlageHtml(template) {
       template.id
     )}">
       <div class="prep-item-head">
-        <strong>${escapeHtml(template.name)}</strong>
+        <strong>${escapeHtml(localizedText(template, "name"))}</strong>
         <span class="prep-status">${escapeHtml(kindLabel(template.kind))}${
           template.active === false ? " · inaktiv" : ""
         }</span>
@@ -860,7 +908,9 @@ export function initChecklists() {
     if (e.target.closest(".checklist-template-delete")) {
       if (
         !confirm(
-          `${t("ui.vorlage_7041")}${template.name}${t("ui.wirklich_loeschen_alle_ausgefuellten_1643")}`
+          `${t("ui.vorlage_7041")}${localizedText(template, "name")}${t(
+            "ui.wirklich_loeschen_alle_ausgefuellten_1643"
+          )}`
         )
       )
         return;

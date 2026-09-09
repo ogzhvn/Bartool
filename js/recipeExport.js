@@ -1,6 +1,6 @@
 import { UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
-import { t } from "./i18n.js";
+import { localizedText, t } from "./i18n.js";
 
 function formatIngredientLine(ing) {
   return `${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit] ?? ing.unit} ${ing.name}`;
@@ -44,11 +44,14 @@ export function exportRecipesToExcel(recipes) {
 export function buildRecipeBlocks(recipes) {
   return recipes
     .map((recipe, index) => {
+      // Druck und Word-Export folgen der eingestellten Sprache. Fehlt eine
+      // englische Fassung, steht der deutsche Text mit dem Zusatz
+      // "only available in German" – wie in der Rezeptansicht.
       const metaRows = [
-        [t("ui.glas"), recipe.glass],
-        [t("ui.garnitur"), recipe.garnish],
-        ["Eis", recipe.ice],
-        [t("ui.zubereitung"), recipe.method],
+        [t("ui.glas"), localizedText(recipe, "glass")],
+        [t("ui.garnitur"), localizedText(recipe, "garnish")],
+        [t("ui.eis"), recipe.ice],
+        [t("ui.zubereitung"), localizedText(recipe, "method")],
       ].filter(([, value]) => value);
 
       const ingredientRows = recipe.ingredients

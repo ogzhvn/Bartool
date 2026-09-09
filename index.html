@@ -576,10 +576,16 @@
 
         <form id="checklist-template-form" hidden>
           <div class="field-row">
-            <label data-i18n="ui.name">
-              Name
+            <label data-i18n="ui.name_deutsch">
+              Name (Deutsch)
               <input type="text" id="checklist-template-name" placeholder="z. B. Closing Bar" required data-i18n-placeholder="ui.z_b_closing_bar" />
             </label>
+            <label data-i18n="ui.name_englisch">
+              Name (Englisch)
+              <input type="text" id="checklist-template-name-en" placeholder="z. B. Closing bar" data-i18n-placeholder="ui.z_b_closing_bar_en" />
+            </label>
+          </div>
+          <div class="field-row">
             <label data-i18n="ui.art">
               Art
               <select id="checklist-template-kind">
@@ -945,9 +951,13 @@
 
             <h3 data-i18n="ui.details">Details</h3>
             <div class="field-row">
-              <label data-i18n="ui.zubereitung">
-                Zubereitung
+              <label data-i18n="ui.zubereitung_deutsch">
+                Zubereitung (Deutsch)
                 <input type="text" id="recipe-method" placeholder="z. B. Mit Eis schütteln und abseihen" data-i18n-placeholder="ui.z_b_mit_eis_schuetteln_und_abseihen" />
+              </label>
+              <label data-i18n="ui.zubereitung_englisch">
+                Zubereitung (Englisch)
+                <input type="text" id="recipe-method-en" placeholder="z. B. Shake with ice and strain" data-i18n-placeholder="ui.z_b_shake_with_ice_and_strain" />
               </label>
             </div>
             <div class="field-row">
@@ -957,13 +967,23 @@
               </label>
             </div>
             <div class="field-row">
-              <label data-i18n="ui.glas">
-                Glas
+              <label data-i18n="ui.glas_deutsch">
+                Glas (Deutsch)
                 <input type="text" id="recipe-glass" placeholder="z. B. Tumbler" data-i18n-placeholder="ui.z_b_tumbler" />
               </label>
-              <label data-i18n="ui.garnitur">
-                Garnitur
+              <label data-i18n="ui.glas_englisch">
+                Glas (Englisch)
+                <input type="text" id="recipe-glass-en" placeholder="z. B. Rocks glass" data-i18n-placeholder="ui.z_b_rocks_glass" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label data-i18n="ui.garnitur_deutsch">
+                Garnitur (Deutsch)
                 <input type="text" id="recipe-garnish" placeholder="z. B. Orangenzeste" data-i18n-placeholder="ui.z_b_orangenzeste" />
+              </label>
+              <label data-i18n="ui.garnitur_englisch">
+                Garnitur (Englisch)
+                <input type="text" id="recipe-garnish-en" placeholder="z. B. Orange zest" data-i18n-placeholder="ui.z_b_orange_zest" />
               </label>
             </div>
             <div class="field-row">
@@ -976,10 +996,16 @@
               Geschichte
               <textarea id="recipe-history" rows="3" placeholder="Kurze Geschichte des Drinks (3-4 Sätze)" data-i18n-placeholder="ui.kurze_geschichte_des_drinks_3_4_saetze"></textarea>
             </label>
-            <label data-i18n="ui.kurzer_pitch_zum_nachsprechen_im_service">
-              Kurzer Pitch (zum Nachsprechen im Service)
-              <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" data-i18n-placeholder="ui.z_b_unser_fruchtigster_sour_sehr_beliebt_d1ed" />
-            </label>
+            <div class="field-row">
+              <label data-i18n="ui.kurzer_pitch_deutsch">
+                Kurzer Pitch, Deutsch (zum Nachsprechen im Service)
+                <input type="text" id="recipe-quick-pitch" placeholder="z. B. „Unser fruchtigster Sour, sehr beliebt bei Gästen, die es nicht zu bitter mögen.“" data-i18n-placeholder="ui.z_b_unser_fruchtigster_sour_sehr_beliebt_d1ed" />
+              </label>
+              <label data-i18n="ui.kurzer_pitch_englisch">
+                Kurzer Pitch, Englisch (zum Nachsprechen im Service)
+                <input type="text" id="recipe-quick-pitch-en" placeholder="z. B. „Our fruitiest sour, popular with guests who don’t like it too bitter.“" data-i18n-placeholder="ui.z_b_our_fruitiest_sour_popular_with_guests" />
+              </label>
+            </div>
             <label data-i18n="ui.passt_gut_zu_produkte_rezepte_kommagetrennt">
               Passt gut zu (Produkte/Rezepte, kommagetrennt)
               <input type="text" id="recipe-pairs-with" list="pairs-with-options" placeholder="z. B. Espresso Martini" data-i18n-placeholder="ui.z_b_espresso_martini" />

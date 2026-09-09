@@ -93,8 +93,8 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Runde 1 (Pakete 1–15), Runde 2 (16–20) und Runde 3 (21–27) sind vollständig
-umgesetzt.** Runde 4 (28–33) ist geplant und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
+vollständig umgesetzt.** Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -156,7 +156,7 @@ eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
 | 30 | Fotos: Storage-Grundlage und Produktbilder | erledigt |
 | 31 | Fotos zu Rezepten: Aufbau und Garnitur | erledigt |
 | 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | erledigt |
-| 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | offen |
+| 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | erledigt |
 
 ---
 
@@ -1451,11 +1451,18 @@ ist eine Falle.
 6. `CACHE` in `sw.js` hochzählen.
 
 **Abnahme**
-- [ ] Rezept auf EN zeigt Zubereitung, Glas, Methode und Garnitur auf Englisch, sofern gepflegt.
-- [ ] Nicht gepflegtes Feld zeigt Deutsch **mit** Hinweis, nicht kommentarlos.
-- [ ] Allergene auf EN vollständig, ohne DB-Eintrag.
-- [ ] Admin kann DE und EN in einem Durchgang speichern.
-- [ ] Der Produktkatalog bleibt unangetastet – kein halb übersetzter Zustand.
+- [x] Rezept auf EN zeigt Zubereitung, Glas, Methode und Garnitur auf Englisch, sofern gepflegt.
+- [x] Nicht gepflegtes Feld zeigt Deutsch **mit** Hinweis, nicht kommentarlos.
+- [x] Allergene auf EN vollständig, ohne DB-Eintrag.
+- [x] Admin kann DE und EN in einem Durchgang speichern.
+- [x] Der Produktkatalog bleibt unangetastet – kein halb übersetzter Zustand.
+
+**Umgesetzt am 09.09.2026.** Spalten `method_en`, `glass_en`, `garnish_en`,
+`quick_pitch_en` in `recipes`, `name_en` in `checklist_templates`, `labelEn`/`hintEn`
+in den Checklistenpunkten. Anzeigelogik zentral in `js/i18n.js`
+(`localizedContent()` / `localizedText()` / `germanOnlyNote()`), Allergene als
+`allergen.*`-Schlüssel in beiden Sprachdateien. Geschichte, Eis und „Passt gut zu"
+bleiben bewusst deutsch, ebenso der ganze Produktkatalog (Backlog Runde 5).
 
 **Commit:** `Englische Inhalte für Rezepte, Checklisten und Allergene`
 

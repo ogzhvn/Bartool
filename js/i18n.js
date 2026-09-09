@@ -8,7 +8,9 @@
 // laufen über `t()` und werden von den Modulen bei `onLanguageChanged()`
 // neu gerendert – deshalb braucht das Umschalten kein Neuladen.
 //
-// Bewusst NICHT übersetzt: Produkt- und Rezeptinhalte (eigenes Paket).
+// Bewusst NICHT übersetzt: der Produktkatalog und die Kategorienamen. Für die
+// wenigen Inhalte, die im Schichtbetrieb wirklich englisch gebraucht werden,
+// gibt es unten localizedContent()/localizedText() (Paket 33).
 
 import { de } from "./i18n/de.js";
 import { en } from "./i18n/en.js";
@@ -234,4 +236,44 @@ export function weekdayName(index, style = "long") {
 export function monthName(index, style = "long") {
   const date = new Date(Date.UTC(2024, Number(index), 1));
   return new Intl.DateTimeFormat(getLocale(), { month: style, timeZone: "UTC" }).format(date);
+}
+
+// ---------------------------------------------------------------------
+// Inhalte mit englischer Zweitfassung (Paket 33)
+// ---------------------------------------------------------------------
+//
+// Wenige Inhaltsfelder haben eine englische Zweitfassung in der Datenbank
+// (Rezept: method/glass/garnish/quickPitch, Checkliste: Vorlagenname und
+// Punkte). Sie liegen als eigenes Feld neben dem deutschen, im JS mit dem
+// Suffix "En" – `recipe.method` / `recipe.methodEn`.
+//
+// Regel dabei: auf Englisch wird nie stillschweigend Deutsch angezeigt.
+// Fehlt die Zweitfassung, kommt der deutsche Text **mit** dem Zusatz
+// "only available in German", damit am Tresen klar ist, dass hier nichts
+// übersetzt wurde und nicht etwa der englische Text so lautet.
+
+// Liefert { text, isGermanOnly, hasText } für ein Inhaltsfeld.
+// `field` ist der deutsche Feldname, `enField` standardmässig derselbe
+// Name mit angehängtem "En".
+export function localizedContent(source, field, enField = `${field}En`) {
+  const german = String(source?.[field] ?? "").trim();
+  const english = String(source?.[enField] ?? "").trim();
+  if (currentLanguage === FALLBACK_LANGUAGE) {
+    return { text: german, isGermanOnly: false, hasText: german !== "" };
+  }
+  if (english !== "") return { text: english, isGermanOnly: false, hasText: true };
+  return { text: german, isGermanOnly: german !== "", hasText: german !== "" };
+}
+
+// Der Hinweistext selbst – auf Deutsch wird er nie angezeigt, steht aber in
+// beiden Sprachdateien, damit der Schlüsselsatz identisch bleibt.
+export function germanOnlyNote() {
+  return t("ui.nur_auf_deutsch_gepflegt");
+}
+
+// Reintext-Variante für Druck, Export und alles ohne HTML:
+// "Kräftig shaken (only available in German)".
+export function localizedText(source, field, enField) {
+  const { text, isGermanOnly } = localizedContent(source, field, enField);
+  return isGermanOnly ? `${text} (${germanOnlyNote()})` : text;
 }

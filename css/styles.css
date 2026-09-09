@@ -1865,6 +1865,13 @@ select {
   font-size: 0.83rem;
 }
 
+/* Hinweis an Inhalten, die es nur auf Deutsch gibt (js/i18n.js, Paket 33). */
+.lang-note {
+  color: var(--text-muted);
+  font-size: 0.83em;
+  white-space: nowrap;
+}
+
 /* ── Kartenkalkulation (js/menuCosting.js) ───────────────── */
 
 .menu-pick-list {

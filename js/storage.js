@@ -89,6 +89,12 @@ function toRecipeRecord(recipe) {
     ice: recipe.ice || null,
     history: recipe.history || null,
     quick_pitch: recipe.quickPitch || null,
+    // Englische Zweitfassung (Paket 33); leer bleibt null, damit die Anzeige
+    // sauber zwischen "nicht gepflegt" und "leer eingetragen" unterscheidet.
+    method_en: recipe.methodEn || null,
+    glass_en: recipe.glassEn || null,
+    garnish_en: recipe.garnishEn || null,
+    quick_pitch_en: recipe.quickPitchEn || null,
     pairs_with: recipe.pairsWith ?? null,
     sales_price:
       recipe.salesPrice === "" || recipe.salesPrice == null ? null : Number(recipe.salesPrice),
@@ -109,6 +115,10 @@ export function fromRecipeRow(row) {
     ice: row.ice ?? "",
     history: row.history ?? "",
     quickPitch: row.quick_pitch ?? "",
+    methodEn: row.method_en ?? "",
+    glassEn: row.glass_en ?? "",
+    garnishEn: row.garnish_en ?? "",
+    quickPitchEn: row.quick_pitch_en ?? "",
     pairsWith: row.pairs_with ?? [],
     salesPrice: row.sales_price ?? "",
     imagePath: row.image_path ?? "",
@@ -754,6 +764,9 @@ const CHECKLIST_RUNS_LIMIT = 300;
 function toChecklistTemplateRecord(template) {
   const record = {
     name: template.name,
+    // Englischer Vorlagenname (Paket 33). Die englischen Punkte selbst stehen
+    // als labelEn/hintEn in den items.
+    name_en: template.nameEn || null,
     kind: template.kind || "sonstiges",
     items: Array.isArray(template.items) ? template.items : [],
     active: template.active !== false,
@@ -766,6 +779,7 @@ function fromChecklistTemplateRow(row) {
   return {
     id: row.id,
     name: row.name ?? "",
+    nameEn: row.name_en ?? "",
     kind: row.kind ?? "sonstiges",
     items: Array.isArray(row.items) ? row.items : [],
     active: row.active !== false,

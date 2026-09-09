@@ -200,6 +200,15 @@ create table if not exists public.recipes (
   ice text,
   history text,
   quick_pitch text,
+  -- Englische Zweitfassung (Paket 33): bewusst nur die Felder, die eine
+  -- Saisonkraft in der Schicht braucht. Kein jsonb-Sammelfeld – die Felder
+  -- sind wenige und bekannt. Leer heisst "nicht gepflegt": die Oberfläche
+  -- zeigt dann den deutschen Text mit dem Hinweis "only available in German",
+  -- nie stillschweigend Deutsch.
+  method_en text,
+  glass_en text,
+  garnish_en text,
+  quick_pitch_en text,
   pairs_with jsonb,
   -- Verkaufspreis brutto in Euro, Grundlage der Kartenkalkulation.
   sales_price numeric,
@@ -218,6 +227,10 @@ alter table public.recipes add column if not exists category text;
 alter table public.recipes add column if not exists sales_price numeric;
 alter table public.recipes add column if not exists image_path text;
 alter table public.recipes add column if not exists garnish_image_path text;
+alter table public.recipes add column if not exists method_en text;
+alter table public.recipes add column if not exists glass_en text;
+alter table public.recipes add column if not exists garnish_en text;
+alter table public.recipes add column if not exists quick_pitch_en text;
 
 alter table public.recipes enable row level security;
 
@@ -542,13 +555,19 @@ create policy "shift_logs: admin deletes"
 create table if not exists public.checklist_templates (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  -- Englischer Vorlagenname (Paket 33), leer = nicht gepflegt.
+  name_en text,
   -- opening | closing | reinigung | temperatur | sonstiges
   kind text not null default 'sonstiges',
-  -- [{ id, label, type: "check" | "wert", unit: "°C", hint: "", min, max }]
+  -- [{ id, label, labelEn, type: "check" | "wert", unit: "°C", hint: "", hintEn: "", min, max }]
+  -- Die englischen Punkte stehen im selben Item wie die deutschen, nicht in
+  -- einem eigenen Sammelfeld – sonst laufen Reihenfolge und ids auseinander.
   items jsonb not null default '[]'::jsonb,
   active boolean not null default true,
   updated_at timestamptz not null default now()
 );
+
+alter table public.checklist_templates add column if not exists name_en text;
 
 alter table public.checklist_templates enable row level security;
 

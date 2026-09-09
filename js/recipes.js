@@ -4,13 +4,13 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { getAllRecipes, getRecipe, isCustomRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
-import { allergensForRecipe } from "./allergens.js";
+import { allergensForRecipe, allergenLabel } from "./allergens.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { printRecipes } from "./printView.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
-import { getLocale, onLanguageChanged, t } from "./i18n.js";
+import { germanOnlyNote, getLocale, localizedContent, onLanguageChanged, t } from "./i18n.js";
 import { uploadRecipePhoto, deleteRecipePhoto, resolveImageUrl } from "./photos.js";
 
 const CATEGORY_ORDER = [
@@ -47,6 +47,13 @@ const garnishEl = document.getElementById("recipe-garnish");
 const iceEl = document.getElementById("recipe-ice");
 const historyEl = document.getElementById("recipe-history");
 const quickPitchEl = document.getElementById("recipe-quick-pitch");
+// Englische Zweitfassung (Paket 33): dieselbe Maske, zweite Spalte. Nur die
+// Felder, die eine Saisonkraft in der Schicht braucht – Geschichte und
+// "Passt gut zu" bleiben bewusst deutsch.
+const methodEnEl = document.getElementById("recipe-method-en");
+const glassEnEl = document.getElementById("recipe-glass-en");
+const garnishEnEl = document.getElementById("recipe-garnish-en");
+const quickPitchEnEl = document.getElementById("recipe-quick-pitch-en");
 const salesPriceEl = document.getElementById("recipe-sales-price");
 const pairsWithEl = document.getElementById("recipe-pairs-with");
 const photoFieldEl = document.getElementById("recipe-photo-field");
@@ -210,6 +217,10 @@ function resetForm() {
   iceEl.value = "";
   historyEl.value = "";
   quickPitchEl.value = "";
+  methodEnEl.value = "";
+  glassEnEl.value = "";
+  garnishEnEl.value = "";
+  quickPitchEnEl.value = "";
   salesPriceEl.value = "";
   pairsWithEl.value = "";
   editor.setIngredients([]);
@@ -229,6 +240,10 @@ function loadIntoForm(recipe) {
   iceEl.value = recipe.ice ?? "";
   historyEl.value = recipe.history ?? "";
   quickPitchEl.value = recipe.quickPitch ?? "";
+  methodEnEl.value = recipe.methodEn ?? "";
+  glassEnEl.value = recipe.glassEn ?? "";
+  garnishEnEl.value = recipe.garnishEn ?? "";
+  quickPitchEnEl.value = recipe.quickPitchEn ?? "";
   salesPriceEl.value = recipe.salesPrice ?? "";
   pairsWithEl.value = (recipe.pairsWith ?? []).join(", ");
   editor.setIngredients(recipe.ingredients);
@@ -261,6 +276,10 @@ async function handleSave() {
     ice: iceEl.value.trim(),
     history: historyEl.value.trim(),
     quickPitch: quickPitchEl.value.trim(),
+    methodEn: methodEnEl.value.trim(),
+    glassEn: glassEnEl.value.trim(),
+    garnishEn: garnishEnEl.value.trim(),
+    quickPitchEn: quickPitchEnEl.value.trim(),
     salesPrice: salesPriceEl.value === "" ? "" : parseFloat(salesPriceEl.value),
   };
   const pairsWith = parsePairsWith(pairsWithEl.value);
@@ -379,10 +398,12 @@ function renderAllergenBlock(recipe) {
   const { entries, unchecked, clear } = allergensForRecipe(recipe);
 
   const zeilen = entries
-    .map(
-      (e) =>
-        `<li><strong>${escapeHtml(e.product)}:</strong> ${escapeHtml(e.allergens)}</li>`
-    )
+    .map((e) => {
+      const angabe = allergenLabel(e.allergens);
+      return `<li><strong>${escapeHtml(e.product)}:</strong> ${escapeHtml(angabe.text)}${langHinweis(
+        angabe.isGermanOnly
+      )}</li>`;
+    })
     .join("");
 
   const teile = [];
@@ -403,16 +424,33 @@ function renderAllergenBlock(recipe) {
   return `<div class="allergen-box"><strong>${t("ui.allergene")}</strong>${teile.join("")}</div>`;
 }
 
+// Kleiner Hinweis hinter Inhalten, die es nur auf Deutsch gibt. Auf Deutsch
+// selbst erscheint er nie (isGermanOnly ist dort immer false).
+function langHinweis(isGermanOnly) {
+  return isGermanOnly ? ` <span class="lang-note">(${escapeHtml(germanOnlyNote())})</span>` : "";
+}
+
+// Zeile für ein Feld mit englischer Zweitfassung (siehe js/i18n.js).
+function inhaltsZeile(label, recipe, field) {
+  const { text, isGermanOnly } = localizedContent(recipe, field);
+  return { label, text, isGermanOnly };
+}
+
+// Zeile für ein Feld, das bewusst nur auf Deutsch gepflegt wird.
+function deutscheZeile(label, value) {
+  return { label, text: String(value ?? ""), isGermanOnly: false };
+}
+
 function renderRecipeItem(recipe) {
   const metaRows = [
-    [t("ui.glas"), recipe.glass],
-    [t("ui.garnitur"), recipe.garnish],
-    ["Eis", recipe.ice],
-    [t("ui.zubereitung"), recipe.method],
-    [t("ui.geschichte"), recipe.history],
-    [t("ui.kurzer_pitch"), recipe.quickPitch],
-    [t("ui.passt_gut_zu"), (recipe.pairsWith ?? []).join(", ")],
-  ].filter(([, value]) => value);
+    inhaltsZeile(t("ui.glas"), recipe, "glass"),
+    inhaltsZeile(t("ui.garnitur"), recipe, "garnish"),
+    deutscheZeile(t("ui.eis"), recipe.ice),
+    inhaltsZeile(t("ui.zubereitung"), recipe, "method"),
+    deutscheZeile(t("ui.geschichte"), recipe.history),
+    inhaltsZeile(t("ui.kurzer_pitch"), recipe, "quickPitch"),
+    deutscheZeile(t("ui.passt_gut_zu"), (recipe.pairsWith ?? []).join(", ")),
+  ].filter((row) => row.text);
 
   const item = document.createElement("details");
   item.className = "recipe-item";
@@ -432,7 +470,12 @@ function renderRecipeItem(recipe) {
         ${recipe.garnishImagePath ? `<figure><div class="item-photo-slot item-photo-slot-garnish"></div><figcaption>${t("ui.garnitur")}</figcaption></figure>` : ""}
       </div>` : ""}
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
-      ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
+      ${metaRows
+        .map(
+          (row) =>
+            `<p><strong>${escapeHtml(row.label)}:</strong> ${escapeHtml(row.text)}${langHinweis(row.isGermanOnly)}</p>`
+        )
+        .join("")}
       ${renderAllergenBlock(recipe)}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${isAdmin() ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
