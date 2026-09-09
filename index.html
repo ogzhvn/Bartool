@@ -137,6 +137,15 @@
       <div class="sidebar-group">
         <h3 class="sidebar-group-title" data-i18n="ui.verwaltung">Verwaltung</h3>
         <button class="tab-btn" data-tab="admin" data-admin-only role="tab" aria-selected="false" data-i18n="ui.admin"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
+        <div class="sidebar-subnav" id="admin-subnav" data-admin-only>
+          <button class="tab-btn subnav-btn" data-tab="admin" role="tab" aria-selected="false" data-i18n="ui.uebersicht">Übersicht</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-users" role="tab" aria-selected="false" data-i18n="ui.konten">Konten</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-roles" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-requests" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-quiz" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-data" role="tab" aria-selected="false" data-i18n="ui.datenqualitaet">Datenqualität</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-audit" role="tab" aria-selected="false" data-i18n="ui.aenderungsverlauf">Änderungsverlauf</button>
+        </div>
         <button type="button" class="tab-btn" id="change-password-nav-btn" data-i18n="ui.passwort_aendern"><i class="ph ph-lock-key" aria-hidden="true"></i>Passwort ändern</button>
         <button type="button" class="tab-btn" id="logout-btn" data-i18n="ui.abmelden"><i class="ph ph-sign-out" aria-hidden="true"></i>Abmelden</button>
       </div>
@@ -1545,9 +1554,16 @@
       </div>
     </section>
 
-    <!-- ADMIN -->
+    <!-- ADMIN – Übersicht über die Unterpunkte (js/adminPanel.js) -->
     <section id="admin" class="tab-panel" data-admin-only>
       <h2 data-i18n="ui.admin">Admin</h2>
+      <p class="hint" data-i18n="ui.der_adminbereich_ist_in_unterpunkte_a1f7">Der Adminbereich ist in Unterpunkte aufgeteilt. Über die Kacheln hier oder das Untermenü in der Seitenleiste geht es direkt hin.</p>
+      <div id="admin-overview-cards" class="tool-grid"></div>
+    </section>
+
+    <!-- ADMIN – Konten (js/adminUsers.js) -->
+    <section id="admin-users" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.konten">Konten</h2>
       <p class="hint" data-i18n="ui.mitarbeiterkonten_anlegen_und_verwalten_e412">Mitarbeiterkonten anlegen und verwalten. Rezepte und Produkte bearbeitest du in den jeweiligen Tabs.</p>
 
       <h3 data-i18n="ui.konto_anlegen">Konto anlegen</h3>
@@ -1589,12 +1605,24 @@
 
       <h3 data-i18n="ui.konten">Konten</h3>
       <div id="admin-employee-list"></div>
+    </section>
 
-      <h3 data-i18n="ui.offene_vorschlaege">Offene Vorschläge</h3>
+    <!-- ADMIN – Rollen & Rechte (füllt Paket 36) -->
+    <section id="admin-roles" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</h2>
+      <p class="hint" data-i18n="ui.rollen_und_rechte_werden_hier_spaeter_b3d2">Rollen und Rechte werden hier später gepflegt. Bis dahin gibt es genau zwei Rollen – Mitarbeiter und Admin – und die stellst du unter Konten ein.</p>
+    </section>
+
+    <!-- ADMIN – Offene Änderungsvorschläge (js/changeRequests.js) -->
+    <section id="admin-requests" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.offene_vorschlaege">Offene Vorschläge</h2>
       <p class="hint" data-i18n="ui.aenderungsvorschlaege_von_mitarbeitenden_c39d">Änderungsvorschläge von Mitarbeitenden zu Rezepten und Produkten. Annehmen übernimmt den Vorschlag direkt, Ablehnen kann mit einem Kommentar begründet werden.</p>
       <div id="change-requests-list"></div>
+    </section>
 
-      <h3 data-i18n="ui.quiz_fragen">Quiz-Fragen</h3>
+    <!-- ADMIN – Quiz-Fragen und Team-Übersicht (js/adminQuiz.js) -->
+    <section id="admin-quiz" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.quiz_fragen">Quiz-Fragen</h2>
       <p class="hint" data-i18n="ui.kuratierte_fragen_fuer_alles_was_nicht_in_6d14">Kuratierte Fragen für alles, was nicht in Produktfeldern steht: Servicewissen, Hausregeln, Prüfungsstoff. Die richtige Antwort wird über die Auswahl links neben dem Feld markiert; die Reihenfolge wird im Quiz gemischt.</p>
       <form id="quiz-admin-form">
         <div class="field-row">
@@ -1664,11 +1692,19 @@
       <h4 data-i18n="ui.themen_heatmap_ueber_das_ganze_team">Themen-Heatmap über das ganze Team</h4>
       <p class="hint" data-i18n="ui.wo_hakt_es_bei_allen_die_themen_mit_der_f1f9">Wo hakt es bei allen? Die Themen mit der schlechtesten Quote stehen oben – Vorlage fürs Teammeeting.</p>
       <div id="quiz-team-heatmap"></div>
+    </section>
 
-      <h3 data-i18n="ui.datenqualitaet">Datenqualität</h3>
+    <!-- ADMIN – Datenqualität (js/dataQuality.js) -->
+    <section id="admin-data" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.datenqualitaet">Datenqualität</h2>
       <p class="hint" data-i18n="ui.welche_produkte_rezepte_fehlen_noch_9ef7">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>
       <div id="data-quality-report"></div>
+    </section>
 
+    <!-- ADMIN – Änderungsverlauf (js/auditLog.js) -->
+    <section id="admin-audit" class="tab-panel" data-admin-only>
+      <h2 data-i18n="ui.aenderungsverlauf">Änderungsverlauf</h2>
+      <p class="hint" data-i18n="ui.jede_aenderung_an_rezepten_produkten_c8a1">Jede Änderung an Rezepten, Produkten und Konten mit Zeitpunkt und Person. Einzelne Stände lassen sich wiederherstellen.</p>
       <details class="recipe-item" id="audit-log-section">
         <summary data-i18n="ui.aenderungsverlauf">Änderungsverlauf</summary>
         <div class="recipe-item-body">

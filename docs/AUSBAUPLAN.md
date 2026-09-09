@@ -176,7 +176,7 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 34 | Adminbereich als Gruppe mit Submenü | offen | Opus 5, mittlerer Denkaufwand |
+| 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5, mittlerer Denkaufwand |
 | 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | offen | Opus 5, hoher Denkaufwand |
 | 36 | Rechte-Matrix im Adminbereich + Durchsetzung | offen | Opus 5, hoher Denkaufwand |
 | 37 | Reporting unter Admin + Betrieb & Team | offen | Sonnet 5, mittlerer Denkaufwand |
@@ -1572,6 +1572,21 @@ und wandert ebenfalls erst in 37 – sie ist Auswertung, keine Fragenpflege.
       Rücksprung, Wiederherstellen aus dem Änderungsverlauf.
 - [ ] Sprache umschalten beschriftet auch die neuen Unterpunkte, ohne Neuladen.
 - [ ] Auf dem Handy ist die Subnav bedienbar und schließt die mobile Navigation.
+
+**Ergebnis (09.09.2026):** Umgesetzt wie beschrieben. `<section id="admin">` ist in
+sieben Panels zerlegt (`admin`, `admin-users`, `admin-roles`, `admin-requests`,
+`admin-quiz`, `admin-data`, `admin-audit`), Markup und IDs 1:1 übernommen. In der
+Sidebar-Gruppe „Verwaltung" steht darunter `#admin-subnav` mit einem
+`.tab-btn.subnav-btn` je Sub-Tab. `js/adminPanel.js` ist auf `js/adminUsers.js`
+(Konten) und `js/adminQuiz.js` (Fragenpflege + Team-Übersicht) aufgeteilt; übrig
+bleibt die Übersicht mit sechs Kacheln samt Kennzahl (Konten, offene Vorschläge,
+Katalog-Lücken). Der Registrar sitzt in `js/adminSections.js` und startet jeden
+Bereich erst, wenn sein Panel zum ersten Mal `active` wird – ohne zweiten Router und
+ohne weiteren Eingriff in `js/tabs.js` außer der Subnav-Bedingung in `switchTab()`.
+Die Quiz-Team-Übersicht liegt vorerst unter `admin-quiz` und zieht in Paket 37 um.
+Geprüft im Browser (Deep-Link, Sprachwechsel, Handybreite, Konto ohne Adminrecht);
+die Live-Datenbank war aus der Session nicht erreichbar, die Schreibpfade wurden
+gegen einen Stub-Client durchgeklickt.
 
 **Commit:** `Adminbereich in Sub-Tabs aufgeteilt, Laden erst beim Öffnen`
 

@@ -141,7 +141,7 @@ async function fetchCuratedQuestions({ onlyActive = true } = {}) {
   }
 }
 
-// Für die Admin-Maske (js/adminPanel.js): Rohzeilen inklusive inaktiver.
+// Für die Admin-Maske (js/adminQuiz.js): Rohzeilen inklusive inaktiver.
 export async function loadCuratedQuestionRows() {
   const { rows, error } = await fetchCuratedQuestions({ onlyActive: false });
   if (error) throw error;

@@ -96,8 +96,13 @@ export function switchTab(tabId, { updateHash = true, replace = false, keepEditR
   document.querySelectorAll(".tab-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
   });
-  document.querySelectorAll(".sidebar-subnav.expanded").forEach((subnav) => {
-    if (subnav.previousElementSibling?.dataset.tab !== tabId) {
+  document.querySelectorAll(".sidebar-subnav").forEach((subnav) => {
+    // Offen bleibt eine Untergruppe, solange ihr eigener Punkt aktiv ist
+    // (Kategoriebaum bei Rezepten/Produkten) oder der aktive Tab selbst in
+    // ihr steht (Admin-Unterpunkte, Paket 34). Alles andere klappt zu.
+    if (subnav.querySelector(`.tab-btn[data-tab="${tabId}"]`)) {
+      subnav.classList.add("expanded");
+    } else if (subnav.previousElementSibling?.dataset.tab !== tabId) {
       subnav.classList.remove("expanded");
     }
   });

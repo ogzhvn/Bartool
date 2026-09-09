@@ -1,614 +1,91 @@
 import { getSupabaseClient } from "./supabaseClient.js";
-import { getCurrentUser, isAdmin } from "./auth.js";
-import { escapeHtml, functionErrorMessage } from "./utils.js";
-import { loadCuratedQuestionRows, saveCuratedQuestion, deleteCuratedQuestion } from "./quiz.js";
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { formatDate, onLanguageChanged, t } from "./i18n.js";
+import { switchTab } from "./tabs.js";
+import { onLanguageChanged, t } from "./i18n.js";
 
-const createForm = document.getElementById("admin-create-form");
-const createError = document.getElementById("admin-create-error");
-const employeeListEl = document.getElementById("admin-employee-list");
-
-async function loadEmployees() {
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from("profiles").select("*").order("email");
-  if (error) {
-    employeeListEl.innerHTML = `<p class="empty-note">${t("ui.konten_konnten_nicht_geladen_werden")} ${escapeHtml(error.message)}</p>`;
-    return;
-  }
-  renderEmployees(data ?? []);
-}
-
-function renderEmployees(profiles) {
-  if (profiles.length === 0) {
-    employeeListEl.innerHTML = `<p class="empty-note">${t("ui.keine_konten_gefunden")}</p>`;
-    return;
-  }
-
-  employeeListEl.innerHTML = `
-    <table>
-      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th></th></tr></thead>
-      <tbody>
-        ${profiles
-          .map(
-            (p) => `
-          <tr data-id="${p.id}">
-            <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._-]{3,32}" /></td>
-            <td>${escapeHtml(p.email)}</td>
-            <td>${escapeHtml(p.display_name ?? "")}</td>
-            <td>
-              <select class="role-select" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>
-                <option value="mitarbeiter" ${p.role === "mitarbeiter" ? "selected" : ""}>${t("ui.mitarbeiter")}</option>
-                <option value="admin" ${p.role === "admin" ? "selected" : ""}>${t("ui.admin")}</option>
-              </select>
-            </td>
-            <td>
-              <button type="button" class="btn-secondary reset-password-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.passwort_zuruecksetzen")}</button>
-              <button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.loeschen")}</button>
-            </td>
-          </tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>
-  `;
-
-  employeeListEl.querySelectorAll(".username-input").forEach((input) => {
-    input.addEventListener("change", async (e) => {
-      const id = e.target.closest("tr").dataset.id;
-      const username = e.target.value.trim().toLowerCase();
-      if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
-        alert(t("ui.benutzername_darf_nur_kleinbuchstaben_1c7d"));
-        loadEmployees();
-        return;
-      }
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.from("profiles").update({ username }).eq("id", id);
-      if (error) {
-        alert(
-          t("ui.benutzername_konnte_nicht_geaendert_werden") +
-            (error.message.includes("profiles_username_key") ? t("ui.dieser_benutzername_ist_bereits_vergeben") : error.message)
-        );
-        loadEmployees();
-      }
-    });
-  });
-
-  employeeListEl.querySelectorAll(".role-select").forEach((select) => {
-    select.addEventListener("change", async (e) => {
-      const id = e.target.closest("tr").dataset.id;
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.from("profiles").update({ role: e.target.value }).eq("id", id);
-      if (error) {
-        alert(t("ui.rolle_konnte_nicht_geaendert_werden") + error.message);
-        loadEmployees();
-      }
-    });
-  });
-
-  employeeListEl.querySelectorAll(".reset-password-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.target.closest("tr").dataset.id;
-      const password = prompt(t("ui.neues_temporaeres_passwort_mind_8_zeichen"));
-      if (password === null) return;
-      if (password.length < 8) {
-        alert(t("ui.das_passwort_muss_mindestens_8_zeichen_haben"));
-        return;
-      }
-      const supabase = getSupabaseClient();
-      const { data, error } = await supabase.functions.invoke("admin-users", {
-        body: { action: "reset-password", userId: id, password },
-      });
-      if (error || data?.error) {
-        alert(t("ui.passwort_konnte_nicht_zurueckgesetzt_werden") + (await functionErrorMessage(error, data)));
-        return;
-      }
-      alert(t("ui.passwort_wurde_zurueckgesetzt_die_person_1e04"));
-    });
-  });
-
-  employeeListEl.querySelectorAll(".delete-employee-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.target.closest("tr").dataset.id;
-      if (!confirm(t("ui.dieses_konto_wirklich_loeschen_der_zugriff_1784"))) return;
-      const supabase = getSupabaseClient();
-      const { data, error } = await supabase.functions.invoke("admin-users", {
-        body: { action: "delete", userId: id },
-      });
-      if (error || data?.error) {
-        alert(t("ui.konto_konnte_nicht_geloescht_werden") + (await functionErrorMessage(error, data)));
-        return;
-      }
-      loadEmployees();
-    });
-  });
-}
-
-async function handleCreate(e) {
-  e.preventDefault();
-  createError.hidden = true;
-
-  const email = document.getElementById("admin-new-email").value.trim();
-  const username = document.getElementById("admin-new-username").value.trim().toLowerCase();
-  const password = document.getElementById("admin-new-password").value;
-  const displayName = document.getElementById("admin-new-name").value.trim();
-  const role = document.getElementById("admin-new-role").value;
-
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase.functions.invoke("admin-users", {
-    body: { action: "create", email, username, password, displayName, role },
-  });
-
-  if (error || data?.error) {
-    createError.hidden = false;
-    createError.textContent = t("ui.konto_konnte_nicht_angelegt_werden") + (await functionErrorMessage(error, data));
-    return;
-  }
-
-  createForm.reset();
-  loadEmployees();
-}
-
-// ---------------------------------------------------------------------
-// Kuratierte Quiz-Fragen (Paket 26)
+// Übersicht des Adminbereichs (Sub-Tab "admin", Paket 34).
 //
-// Der Generator deckt alles ab, was in Produkt- und Rezeptfeldern steht.
-// Hier kommt dazu, was nirgends als Feld existiert: Servicewissen,
-// Hausregeln, Prüfungsstoff. Vor dem Speichern gibt es eine Vorschau in
-// genau der Form, in der die Frage später im Quiz erscheint.
-// ---------------------------------------------------------------------
+// Kontenverwaltung und Quiz-Pflege sind nach js/adminUsers.js bzw.
+// js/adminQuiz.js gewandert. Hier bleibt nur die Startseite des Bereichs:
+// je Unterpunkt eine Kachel mit einer Kennzahl, die den Weg dorthin abkürzt.
+// Die Kennzahlen sind bewusst billig – zwei count-Abfragen und zwei Listen,
+// die ohnehin schon im Speicher liegen.
 
-const quizForm = document.getElementById("quiz-admin-form");
-const quizQuestionEl = document.getElementById("quiz-admin-question");
-const quizTopicEl = document.getElementById("quiz-admin-topic");
-const quizDifficultyEl = document.getElementById("quiz-admin-difficulty");
-const quizOptionsEl = document.getElementById("quiz-admin-options");
-const quizAddOptionBtn = document.getElementById("quiz-admin-add-option");
-const quizExplanationEl = document.getElementById("quiz-admin-explanation");
-const quizRefProductEl = document.getElementById("quiz-admin-ref-product");
-const quizRefRecipeEl = document.getElementById("quiz-admin-ref-recipe");
-const quizProductListEl = document.getElementById("quiz-admin-product-list");
-const quizRecipeListEl = document.getElementById("quiz-admin-recipe-list");
-const quizActiveEl = document.getElementById("quiz-admin-active");
-const quizErrorEl = document.getElementById("quiz-admin-error");
-const quizPreviewBtn = document.getElementById("quiz-admin-preview");
-const quizPreviewBox = document.getElementById("quiz-admin-preview-box");
-const quizResetBtn = document.getElementById("quiz-admin-reset");
-const quizListEl = document.getElementById("quiz-admin-list");
+const cardsEl = document.getElementById("admin-overview-cards");
 
-// id der Frage, die gerade bearbeitet wird (leer = neue Frage).
-let quizEditId = "";
+const CARDS = [
+  { tab: "admin-users", icon: "ph-users", titleKey: "ui.konten", descKey: "ui.konten_anlegen_rollen_setzen_passwoerter_b71a" },
+  { tab: "admin-roles", icon: "ph-shield-check", titleKey: "ui.rollen_und_rechte", descKey: "ui.wer_darf_was_folgt_in_einem_der_e2c5" },
+  { tab: "admin-requests", icon: "ph-git-pull-request", titleKey: "ui.offene_vorschlaege", descKey: "ui.aenderungsvorschlaege_aus_dem_team_6ab3" },
+  { tab: "admin-quiz", icon: "ph-brain", titleKey: "ui.quiz_fragen", descKey: "ui.eigene_fragen_pflegen_und_das_team_4d19" },
+  { tab: "admin-data", icon: "ph-list-magnifying-glass", titleKey: "ui.datenqualitaet", descKey: "ui.welche_angaben_fehlen_noch_im_katalog_c0f5" },
+  { tab: "admin-audit", icon: "ph-clock-counter-clockwise", titleKey: "ui.aenderungsverlauf", descKey: "ui.wer_hat_wann_was_geaendert_d3b8" },
+];
 
-function quizSetError(text) {
-  quizErrorEl.hidden = !text;
-  quizErrorEl.textContent = text ?? "";
+// Fehlende Pflichtangaben im Katalog – dieselben Felder, die die
+// Datenqualität ausführlich auflistet, hier nur als eine Zahl.
+function katalogLuecken() {
+  const produkte = getAllProducts().filter(
+    (p) => !p.priceValue || !p.quickPitch || !p.originCountry || !p.baseMaterial || !p.verified
+  ).length;
+  const rezepte = getAllRecipes().filter((r) => !r.quickPitch || !r.method).length;
+  return produkte + rezepte;
 }
 
-// Eine Antwortzeile: Radio (= richtige Antwort) + Text + Entfernen.
-function quizAddOptionRow(value = "", checked = false) {
-  const row = document.createElement("div");
-  row.className = "field-row quiz-admin-option-row";
-
-  const radioLabel = document.createElement("label");
-  radioLabel.className = "radio-label";
-  const radio = document.createElement("input");
-  radio.type = "radio";
-  radio.name = "quiz-admin-correct";
-  radio.checked = checked;
-  radioLabel.appendChild(radio);
-  radioLabel.appendChild(document.createTextNode(" richtig"));
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "quiz-admin-option-input";
-  input.value = value;
-  input.placeholder = t("ui.antwortmoeglichkeit");
-
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.className = "btn-secondary";
-  removeBtn.textContent = t("ui.entfernen");
-  removeBtn.addEventListener("click", () => {
-    if (quizOptionsEl.children.length <= 2) return;
-    row.remove();
-  });
-
-  row.appendChild(radioLabel);
-  row.appendChild(input);
-  row.appendChild(removeBtn);
-  quizOptionsEl.appendChild(row);
-}
-
-function quizReadForm() {
-  const rows = [...quizOptionsEl.querySelectorAll(".quiz-admin-option-row")];
-  const options = [];
-  let correctIndex = -1;
-  rows.forEach((row) => {
-    const wert = row.querySelector(".quiz-admin-option-input").value.trim();
-    if (!wert) return;
-    if (row.querySelector('input[type="radio"]').checked) correctIndex = options.length;
-    options.push(wert);
-  });
+async function ladeKennzahlen() {
+  const supabase = getSupabaseClient();
+  const [konten, vorschlaege] = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("change_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+  ]);
   return {
-    id: quizEditId,
-    question: quizQuestionEl.value.trim(),
-    options,
-    correctIndex,
-    explanation: quizExplanationEl.value.trim(),
-    topic: quizTopicEl.value.trim(),
-    difficulty: Number(quizDifficultyEl.value) || 2,
-    refProduct: quizRefProductEl.value.trim(),
-    refRecipe: quizRefRecipeEl.value.trim(),
-    active: quizActiveEl.checked,
+    "admin-users": konten.error ? null : konten.count,
+    "admin-requests": vorschlaege.error ? null : vorschlaege.count,
+    "admin-data": katalogLuecken(),
   };
 }
 
-function quizValidate(frage) {
-  if (!frage.question) return t("ui.die_frage_fehlt");
-  if (frage.options.length < 2) return t("ui.es_braucht_mindestens_zwei_ausgefuellte_c627");
-  if (new Set(frage.options.map((o) => o.toLowerCase())).size !== frage.options.length)
-    return t("ui.zwei_antworten_sind_identisch");
-  if (frage.correctIndex < 0) return t("ui.es_ist_keine_richtige_antwort_markiert");
+function kennzahlText(tab, wert) {
+  if (wert == null) return "";
+  if (tab === "admin-users") return `${wert} ${t("ui.konten")}`;
+  if (tab === "admin-requests") return `${wert} ${t("ui.offen")}`;
+  if (tab === "admin-data") return `${wert} ${t("ui.luecken")}`;
   return "";
 }
 
-// Vorschau in derselben Form wie im Quiz – alles per textContent.
-function quizRenderPreview() {
-  const frage = quizReadForm();
-  const fehler = quizValidate(frage);
-  quizSetError(fehler);
-  if (fehler) {
-    quizPreviewBox.hidden = true;
-    return false;
-  }
-
-  quizPreviewBox.textContent = "";
-  const titel = document.createElement("p");
-  titel.className = "quiz-topic-label";
-  titel.textContent = `${frage.topic || t("ui.servicewissen")} ${t("ui.hauswissen")}`;
-  quizPreviewBox.appendChild(titel);
-
-  const text = document.createElement("p");
-  text.className = "quiz-question";
-  text.textContent = frage.question;
-  quizPreviewBox.appendChild(text);
-
-  const optionen = document.createElement("div");
-  optionen.className = "quiz-options";
-  frage.options.forEach((option, i) => {
+function render(kennzahlen = {}) {
+  if (!cardsEl) return;
+  cardsEl.innerHTML = "";
+  CARDS.forEach((card) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = i === frage.correctIndex ? "quiz-option is-correct" : "quiz-option";
-    btn.disabled = true;
-    btn.textContent = option;
-    optionen.appendChild(btn);
-  });
-  quizPreviewBox.appendChild(optionen);
+    btn.className = "tool-card";
 
-  if (frage.explanation) {
-    const erklaerung = document.createElement("p");
-    erklaerung.className = "quiz-feedback-explanation";
-    erklaerung.textContent = frage.explanation;
-    quizPreviewBox.appendChild(erklaerung);
-  }
+    const icon = document.createElement("i");
+    icon.className = `ph ${card.icon} tool-card-icon`;
+    icon.setAttribute("aria-hidden", "true");
 
-  quizPreviewBox.hidden = false;
-  return true;
-}
+    const title = document.createElement("span");
+    title.className = "tool-card-title";
+    title.textContent = t(card.titleKey);
 
-function quizResetForm() {
-  quizEditId = "";
-  quizForm.reset();
-  quizOptionsEl.textContent = "";
-  quizAddOptionRow("", true);
-  quizAddOptionRow();
-  quizAddOptionRow();
-  quizAddOptionRow();
-  quizPreviewBox.hidden = true;
-  quizSetError("");
-}
+    const desc = document.createElement("span");
+    desc.className = "tool-card-desc";
+    const zahl = kennzahlText(card.tab, kennzahlen[card.tab]);
+    desc.textContent = zahl ? `${zahl} · ${t(card.descKey)}` : t(card.descKey);
 
-function quizLoadIntoForm(row) {
-  quizEditId = row.id;
-  quizQuestionEl.value = row.question ?? "";
-  quizTopicEl.value = row.topic ?? "";
-  quizDifficultyEl.value = String(row.difficulty ?? 2);
-  quizExplanationEl.value = row.explanation ?? "";
-  quizRefProductEl.value = row.ref_product ?? "";
-  quizRefRecipeEl.value = row.ref_recipe ?? "";
-  quizActiveEl.checked = row.active !== false;
-  quizOptionsEl.textContent = "";
-  const optionen = Array.isArray(row.options) ? row.options : [];
-  optionen.forEach((option, i) => quizAddOptionRow(String(option ?? ""), i === Number(row.correct_index)));
-  if (optionen.length < 2) quizAddOptionRow();
-  quizPreviewBox.hidden = true;
-  quizSetError("");
-  quizQuestionEl.scrollIntoView({ block: "center" });
-}
-
-function quizRenderList(rows) {
-  quizListEl.textContent = "";
-  if (rows.length === 0) {
-    const p = document.createElement("p");
-    p.className = "empty-note";
-    p.textContent = t("ui.noch_keine_kuratierten_fragen_der_c7a4");
-    quizListEl.appendChild(p);
-    return;
-  }
-  rows.forEach((row) => {
-    const item = document.createElement("div");
-    item.className = "quiz-admin-item";
-
-    const kopf = document.createElement("p");
-    kopf.className = "quiz-admin-item-question";
-    kopf.textContent = row.question ?? "";
-    item.appendChild(kopf);
-
-    const meta = document.createElement("p");
-    meta.className = "quiz-admin-item-meta";
-    const optionen = Array.isArray(row.options) ? row.options : [];
-    meta.textContent = `${row.topic ?? ""} · ${optionen.length} ${t("ui.antworten")}${row.active === false ? " · inaktiv" : ""}`;
-    item.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.className = "btn-secondary";
-    editBtn.textContent = t("ui.bearbeiten");
-    editBtn.addEventListener("click", () => quizLoadIntoForm(row));
-    actions.appendChild(editBtn);
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "btn-secondary";
-    deleteBtn.textContent = t("ui.loeschen");
-    deleteBtn.addEventListener("click", async () => {
-      if (!confirm(t("ui.diese_frage_wirklich_loeschen"))) return;
-      try {
-        await deleteCuratedQuestion(row.id);
-      } catch (error) {
-        quizSetError(t("ui.frage_konnte_nicht_geloescht_werden") + error.message);
-        return;
-      }
-      if (quizEditId === row.id) quizResetForm();
-      quizLoadQuestions();
-    });
-    actions.appendChild(deleteBtn);
-
-    item.appendChild(actions);
-    quizListEl.appendChild(item);
+    btn.append(icon, title, desc);
+    btn.addEventListener("click", () => switchTab(card.tab));
+    cardsEl.appendChild(btn);
   });
 }
 
-async function quizLoadQuestions() {
-  try {
-    quizRenderList(await loadCuratedQuestionRows());
-  } catch (error) {
-    quizListEl.textContent = "";
-    const p = document.createElement("p");
-    p.className = "empty-note";
-    p.textContent = t("ui.fragen_konnten_nicht_geladen_werden") + error.message;
-    quizListEl.appendChild(p);
-  }
-}
+export async function initAdminPanel() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist. Die Kennzahlen
+  // werden dabei frisch geholt – der Adminbereich ist keine Dauerschleife.
+  onLanguageChanged(() => ladeKennzahlen().then(render));
 
-function quizFillDatalists() {
-  const fuellen = (listEl, namen) => {
-    listEl.textContent = "";
-    namen.forEach((name) => {
-      const option = document.createElement("option");
-      option.value = name;
-      listEl.appendChild(option);
-    });
-  };
-  fuellen(quizProductListEl, getAllProducts().map((p) => p.name));
-  fuellen(quizRecipeListEl, getAllRecipes().map((r) => r.name));
-}
-
-async function quizHandleSubmit(e) {
-  e.preventDefault();
-  const frage = quizReadForm();
-  const fehler = quizValidate(frage);
-  if (fehler) {
-    quizSetError(fehler);
-    return;
-  }
-  try {
-    await saveCuratedQuestion(frage);
-  } catch (error) {
-    quizSetError(t("ui.frage_konnte_nicht_gespeichert_werden") + error.message);
-    return;
-  }
-  quizResetForm();
-  quizLoadQuestions();
-}
-
-// ---------------------------------------------------------------------
-// Quiz: Team-Übersicht und Themen-Heatmap (Paket 27)
-//
-// Beide Listen kommen aus SECURITY-DEFINER-Funktionen, die selbst auf Admin
-// prüfen und ausschließlich Summen zurückgeben. Auf die Tabelle
-// quiz_attempts hat auch ein Admin keinen Lesezugriff – einzelne Antworten
-// einer Person bleiben deren Sache.
-// ---------------------------------------------------------------------
-
-const teamRefreshBtn = document.getElementById("quiz-team-refresh");
-const teamErrorEl = document.getElementById("quiz-team-error");
-const teamListEl = document.getElementById("quiz-team-list");
-const teamHeatmapEl = document.getElementById("quiz-team-heatmap");
-
-function teamSetError(text) {
-  teamErrorEl.hidden = !text;
-  teamErrorEl.textContent = text ?? "";
-}
-
-function teamEmptyNote(container, text) {
-  container.textContent = "";
-  const p = document.createElement("p");
-  p.className = "empty-note";
-  p.textContent = text;
-  container.appendChild(p);
-}
-
-function teamQuoteBar(prozent) {
-  const balken = document.createElement("span");
-  balken.className = "quiz-quota-bar";
-  const fuellung = document.createElement("span");
-  fuellung.className =
-    prozent >= 80 ? "quiz-quota-fill is-good" : prozent >= 50 ? "quiz-quota-fill" : "quiz-quota-fill is-weak";
-  fuellung.style.width = `${Math.max(2, prozent)}%`;
-  balken.appendChild(fuellung);
-  return balken;
-}
-
-function teamPersonName(row) {
-  const name = String(row.display_name ?? "").trim();
-  if (name) return name;
-  // Ohne Anzeigenamen bleibt nur die Mailadresse als Kennung.
-  return String(row.email ?? "").trim() || t("ui.unbekannt");
-}
-
-function teamRenderOverview(rows) {
-  teamListEl.textContent = "";
-  const aktiv = rows.filter((row) => Number(row.attempts ?? 0) > 0);
-  if (aktiv.length === 0) {
-    teamEmptyNote(teamListEl, t("ui.noch_hat_niemand_eine_quizrunde_gespielt"));
-    return;
-  }
-
-  aktiv.forEach((row) => {
-    const item = document.createElement("div");
-    item.className = "quiz-team-item";
-
-    const kopf = document.createElement("div");
-    kopf.className = "quiz-team-head";
-
-    const name = document.createElement("span");
-    name.className = "quiz-team-name";
-    name.textContent = teamPersonName(row);
-    kopf.appendChild(name);
-
-    const quote = Number(row.accuracy ?? 0);
-    const quoteEl = document.createElement("span");
-    quoteEl.className = "quiz-quota-value";
-    quoteEl.textContent = `${quote} %`;
-    kopf.appendChild(quoteEl);
-    item.appendChild(kopf);
-
-    item.appendChild(teamQuoteBar(quote));
-
-    const runden = Number(row.rounds ?? 0);
-    const versuche = Number(row.attempts ?? 0);
-    const richtig = Number(row.correct ?? 0);
-    const meta = document.createElement("p");
-    meta.className = "quiz-team-meta";
-    const zuletzt = row.last_answered_at ? new Date(row.last_answered_at) : null;
-    const zuletztText =
-      zuletzt && !Number.isNaN(zuletzt.getTime())
-        ? ` · ${t("ui.zuletzt")} ${formatDate(zuletzt)}`
-        : "";
-    meta.textContent = `${runden} ${runden === 1 ? t("ui.runde") : t("ui.runden")} · ${richtig} ${t("ui.von")} ${versuche} ${t("ui.fragen_richtig_71e0")}${zuletztText}`;
-    item.appendChild(meta);
-
-    const schwach = Array.isArray(row.weakest_topics) ? row.weakest_topics : [];
-    const themen = document.createElement("p");
-    themen.className = "quiz-team-topics";
-    themen.textContent =
-      schwach.length === 0
-        ? t("ui.schwaechste_themen_noch_zu_wenige_dada")
-        : t("ui.schwaechste_themen") +
-          schwach.map((thema) => `${thema.topic} (${thema.accuracy} %, ${thema.attempts} ${t("ui.fragen")}`).join(" · ");
-    item.appendChild(themen);
-
-    teamListEl.appendChild(item);
-  });
-}
-
-function teamRenderHeatmap(rows) {
-  teamHeatmapEl.textContent = "";
-  if (rows.length === 0) {
-    teamEmptyNote(teamHeatmapEl, t("ui.noch_keine_antworten_die_heatmap_fuellt_9261"));
-    return;
-  }
-  rows.forEach((row) => {
-    const zeile = document.createElement("div");
-    zeile.className = "quiz-quota-row";
-
-    const kopf = document.createElement("span");
-    kopf.className = "quiz-quota-head";
-    const label = document.createElement("span");
-    label.className = "quiz-quota-label";
-    label.textContent = row.topic ?? "";
-    const wert = document.createElement("span");
-    wert.className = "quiz-quota-value";
-    wert.textContent = `${Number(row.accuracy ?? 0)} %`;
-    kopf.appendChild(label);
-    kopf.appendChild(wert);
-    zeile.appendChild(kopf);
-
-    zeile.appendChild(teamQuoteBar(Number(row.accuracy ?? 0)));
-
-    const lernende = Number(row.learners ?? 0);
-    const meta = document.createElement("span");
-    meta.className = "quiz-quota-meta";
-    meta.textContent = `${Number(row.correct ?? 0)} ${t("ui.von")} ${Number(row.attempts ?? 0)} ${t("ui.fragen_richtig")} ${lernende} ${lernende === 1 ? t("ui.person") : t("ui.personen")}`;
-    zeile.appendChild(meta);
-
-    teamHeatmapEl.appendChild(zeile);
-  });
-}
-
-async function teamLoad() {
-  teamSetError("");
-  const supabase = getSupabaseClient();
-  try {
-    const [uebersicht, heatmap] = await Promise.all([
-      supabase.rpc("quiz_team_overview"),
-      supabase.rpc("quiz_topic_heatmap"),
-    ]);
-    if (uebersicht.error) throw uebersicht.error;
-    if (heatmap.error) throw heatmap.error;
-    teamRenderOverview(uebersicht.data ?? []);
-    teamRenderHeatmap(heatmap.data ?? []);
-  } catch (error) {
-    teamSetError(t("ui.die_team_auswertung_konnte_nicht_geladen_34c6") + error.message);
-    teamEmptyNote(teamListEl, t("ui.keine_daten_geladen"));
-    teamEmptyNote(teamHeatmapEl, t("ui.keine_daten_geladen"));
-  }
-}
-
-function initQuizTeam() {
-  teamRefreshBtn.addEventListener("click", teamLoad);
-  // Das Admin-Panel wird für alle initialisiert und nur per data-admin-only
-  // versteckt. Der RPC-Aufruf würde für Mitarbeitende mit einem Rechtefehler
-  // enden – also gar nicht erst anfragen.
-  if (isAdmin()) teamLoad();
-}
-
-function initQuizAdmin() {
-  quizAddOptionBtn.addEventListener("click", () => quizAddOptionRow());
-  quizPreviewBtn.addEventListener("click", quizRenderPreview);
-  quizResetBtn.addEventListener("click", quizResetForm);
-  quizForm.addEventListener("submit", quizHandleSubmit);
-  quizResetForm();
-  quizFillDatalists();
-  quizLoadQuestions();
-}
-
-export function initAdminPanel() {
-  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
-  onLanguageChanged(() => {
-    loadEmployees();
-    quizResetForm();
-    quizLoadQuestions();
-    if (isAdmin()) teamLoad();
-  });
-
-  createForm.addEventListener("submit", handleCreate);
-  loadEmployees();
-  initQuizAdmin();
-  initQuizTeam();
+  render();
+  render(await ladeKennzahlen());
 }

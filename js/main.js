@@ -18,11 +18,9 @@ import { initLosses } from "./losses.js";
 import { initReporting } from "./reporting.js";
 import { initChecklists } from "./checklists.js";
 import { initProductImport } from "./productImport.js";
-import { initAdminPanel } from "./adminPanel.js";
-import { initAuditLog } from "./auditLog.js";
-import { initDataQuality } from "./dataQuality.js";
+import { initAdminSections } from "./adminSections.js";
 import { initQuickSearch } from "./quickSearch.js";
-import { initChangeRequestsAdmin, initMyChangeRequests } from "./changeRequests.js";
+import { initMyChangeRequests } from "./changeRequests.js";
 import {
   initRecipeSync,
   initProductSync,
@@ -107,6 +105,9 @@ async function bootstrapAppOnce() {
     initChecklistRunSync(),
     initPriceHistorySync(),
   ]);
+  // Muss vor initTabs() stehen: initTabs() schaltet direkt auf den Start-Tab,
+  // und ist das per Deep-Link ein Admin-Unterpunkt, soll er dabei schon laden.
+  initAdminSections();
   initTabs();
   initHome();
   initRecipes();
@@ -127,11 +128,7 @@ async function bootstrapAppOnce() {
   initReporting();
   initChecklists();
   initProductImport();
-  initAdminPanel();
-  initAuditLog();
-  initDataQuality();
   initQuickSearch();
-  initChangeRequestsAdmin();
   initMyChangeRequests();
   startSessionTimeoutWatch();
 }
