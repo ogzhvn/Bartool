@@ -121,6 +121,7 @@
         <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
         <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
         <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
+        <button class="tab-btn" data-tab="losses" role="tab" aria-selected="false"><i class="ph ph-warning" aria-hidden="true"></i>Schwund &amp; Bruch</button>
         <button class="tab-btn" data-tab="buildable" role="tab" aria-selected="false"><i class="ph ph-martini" aria-hidden="true"></i>Was kann ich bauen?</button>
       </div>
       <div class="sidebar-group">
@@ -642,6 +643,65 @@
         </div>
         <div id="inv-order-result"></div>
       </div>
+    </section>
+
+    <!-- SCHWUND, BRUCH UND VERKOSTUNG -->
+    <section id="losses" class="tab-panel">
+      <h2>Schwund &amp; Bruch</h2>
+      <p class="hint">Jeder Milliliter, der nicht über den Tresen verkauft wurde, bekommt hier einen Grund: Bruch, Verkostung, Schulung, Retoure. Damit ist die Inventurdifferenz später erklärbar statt geschätzt.</p>
+
+      <form id="loss-form">
+        <h3>Grund</h3>
+        <div id="loss-reasons" class="loss-reasons"></div>
+
+        <label>
+          Produkt
+          <input type="text" id="loss-product" list="loss-product-options" placeholder="Produkt aus dem Katalog wählen…" autocomplete="off" />
+        </label>
+        <datalist id="loss-product-options"></datalist>
+        <p id="loss-product-warning" class="empty-note" hidden></p>
+
+        <div class="field-row">
+          <label>
+            Menge
+            <input type="number" id="loss-amount" min="0" step="0.1" inputmode="decimal" />
+          </label>
+          <label>
+            Einheit
+            <select id="loss-unit"></select>
+          </label>
+          <label id="loss-size-wrap" hidden>
+            Größe in ml
+            <input type="number" id="loss-size" min="0" step="1" inputmode="numeric" placeholder="z. B. 700" />
+          </label>
+        </div>
+        <p class="hint">Bei „Flasche“ und „Glas“ ist die Größe nötig, sonst lässt sich der Verlust nicht in Euro und nicht gegen die Inventur rechnen. Ohne Größe wird trotzdem gebucht – dann eben ohne Wert.</p>
+
+        <div class="field-row">
+          <label>
+            Datum
+            <input type="date" id="loss-date" />
+          </label>
+          <label>
+            Notiz (optional)
+            <input type="text" id="loss-note" placeholder="z. B. Glas beim Abräumen gefallen" />
+          </label>
+        </div>
+
+        <p id="loss-value-preview" class="prep-meta"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Verlust buchen</button>
+        </div>
+      </form>
+
+      <h3>Letzte 30 Tage</h3>
+      <div class="field-row">
+        <select id="loss-filter-reason" aria-label="Nach Grund filtern"></select>
+        <input type="text" id="loss-filter-product" placeholder="Produkt filtern…" aria-label="Nach Produkt filtern" />
+      </div>
+      <div id="loss-summary"></div>
+      <div id="loss-list"></div>
     </section>
 
     <!-- WAS KANN ICH BAUEN? -->

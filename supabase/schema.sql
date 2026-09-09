@@ -1049,6 +1049,66 @@ revoke all on function public.quiz_topic_heatmap() from public;
 grant execute on function public.quiz_topic_heatmap() to authenticated;
 
 -- ---------------------------------------------------------------------
+-- Schwund-, Bruch- und Verkostungsbuch (Paket 28)
+--
+-- Jeder Milliliter, der nicht ueber den Tresen verkauft wurde, bekommt hier
+-- einen Grund. Damit ist die Inventurdifferenz erklaerbar statt geschaetzt.
+-- product_name ist bewusst Text und kein Fremdschluessel: der Katalog wird
+-- umbenannt und aufgeraeumt, eine gebuchte Verlustmenge bleibt trotzdem
+-- stehen. Die Zuordnung zum Produkt macht das Frontend ueber den Namen.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.losses (
+  id uuid primary key default gen_random_uuid(),
+  product_name text not null,
+  amount numeric not null,
+  -- ml | cl | Flasche | Glas
+  amount_unit text not null default 'ml',
+  -- Bruch | Verkostung Gast | Schulung | Retoure/verdorben | Schwund unklar
+  reason text not null,
+  note text,
+  recorded_by uuid references public.profiles (id) on delete set null,
+  occurred_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists losses_occurred_at_idx on public.losses (occurred_at desc);
+create index if not exists losses_product_idx on public.losses (product_name);
+
+alter table public.losses enable row level security;
+
+drop trigger if exists losses_set_updated_at on public.losses;
+create trigger losses_set_updated_at
+  before update on public.losses
+  for each row execute function public.set_updated_at();
+
+-- Jeder Eingeloggte bucht seine eigenen Verluste und sieht alle Buchungen -
+-- sonst waere die Summe je Grund sinnlos. Korrigieren und loeschen darf nur,
+-- wer den Eintrag geschrieben hat, oder ein Admin: eine Buchung ist ein
+-- Nachweis und darf nicht von Dritten stillschweigend verschwinden.
+drop policy if exists "losses: any authenticated user can read" on public.losses;
+create policy "losses: any authenticated user can read"
+  on public.losses for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "losses: any authenticated user can insert" on public.losses;
+create policy "losses: any authenticated user can insert"
+  on public.losses for insert
+  with check (auth.role() = 'authenticated' and recorded_by = auth.uid());
+
+drop policy if exists "losses: own entry or admin updates" on public.losses;
+create policy "losses: own entry or admin updates"
+  on public.losses for update
+  using (recorded_by = auth.uid() or private.is_admin())
+  with check (recorded_by = auth.uid() or private.is_admin());
+
+drop policy if exists "losses: own entry or admin deletes" on public.losses;
+create policy "losses: own entry or admin deletes"
+  on public.losses for delete
+  using (recorded_by = auth.uid() or private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
 -- ---------------------------------------------------------------------
 
@@ -1090,6 +1150,13 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.product_prices;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.losses;
 exception
   when duplicate_object then null;
 end $$;

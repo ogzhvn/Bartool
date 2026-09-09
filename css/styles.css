@@ -2479,3 +2479,39 @@ input[type="datetime-local"] {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* ── Schwund-, Bruch- und Verkostungsbuch ────────────────── */
+
+/* Ein Griff pro Grund: die Kacheln sind bewusst groß genug, um sie
+   einhändig und mit nassen Fingern hinterm Tresen zu treffen. */
+.loss-reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.loss-reason-btn {
+  min-height: 56px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.loss-reason-btn:hover {
+  border-color: var(--accent-700);
+  color: var(--accent-300);
+}
+
+.loss-reason-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-900);
+  color: var(--accent-300);
+  font-weight: 600;
+}
