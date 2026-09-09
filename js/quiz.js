@@ -1,7 +1,8 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
-import { generateQuestions, listGeneratedTopics, pickQuestions } from "./quizGenerator.js";
+import { generateQuestions, listGeneratedTopics } from "./quizGenerator.js";
 import { onProductsChanged, onRecipesChanged } from "./storage.js";
+import { berechneStatistik, letzterStandProFrage, waehleFragen } from "./quizStats.js";
 import { switchTab } from "./tabs.js";
 import { focusProduct } from "./products.js";
 import { focusRecipe } from "./recipes.js";
@@ -40,6 +41,14 @@ const jumpBtn = document.getElementById("quiz-jump");
 const nextBtn = document.getElementById("quiz-next");
 const abortBtn = document.getElementById("quiz-abort");
 
+const statsEl = document.getElementById("quiz-stats");
+const statsNoteEl = document.getElementById("quiz-stats-note");
+const statsBodyEl = document.getElementById("quiz-stats-body");
+const statsTilesEl = document.getElementById("quiz-stats-tiles");
+const statsHistoryEl = document.getElementById("quiz-stats-history");
+const statsWeakEl = document.getElementById("quiz-stats-weak");
+const statsTopicsEl = document.getElementById("quiz-stats-topics");
+
 const resultEl = document.getElementById("quiz-result");
 const resultTitleEl = document.getElementById("quiz-result-title");
 const resultSummaryEl = document.getElementById("quiz-result-summary");
@@ -50,6 +59,15 @@ const againBtn = document.getElementById("quiz-again");
 let curatedCache = [];
 // Laufende Runde: { fragen, index, antworten: [{ frage, korrekt }] }
 let runde = null;
+// Eigene Versuche, neueste zuerst. Basis für Auswertung und Wiederholung.
+let meineVersuche = [];
+// Noch laufende Inserts – die Auswertung wartet darauf, bevor sie neu lädt.
+let offeneInserts = [];
+
+// Wie viele eigene Versuche für die Auswertung geladen werden. Bei 25 Fragen
+// pro Prüfungsrunde deckt das rund 160 Runden ab; alles darüber ist für die
+// Trefferquote von heute ohnehin nicht mehr aussagekräftig.
+const VERSUCHE_LIMIT = 4000;
 
 function txt(value) {
   return String(value ?? "").trim();
@@ -67,6 +85,17 @@ function shuffle(list) {
 function setNote(text) {
   startNoteEl.hidden = !text;
   startNoteEl.textContent = text ?? "";
+}
+
+// crypto.randomUUID() gibt es nur im secure context. Hinterm Tresen läuft das
+// Tool auch mal über http im WLAN – dann greift der Fallback.
+function neueRundenId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // ---------------------------------------------------------------------
@@ -150,6 +179,173 @@ export async function deleteCuratedQuestion(id) {
 }
 
 // ---------------------------------------------------------------------
+// Eigene Versuche: Auswertung (Paket 27) und Wiederholungslogik
+// ---------------------------------------------------------------------
+
+// Lädt die eigenen Versuche. Die RLS-Policy gibt ohnehin nur die eigenen
+// Zeilen heraus; der Filter steht trotzdem da, damit die Absicht im Code
+// sichtbar ist.
+async function loadMyAttempts() {
+  const nutzer = getCurrentUser();
+  if (!nutzer) {
+    meineVersuche = [];
+    return null;
+  }
+  const supabase = getSupabaseClient();
+  try {
+    const { data, error } = await supabase
+      .from("quiz_attempts")
+      .select("question_key,topic,correct,answered_at,round_id")
+      .eq("user_id", nutzer.id)
+      .order("answered_at", { ascending: false })
+      .limit(VERSUCHE_LIMIT);
+    if (error) return error;
+    meineVersuche = data ?? [];
+    return null;
+  } catch (err) {
+    // Offline: die bisher lokal gesammelten Versuche bleiben stehen.
+    return err;
+  }
+}
+
+function kachel(wert, beschriftung) {
+  const box = document.createElement("div");
+  box.className = "quiz-stat-tile";
+  const w = document.createElement("span");
+  w.className = "quiz-stat-value";
+  w.textContent = wert;
+  const b = document.createElement("span");
+  b.className = "quiz-stat-label";
+  b.textContent = beschriftung;
+  box.appendChild(w);
+  box.appendChild(b);
+  return box;
+}
+
+// Zeile mit Balken – dieselbe Optik für Themen und Rundenverlauf.
+function quotenZeile({ label, meta, prozent, onClick }) {
+  const zeile = document.createElement(onClick ? "button" : "div");
+  zeile.className = onClick ? "quiz-quota-row is-clickable" : "quiz-quota-row";
+  if (onClick) {
+    zeile.type = "button";
+    zeile.addEventListener("click", onClick);
+  }
+
+  const kopf = document.createElement("span");
+  kopf.className = "quiz-quota-head";
+  const name = document.createElement("span");
+  name.className = "quiz-quota-label";
+  name.textContent = label;
+  const zahl = document.createElement("span");
+  zahl.className = "quiz-quota-value";
+  zahl.textContent = `${prozent} %`;
+  kopf.appendChild(name);
+  kopf.appendChild(zahl);
+  zeile.appendChild(kopf);
+
+  const balken = document.createElement("span");
+  balken.className = "quiz-quota-bar";
+  const fuellung = document.createElement("span");
+  fuellung.className = prozent >= 80 ? "quiz-quota-fill is-good" : prozent >= 50 ? "quiz-quota-fill" : "quiz-quota-fill is-weak";
+  fuellung.style.width = `${Math.max(2, prozent)}%`;
+  balken.appendChild(fuellung);
+  zeile.appendChild(balken);
+
+  if (meta) {
+    const metaEl = document.createElement("span");
+    metaEl.className = "quiz-quota-meta";
+    metaEl.textContent = meta;
+    zeile.appendChild(metaEl);
+  }
+  return zeile;
+}
+
+function datumKurz(wert) {
+  const d = new Date(wert);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+}
+
+function renderStats(fehler) {
+  if (fehler) {
+    statsNoteEl.hidden = false;
+    statsNoteEl.textContent = "Die Auswertung konnte nicht geladen werden. Ohne Netz zeigt sie nur die Runden dieser Sitzung.";
+  } else {
+    statsNoteEl.hidden = true;
+    statsNoteEl.textContent = "";
+  }
+
+  const stat = berechneStatistik(meineVersuche);
+  if (stat.gesamt === 0) {
+    statsBodyEl.hidden = true;
+    statsNoteEl.hidden = false;
+    statsNoteEl.textContent = fehler
+      ? statsNoteEl.textContent
+      : "Noch keine beantworteten Fragen. Nach der ersten Runde stehen hier deine Zahlen.";
+    return;
+  }
+  statsBodyEl.hidden = false;
+
+  statsTilesEl.textContent = "";
+  statsTilesEl.appendChild(kachel(`${stat.quote} %`, "Trefferquote gesamt"));
+  statsTilesEl.appendChild(kachel(String(stat.rundenGesamt), stat.rundenGesamt === 1 ? "Runde" : "Runden"));
+  statsTilesEl.appendChild(kachel(String(stat.gesamt), "Fragen beantwortet"));
+  statsTilesEl.appendChild(kachel(String(stat.gesamt - stat.richtig), "davon falsch"));
+
+  statsHistoryEl.textContent = "";
+  stat.runden.forEach((r, i) => {
+    statsHistoryEl.appendChild(
+      quotenZeile({
+        label: i === 0 ? `Letzte Runde · ${datumKurz(r.zuletzt)}` : `${datumKurz(r.zuletzt)}`,
+        meta: `${r.richtig} von ${r.versuche} richtig`,
+        prozent: r.quote,
+      })
+    );
+  });
+
+  statsWeakEl.textContent = "";
+  if (stat.schwach.length === 0) {
+    const p = document.createElement("p");
+    p.className = "empty-note";
+    p.textContent = "Kein Thema unter 100 % – da ist gerade nichts zu üben.";
+    statsWeakEl.appendChild(p);
+  }
+  stat.schwach.forEach((t) => {
+    statsWeakEl.appendChild(
+      quotenZeile({
+        label: t.topic,
+        meta: `${t.richtig} von ${t.versuche} richtig · Übungsrunde starten`,
+        prozent: t.quote,
+        onClick: () => startRound({ size: SCHNELLRUNDE, topic: t.topic }),
+      })
+    );
+  });
+
+  statsTopicsEl.textContent = "";
+  [...stat.themen]
+    .sort((a, b) => a.topic.localeCompare(b.topic, "de"))
+    .forEach((t) => {
+      statsTopicsEl.appendChild(
+        quotenZeile({
+          label: t.topic,
+          meta: `${t.richtig} von ${t.versuche} richtig`,
+          prozent: t.quote,
+        })
+      );
+    });
+}
+
+async function refreshStats() {
+  if (offeneInserts.length > 0) {
+    const laufend = offeneInserts;
+    offeneInserts = [];
+    await Promise.allSettled(laufend);
+  }
+  const fehler = await loadMyAttempts();
+  renderStats(fehler);
+}
+
+// ---------------------------------------------------------------------
 // Fragenpool
 // ---------------------------------------------------------------------
 
@@ -184,6 +380,9 @@ function showView(view) {
   startEl.hidden = view !== "start";
   roundEl.hidden = view !== "round";
   resultEl.hidden = view !== "result";
+  // Die eigene Auswertung steht unter der Modusauswahl und hat in einer
+  // laufenden Runde nichts zu suchen.
+  statsEl.hidden = view !== "start";
 }
 
 async function startRound({ size, topic = "" }) {
@@ -191,7 +390,7 @@ async function startRound({ size, topic = "" }) {
   await refreshCurated();
   const pool = buildPool();
   renderTopics(pool);
-  const fragen = pickQuestions(pool, size, { topic });
+  const fragen = waehleFragen(pool, size, topic, letzterStandProFrage(meineVersuche));
   if (fragen.length === 0) {
     setNote(
       topic
@@ -201,7 +400,7 @@ async function startRound({ size, topic = "" }) {
     showView("start");
     return;
   }
-  runde = { fragen, index: 0, antworten: [], gewuenscht: size, topic };
+  runde = { fragen, index: 0, antworten: [], gewuenscht: size, topic, id: neueRundenId() };
   showView("round");
   renderQuestion();
 }
@@ -267,20 +466,35 @@ function answer(gewaehlt) {
 
 // Versuch mitschreiben (Grundlage für die Auswertung in Paket 27). Schlägt
 // das fehl (offline), läuft die Runde trotzdem weiter.
-async function recordAttempt(frage, korrekt) {
+function recordAttempt(frage, korrekt) {
   const nutzer = getCurrentUser();
   if (!nutzer) return;
+
+  // Sofort lokal mitschreiben: so stimmen Auswertung und Wiederholungslogik
+  // auch dann, wenn der Insert unterwegs hängen bleibt.
+  meineVersuche.unshift({
+    question_key: frage.key,
+    topic: frage.topic,
+    correct: korrekt,
+    answered_at: new Date().toISOString(),
+    round_id: runde?.id ?? null,
+  });
+
   const supabase = getSupabaseClient();
-  try {
-    await supabase.from("quiz_attempts").insert({
-      user_id: nutzer.id,
-      question_key: frage.key,
-      topic: frage.topic,
-      correct: korrekt,
-    });
-  } catch {
-    // Kein Netz – der Versuch geht verloren, die Runde nicht.
-  }
+  const insert = (async () => {
+    try {
+      await supabase.from("quiz_attempts").insert({
+        user_id: nutzer.id,
+        question_key: frage.key,
+        topic: frage.topic,
+        correct: korrekt,
+        round_id: runde?.id ?? null,
+      });
+    } catch {
+      // Kein Netz – der Versuch steht nur lokal, die Runde läuft weiter.
+    }
+  })();
+  offeneInserts.push(insert);
 }
 
 function nextQuestion() {
@@ -361,9 +575,11 @@ function springeZu(kind, name) {
 
 async function zurueckZumStart() {
   runde = null;
+  showView("start");
+  renderStats(null);
   await refreshCurated();
   renderTopics(buildPool());
-  showView("start");
+  await refreshStats();
 }
 
 export function initQuiz() {
@@ -385,6 +601,7 @@ export function initQuiz() {
 
   renderTopics(buildPool());
   showView("start");
+  refreshStats();
   refreshCurated().then(() => {
     if (!runde) renderTopics(buildPool());
   });

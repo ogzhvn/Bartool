@@ -1,5 +1,5 @@
 import { getSupabaseClient } from "./supabaseClient.js";
-import { getCurrentUser } from "./auth.js";
+import { getCurrentUser, isAdmin } from "./auth.js";
 import { escapeHtml, functionErrorMessage } from "./utils.js";
 import { loadCuratedQuestionRows, saveCuratedQuestion, deleteCuratedQuestion } from "./quiz.js";
 import { getAllProducts } from "./productLibrary.js";
@@ -425,6 +425,168 @@ async function quizHandleSubmit(e) {
   quizLoadQuestions();
 }
 
+// ---------------------------------------------------------------------
+// Quiz: Team-Übersicht und Themen-Heatmap (Paket 27)
+//
+// Beide Listen kommen aus SECURITY-DEFINER-Funktionen, die selbst auf Admin
+// prüfen und ausschließlich Summen zurückgeben. Auf die Tabelle
+// quiz_attempts hat auch ein Admin keinen Lesezugriff – einzelne Antworten
+// einer Person bleiben deren Sache.
+// ---------------------------------------------------------------------
+
+const teamRefreshBtn = document.getElementById("quiz-team-refresh");
+const teamErrorEl = document.getElementById("quiz-team-error");
+const teamListEl = document.getElementById("quiz-team-list");
+const teamHeatmapEl = document.getElementById("quiz-team-heatmap");
+
+function teamSetError(text) {
+  teamErrorEl.hidden = !text;
+  teamErrorEl.textContent = text ?? "";
+}
+
+function teamEmptyNote(container, text) {
+  container.textContent = "";
+  const p = document.createElement("p");
+  p.className = "empty-note";
+  p.textContent = text;
+  container.appendChild(p);
+}
+
+function teamQuoteBar(prozent) {
+  const balken = document.createElement("span");
+  balken.className = "quiz-quota-bar";
+  const fuellung = document.createElement("span");
+  fuellung.className =
+    prozent >= 80 ? "quiz-quota-fill is-good" : prozent >= 50 ? "quiz-quota-fill" : "quiz-quota-fill is-weak";
+  fuellung.style.width = `${Math.max(2, prozent)}%`;
+  balken.appendChild(fuellung);
+  return balken;
+}
+
+function teamPersonName(row) {
+  const name = String(row.display_name ?? "").trim();
+  if (name) return name;
+  // Ohne Anzeigenamen bleibt nur die Mailadresse als Kennung.
+  return String(row.email ?? "").trim() || "Unbekannt";
+}
+
+function teamRenderOverview(rows) {
+  teamListEl.textContent = "";
+  const aktiv = rows.filter((row) => Number(row.attempts ?? 0) > 0);
+  if (aktiv.length === 0) {
+    teamEmptyNote(teamListEl, "Noch hat niemand eine Quizrunde gespielt.");
+    return;
+  }
+
+  aktiv.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "quiz-team-item";
+
+    const kopf = document.createElement("div");
+    kopf.className = "quiz-team-head";
+
+    const name = document.createElement("span");
+    name.className = "quiz-team-name";
+    name.textContent = teamPersonName(row);
+    kopf.appendChild(name);
+
+    const quote = Number(row.accuracy ?? 0);
+    const quoteEl = document.createElement("span");
+    quoteEl.className = "quiz-quota-value";
+    quoteEl.textContent = `${quote} %`;
+    kopf.appendChild(quoteEl);
+    item.appendChild(kopf);
+
+    item.appendChild(teamQuoteBar(quote));
+
+    const runden = Number(row.rounds ?? 0);
+    const versuche = Number(row.attempts ?? 0);
+    const richtig = Number(row.correct ?? 0);
+    const meta = document.createElement("p");
+    meta.className = "quiz-team-meta";
+    const zuletzt = row.last_answered_at ? new Date(row.last_answered_at) : null;
+    const zuletztText =
+      zuletzt && !Number.isNaN(zuletzt.getTime())
+        ? ` · zuletzt ${zuletzt.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`
+        : "";
+    meta.textContent = `${runden} ${runden === 1 ? "Runde" : "Runden"} · ${richtig} von ${versuche} Fragen richtig${zuletztText}`;
+    item.appendChild(meta);
+
+    const schwach = Array.isArray(row.weakest_topics) ? row.weakest_topics : [];
+    const themen = document.createElement("p");
+    themen.className = "quiz-team-topics";
+    themen.textContent =
+      schwach.length === 0
+        ? "Schwächste Themen: noch zu wenige Antworten pro Thema."
+        : "Schwächste Themen: " +
+          schwach.map((t) => `${t.topic} (${t.accuracy} %, ${t.attempts} Fragen)`).join(" · ");
+    item.appendChild(themen);
+
+    teamListEl.appendChild(item);
+  });
+}
+
+function teamRenderHeatmap(rows) {
+  teamHeatmapEl.textContent = "";
+  if (rows.length === 0) {
+    teamEmptyNote(teamHeatmapEl, "Noch keine Antworten – die Heatmap füllt sich mit den ersten Runden.");
+    return;
+  }
+  rows.forEach((row) => {
+    const zeile = document.createElement("div");
+    zeile.className = "quiz-quota-row";
+
+    const kopf = document.createElement("span");
+    kopf.className = "quiz-quota-head";
+    const label = document.createElement("span");
+    label.className = "quiz-quota-label";
+    label.textContent = row.topic ?? "";
+    const wert = document.createElement("span");
+    wert.className = "quiz-quota-value";
+    wert.textContent = `${Number(row.accuracy ?? 0)} %`;
+    kopf.appendChild(label);
+    kopf.appendChild(wert);
+    zeile.appendChild(kopf);
+
+    zeile.appendChild(teamQuoteBar(Number(row.accuracy ?? 0)));
+
+    const lernende = Number(row.learners ?? 0);
+    const meta = document.createElement("span");
+    meta.className = "quiz-quota-meta";
+    meta.textContent = `${Number(row.correct ?? 0)} von ${Number(row.attempts ?? 0)} Fragen richtig · ${lernende} ${lernende === 1 ? "Person" : "Personen"}`;
+    zeile.appendChild(meta);
+
+    teamHeatmapEl.appendChild(zeile);
+  });
+}
+
+async function teamLoad() {
+  teamSetError("");
+  const supabase = getSupabaseClient();
+  try {
+    const [uebersicht, heatmap] = await Promise.all([
+      supabase.rpc("quiz_team_overview"),
+      supabase.rpc("quiz_topic_heatmap"),
+    ]);
+    if (uebersicht.error) throw uebersicht.error;
+    if (heatmap.error) throw heatmap.error;
+    teamRenderOverview(uebersicht.data ?? []);
+    teamRenderHeatmap(heatmap.data ?? []);
+  } catch (error) {
+    teamSetError("Die Team-Auswertung konnte nicht geladen werden: " + error.message);
+    teamEmptyNote(teamListEl, "Keine Daten geladen.");
+    teamEmptyNote(teamHeatmapEl, "Keine Daten geladen.");
+  }
+}
+
+function initQuizTeam() {
+  teamRefreshBtn.addEventListener("click", teamLoad);
+  // Das Admin-Panel wird für alle initialisiert und nur per data-admin-only
+  // versteckt. Der RPC-Aufruf würde für Mitarbeitende mit einem Rechtefehler
+  // enden – also gar nicht erst anfragen.
+  if (isAdmin()) teamLoad();
+}
+
 function initQuizAdmin() {
   quizAddOptionBtn.addEventListener("click", () => quizAddOptionRow());
   quizPreviewBtn.addEventListener("click", quizRenderPreview);
@@ -439,4 +601,5 @@ export function initAdminPanel() {
   createForm.addEventListener("submit", handleCreate);
   loadEmployees();
   initQuizAdmin();
+  initQuizTeam();
 }

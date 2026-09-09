@@ -869,21 +869,31 @@ create table if not exists public.quiz_attempts (
   question_key text not null,
   topic text not null default '',
   correct boolean not null,
-  answered_at timestamptz not null default now()
+  answered_at timestamptz not null default now(),
+  -- Klammert die Versuche einer Runde zusammen (Paket 27). Ohne die Spalte
+  -- liesse sich weder "Anzahl Runden" noch der Rundenverlauf bilden.
+  round_id uuid
 );
+
+alter table public.quiz_attempts add column if not exists round_id uuid;
 
 create index if not exists quiz_attempts_user_answered_idx
   on public.quiz_attempts (user_id, answered_at desc);
 create index if not exists quiz_attempts_question_key_idx
   on public.quiz_attempts (question_key);
+create index if not exists quiz_attempts_user_round_idx
+  on public.quiz_attempts (user_id, round_id);
 
 alter table public.quiz_attempts enable row level security;
 
--- Jeder sieht nur die eigenen Versuche, Admins sehen alle (Team-Übersicht).
+-- Jeder sieht ausschliesslich die eigenen Versuche - auch Admins. Die
+-- Barleitung bekommt nur Aggregate, ueber die beiden Funktionen weiter unten
+-- (Paket 27). Einzelne Antworten einer Person sind bewusst nicht einsehbar.
 drop policy if exists "quiz_attempts: own or admin select" on public.quiz_attempts;
-create policy "quiz_attempts: own or admin select"
+drop policy if exists "quiz_attempts: own select" on public.quiz_attempts;
+create policy "quiz_attempts: own select"
   on public.quiz_attempts for select
-  using (user_id = auth.uid() or private.is_admin());
+  using (user_id = auth.uid());
 
 drop policy if exists "quiz_attempts: own insert" on public.quiz_attempts;
 create policy "quiz_attempts: own insert"
@@ -894,6 +904,149 @@ drop policy if exists "quiz_attempts: admin deletes" on public.quiz_attempts;
 create policy "quiz_attempts: admin deletes"
   on public.quiz_attempts for delete
   using (private.is_admin());
+
+-- ---------------------------------------------------------------------
+-- Quiz-Auswertung fuer die Barleitung (Paket 27)
+--
+-- Beide Funktionen laufen als security definer und pruefen selbst auf Admin.
+-- Sie geben ausschliesslich Summen zurueck, nie einzelne Antworten - das ist
+-- der Grund, warum die select-Policy oben Admins nicht mehr einschliesst.
+-- ---------------------------------------------------------------------
+
+create or replace function public.quiz_team_overview()
+returns table (
+  user_id uuid,
+  display_name text,
+  email text,
+  rounds bigint,
+  attempts bigint,
+  correct bigint,
+  accuracy numeric,
+  last_answered_at timestamptz,
+  weakest_topics jsonb
+)
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $$
+begin
+  if not private.is_admin() then
+    raise exception 'Nur die Barleitung darf die Team-Auswertung lesen.'
+      using errcode = '42501';
+  end if;
+
+  return query
+  with basis as (
+    select
+      a.user_id as uid,
+      a.topic as topic,
+      a.correct as correct,
+      a.answered_at as answered_at,
+      -- Altzeilen ohne round_id: die angebrochene Stunde als Ersatzschluessel.
+      coalesce(a.round_id::text, 'h:' || date_trunc('hour', a.answered_at)::text) as rundenschluessel
+    from public.quiz_attempts a
+  ),
+  je_person as (
+    select
+      b.uid,
+      count(distinct b.rundenschluessel) as rounds,
+      count(*) as attempts,
+      count(*) filter (where b.correct) as correct,
+      max(b.answered_at) as last_answered_at
+    from basis b
+    group by b.uid
+  ),
+  je_thema as (
+    select
+      b.uid,
+      b.topic as topic,
+      count(*) as attempts,
+      count(*) filter (where b.correct) as correct
+    from basis b
+    where b.topic <> ''
+    group by b.uid, b.topic
+    -- Unter drei Versuchen ist eine Quote pro Thema reines Rauschen.
+    having count(*) >= 3
+  ),
+  gereiht as (
+    select
+      t.uid,
+      t.topic,
+      t.attempts,
+      round(100.0 * t.correct / t.attempts) as accuracy,
+      row_number() over (
+        partition by t.uid
+        order by (1.0 * t.correct / t.attempts) asc, t.attempts desc, t.topic asc
+      ) as platz
+    from je_thema t
+  ),
+  schwach as (
+    select
+      g.uid,
+      jsonb_agg(
+        jsonb_build_object('topic', g.topic, 'attempts', g.attempts, 'accuracy', g.accuracy)
+        order by g.platz
+      ) as weakest_topics
+    from gereiht g
+    where g.platz <= 3
+    group by g.uid
+  )
+  select
+    p.id,
+    p.display_name,
+    p.email,
+    coalesce(jp.rounds, 0),
+    coalesce(jp.attempts, 0),
+    coalesce(jp.correct, 0),
+    case when coalesce(jp.attempts, 0) = 0 then null
+         else round(100.0 * jp.correct / jp.attempts) end,
+    jp.last_answered_at,
+    coalesce(s.weakest_topics, '[]'::jsonb)
+  from public.profiles p
+  left join je_person jp on jp.uid = p.id
+  left join schwach s on s.uid = p.id
+  order by coalesce(jp.attempts, 0) desc, p.display_name asc nulls last, p.email asc;
+end;
+$$;
+
+revoke all on function public.quiz_team_overview() from public;
+grant execute on function public.quiz_team_overview() to authenticated;
+
+-- Themen-Heatmap ueber das ganze Team: wo hakt es bei allen?
+create or replace function public.quiz_topic_heatmap()
+returns table (
+  topic text,
+  attempts bigint,
+  correct bigint,
+  accuracy numeric,
+  learners bigint
+)
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $$
+begin
+  if not private.is_admin() then
+    raise exception 'Nur die Barleitung darf die Team-Auswertung lesen.'
+      using errcode = '42501';
+  end if;
+
+  return query
+  select
+    a.topic,
+    count(*) as attempts,
+    count(*) filter (where a.correct) as correct,
+    round(100.0 * count(*) filter (where a.correct) / count(*)) as accuracy,
+    count(distinct a.user_id) as learners
+  from public.quiz_attempts a
+  where a.topic <> ''
+  group by a.topic
+  order by round(100.0 * count(*) filter (where a.correct) / count(*)) asc, count(*) desc, a.topic asc;
+end;
+$$;
+
+revoke all on function public.quiz_topic_heatmap() from public;
+grant execute on function public.quiz_topic_heatmap() to authenticated;
 
 -- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen

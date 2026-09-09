@@ -2323,3 +2323,159 @@ input[type="datetime-local"] {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* Quiz-Auswertung: eigene Zahlen und Team-Übersicht (Paket 27) */
+
+.quiz-stats {
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--border);
+}
+
+.quiz-stats h4 {
+  margin: 1.4rem 0 0.6rem;
+}
+
+.quiz-stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.quiz-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.quiz-stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent-300);
+}
+
+.quiz-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quiz-quota-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.quiz-quota-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.quiz-quota-row.is-clickable {
+  cursor: pointer;
+  /* Touch-Target hinterm Tresen: nicht kleiner als ein Daumen. */
+  min-height: 44px;
+}
+
+.quiz-quota-row.is-clickable:hover,
+.quiz-quota-row.is-clickable:focus-visible {
+  border-color: var(--accent-700);
+}
+
+.quiz-quota-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.quiz-quota-label {
+  font-weight: 600;
+}
+
+.quiz-quota-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-300);
+}
+
+.quiz-quota-bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  overflow: hidden;
+}
+
+.quiz-quota-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-700);
+}
+
+.quiz-quota-fill.is-good {
+  background: var(--accent);
+}
+
+.quiz-quota-fill.is-weak {
+  background: var(--danger);
+}
+
+.quiz-quota-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quiz-stats-all {
+  margin-top: 1.2rem;
+}
+
+.quiz-stats-all summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+/* Team-Übersicht im Admin-Bereich */
+
+.quiz-team-item {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.quiz-team-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.quiz-team-name {
+  font-weight: 600;
+}
+
+.quiz-team-meta {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quiz-team-topics {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

@@ -691,6 +691,28 @@
         <p id="quiz-start-note" class="empty-note" hidden></p>
       </div>
 
+      <div id="quiz-stats" class="quiz-stats">
+        <h3>Deine Auswertung</h3>
+        <p class="hint">Nur deine eigenen Zahlen – niemand sonst sieht, welche Frage du wie beantwortet hast.</p>
+        <p id="quiz-stats-note" class="empty-note" hidden></p>
+
+        <div id="quiz-stats-body" hidden>
+          <div id="quiz-stats-tiles" class="quiz-stat-tiles"></div>
+
+          <h4>Verlauf der letzten Runden</h4>
+          <div id="quiz-stats-history" class="quiz-quota-list"></div>
+
+          <h4>Deine schwächsten Themen</h4>
+          <p class="hint">Ein Klick startet direkt eine Übungsrunde zu dem Thema.</p>
+          <div id="quiz-stats-weak" class="quiz-quota-list"></div>
+
+          <details class="quiz-stats-all">
+            <summary>Alle Themen im Detail</summary>
+            <div id="quiz-stats-topics" class="quiz-quota-list"></div>
+          </details>
+        </div>
+      </div>
+
       <div id="quiz-round" hidden>
         <div class="quiz-progress">
           <span id="quiz-progress-text"></span>
@@ -1485,6 +1507,18 @@
       </form>
       <div id="quiz-admin-preview-box" class="quiz-preview" hidden></div>
       <div id="quiz-admin-list"></div>
+
+      <h3>Quiz – Team-Übersicht</h3>
+      <p class="hint">Pro Person nur Summen: Runden, Trefferquote, schwächste Themen. Einzelne Antworten sind bewusst nicht einsehbar – die Datenbank gibt sie auch der Barleitung nicht heraus.</p>
+      <div class="actions">
+        <button type="button" id="quiz-team-refresh" class="btn-secondary">Auswertung aktualisieren</button>
+      </div>
+      <div id="quiz-team-error" class="error-note" hidden></div>
+      <div id="quiz-team-list"></div>
+
+      <h4>Themen-Heatmap über das ganze Team</h4>
+      <p class="hint">Wo hakt es bei allen? Die Themen mit der schlechtesten Quote stehen oben – Vorlage fürs Teammeeting.</p>
+      <div id="quiz-team-heatmap"></div>
 
       <h3>Datenqualität</h3>
       <p class="hint">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>

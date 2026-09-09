@@ -139,7 +139,7 @@ untereinander tauschen, 21 nicht.
 | 24 | Textausbau Brände, Wermut + Nachtrag Gin/Rum (64) | erledigt |
 | 25 | Wein & Schaumwein ausbauen (30) | erledigt |
 | 26 | Quiz-Modul (Generator + kuratierte Fragen) | erledigt |
-| 27 | Quiz-Auswertung und Team-Übersicht | offen |
+| 27 | Quiz-Auswertung und Team-Übersicht | erledigt |
 
 ---
 
