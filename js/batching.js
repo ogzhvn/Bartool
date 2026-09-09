@@ -6,6 +6,7 @@ import { escapeHtml, formatNumber } from "./utils.js";
 import { alcoholMl, abvAfterWater } from "./abv.js";
 import { prefillPreparation } from "./preparations.js";
 import { switchTab } from "./tabs.js";
+import { applyTranslations, onLanguageChanged, t } from "./i18n.js";
 
 const panelEl = document.getElementById("batching");
 const ingredientsEl = document.getElementById("batch-ingredients");
@@ -44,7 +45,7 @@ function currentDilutionMode() {
 
 function updateDilutionLabel() {
   const el = document.getElementById("batch-dilution-unit");
-  if (el) el.textContent = currentDilutionMode() === "percent" ? "% Wasseranteil" : "% Ziel-ABV";
+  if (el) el.textContent = currentDilutionMode() === "percent" ? t("ui.wasseranteil") : t("ui.ziel_abv_6160");
 }
 
 function showNote(message) {
@@ -73,14 +74,14 @@ function calculateBottles(ingredients, basePortions) {
 
   const finalVolume = bottleSize * bottleCount;
   if (finalVolume <= 0) {
-    showNote("Bitte Flaschengröße und Anzahl eintragen.");
+    showNote(t("ui.bitte_flaschengroesse_und_anzahl_eintragen"));
     return;
   }
 
   const baseVolumeMl = volumeMlOf(ingredients);
   if (baseVolumeMl === 0) {
     showNote(
-      "Für den Flaschen-Modus wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt."
+      t("ui.fuer_den_flaschen_modus_wird_mindestens_7f3d")
     );
     return;
   }
@@ -96,17 +97,17 @@ function calculateBottles(ingredients, basePortions) {
   let preVolume;
   if (dilutionMode === "percent") {
     if (value >= 100) {
-      showNote("Der Wasseranteil muss unter 100 % liegen.");
+      showNote(t("ui.der_wasseranteil_muss_unter_100_liegen"));
       return;
     }
     preVolume = finalVolume * (1 - value / 100);
   } else {
     if (value <= 0) {
-      showNote("Bitte einen Ziel-Alkoholgehalt über 0 % eintragen.");
+      showNote(t("ui.bitte_einen_ziel_alkoholgehalt_ueber_0_2467"));
       return;
     }
     if (baseAlcoholMl === 0) {
-      showNote("Ohne Alkoholgehalt bei den Zutaten lässt sich kein Ziel-ABV berechnen.");
+      showNote(t("ui.ohne_alkoholgehalt_bei_den_zutaten_laesst_341e"));
       return;
     }
     // Nötiger reiner Alkohol für das Ziel, daraus die Menge Rezept.
@@ -115,7 +116,7 @@ function calculateBottles(ingredients, basePortions) {
     if (preVolume > finalVolume) {
       const maxAbv = (baseAlcoholMl / baseVolumeMl) * 100;
       showNote(
-        `Ziel nicht erreichbar: unverdünnt hat das Rezept nur ${formatNumber(maxAbv)} % ABV. Wasser kann nur verdünnen.`
+        `${t("ui.ziel_nicht_erreichbar_unverduennt_hat_das_61af")} ${formatNumber(maxAbv)} ${t("ui.abv_wasser_kann_nur_verduennen")}`
       );
       return;
     }
@@ -131,7 +132,7 @@ function calculateBottles(ingredients, basePortions) {
   resultEl.hidden = false;
   resultEl.innerHTML = `
     <table>
-      <thead><tr><th>Zutat</th><th>Menge</th></tr></thead>
+      <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th></tr></thead>
       <tbody>
         ${scaled
           .map(
@@ -139,27 +140,26 @@ function calculateBottles(ingredients, basePortions) {
               `<tr><td>${escapeHtml(ing.name)}</td><td>${formatNumber(ing.scaledAmount)} ${UNIT_LABELS[ing.unit]}</td></tr>`
           )
           .join("")}
-        <tr><td><strong>Wasser</strong></td><td><strong>${formatNumber(waterMl)} ml</strong></td></tr>
+        <tr><td><strong>${t("ui.wasser")}</strong></td><td><strong>${formatNumber(waterMl)} ml</strong></td></tr>
       </tbody>
     </table>
     <p class="summary">
-      Rezept unverdünnt: ${formatNumber(preVolume)} ml · Wasser: ${formatNumber(waterMl)} ml
-      (${formatNumber((waterMl / finalVolume) * 100)} % vom Endvolumen)<br />
-      Ergibt ${formatNumber(bottleCount)} Flaschen à ${formatNumber(bottleSize)} ml
-      · entspricht ${formatNumber(basePortions * factor)} Portionen
+      ${t("ui.rezept_unverduennt")} ${formatNumber(preVolume)} ${t("ui.ml_wasser_6ca8")} ${formatNumber(waterMl)} ml
+      (${formatNumber((waterMl / finalVolume) * 100)} ${t("ui.vom_endvolumen")}<br />
+      ${t("ui.ergibt")} ${formatNumber(bottleCount)} ${t("ui.flaschen_a")} ${formatNumber(bottleSize)} ${t("ui.ml_entspricht")} ${formatNumber(basePortions * factor)} ${t("ui.portionen")}
     </p>
     ${
       ohneAbv.length > 0
-        ? `<p class="empty-note">Ohne Alkoholgehalt gerechnet (als 0 % angenommen): ${escapeHtml(ohneAbv.join(", "))}. Wert in der Zutatenzeile ergänzen, sonst stimmt der ABV nicht.</p>`
+        ? `<p class="empty-note">${t("ui.ohne_alkoholgehalt_gerechnet_als_0_bb19")} ${escapeHtml(ohneAbv.join(", "))}${t("ui.wert_in_der_zutatenzeile_ergaenzen_3c11")}</p>`
         : ""
     }
   `;
 
   letztesErgebnis = { volumeMl: finalVolume, abv: finalAbv };
   totalEl.hidden = false;
-  totalLabelEl.textContent = "Alkoholgehalt";
+  totalLabelEl.textContent = t("ui.alkoholgehalt_006a");
   totalValueEl.textContent = `${formatNumber(finalAbv)} % ABV`;
-  totalSubEl.textContent = `${formatNumber(finalVolume)} ml gesamt · ${formatNumber(bottleCount)} × ${formatNumber(bottleSize)} ml`;
+  totalSubEl.textContent = `${formatNumber(finalVolume)} ${t("ui.ml_gesamt")} ${formatNumber(bottleCount)} × ${formatNumber(bottleSize)} ml`;
 }
 
 function calculateScale() {
@@ -190,7 +190,7 @@ function calculateScale() {
     }, 0);
     if (baseVolumeMl === 0) {
       showNote(
-        "Für die Skalierung nach Volumen wird mindestens eine Zutat mit einer Volumeneinheit (ml, cl, oz, BL, Dash) benötigt."
+        t("ui.fuer_die_skalierung_nach_volumen_wird_6dfe")
       );
       return;
     }
@@ -200,7 +200,7 @@ function calculateScale() {
     const rawPortions = basePortions * (targetVolume / baseVolumeMl);
     const flooredPortions = Math.floor(rawPortions);
     if (flooredPortions < 1) {
-      showNote("Das Ziel-Volumen reicht nicht für eine ganze Portion.");
+      showNote(t("ui.das_ziel_volumen_reicht_nicht_fuer_eine_6d3b"));
       return;
     }
     factor = flooredPortions / basePortions;
@@ -222,7 +222,7 @@ function calculateScale() {
   resultEl.hidden = false;
   resultEl.innerHTML = `
     <table>
-      <thead><tr><th>Zutat</th><th>Menge</th></tr></thead>
+      <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th></tr></thead>
       <tbody>
         ${scaled
           .map(
@@ -234,16 +234,16 @@ function calculateScale() {
     </table>
   `;
 
-  totalLabelEl.textContent = "Gesamtvolumen";
+  totalLabelEl.textContent = t("ui.gesamtvolumen");
   letztesErgebnis = { volumeMl: totalVolumeMl > 0 ? totalVolumeMl : null, abv: null };
   if (totalVolumeMl > 0) {
     totalEl.hidden = false;
     totalValueEl.textContent = `${formatNumber(totalVolumeMl)} ml`;
-    totalSubEl.textContent = `${formatNumber(totalVolumeMl / 1000)} l · ${formatNumber(resultingPortions)} Portionen`;
+    totalSubEl.textContent = `${formatNumber(totalVolumeMl / 1000)} l · ${formatNumber(resultingPortions)} ${t("ui.portionen")}`;
   } else {
     totalEl.hidden = false;
-    totalValueEl.textContent = `${formatNumber(resultingPortions)} Portionen`;
-    totalSubEl.textContent = "Kein Volumen berechenbar – nur Stückzutaten";
+    totalValueEl.textContent = `${formatNumber(resultingPortions)} ${t("ui.portionen")}`;
+    totalSubEl.textContent = t("ui.kein_volumen_berechenbar_nur_stueckzutaten");
   }
 }
 
@@ -253,14 +253,14 @@ function calculateScale() {
 function handleToPreparation() {
   const name = document.getElementById("batch-name").value.trim();
   if (!name && editor.getIngredients().length === 0) {
-    alert("Erst ein Rezept eingeben oder laden.");
+    alert(t("ui.erst_ein_rezept_eingeben_oder_laden"));
     return;
   }
   const abv = letztesErgebnis.abv;
   const vorschlag = abv === null ? "sonstiges" : abv >= 15 ? "batch" : "batch_juice";
   switchTab("preparations");
   prefillPreparation({
-    label: name || "Batch",
+    label: name || t("ui.batch"),
     prepType: vorschlag,
     batchSizeMl: letztesErgebnis.volumeMl ?? "",
     abv: abv === null ? "" : Number(abv.toFixed(1)),
@@ -281,7 +281,7 @@ async function shareResult() {
   const rows = [...resultEl.querySelectorAll("tbody tr")].map((tr) =>
     [...tr.querySelectorAll("td")].map((td) => td.textContent.trim()).join(": ")
   );
-  const name = document.getElementById("batch-name").value || "Batch";
+  const name = document.getElementById("batch-name").value || t("ui.batch");
   const text = [`${name} – ${totalValueEl.textContent} (${totalSubEl.textContent})`, ...rows].join("\n");
   if (navigator.share) {
     try {
@@ -298,7 +298,7 @@ function populateRecipeSelect() {
   const recipes = getAllRecipes();
   const currentValue = recipeSelectEl.value;
   recipeSelectEl.innerHTML =
-    `<option value="">– Rezept auswählen –</option>` +
+    `<option value="">${t("ui.rezept_auswaehlen")}</option>` +
     recipes.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join("");
   if (recipes.some((r) => r.name === currentValue)) {
     recipeSelectEl.value = currentValue;
@@ -308,7 +308,7 @@ function populateRecipeSelect() {
 function handleLoadRecipe() {
   const name = recipeSelectEl.value;
   if (!name) {
-    alert("Bitte zuerst ein Rezept auswählen.");
+    alert(t("ui.bitte_zuerst_ein_rezept_auswaehlen"));
     return;
   }
   const recipe = getRecipe(name);
@@ -322,11 +322,11 @@ function handleLoadRecipe() {
 
 function renderRecipeInfo(recipe) {
   const rows = [
-    ["Glas", recipe.glass],
-    ["Garnitur", recipe.garnish],
+    [t("ui.glas"), recipe.glass],
+    [t("ui.garnitur"), recipe.garnish],
     ["Eis", recipe.ice],
-    ["Zubereitung", recipe.method],
-    ["Geschichte", recipe.history],
+    [t("ui.zubereitung"), recipe.method],
+    [t("ui.geschichte"), recipe.history],
   ].filter(([, value]) => value);
 
   if (rows.length === 0) {
@@ -350,6 +350,13 @@ function handleClear() {
 }
 
 export function initBatching() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    populateRecipeSelect();
+    updateModeInputs();
+    applyTranslations(panelEl);
+  });
+
   editor.setIngredients([]);
   populateRecipeSelect();
   onRecipesChanged(populateRecipeSelect);

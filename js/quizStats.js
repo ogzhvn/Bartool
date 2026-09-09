@@ -1,3 +1,4 @@
+import { getLocale } from "./i18n.js";
 // Rechenteil der Quiz-Auswertung (Paket 27).
 //
 // Bewusst ohne DOM- und Supabase-Zugriff: hier stecken nur Funktionen, die
@@ -92,13 +93,13 @@ export function berechneStatistik(versuche) {
     if (v.correct === true) eintrag.richtig += 1;
   });
   const themen = [...proThema.values()]
-    .map((t) => ({ ...t, quote: quote(t.richtig, t.versuche) }))
-    .sort((a, b) => a.quote - b.quote || b.versuche - a.versuche || a.topic.localeCompare(b.topic, "de"));
+    .map((thema) => ({ ...thema, quote: quote(thema.richtig, thema.versuche) }))
+    .sort((a, b) => a.quote - b.quote || b.versuche - a.versuche || a.topic.localeCompare(b.topic, getLocale()));
 
   // Fürs Üben nur Themen mit belastbarer Grundlage; gibt es davon noch keine,
   // fällt die Schwelle weg, damit der Bereich nicht leer bleibt.
-  let schwach = themen.filter((t) => t.versuche >= THEMA_MIN_VERSUCHE && t.quote < 100);
-  if (schwach.length === 0) schwach = themen.filter((t) => t.quote < 100);
+  let schwach = themen.filter((thema) => thema.versuche >= THEMA_MIN_VERSUCHE && thema.quote < 100);
+  if (schwach.length === 0) schwach = themen.filter((thema) => thema.quote < 100);
   schwach = schwach.slice(0, SCHWACHE_THEMEN);
 
   const proRunde = new Map();

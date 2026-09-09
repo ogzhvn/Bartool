@@ -1,4 +1,5 @@
 import { getProduct } from "./productLibrary.js";
+import { t } from "./i18n.js";
 
 // Allergene eines Drinks aus den Angaben der einzelnen Produkte.
 //
@@ -8,6 +9,8 @@ import { getProduct } from "./productLibrary.js";
 // ausdrücklich ungeprüft ausgewiesen, statt sie stillschweigend wegzulassen.
 
 // Einträge, die im Katalog "nichts bekannt" bedeuten und keine echte Angabe sind.
+// Vergleich gegen den Produktkatalog, nicht gegen Oberflächentext: die
+// Werte stehen so in den Produktdaten und bleiben deshalb deutsch.
 const OHNE_BEFUND = ["keine bekannten", "keine", "-", "keine bekannt"];
 
 function istOhneBefund(text) {
@@ -29,13 +32,13 @@ export function allergensForRecipe(recipe) {
 
     const produkt = getProduct(name);
     if (!produkt) {
-      unchecked.push({ name, reason: "nicht im Produktkatalog" });
+      unchecked.push({ name, reason: t("ui.nicht_im_produktkatalog") });
       return;
     }
 
     const angabe = String(produkt.allergens ?? "").trim();
     if (!angabe) {
-      unchecked.push({ name: produkt.name, reason: "kein Eintrag im Katalog" });
+      unchecked.push({ name: produkt.name, reason: t("ui.kein_eintrag_im_katalog") });
       return;
     }
     if (istOhneBefund(angabe)) {

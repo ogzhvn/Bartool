@@ -1,6 +1,7 @@
 import { buildRecipeBlocks } from "./recipeExport.js";
 import { buildProductBlocks } from "./productExport.js";
-import { escapeHtml, formatNumberDe } from "./utils.js";
+import { escapeHtml, formatNumberLocal } from "./utils.js";
+import { formatDate, t } from "./i18n.js";
 
 // Druckansicht für ausgewählte Rezepte und Produkte.
 //
@@ -38,7 +39,7 @@ function printBlocks(title, blocksHtml) {
 export function printRecipes(recipes) {
   if (recipes.length === 0) return;
   printBlocks(
-    recipes.length === 1 ? recipes[0].name : `Rezepte (${recipes.length})`,
+    recipes.length === 1 ? recipes[0].name : `${t("ui.rezepte_67a4")}${recipes.length})`,
     buildRecipeBlocks(recipes)
   );
 }
@@ -46,7 +47,7 @@ export function printRecipes(recipes) {
 export function printProducts(products) {
   if (products.length === 0) return;
   printBlocks(
-    products.length === 1 ? products[0].name : `Produkte (${products.length})`,
+    products.length === 1 ? products[0].name : `${t("ui.produkte_5091")}${products.length})`,
     buildProductBlocks(products)
   );
 }
@@ -61,7 +62,7 @@ export function printProducts(products) {
 
 function formatLabelDate(value) {
   if (!value) return "–";
-  return new Date(value).toLocaleDateString("de-DE", {
+  return formatDate(value, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -70,8 +71,8 @@ function formatLabelDate(value) {
 
 function labelHtml(prep, typLabel, ersteller) {
   const zeilen = [
-    prep.batchSizeMl ? `${formatNumberDe(prep.batchSizeMl)} ml` : "",
-    prep.abv !== "" && prep.abv != null ? `${formatNumberDe(prep.abv)} % vol` : "",
+    prep.batchSizeMl ? `${formatNumberLocal(prep.batchSizeMl)} ml` : "",
+    prep.abv !== "" && prep.abv != null ? `${formatNumberLocal(prep.abv)} % vol` : "",
     prep.location,
   ].filter(Boolean);
 
@@ -80,11 +81,11 @@ function labelHtml(prep, typLabel, ersteller) {
       <div class="label-name">${escapeHtml(prep.label)}</div>
       <div class="label-type">${escapeHtml(typLabel)}${zeilen.length ? " · " + escapeHtml(zeilen.join(" · ")) : ""}</div>
       <div class="label-dates">
-        <span>Angesetzt<strong>${formatLabelDate(prep.madeAt)}</strong></span>
-        <span>Haltbar bis<strong>${formatLabelDate(prep.expiresAt)}</strong></span>
+        <span>${t("ui.angesetzt")}<strong>${formatLabelDate(prep.madeAt)}</strong></span>
+        <span>${t("ui.haltbar_bis")}<strong>${formatLabelDate(prep.expiresAt)}</strong></span>
       </div>
       ${prep.notes ? `<div class="label-note">${escapeHtml(prep.notes)}</div>` : ""}
-      ${ersteller ? `<div class="label-note">Angesetzt von ${escapeHtml(ersteller)}</div>` : ""}
+      ${ersteller ? `<div class="label-note">${t("ui.angesetzt_von")} ${escapeHtml(ersteller)}</div>` : ""}
     </div>`;
 }
 
@@ -118,7 +119,7 @@ export function printLabels(prep, typLabel, anzahl = 1, ersteller = "") {
 // ---------------------------------------------------------------------
 
 function formatMengePrint(ml) {
-  return ml >= 1000 ? `${formatNumberDe(ml / 1000)} l` : `${formatNumberDe(ml)} ml`;
+  return ml >= 1000 ? `${formatNumberLocal(ml / 1000)} l` : `${formatNumberLocal(ml)} ml`;
 }
 
 function tabelle(kopf, zeilen) {
@@ -133,65 +134,65 @@ export function printEventPlan(event, ergebnis) {
   if (!event || !ergebnis) return;
 
   const datum = event.eventDate
-    ? new Date(event.eventDate).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+    ? formatDate(event.eventDate)
     : "–";
 
   const kopf = [
-    ["Datum", escapeHtml(datum)],
-    ["Gäste", event.guests ? formatNumberDe(event.guests) : "–"],
-    ["Dauer", event.durationHours ? `${formatNumberDe(event.durationHours)} h` : "–"],
-    ["Drinks gesamt", `${ergebnis.totalDrinks} (inkl. ${formatNumberDe(Number(event.bufferPercent) || 0)} % Puffer)`],
-    ["Eisbedarf", `${formatNumberDe(ergebnis.iceKg)} kg`],
-    ["Wareneinsatz", `${formatNumberDe(ergebnis.totalCost)} € · pro Gast ${formatNumberDe(ergebnis.costPerGuest)} €`],
+    [t("ui.datum"), escapeHtml(datum)],
+    [t("ui.gaeste"), event.guests ? formatNumberLocal(event.guests) : "–"],
+    [t("ui.dauer"), event.durationHours ? `${formatNumberLocal(event.durationHours)} h` : "–"],
+    [t("ui.drinks_gesamt"), `${ergebnis.totalDrinks} (inkl. ${formatNumberLocal(Number(event.bufferPercent) || 0)} ${t("ui.puffer_13f0")}`],
+    [t("ui.eisbedarf"), `${formatNumberLocal(ergebnis.iceKg)} kg`],
+    [t("ui.wareneinsatz"), `${formatNumberLocal(ergebnis.totalCost)} ${t("ui.pro_gast")} ${formatNumberLocal(ergebnis.costPerGuest)} €`],
   ]
     .map(([label, wert]) => `<p class="meta"><strong>${escapeHtml(label)}</strong> ${wert}</p>`)
     .join("");
 
   const drinks = tabelle(
-    ["Rezept", "Anteil", "Anzahl", "Batchmenge", "ABV"],
+    [t("ui.rezept"), t("ui.anteil"), t("ui.anzahl"), t("ui.batchmenge"), "ABV"],
     ergebnis.drinks.map((d) => [
       escapeHtml(d.recipeName),
-      `${formatNumberDe(d.share)} %`,
+      `${formatNumberLocal(d.share)} %`,
       String(d.count),
       d.found ? formatMengePrint(d.batchMl) : "–",
-      d.found && d.abv !== null ? `${formatNumberDe(d.abv)} % vol` : "–",
+      d.found && d.abv !== null ? `${formatNumberLocal(d.abv)} % vol` : "–",
     ])
   );
 
   const entnahme = tabelle(
-    ["Zutat", "Menge", "Gebinde", "Lieferant", "Kosten"],
+    [t("ui.zutat"), t("ui.menge"), t("ui.gebinde"), t("ui.lieferant"), t("ui.kosten")],
     ergebnis.volumeLines.map((l) => [
       escapeHtml(l.name),
       formatMengePrint(l.ml),
-      l.bottles !== null ? `${l.bottles} × ${formatMengePrint(l.bottleSizeMl)}` : "Gebinde unbekannt",
+      l.bottles !== null ? `${l.bottles} × ${formatMengePrint(l.bottleSizeMl)}` : t("ui.gebinde_unbekannt"),
       l.supplier ? escapeHtml(l.supplier) : "–",
-      l.priceKnown ? `${formatNumberDe(l.cost)} €` : "kein Preis hinterlegt",
+      l.priceKnown ? `${formatNumberLocal(l.cost)} €` : t("ui.kein_preis_hinterlegt"),
     ])
   );
 
   const stueck = tabelle(
-    ["Zutat", "Menge", "Lieferant"],
+    [t("ui.zutat"), t("ui.menge"), t("ui.lieferant")],
     ergebnis.pieceLines.map((l) => [
       escapeHtml(l.name),
-      `${formatNumberDe(Math.ceil(l.amount))} ${escapeHtml(l.unit)}`,
+      `${formatNumberLocal(Math.ceil(l.amount))} ${escapeHtml(l.unit)}`,
       l.supplier ? escapeHtml(l.supplier) : "–",
     ])
   );
 
-  const notiz = event.notes ? `<p class="meta"><strong>Notiz</strong> ${escapeHtml(event.notes)}</p>` : "";
+  const notiz = event.notes ? `<p class="meta"><strong>${t("ui.notiz")}</strong> ${escapeHtml(event.notes)}</p>` : "";
   const hinweis =
     ergebnis.missingPrices.length > 0
-      ? `<p class="history">Ohne hinterlegten Einkaufspreis und deshalb mit 0 € gerechnet: ${escapeHtml(
+      ? `<p class="history">${t("ui.ohne_hinterlegten_einkaufspreis_und_7e9c")} ${escapeHtml(
           ergebnis.missingPrices.join(", ")
         )}.</p>`
       : "";
 
   printBlocks(
-    event.name || "Eventplan",
+    event.name || t("ui.eventplan"),
     `${kopf}${notiz}
-     <h2>Drinks</h2>${drinks}
-     <h2>Entnahme-/Einkaufsliste</h2>${entnahme || "<p>Keine Volumenzutaten.</p>"}
-     ${stueck ? `<h2>Stückzutaten</h2>${stueck}` : ""}
+     <h2>${t("ui.drinks")}</h2>${drinks}
+     <h2>${t("ui.entnahme_einkaufsliste")}</h2>${entnahme || "<p>Keine Volumenzutaten.</p>"}
+     ${stueck ? `<h2>${t("ui.stueckzutaten")}</h2>${stueck}` : ""}
      ${hinweis}`
   );
 }
@@ -207,7 +208,7 @@ export function printEventPlan(event, ergebnis) {
 // { titel, meta: [[label, wert], ...], zeilen: [[punkt, ergebnis, von, zeitpunkt, notiz], ...] }
 // ---------------------------------------------------------------------
 
-export function printChecklistRuns(laeufe, titel = "Checklisten-Nachweis") {
+export function printChecklistRuns(laeufe, titel = t("ui.checklisten_nachweis")) {
   if (!Array.isArray(laeufe) || laeufe.length === 0) return;
 
   // Bei einem einzelnen Lauf steht der Name schon in der Überschrift –
@@ -220,7 +221,7 @@ export function printChecklistRuns(laeufe, titel = "Checklisten-Nachweis") {
         .map(([label, wert]) => `<p class="meta"><strong>${escapeHtml(label)}</strong> ${escapeHtml(wert)}</p>`)
         .join("");
       const zeilen = tabelle(
-        ["Punkt", "Ergebnis", "Von", "Zeitpunkt", "Notiz"],
+        [t("ui.punkt"), t("ui.ergebnis"), "Von", t("ui.zeitpunkt"), t("ui.notiz")],
         (lauf.zeilen ?? []).map((z) => z.map((c) => escapeHtml(c)))
       );
       const ueberschrift = einzeln ? "" : `<h2>${escapeHtml(lauf.titel)}</h2>`;

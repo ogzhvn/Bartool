@@ -4,6 +4,7 @@ import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { getAllProducts, getProduct } from "./productLibrary.js";
 import { onRecipesChanged, onProductsChanged } from "./storage.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
+import { applyTranslations, onLanguageChanged, t } from "./i18n.js";
 
 const panelEl = document.getElementById("dilution");
 const ingredientsEl = document.getElementById("dil-ingredients");
@@ -19,10 +20,10 @@ function makeIngredientRow(data = {}) {
   const row = document.createElement("div");
   row.className = "ingredient-row";
   row.innerHTML = `
-    <input class="ing-name" type="text" placeholder="Zutat" list="dil-product-options" value="${escapeHtml(data.name ?? "")}" />
+    <input class="ing-name" type="text" placeholder="${t("ui.zutat")}" data-i18n-placeholder="ui.zutat" list="dil-product-options" value="${escapeHtml(data.name ?? "")}" />
     <input class="ing-amount" type="number" min="0" step="0.1" placeholder="ml" value="${escapeHtml(data.amount ?? "")}" />
     <input class="ing-abv" type="number" min="0" max="100" step="0.1" placeholder="ABV %" value="${escapeHtml(data.abv ?? "")}" />
-    <button type="button" class="remove-btn" title="Entfernen">✕</button>
+    <button type="button" class="remove-btn" title="${t("ui.entfernen")}" data-i18n-title="ui.entfernen">✕</button>
   `;
 
   const nameEl = row.querySelector(".ing-name");
@@ -54,7 +55,7 @@ function addIngredientRow(data) {
 function getIngredients() {
   return [...ingredientsEl.querySelectorAll(".ingredient-row")]
     .map((row) => ({
-      name: row.querySelector(".ing-name").value.trim() || "Zutat",
+      name: row.querySelector(".ing-name").value.trim() || t("ui.zutat"),
       amount: parseFloat(row.querySelector(".ing-amount").value),
       abv: parseFloat(row.querySelector(".ing-abv").value),
     }))
@@ -97,7 +98,7 @@ function calculate() {
   if (mode === "percent") {
     const percent = parseFloat(document.getElementById("dil-percent").value) || 0;
     if (percent >= 100) {
-      showNote("Verdünnung muss unter 100 % liegen.");
+      showNote(t("ui.verduennung_muss_unter_100_liegen"));
       return;
     }
     finalVolume = preVolume / (1 - percent / 100);
@@ -113,7 +114,7 @@ function calculate() {
   resultEl.hidden = false;
   resultEl.innerHTML = `
     <table>
-      <thead><tr><th>Zutat</th><th>Menge</th><th>ABV</th></tr></thead>
+      <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th><th>ABV</th></tr></thead>
       <tbody>
         ${ingredients
           .map((i) => `<tr><td>${i.name}</td><td>${formatNumber(i.amount)} ml</td><td>${formatNumber(i.abv)} %</td></tr>`)
@@ -121,14 +122,14 @@ function calculate() {
       </tbody>
     </table>
     <p class="summary">
-      Vor Verdünnung: ${formatNumber(preVolume)} ml · ${formatNumber(preAbv)} % ABV<br />
-      Verdünnung: ${formatNumber(dilutionMl)} ml (${formatNumber(dilutionPercentOfFinal)} % des Endvolumens)
+      ${t("ui.vor_verduennung")} ${formatNumber(preVolume)} ml · ${formatNumber(preAbv)} % ABV<br />
+      ${t("ui.verduennung_17e9")} ${formatNumber(dilutionMl)} ml (${formatNumber(dilutionPercentOfFinal)} ${t("ui.des_endvolumens_b0be")}
     </p>
   `;
 
   totalEl.hidden = false;
   totalValueEl.textContent = `${formatNumber(finalAbv)} %`;
-  totalSubEl.textContent = `Endvolumen ${formatNumber(finalVolume)} ml · vorher ${formatNumber(preAbv)} %`;
+  totalSubEl.textContent = `${t("ui.endvolumen")} ${formatNumber(finalVolume)} ${t("ui.ml_vorher")} ${formatNumber(preAbv)} %`;
 }
 
 function stepPercent(delta) {
@@ -149,7 +150,7 @@ function populateRecipeSelect() {
   const recipes = getAllRecipes();
   const bisher = recipeSelectEl.value;
   recipeSelectEl.innerHTML =
-    `<option value="">– Rezept auswählen –</option>` +
+    `<option value="">${t("ui.rezept_auswaehlen")}</option>` +
     recipes.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join("");
   if (recipes.some((r) => r.name === bisher)) recipeSelectEl.value = bisher;
 }
@@ -161,7 +162,7 @@ function populateRecipeSelect() {
 function handleLoadRecipe() {
   const name = recipeSelectEl.value;
   if (!name) {
-    alert("Bitte zuerst ein Rezept auswählen.");
+    alert(t("ui.bitte_zuerst_ein_rezept_auswaehlen"));
     return;
   }
   const recipe = getRecipe(name);
@@ -190,10 +191,10 @@ function handleLoadRecipe() {
   const ohneAbv = zeilen.filter((z) => z.abv === "").map((z) => z.name);
   const hinweise = [];
   if (uebersprungen.length > 0) {
-    hinweise.push(`Ohne Volumen und deshalb nicht übernommen: ${uebersprungen.join(", ")}.`);
+    hinweise.push(`${t("ui.ohne_volumen_und_deshalb_nicht_uebernommen")} ${uebersprungen.join(", ")}.`);
   }
   if (ohneAbv.length > 0) {
-    hinweise.push(`Kein Alkoholgehalt im Produktkatalog gefunden für: ${ohneAbv.join(", ")}. Bitte selbst eintragen.`);
+    hinweise.push(`${t("ui.kein_alkoholgehalt_im_produktkatalog_e717")} ${ohneAbv.join(", ")}. Bitte selbst eintragen.`);
   }
   recipeNoteEl.hidden = hinweise.length === 0;
   recipeNoteEl.textContent = hinweise.join(" ");
@@ -202,6 +203,14 @@ function handleLoadRecipe() {
 }
 
 export function initDilution() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    populateRecipeSelect();
+    updateModeInputs();
+    calculate();
+    applyTranslations(panelEl);
+  });
+
   populateProductOptions();
   populateRecipeSelect();
   onProductsChanged(populateProductOptions);

@@ -5,6 +5,7 @@ import { focusProduct } from "./products.js";
 import { switchTab } from "./tabs.js";
 import { closeMobileNav } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
+import { getLocale, t } from "./i18n.js";
 
 // Globale Suche über Rezepte und Produkte in einem Fenster.
 //
@@ -43,7 +44,7 @@ function rang(name, suchbegriff) {
 function sortiereNachRelevanz(eintraege, suchbegriff) {
   return eintraege.sort((a, b) => {
     const diff = rang(a.name, suchbegriff) - rang(b.name, suchbegriff);
-    return diff !== 0 ? diff : a.name.localeCompare(b.name, "de");
+    return diff !== 0 ? diff : a.name.localeCompare(b.name, getLocale());
   });
 }
 
@@ -89,7 +90,7 @@ function render() {
   if (suchbegriff.length < 2) {
     treffer = [];
     markiert = -1;
-    resultsEl.innerHTML = `<p class="empty-note">Mindestens zwei Zeichen eingeben.</p>`;
+    resultsEl.innerHTML = `<p class="empty-note">${t("ui.mindestens_zwei_zeichen_eingeben")}</p>`;
     return;
   }
 
@@ -98,18 +99,18 @@ function render() {
 
   if (treffer.length === 0) {
     markiert = -1;
-    resultsEl.innerHTML = `<p class="empty-note">Nichts gefunden.</p>`;
+    resultsEl.innerHTML = `<p class="empty-note">${t("ui.nichts_gefunden")}</p>`;
     return;
   }
 
   let index = 0;
   let html = "";
   if (rezepte.length > 0) {
-    html += `<h4 class="quick-search-group">Rezepte</h4>`;
+    html += `<h4 class="quick-search-group">${t("ui.rezepte")}</h4>`;
     html += rezepte.map((e) => zeileHtml(e, index++)).join("");
   }
   if (produkte.length > 0) {
-    html += `<h4 class="quick-search-group">Produkte</h4>`;
+    html += `<h4 class="quick-search-group">${t("ui.produkte")}</h4>`;
     html += produkte.map((e) => zeileHtml(e, index++)).join("");
   }
   resultsEl.innerHTML = html;

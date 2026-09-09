@@ -10,6 +10,7 @@ import { printRecipes } from "./printView.js";
 import { isAdmin } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
+import { getLocale, onLanguageChanged, t } from "./i18n.js";
 
 const CATEGORY_ORDER = [
   "Gin",
@@ -139,12 +140,12 @@ function loadIntoForm(recipe) {
 async function handleSave() {
   const name = nameEl.value.trim();
   if (!name) {
-    alert("Bitte einen Rezeptnamen eingeben.");
+    alert(t("ui.bitte_einen_rezeptnamen_eingeben"));
     return;
   }
   const ingredients = editor.getIngredients();
   if (ingredients.length === 0) {
-    alert("Bitte mindestens eine gültige Zutat eingeben.");
+    alert(t("ui.bitte_mindestens_eine_gueltige_zutat_7d1c"));
     return;
   }
   const basePortions = parseFloat(basePortionsEl.value) || 1;
@@ -169,11 +170,11 @@ async function handleSave() {
   if (!isAdmin()) {
     try {
       await submitChangeRequest("recipes", recipe);
-      alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      alert(t("ui.danke_dein_vorschlag_wurde_zur_pruefung_an_65b3"));
       resetForm();
       exitEditView();
     } catch (error) {
-      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+      alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
     }
     return;
   }
@@ -186,40 +187,40 @@ async function handleSave() {
     editingOriginalName = name;
     exitEditView();
   } catch (error) {
-    alert("Rezept konnte nicht gespeichert werden: " + error.message);
+    alert(t("ui.rezept_konnte_nicht_gespeichert_werden") + error.message);
   }
 }
 
 async function handleDelete() {
   if (!editingOriginalName) {
-    alert("Bitte zuerst ein Rezept auswählen.");
+    alert(t("ui.bitte_zuerst_ein_rezept_auswaehlen"));
     return;
   }
   if (!isCustomRecipe(editingOriginalName)) {
-    alert('Dieses Rezept ist ein Klassiker aus der Bibliothek und wurde noch nicht in deinem Rezeptbuch gespeichert – es gibt nichts zu löschen.');
+    alert(t("ui.dieses_rezept_ist_ein_klassiker_aus_der_5933"));
     return;
   }
 
   if (!isAdmin()) {
-    if (!confirm(`Löschung von "${editingOriginalName}" zur Prüfung vorschlagen?`)) return;
+    if (!confirm(`${t("ui.loeschung_von")}${editingOriginalName}${t("ui.zur_pruefung_vorschlagen")}`)) return;
     try {
       await submitChangeRequest("recipes", { name: editingOriginalName }, "delete");
-      alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      alert(t("ui.danke_der_loeschvorschlag_wurde_zur_a3bd"));
       resetForm();
       exitEditView();
     } catch (error) {
-      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+      alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
     }
     return;
   }
 
-  if (!confirm(`Rezept "${editingOriginalName}" wirklich löschen?`)) return;
+  if (!confirm(`${t("ui.rezept_501c")}${editingOriginalName}${t("ui.wirklich_loeschen_b7a7")}`)) return;
   try {
     await deleteRecipe(editingOriginalName);
     resetForm();
     exitEditView();
   } catch (error) {
-    alert("Rezept konnte nicht gelöscht werden: " + error.message);
+    alert(t("ui.rezept_konnte_nicht_geloescht_werden") + error.message);
   }
 }
 
@@ -254,11 +255,11 @@ function groupRecipesByCategory(recipes) {
     if (!groups.has(category)) groups.set(category, []);
     groups.get(category).push(recipe);
   });
-  return [...groups.entries()].sort(([a], [b]) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de"));
+  return [...groups.entries()].sort(([a], [b]) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, getLocale()));
 }
 
 function updateExportBar() {
-  selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
+  selectedCountEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
   exportExcelBtn.disabled = selectedNames.size === 0;
   exportWordBtn.disabled = selectedNames.size === 0;
   printBtn.disabled = selectedNames.size === 0;
@@ -281,28 +282,28 @@ function renderAllergenBlock(recipe) {
     teile.push(`<ul class="allergen-list">${zeilen}</ul>`);
   } else if (clear.length > 0 && unchecked.length === 0) {
     teile.push(
-      `<p class="allergen-note">Bei allen ${clear.length} Zutaten ist im Katalog „Keine bekannten" hinterlegt. Das ersetzt keine eigene Prüfung.</p>`
+      `<p class="allergen-note">${t("ui.bei_allen")} ${clear.length} ${t("ui.zutaten_ist_im_katalog_keine_bekannten_24d4")}</p>`
     );
   }
 
   if (unchecked.length > 0) {
     const liste = unchecked.map((u) => `${u.name} (${u.reason})`).join(", ");
-    teile.push(`<p class="allergen-note">Ungeprüft: ${escapeHtml(liste)}</p>`);
+    teile.push(`<p class="allergen-note">${t("ui.ungeprueft")} ${escapeHtml(liste)}</p>`);
   }
 
   if (teile.length === 0) return "";
-  return `<div class="allergen-box"><strong>Allergene</strong>${teile.join("")}</div>`;
+  return `<div class="allergen-box"><strong>${t("ui.allergene")}</strong>${teile.join("")}</div>`;
 }
 
 function renderRecipeItem(recipe) {
   const metaRows = [
-    ["Glas", recipe.glass],
-    ["Garnitur", recipe.garnish],
+    [t("ui.glas"), recipe.glass],
+    [t("ui.garnitur"), recipe.garnish],
     ["Eis", recipe.ice],
-    ["Zubereitung", recipe.method],
-    ["Geschichte", recipe.history],
-    ["Kurzer Pitch", recipe.quickPitch],
-    ["Passt gut zu", (recipe.pairsWith ?? []).join(", ")],
+    [t("ui.zubereitung"), recipe.method],
+    [t("ui.geschichte"), recipe.history],
+    [t("ui.kurzer_pitch"), recipe.quickPitch],
+    [t("ui.passt_gut_zu"), (recipe.pairsWith ?? []).join(", ")],
   ].filter(([, value]) => value);
 
   const item = document.createElement("details");
@@ -315,15 +316,15 @@ function renderRecipeItem(recipe) {
         <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
         ${escapeHtml(recipe.name)}
       </span>
-      <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
+      <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       <table><tbody>${renderIngredientRows(recipe.ingredients)}</tbody></table>
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderAllergenBlock(recipe)}
       <div class="actions">
-        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
-        ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? "Löschen" : "Löschung vorschlagen"}</button>` : ""}
+        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
+        ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
       </div>
     </div>
   `;
@@ -363,21 +364,21 @@ function renderRecipeItem(recipe) {
     deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (!isAdmin()) {
-        if (!confirm(`Löschung von "${recipe.name}" zur Prüfung vorschlagen?`)) return;
+        if (!confirm(`${t("ui.loeschung_von")}${recipe.name}${t("ui.zur_pruefung_vorschlagen")}`)) return;
         try {
           await submitChangeRequest("recipes", { name: recipe.name }, "delete");
-          alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+          alert(t("ui.danke_der_loeschvorschlag_wurde_zur_a3bd"));
         } catch (error) {
-          alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+          alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
         }
         return;
       }
-      if (!confirm(`Rezept "${recipe.name}" wirklich löschen?`)) return;
+      if (!confirm(`${t("ui.rezept_501c")}${recipe.name}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
         if (editingOriginalName === recipe.name) resetForm();
         await deleteRecipe(recipe.name);
       } catch (error) {
-        alert("Rezept konnte nicht gelöscht werden: " + error.message);
+        alert(t("ui.rezept_konnte_nicht_geloescht_werden") + error.message);
       }
     });
   }
@@ -388,7 +389,7 @@ function renderBrowseList() {
   const recipes = currentFilteredRecipes();
 
   if (recipes.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
+    listEl.innerHTML = `<p class="empty-note">${t("ui.keine_rezepte_gefunden")}</p>`;
     updateExportBar();
     return;
   }
@@ -400,7 +401,7 @@ function renderBrowseList() {
     listEl.appendChild(header);
 
     items
-      .sort((a, b) => a.name.localeCompare(b.name, "de"))
+      .sort((a, b) => a.name.localeCompare(b.name, getLocale()))
       .forEach((recipe) => listEl.appendChild(renderRecipeItem(recipe)));
   });
   updateExportBar();
@@ -411,7 +412,7 @@ function renderSidebarList() {
   const recipes = getAllRecipes().filter((r) => recipeMatchesQuery(r, query));
 
   if (recipes.length === 0) {
-    sidebarListEl.innerHTML = `<p class="empty-note">Keine Rezepte gefunden.</p>`;
+    sidebarListEl.innerHTML = `<p class="empty-note">${t("ui.keine_rezepte_gefunden")}</p>`;
     return;
   }
   sidebarListEl.innerHTML = "";
@@ -427,7 +428,7 @@ function renderSidebarList() {
 
 function sortedCategories() {
   return [...new Set(getAllRecipes().map((r) => r.category).filter(Boolean))].sort(
-    (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, "de")
+    (a, b) => categorySortIndex(a) - categorySortIndex(b) || a.localeCompare(b, getLocale())
   );
 }
 
@@ -435,7 +436,7 @@ function populateCategoryFilter() {
   const categories = sortedCategories();
   const currentValue = categoryFilterEl.value;
   categoryFilterEl.innerHTML =
-    `<option value="">Alle Kategorien</option>` +
+    `<option value="">${t("ui.alle_kategorien")}</option>` +
     categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
   if (categories.includes(currentValue)) categoryFilterEl.value = currentValue;
 }
@@ -507,9 +508,16 @@ export function focusRecipe(name) {
 }
 
 export function initRecipes() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    populateCategoryFilter();
+    renderBrowseList();
+    renderSidebarList();
+  });
+
   if (!isAdmin()) {
-    document.getElementById("recipe-save").textContent = "Vorschlag einreichen";
-    document.getElementById("recipe-delete").textContent = "Löschung vorschlagen";
+    document.getElementById("recipe-save").textContent = t("ui.vorschlag_einreichen");
+    document.getElementById("recipe-delete").textContent = t("ui.loeschung_vorschlagen");
   }
   editor.setIngredients([]);
   document.getElementById("recipe-add-ingredient").addEventListener("click", () => editor.addRow());

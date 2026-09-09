@@ -1,3 +1,4 @@
+import { getLocale } from "./i18n.js";
 import { loadProducts } from "./storage.js";
 import { PRODUCTS } from "./productsData.js";
 import { getAllRecipes } from "./recipeLibrary.js";
@@ -8,7 +9,7 @@ export function getAllProducts() {
   const custom = loadProducts();
   const customNames = new Set(custom.map((p) => p.name));
   const bundled = PRODUCTS.filter((p) => !customNames.has(p.name));
-  return [...custom, ...bundled].sort((a, b) => a.name.localeCompare(b.name, "de"));
+  return [...custom, ...bundled].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
 export function getProduct(name) {

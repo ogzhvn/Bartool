@@ -1,5 +1,6 @@
 import { UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
+import { t } from "./i18n.js";
 
 function formatIngredientLine(ing) {
   return `${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit] ?? ing.unit} ${ing.name}`;
@@ -33,8 +34,8 @@ export function exportRecipesToExcel(recipes) {
   ];
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Rezepte");
-  XLSX.writeFile(workbook, timestampedFilename("Bartool-Rezepte", "xlsx"));
+  XLSX.utils.book_append_sheet(workbook, worksheet, t("ui.rezepte"));
+  XLSX.writeFile(workbook, timestampedFilename(t("ui.bartool_rezepte"), "xlsx"));
 }
 
 // Baut die Rezeptblöcke als HTML. Wird sowohl vom Word-Export als auch von
@@ -44,10 +45,10 @@ export function buildRecipeBlocks(recipes) {
   return recipes
     .map((recipe, index) => {
       const metaRows = [
-        ["Glas", recipe.glass],
-        ["Garnitur", recipe.garnish],
+        [t("ui.glas"), recipe.glass],
+        [t("ui.garnitur"), recipe.garnish],
         ["Eis", recipe.ice],
-        ["Zubereitung", recipe.method],
+        [t("ui.zubereitung"), recipe.method],
       ].filter(([, value]) => value);
 
       const ingredientRows = recipe.ingredients
@@ -61,7 +62,7 @@ export function buildRecipeBlocks(recipes) {
         <div class="recipe-block${index > 0 ? " pagebreak" : ""}">
           <h2>${escapeHtml(recipe.name)}</h2>
           <table>
-            <thead><tr><th>Zutat</th><th>Menge</th></tr></thead>
+            <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th></tr></thead>
             <tbody>${ingredientRows}</tbody>
           </table>
           ${metaRows.map(([label, value]) => `<p class="meta"><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
@@ -79,7 +80,7 @@ export function exportRecipesToWord(recipes) {
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta charset="utf-8" />
-  <title>Bartool Rezepte</title>
+  <title>${t("ui.bartool_rezepte_1dbb")}</title>
   <style>
     body { font-family: Calibri, Arial, sans-serif; color: #222; }
     h1 { color: #b8790f; margin-bottom: 4px; }
@@ -94,7 +95,7 @@ export function exportRecipesToWord(recipes) {
   </style>
 </head>
 <body>
-  <h1>Bartool – Rezepte</h1>
+  <h1>${t("ui.bartool_rezepte_abf0")}</h1>
   ${blocks}
 </body>
 </html>`;
@@ -103,7 +104,7 @@ export function exportRecipesToWord(recipes) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = timestampedFilename("Bartool-Rezepte", "doc");
+  link.download = timestampedFilename(t("ui.bartool_rezepte"), "doc");
   link.click();
   URL.revokeObjectURL(url);
 }

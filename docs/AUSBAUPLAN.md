@@ -155,7 +155,7 @@ eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
 | 29 | Reporting-Übersicht | offen |
 | 30 | Fotos: Storage-Grundlage und Produktbilder | offen |
 | 31 | Fotos zu Rezepten: Aufbau und Garnitur | offen |
-| 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | offen |
+| 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | erledigt |
 | 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | offen |
 
 ---
@@ -1415,11 +1415,13 @@ damit die Einarbeitung nicht am „so ungefähr" hängt.
 8. `CACHE` in `sw.js` hochzählen.
 
 **Abnahme**
-- [ ] Umschalten wirkt sofort in jedem Tab, ohne Neuladen.
-- [ ] Nach Neuladen und nach Login auf einem zweiten Gerät ist die Sprache noch gesetzt.
-- [ ] Kein Tab mit deutschen Restbeschriftungen auf EN (jeden Tab einmal durchklicken).
-- [ ] Druckansicht und Etiketten folgen der eingestellten Sprache.
-- [ ] Fehlender Schlüssel führt zu deutschem Text, nie zu leerem Feld.
+- [x] Umschalten wirkt sofort in jedem Tab, ohne Neuladen.
+- [x] Nach Neuladen und nach Login auf einem zweiten Gerät ist die Sprache noch gesetzt.
+- [x] Kein Tab mit deutschen Restbeschriftungen auf EN (jeden Tab einmal durchklicken).
+      Ausgenommen sind Produkt-/Rezeptinhalte und Kategorienamen – die sind Paket 33
+      bzw. Backlog Runde 5.
+- [x] Druckansicht und Etiketten folgen der eingestellten Sprache.
+- [x] Fehlender Schlüssel führt zu deutschem Text, nie zu leerem Feld.
 
 **Commit:** `Mehrsprachigkeit: Grundgerüst und englische Oberfläche`
 

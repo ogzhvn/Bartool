@@ -154,6 +154,43 @@ a:hover {
   font-size: 0.8rem;
 }
 
+/* Sprachumschalter DE/EN im Header. Steht vor .header-user und schiebt sich
+   selbst nach rechts, damit er auch auf der Login-Maske (wo .header-user
+   ausgeblendet ist) am rechten Rand sitzt. */
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.lang-btn {
+  min-width: 40px;
+  min-height: 30px;
+  padding: 0.25rem 0.5rem;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.lang-btn:hover {
+  color: var(--accent-300);
+}
+
+.lang-btn.active {
+  background: var(--bg-elevated-2);
+  color: var(--accent);
+}
+
 /* ── Layout ──────────────────────────────────────────────── */
 
 .app-layout {

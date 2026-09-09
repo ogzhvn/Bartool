@@ -6,6 +6,7 @@ import { onProductsChanged, onRecipesChanged } from "./storage.js";
 import { switchTab } from "./tabs.js";
 import { focusRecipe } from "./recipes.js";
 import { escapeHtml } from "./utils.js";
+import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // "Was kann ich bauen?" – Zählstand aus der Inventur gegen das Rezeptbuch.
 //
@@ -34,12 +35,6 @@ let ladeVorgang = 0;
 function setStatus(text) {
   statusEl.hidden = !text;
   statusEl.textContent = text ?? "";
-}
-
-function formatDate(iso) {
-  if (!iso) return "";
-  const [y, m, d] = String(iso).split("-");
-  return `${d}.${m}.${y}`;
 }
 
 // ---------------------------------------------------------------------
@@ -96,13 +91,13 @@ export function auswertenGegenStand(zaehlstand) {
   bewertet.forEach((b) => b.ungezaehlt.forEach((p) => ungezaehlteProdukte.add(p)));
 
   return {
-    machbar: machbar.sort((a, b) => a.name.localeCompare(b.name, "de")),
-    eineFehlt: eineFehlt.sort((a, b) => a.name.localeCompare(b.name, "de")),
+    machbar: machbar.sort((a, b) => a.name.localeCompare(b.name, getLocale())),
+    eineFehlt: eineFehlt.sort((a, b) => a.name.localeCompare(b.name, getLocale())),
     mehrereFehlen,
-    unklareRezepte: unklareRezepte.sort((a, b) => a.name.localeCompare(b.name, "de")),
+    unklareRezepte: unklareRezepte.sort((a, b) => a.name.localeCompare(b.name, getLocale())),
     unklareZutaten: [...nachZutat.entries()]
-      .map(([zutat, rezepte]) => ({ zutat, rezepte: rezepte.sort((a, b) => a.localeCompare(b, "de")) }))
-      .sort((a, b) => b.rezepte.length - a.rezepte.length || a.zutat.localeCompare(b.zutat, "de")),
+      .map(([zutat, rezepte]) => ({ zutat, rezepte: rezepte.sort((a, b) => a.localeCompare(b, getLocale())) }))
+      .sort((a, b) => b.rezepte.length - a.rezepte.length || a.zutat.localeCompare(b.zutat, getLocale())),
     ungezaehlteProdukte: [...ungezaehlteProdukte],
     rezepteGesamt: bewertet.length,
   };
@@ -133,7 +128,7 @@ function renderCountSelect() {
     .map(
       (z) =>
         `<option value="${escapeHtml(z.id)}"${z.id === gewaehlteId ? " selected" : ""}>${escapeHtml(
-          z.title || "Inventur"
+          z.title || t("ui.inventur")
         )} · ${formatDate(z.countedOn)} · ${z.status === "abgeschlossen" ? "abgeschlossen" : "offen"}</option>`
     )
     .join("");
@@ -146,8 +141,8 @@ function render() {
   if (!stand) {
     resultEl.innerHTML =
       loadInventoryCounts().length === 0
-        ? `<p class="empty-note">Es gibt noch keine Inventur. Lege im Tab „Inventur" eine Zählung an und zähle die Produkte – danach steht hier, was sich daraus bauen lässt.</p>`
-        : `<p class="empty-note">Noch kein Zählstand geladen.</p>`;
+        ? `<p class="empty-note">${t("ui.es_gibt_noch_keine_inventur_lege_im_tab_b07d")}</p>`
+        : `<p class="empty-note">${t("ui.noch_kein_zaehlstand_geladen")}</p>`;
     return;
   }
 
@@ -158,7 +153,7 @@ function render() {
   ).length;
 
   if (gezaehltePositionen === 0) {
-    resultEl.innerHTML = `<p class="empty-note">In dieser Zählung ist noch nichts erfasst. Solange nichts gezählt ist, lässt sich nicht sagen, was fehlt.</p>`;
+    resultEl.innerHTML = `<p class="empty-note">${t("ui.in_dieser_zaehlung_ist_noch_nichts_erfasst_974c")}</p>`;
     return;
   }
 
@@ -171,31 +166,31 @@ function render() {
   const kacheln = `
     <div class="home-stats">
       <div class="stat-tile"><span class="stat-value">${a.machbar.length}</span><span class="stat-label">machbar</span></div>
-      <div class="stat-tile"><span class="stat-value">${a.eineFehlt.length}</span><span class="stat-label">eine Zutat fehlt</span></div>
-      <div class="stat-tile"><span class="stat-value">${a.mehrereFehlen.length}</span><span class="stat-label">mehrere Zutaten fehlen</span></div>
-      <div class="stat-tile"><span class="stat-value">${a.unklareRezepte.length}</span><span class="stat-label">Bestand unklar</span></div>
+      <div class="stat-tile"><span class="stat-value">${a.eineFehlt.length}</span><span class="stat-label">${t("ui.eine_zutat_fehlt_980e")}</span></div>
+      <div class="stat-tile"><span class="stat-value">${a.mehrereFehlen.length}</span><span class="stat-label">${t("ui.mehrere_zutaten_fehlen")}</span></div>
+      <div class="stat-tile"><span class="stat-value">${a.unklareRezepte.length}</span><span class="stat-label">${t("ui.bestand_unklar")}</span></div>
     </div>`;
 
   const hinweis =
     a.ungezaehlteProdukte.length > 0
-      ? `<p class="empty-note">${a.ungezaehlteProdukte.length} in Rezepten verwendete Produkte sind in dieser Zählung nicht erfasst. Nicht gezählt ist etwas anderes als leer – sie gelten hier als vorhanden.</p>`
+      ? `<p class="empty-note">${a.ungezaehlteProdukte.length} ${t("ui.in_rezepten_verwendete_produkte_sind_in_7870")}</p>`
       : "";
 
   const machbarBlock = `
-    <h3 class="prep-group">Machbar (${machbar.length}${machbar.length !== a.machbar.length ? ` von ${a.machbar.length}` : ""})</h3>
+    <h3 class="prep-group">${t("ui.machbar")}${machbar.length}${machbar.length !== a.machbar.length ? ` von ${a.machbar.length}` : ""})</h3>
     ${
       machbar.length > 0
         ? `<div class="shortcut-list">${rezeptChips(machbar)}</div>`
-        : `<p class="empty-note">Kein Drink in dieser Auswahl vollständig auf Bestand.</p>`
+        : `<p class="empty-note">${t("ui.kein_drink_in_dieser_auswahl_vollstaendig_e221")}</p>`
     }`;
 
   const eineFehltBlock = `
-    <h3 class="prep-group">Eine Zutat fehlt (${eineFehlt.length}${eineFehlt.length !== a.eineFehlt.length ? ` von ${a.eineFehlt.length}` : ""})</h3>
+    <h3 class="prep-group">${t("ui.eine_zutat_fehlt")}${eineFehlt.length}${eineFehlt.length !== a.eineFehlt.length ? ` von ${a.eineFehlt.length}` : ""})</h3>
     ${
       eineFehlt.length > 0
         ? `<div class="table-scroll">
              <table>
-               <thead><tr><th>Drink</th><th>fehlt</th></tr></thead>
+               <thead><tr><th>${t("ui.drink")}</th><th>fehlt</th></tr></thead>
                <tbody>
                  ${eineFehlt
                    .map(
@@ -209,20 +204,20 @@ function render() {
                </tbody>
              </table>
            </div>`
-        : `<p class="empty-note">Kein Drink, dem genau eine Zutat fehlt.</p>`
+        : `<p class="empty-note">${t("ui.kein_drink_dem_genau_eine_zutat_fehlt")}</p>`
     }`;
 
   const unklarBlock = `
-    <h3 class="prep-group">Nicht zuordenbare Zutaten (${unklareZutaten.length}${
+    <h3 class="prep-group">${t("ui.nicht_zuordenbare_zutaten")}${unklareZutaten.length}${
       unklareZutaten.length !== a.unklareZutaten.length ? ` von ${a.unklareZutaten.length}` : ""
     })</h3>
     ${
       a.unklareZutaten.length === 0
-        ? `<p class="empty-note">Alle Zutaten des Rezeptbuchs sind einem Produkt zugeordnet.</p>`
-        : `<p class="hint">Diese Zutaten haben keinen Treffer im Produktkatalog – für sie lässt sich kein Bestand prüfen. Entweder fehlt das Produkt, oder die Schreibweise weicht ab (die Zutat muss den Produktnamen enthalten, z.&nbsp;B. „Bombay Sapphire Gin" statt „Gin").</p>
+        ? `<p class="empty-note">${t("ui.alle_zutaten_des_rezeptbuchs_sind_einem_24f9")}</p>`
+        : `<p class="hint">${t("ui.diese_zutaten_haben_keinen_treffer_im_9298")}</p>
            <div class="table-scroll">
              <table>
-               <thead><tr><th>Zutat</th><th>Drinks</th><th>betroffen</th></tr></thead>
+               <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.drinks")}</th><th>betroffen</th></tr></thead>
                <tbody>
                  ${unklareZutaten
                    .map(
@@ -260,7 +255,7 @@ async function ladeStand() {
     return;
   }
   const lauf = ++ladeVorgang;
-  setStatus("Zählstand wird geladen …");
+  setStatus(t("ui.zaehlstand_wird_geladen"));
   try {
     const geladen = await loadInventoryItems(gewaehlteId);
     if (lauf !== ladeVorgang) return; // zwischenzeitlich andere Zählung gewählt
@@ -269,7 +264,7 @@ async function ladeStand() {
   } catch {
     if (lauf !== ladeVorgang) return;
     stand = null;
-    setStatus("Zählstand konnte nicht geladen werden – ohne Netz gibt es keine Auswertung.");
+    setStatus(t("ui.zaehlstand_konnte_nicht_geladen_werden_afc0"));
   }
   render();
 }
@@ -291,6 +286,12 @@ export function openBuildableForCount(countId, standVorgabe = null) {
 }
 
 export function initBuildable() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderCountSelect();
+    render();
+  });
+
   renderCountSelect();
   render();
 

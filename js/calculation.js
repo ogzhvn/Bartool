@@ -3,6 +3,7 @@ import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { UNIT_LABELS } from "./units.js";
 import { escapeHtml, formatNumber } from "./utils.js";
 import { priceLabelFor, ingredientCost, priceForIngredient } from "./costing.js";
+import { applyTranslations, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 const panelEl = document.getElementById("calculation");
 const ingredientsEl = document.getElementById("calc-ingredients");
@@ -15,24 +16,24 @@ const targetQuoteEl = document.getElementById("calc-target-quote");
 const vatEl = document.getElementById("calc-vat");
 
 function formatEuro(n) {
-  return `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  return `${n.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
 function makeRow(data = {}) {
   const row = document.createElement("div");
   row.className = "calc-ingredient-row";
   row.innerHTML = `
-    <input class="calc-ing-name" type="text" placeholder="Zutat" value="${escapeHtml(data.name ?? "")}" />
-    <input class="calc-ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${escapeHtml(data.amount ?? "")}" />
+    <input class="calc-ing-name" type="text" placeholder="${t("ui.zutat")}" data-i18n-placeholder="ui.zutat" value="${escapeHtml(data.name ?? "")}" />
+    <input class="calc-ing-amount" type="number" min="0" step="0.01" placeholder="${t("ui.menge")}" data-i18n-placeholder="ui.menge" value="${escapeHtml(data.amount ?? "")}" />
     <select class="calc-ing-unit">
       ${Object.entries(UNIT_LABELS)
         .map(([val, label]) => `<option value="${val}" ${data.unit === val ? "selected" : ""}>${label}</option>`)
         .join("")}
     </select>
-    <input class="calc-ing-price" type="number" min="0" step="0.01" placeholder="Preis" value="${escapeHtml(data.price ?? "")}" />
+    <input class="calc-ing-price" type="number" min="0" step="0.01" placeholder="${t("ui.preis")}" data-i18n-placeholder="ui.preis" value="${escapeHtml(data.price ?? "")}" />
     <span class="calc-price-label"></span>
     <span class="calc-cost">0,00 €</span>
-    <button type="button" class="remove-btn" title="Entfernen">✕</button>
+    <button type="button" class="remove-btn" title="${t("ui.entfernen")}" data-i18n-title="ui.entfernen">✕</button>
   `;
 
   const nameEl = row.querySelector(".calc-ing-name");
@@ -95,7 +96,7 @@ function calculate() {
 
   const tableHtml = `
     <table>
-      <thead><tr><th>Zutat</th><th>Menge</th><th>Kosten</th></tr></thead>
+      <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th><th>${t("ui.kosten")}</th></tr></thead>
       <tbody>
         ${lines
           .map(
@@ -112,7 +113,7 @@ function calculate() {
     resultEl.innerHTML = tableHtml;
     totalEl.hidden = false;
     totalValueEl.textContent = formatEuro(total);
-    totalSubEl.textContent = "Wareneinsatz gesamt · ohne Ziel-Quote kein Verkaufspreis";
+    totalSubEl.textContent = t("ui.wareneinsatz_gesamt_ohne_ziel_quote_kein_cdf4");
     return;
   }
 
@@ -124,22 +125,22 @@ function calculate() {
   resultEl.innerHTML = `
     ${tableHtml}
     <p class="summary">
-      Wareneinsatz gesamt: ${formatEuro(total)}<br />
-      Verkaufspreis netto: ${formatEuro(priceNet)}<br />
-      Rohertrag (Marge): ${formatEuro(margin)}
+      ${t("ui.wareneinsatz_gesamt")} ${formatEuro(total)}<br />
+      ${t("ui.verkaufspreis_netto")} ${formatEuro(priceNet)}<br />
+      ${t("ui.rohertrag_marge")} ${formatEuro(margin)}
     </p>
   `;
 
   totalEl.hidden = false;
   totalValueEl.textContent = formatEuro(priceGross);
-  totalSubEl.textContent = `inkl. ${formatNumber(vat)} % MwSt. · Wareneinsatz ${formatEuro(total)} · Marge ${formatEuro(margin)}`;
+  totalSubEl.textContent = `inkl. ${formatNumber(vat)} ${t("ui.mwst_wareneinsatz")} ${formatEuro(total)} ${t("ui.marge")} ${formatEuro(margin)}`;
 }
 
 function populateRecipeSelect() {
   const recipes = getAllRecipes();
   const currentValue = recipeSelectEl.value;
   recipeSelectEl.innerHTML =
-    `<option value="">– Rezept auswählen –</option>` +
+    `<option value="">${t("ui.rezept_auswaehlen")}</option>` +
     recipes.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join("");
   if (recipes.some((r) => r.name === currentValue)) {
     recipeSelectEl.value = currentValue;
@@ -149,7 +150,7 @@ function populateRecipeSelect() {
 function handleLoadRecipe() {
   const name = recipeSelectEl.value;
   if (!name) {
-    alert("Bitte zuerst ein Rezept auswählen.");
+    alert(t("ui.bitte_zuerst_ein_rezept_auswaehlen"));
     return;
   }
   const recipe = getRecipe(name);
@@ -170,6 +171,13 @@ function handleClear() {
 }
 
 export function initCalculation() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    populateRecipeSelect();
+    calculate();
+    applyTranslations(panelEl);
+  });
+
   addRow();
   populateRecipeSelect();
   onRecipesChanged(populateRecipeSelect);

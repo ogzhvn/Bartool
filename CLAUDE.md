@@ -23,6 +23,7 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 | Rechner | `js/batching.js`, `superjuice.js`, `syrup.js`, `dilution.js`, `calculation.js` |
 | Bibliothek (Merge DB+statisch) | `js/recipeLibrary.js`, `js/productLibrary.js` |
 | Statische Daten (GROSS, s.u.) | `js/classicsData.js`, `js/houseRecipes.js`, `js/productsData.js` |
+| Mehrsprachigkeit DE/EN | `js/i18n.js`, `js/i18n/de.js`, `js/i18n/en.js`, `js/language.js` |
 | Admin, Audit, Änderungsanträge | `js/adminPanel.js`, `auditLog.js`, `changeRequests.js`, `dataQuality.js` |
 | DB-Schema + RLS + Setup | `supabase/schema.sql`, `supabase/README.md` |
 | Edge Functions | `supabase/functions/{admin-users,login-with-username}` |
@@ -79,6 +80,13 @@ Dieses Muster nie durchbrechen.
    aus den Daten-Dateien.
 10. **Kein Commit auf einem nicht lauffähigen Zwischenstand.** Vor dem Commit:
     App gedanklich durchspielen bzw. `python3 -m http.server 8000` und klicken.
+11. **Oberflächentexte laufen über i18n.** Feste Beschriftungen in `index.html`
+    tragen `data-i18n="key"` (bzw. `data-i18n-placeholder/-title/-aria-label`),
+    Texte aus JS kommen aus `t("key")`. Neue Schlüssel gehören in **beide**
+    Sprachdateien; Zahlen/Datum/Währung nie von Hand formatieren, sondern über
+    `formatDecimal/formatDate/formatCurrency` aus `js/i18n.js`. Ein Modul, das
+    Markup nachträglich baut, rendert bei `onLanguageChanged()` neu.
+    Kategorien, Produkt- und Rezeptinhalte bleiben bewusst deutsch.
 
 ## Kontext-Budget (wichtig – hier wird das meiste Geld verbrannt)
 

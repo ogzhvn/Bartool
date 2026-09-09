@@ -6,6 +6,7 @@ import { berechneStatistik, letzterStandProFrage, waehleFragen } from "./quizSta
 import { switchTab } from "./tabs.js";
 import { focusProduct } from "./products.js";
 import { focusRecipe } from "./recipes.js";
+import { getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Quiz – Schulungswerkzeug fürs Barteam (Paket 26).
 //
@@ -117,7 +118,7 @@ function fromQuestionRow(row) {
     options: gemischt,
     correctIndex: gemischt.indexOf(richtig),
     explanation: txt(row.explanation),
-    topic: txt(row.topic) || "Servicewissen",
+    topic: txt(row.topic) || t("ui.servicewissen"),
     difficulty: Number(row.difficulty) || 2,
     refProduct: txt(row.ref_product),
     refRecipe: txt(row.ref_recipe),
@@ -155,7 +156,7 @@ export async function saveCuratedQuestion(question) {
     options: question.options,
     correct_index: question.correctIndex,
     explanation: txt(question.explanation),
-    topic: txt(question.topic) || "Servicewissen",
+    topic: txt(question.topic) || t("ui.servicewissen"),
     difficulty: question.difficulty,
     ref_product: txt(question.refProduct) || null,
     ref_recipe: txt(question.refRecipe) || null,
@@ -263,13 +264,13 @@ function quotenZeile({ label, meta, prozent, onClick }) {
 function datumKurz(wert) {
   const d = new Date(wert);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  return d.toLocaleDateString(getLocale(), { day: "2-digit", month: "2-digit" });
 }
 
 function renderStats(fehler) {
   if (fehler) {
     statsNoteEl.hidden = false;
-    statsNoteEl.textContent = "Die Auswertung konnte nicht geladen werden. Ohne Netz zeigt sie nur die Runden dieser Sitzung.";
+    statsNoteEl.textContent = t("ui.die_auswertung_konnte_nicht_geladen_werden_f2cb");
   } else {
     statsNoteEl.hidden = true;
     statsNoteEl.textContent = "";
@@ -281,23 +282,23 @@ function renderStats(fehler) {
     statsNoteEl.hidden = false;
     statsNoteEl.textContent = fehler
       ? statsNoteEl.textContent
-      : "Noch keine beantworteten Fragen. Nach der ersten Runde stehen hier deine Zahlen.";
+      : t("ui.noch_keine_beantworteten_fragen_nach_der_99fb");
     return;
   }
   statsBodyEl.hidden = false;
 
   statsTilesEl.textContent = "";
-  statsTilesEl.appendChild(kachel(`${stat.quote} %`, "Trefferquote gesamt"));
-  statsTilesEl.appendChild(kachel(String(stat.rundenGesamt), stat.rundenGesamt === 1 ? "Runde" : "Runden"));
-  statsTilesEl.appendChild(kachel(String(stat.gesamt), "Fragen beantwortet"));
-  statsTilesEl.appendChild(kachel(String(stat.gesamt - stat.richtig), "davon falsch"));
+  statsTilesEl.appendChild(kachel(`${stat.quote} %`, t("ui.trefferquote_gesamt")));
+  statsTilesEl.appendChild(kachel(String(stat.rundenGesamt), stat.rundenGesamt === 1 ? t("ui.runde") : t("ui.runden")));
+  statsTilesEl.appendChild(kachel(String(stat.gesamt), t("ui.fragen_beantwortet")));
+  statsTilesEl.appendChild(kachel(String(stat.gesamt - stat.richtig), t("ui.davon_falsch")));
 
   statsHistoryEl.textContent = "";
   stat.runden.forEach((r, i) => {
     statsHistoryEl.appendChild(
       quotenZeile({
-        label: i === 0 ? `Letzte Runde · ${datumKurz(r.zuletzt)}` : `${datumKurz(r.zuletzt)}`,
-        meta: `${r.richtig} von ${r.versuche} richtig`,
+        label: i === 0 ? `${t("ui.letzte_runde")} ${datumKurz(r.zuletzt)}` : `${datumKurz(r.zuletzt)}`,
+        meta: `${r.richtig} ${t("ui.von")} ${r.versuche} ${t("ui.richtig_klein")}`,
         prozent: r.quote,
       })
     );
@@ -307,29 +308,29 @@ function renderStats(fehler) {
   if (stat.schwach.length === 0) {
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Kein Thema unter 100 % – da ist gerade nichts zu üben.";
+    p.textContent = t("ui.kein_thema_unter_100_da_ist_gerade_nichts_0114");
     statsWeakEl.appendChild(p);
   }
-  stat.schwach.forEach((t) => {
+  stat.schwach.forEach((thema) => {
     statsWeakEl.appendChild(
       quotenZeile({
-        label: t.topic,
-        meta: `${t.richtig} von ${t.versuche} richtig · Übungsrunde starten`,
-        prozent: t.quote,
-        onClick: () => startRound({ size: SCHNELLRUNDE, topic: t.topic }),
+        label: thema.topic,
+        meta: `${thema.richtig} ${t("ui.von")} ${thema.versuche} ${t("ui.richtig_uebungsrunde_starten")}`,
+        prozent: thema.quote,
+        onClick: () => startRound({ size: SCHNELLRUNDE, topic: thema.topic }),
       })
     );
   });
 
   statsTopicsEl.textContent = "";
   [...stat.themen]
-    .sort((a, b) => a.topic.localeCompare(b.topic, "de"))
-    .forEach((t) => {
+    .sort((a, b) => a.topic.localeCompare(b.topic, getLocale()))
+    .forEach((thema) => {
       statsTopicsEl.appendChild(
         quotenZeile({
-          label: t.topic,
-          meta: `${t.richtig} von ${t.versuche} richtig`,
-          prozent: t.quote,
+          label: thema.topic,
+          meta: `${thema.richtig} ${t("ui.von")} ${thema.versuche} ${t("ui.richtig_klein")}`,
+          prozent: thema.quote,
         })
       );
     });
@@ -365,10 +366,10 @@ function renderTopics(pool) {
   themen.forEach(({ topic, count }) => {
     const option = document.createElement("option");
     option.value = topic;
-    option.textContent = `${topic} (${count} Fragen)`;
+    option.textContent = `${topic} (${count} ${t("ui.fragen")}`;
     topicSelectEl.appendChild(option);
   });
-  if (vorher && themen.some((t) => t.topic === vorher)) topicSelectEl.value = vorher;
+  if (vorher && themen.some((thema) => thema.topic === vorher)) topicSelectEl.value = vorher;
   topicBtn.disabled = themen.length === 0;
 }
 
@@ -394,8 +395,8 @@ async function startRound({ size, topic = "" }) {
   if (fragen.length === 0) {
     setNote(
       topic
-        ? `Zum Thema „${topic}" gibt es derzeit keine Fragen.`
-        : "Es gibt derzeit keine Fragen. Sobald Produkte als geprüft markiert sind, füllt sich das Quiz automatisch."
+        ? `${t("ui.zum_thema")}${topic}${t("ui.gibt_es_derzeit_keine_fragen")}`
+        : t("ui.es_gibt_derzeit_keine_fragen_sobald_08fe")
     );
     showView("start");
     return;
@@ -409,11 +410,11 @@ function renderQuestion() {
   const frage = runde.fragen[runde.index];
   const richtige = runde.antworten.filter((a) => a.korrekt).length;
 
-  progressTextEl.textContent = `Frage ${runde.index + 1} von ${runde.fragen.length}`;
-  scoreTextEl.textContent = `${richtige} richtig`;
+  progressTextEl.textContent = `${t("ui.frage")} ${runde.index + 1} ${t("ui.von")} ${runde.fragen.length}`;
+  scoreTextEl.textContent = t("ui.punktestand_richtig", { n: richtige });
   progressFillEl.style.width = `${Math.round((runde.index / runde.fragen.length) * 100)}%`;
 
-  questionTopicEl.textContent = frage.source === "kuratiert" ? `${frage.topic} · Hauswissen` : frage.topic;
+  questionTopicEl.textContent = frage.source === "kuratiert" ? `${frage.topic} ${t("ui.hauswissen")}` : frage.topic;
   questionTextEl.textContent = frage.question;
 
   optionsEl.textContent = "";
@@ -442,7 +443,7 @@ function answer(gewaehlt) {
     else if (i === gewaehlt) btn.classList.add("is-wrong");
   });
 
-  feedbackTitleEl.textContent = korrekt ? "Richtig." : `Falsch – richtig ist: ${frage.options[frage.correctIndex]}`;
+  feedbackTitleEl.textContent = korrekt ? t("ui.richtig_d1bb") : `${t("ui.falsch_richtig_ist")} ${frage.options[frage.correctIndex]}`;
   feedbackTitleEl.className = korrekt ? "quiz-feedback-title is-correct" : "quiz-feedback-title is-wrong";
   feedbackExplanationEl.textContent = frage.explanation;
   feedbackExplanationEl.hidden = !frage.explanation;
@@ -459,7 +460,7 @@ function answer(gewaehlt) {
     jumpBtn.hidden = true;
   }
 
-  nextBtn.textContent = runde.index + 1 >= runde.fragen.length ? "Auswertung" : "Weiter";
+  nextBtn.textContent = runde.index + 1 >= runde.fragen.length ? t("ui.auswertung") : t("ui.weiter");
   feedbackEl.hidden = false;
   recordAttempt(frage, korrekt);
 }
@@ -511,18 +512,18 @@ function renderResult() {
   const gesamt = runde.antworten.length;
   const quote = gesamt > 0 ? Math.round((richtige / gesamt) * 100) : 0;
 
-  resultTitleEl.textContent = `${richtige} von ${gesamt} richtig (${quote} %)`;
+  resultTitleEl.textContent = `${richtige} ${t("ui.von")} ${gesamt} ${t("ui.richtig_klein")} (${quote} %)`;
   resultSummaryEl.textContent =
     quote >= 80
-      ? "Sitzt. Nächste Runde ruhig mit einem anderen Thema."
-      : "Die falschen Fragen stehen unten – ein Klick führt direkt zum Eintrag.";
+      ? t("ui.sitzt_naechste_runde_ruhig_mit_einem_de2f")
+      : t("ui.die_falschen_fragen_stehen_unten_ein_klick_475e");
 
   resultListEl.textContent = "";
   const falsche = runde.antworten.filter((a) => !a.korrekt);
   if (falsche.length === 0) {
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Keine Fehler in dieser Runde.";
+    p.textContent = t("ui.keine_fehler_in_dieser_runde");
     resultListEl.appendChild(p);
   }
   falsche.forEach(({ frage }) => {
@@ -536,7 +537,7 @@ function renderResult() {
 
     const antwortEl = document.createElement("p");
     antwortEl.className = "quiz-result-answer";
-    antwortEl.textContent = `Richtig: ${frage.options[frage.correctIndex]}`;
+    antwortEl.textContent = `${t("ui.richtig")} ${frage.options[frage.correctIndex]}`;
     item.appendChild(antwortEl);
 
     if (frage.explanation) {
@@ -583,6 +584,12 @@ async function zurueckZumStart() {
 }
 
 export function initQuiz() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderTopics(buildPool());
+    refreshStats();
+  });
+
   quickBtn.addEventListener("click", () => startRound({ size: SCHNELLRUNDE }));
   examBtn.addEventListener("click", () => startRound({ size: PRUEFUNG }));
   topicBtn.addEventListener("click", () => startRound({ size: SCHNELLRUNDE, topic: topicSelectEl.value }));

@@ -1,3 +1,4 @@
+import { onLanguageChanged } from "./i18n.js";
 const PRESETS = {
   "1:1": { sugar: 1, water: 1 },
   "2:1": { sugar: 2, water: 1 },
@@ -43,6 +44,9 @@ function calculate() {
 }
 
 export function initSyrup() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(calculate);
+
   presetEl.addEventListener("change", applyPreset);
   [sugarPartsEl, waterPartsEl, waterAmountEl].forEach((el) => el.addEventListener("input", calculate));
   applyPreset();

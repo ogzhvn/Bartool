@@ -1,3 +1,4 @@
+import { onLanguageChanged } from "./i18n.js";
 // Faktoren beziehen sich auf das Gewicht der (übrig gebliebenen) Zitrusschalen.
 const RATIOS = {
   lime: { citric: 0.6667, malic: 0.333, water: 16.66 },
@@ -13,6 +14,9 @@ function calcFor(type) {
 }
 
 export function initSuperjuice() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => Object.keys(RATIOS).forEach(calcFor));
+
   Object.keys(RATIOS).forEach((type) => {
     document.getElementById(`sj-${type}-peel`).addEventListener("input", () => calcFor(type));
     calcFor(type);

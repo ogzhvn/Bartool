@@ -1,10 +1,11 @@
 import { UNIT_TO_ML } from "./units.js";
 import { getAllProducts } from "./productLibrary.js";
+import { t } from "./i18n.js";
 
 const VOLUME_UNITS = new Set(Object.keys(UNIT_TO_ML));
 
 export function priceLabelFor(unit) {
-  return VOLUME_UNITS.has(unit) ? "€ / Liter" : "€ / Stück";
+  return VOLUME_UNITS.has(unit) ? t("ui.liter") : t("ui.stueck");
 }
 
 export function ingredientCost(amount, unit, price) {

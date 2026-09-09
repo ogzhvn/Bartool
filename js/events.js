@@ -8,7 +8,8 @@ import { prefillPreparation } from "./preparations.js";
 import { printEventPlan } from "./printView.js";
 import { switchTab } from "./tabs.js";
 import { isAdmin, getCurrentUser } from "./auth.js";
-import { escapeHtml, formatNumberDe } from "./utils.js";
+import { escapeHtml, formatNumberLocal } from "./utils.js";
+import { applyTranslations, formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Event-/Bankettplaner: aus Gästezahl, Dauer und Drinkauswahl fällt hinten
 // alles heraus, was für eine Veranstaltung gebraucht wird – Drinkzahl,
@@ -58,7 +59,7 @@ export function parseGebindeMl(orderUnit) {
 }
 
 export function formatMenge(ml) {
-  return ml >= 1000 ? `${formatNumberDe(ml / 1000)} l` : `${formatNumberDe(ml)} ml`;
+  return ml >= 1000 ? `${formatNumberLocal(ml / 1000)} l` : `${formatNumberLocal(ml)} ml`;
 }
 
 // Rechnet einen kompletten Eventplan durch.
@@ -143,7 +144,7 @@ export function planEvent(ev) {
         bottles: gebindeMl ? Math.ceil(ml / gebindeMl) : null,
       };
     })
-    .sort((a, b) => a.name.localeCompare(b.name, "de"));
+    .sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 
   const pieceLines = [...stueck.values()]
     .map((z) => {
@@ -156,7 +157,7 @@ export function planEvent(ev) {
         supplier: produkt?.supplier ?? "",
       };
     })
-    .sort((a, b) => a.name.localeCompare(b.name, "de"));
+    .sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 
   const totalCost = [...volumeLines, ...pieceLines].reduce((s, l) => s + l.cost, 0);
   const gaeste = Number(ev.guests) || 0;
@@ -204,7 +205,7 @@ function recipeOptionsHtml(selected) {
   const namen = getAllRecipes().map((r) => r.name);
   if (selected && !namen.includes(selected)) namen.unshift(selected);
   return (
-    `<option value="">Rezept wählen …</option>` +
+    `<option value="">${t("ui.rezept_waehlen")}</option>` +
     namen
       .map((n) => `<option value="${escapeHtml(n)}"${n === selected ? " selected" : ""}>${escapeHtml(n)}</option>`)
       .join("")
@@ -216,11 +217,11 @@ function addMixRow(zeile = {}) {
   row.className = "ingredient-row event-mix-row";
   row.innerHTML = `
     <select class="event-mix-recipe">${recipeOptionsHtml(zeile.recipeName ?? "")}</select>
-    <input type="number" class="event-mix-share" min="0" max="100" step="1" placeholder="Anteil %" value="${
+    <input type="number" class="event-mix-share" min="0" max="100" step="1" placeholder="${t("ui.anteil_prozent")}" data-i18n-placeholder="ui.anteil_prozent" value="${
       zeile.share ?? ""
     }" />
     <span class="event-mix-count"></span>
-    <button type="button" class="remove-btn" aria-label="Zeile entfernen">×</button>`;
+    <button type="button" class="remove-btn" aria-label="${t("ui.zeile_entfernen")}" data-i18n-aria-label="ui.zeile_entfernen">×</button>`;
   mixEl.appendChild(row);
 }
 
@@ -257,7 +258,7 @@ function resetForm() {
   drinksEl.value = defaultDrinksPerGuest(durationEl.value);
   mixEl.innerHTML = "";
   addMixRow();
-  submitBtn.textContent = "Event speichern";
+  submitBtn.textContent = t("ui.event_speichern");
   cancelBtn.hidden = true;
   render();
 }
@@ -276,7 +277,7 @@ function loadIntoForm(ev) {
   mixEl.innerHTML = "";
   const mix = Array.isArray(ev.drinkMix) && ev.drinkMix.length > 0 ? ev.drinkMix : [{}];
   mix.forEach(addMixRow);
-  submitBtn.textContent = "Änderungen speichern";
+  submitBtn.textContent = t("ui.aenderungen_speichern");
   cancelBtn.hidden = false;
   render();
   nameEl.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -288,18 +289,18 @@ function zeileHtml(zellen) {
 
 function ergebnisHtml(ev, plan) {
   if (plan.totalDrinks === 0 || plan.drinks.length === 0) {
-    return `<p class="empty-note">Gäste, Drinks pro Gast und mindestens ein Rezept eintragen – dann wird hier gerechnet.</p>`;
+    return `<p class="empty-note">${t("ui.gaeste_drinks_pro_gast_und_mindestens_ein_97f6")}</p>`;
   }
 
   const drinkZeilen = plan.drinks
     .map((d) =>
       zeileHtml([
         escapeHtml(d.recipeName) + (d.found ? "" : ' <em>(Rezept nicht gefunden)</em>'),
-        `${formatNumberDe(d.share)} %`,
-        `${d.count} Drinks`,
+        `${formatNumberLocal(d.share)} %`,
+        `${d.count} ${t("ui.drinks")}`,
         d.found ? formatMenge(d.batchMl) : "–",
-        d.found && d.abv !== null ? `${formatNumberDe(d.abv)} % vol` : "–",
-        d.found ? `${formatNumberDe(d.cost)} €` : "–",
+        d.found && d.abv !== null ? `${formatNumberLocal(d.abv)} % vol` : "–",
+        d.found ? `${formatNumberLocal(d.cost)} €` : "–",
       ])
     )
     .join("");
@@ -313,7 +314,7 @@ function ergebnisHtml(ev, plan) {
           ? `${l.bottles} × ${formatMenge(l.bottleSizeMl)}`
           : '<span style="color: var(--danger)">Gebinde unbekannt</span>',
         l.supplier ? escapeHtml(l.supplier) : "–",
-        l.priceKnown ? `${formatNumberDe(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
+        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
       ])
     )
     .join("");
@@ -322,9 +323,9 @@ function ergebnisHtml(ev, plan) {
     .map((l) =>
       zeileHtml([
         escapeHtml(l.name),
-        `${formatNumberDe(Math.ceil(l.amount))} ${escapeHtml(UNIT_LABELS[l.unit] ?? l.unit)}`,
+        `${formatNumberLocal(Math.ceil(l.amount))} ${escapeHtml(UNIT_LABELS[l.unit] ?? l.unit)}`,
         l.supplier ? escapeHtml(l.supplier) : "–",
-        l.priceKnown ? `${formatNumberDe(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
+        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
       ])
     )
     .join("");
@@ -332,12 +333,12 @@ function ergebnisHtml(ev, plan) {
   const hinweise = [];
   if (plan.missingRecipes.length > 0) {
     hinweise.push(
-      `Nicht im Rezeptbuch gefunden und deshalb nicht eingerechnet: ${escapeHtml(plan.missingRecipes.join(", "))}.`
+      `${t("ui.nicht_im_rezeptbuch_gefunden_und_deshalb_f566")} ${escapeHtml(plan.missingRecipes.join(", "))}.`
     );
   }
   if (plan.missingPrices.length > 0) {
     hinweise.push(
-      `Ohne Einkaufspreis im Katalog und deshalb mit 0 € in der Summe: ${escapeHtml(
+      `${t("ui.ohne_einkaufspreis_im_katalog_und_deshalb_5804")} ${escapeHtml(
         plan.missingPrices.join(", ")
       )}. Der Wareneinsatz ist damit zu niedrig.`
     );
@@ -345,28 +346,28 @@ function ergebnisHtml(ev, plan) {
 
   return `
     <div class="result-box">
-      <p><strong>Drinks gesamt</strong> ${plan.totalDrinks} (inkl. ${formatNumberDe(
+      <p><strong>${t("ui.drinks_gesamt")}</strong> ${plan.totalDrinks} (inkl. ${formatNumberLocal(
         Number(ev.bufferPercent) || 0
-      )} % Puffer)</p>
-      <p><strong>Wareneinsatz</strong> ${formatNumberDe(plan.totalCost)} € · pro Gast ${formatNumberDe(
+      )} ${t("ui.puffer_13f0")}</p>
+      <p><strong>${t("ui.wareneinsatz")}</strong> ${formatNumberLocal(plan.totalCost)} ${t("ui.pro_gast")} ${formatNumberLocal(
         plan.costPerGuest
       )} €</p>
-      <p><strong>Eisbedarf</strong> ${formatNumberDe(plan.iceKg)} kg</p>
+      <p><strong>${t("ui.eisbedarf")}</strong> ${formatNumberLocal(plan.iceKg)} kg</p>
       ${hinweise.map((h) => `<p style="color: var(--danger)">${h}</p>`).join("")}
 
-      <h4>Drinks</h4>
+      <h4>${t("ui.drinks")}</h4>
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Rezept</th><th>Anteil</th><th>Anzahl</th><th>Batchmenge</th><th>ABV</th><th>Kosten</th></tr></thead>
+          <thead><tr><th>${t("ui.rezept")}</th><th>${t("ui.anteil")}</th><th>${t("ui.anzahl")}</th><th>${t("ui.batchmenge")}</th><th>ABV</th><th>${t("ui.kosten")}</th></tr></thead>
           <tbody>${drinkZeilen}</tbody>
         </table>
       </div>
 
-      <h4>Entnahme-/Einkaufsliste</h4>
+      <h4>${t("ui.entnahme_einkaufsliste")}</h4>
       ${
         entnahmeZeilen
           ? `<div class="table-scroll"><table>
-              <thead><tr><th>Zutat</th><th>Menge</th><th>Gebinde</th><th>Lieferant</th><th>Kosten</th></tr></thead>
+              <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th><th>${t("ui.gebinde")}</th><th>${t("ui.lieferant")}</th><th>${t("ui.kosten")}</th></tr></thead>
               <tbody>${entnahmeZeilen}</tbody>
             </table></div>`
           : '<p class="empty-note">Keine Volumenzutaten.</p>'
@@ -374,17 +375,17 @@ function ergebnisHtml(ev, plan) {
 
       ${
         stueckZeilen
-          ? `<h4>Stückzutaten</h4>
+          ? `<h4>${t("ui.stueckzutaten")}</h4>
              <div class="table-scroll"><table>
-               <thead><tr><th>Zutat</th><th>Menge</th><th>Lieferant</th><th>Kosten</th></tr></thead>
+               <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th><th>${t("ui.lieferant")}</th><th>${t("ui.kosten")}</th></tr></thead>
                <tbody>${stueckZeilen}</tbody>
              </table></div>`
           : ""
       }
 
       <div class="actions no-print">
-        <button type="button" id="event-to-preps" class="btn-secondary">Batches als Ansätze anlegen</button>
-        <button type="button" id="event-print" class="btn-secondary">Plan drucken</button>
+        <button type="button" id="event-to-preps" class="btn-secondary">${t("ui.batches_als_ansaetze_anlegen")}</button>
+        <button type="button" id="event-print" class="btn-secondary">${t("ui.plan_drucken")}</button>
       </div>
     </div>`;
 }
@@ -397,17 +398,17 @@ function render() {
   [...mixEl.querySelectorAll(".event-mix-row")].forEach((row) => {
     const name = row.querySelector(".event-mix-recipe").value;
     const treffer = plan.drinks.find((d) => d.recipeName === name);
-    row.querySelector(".event-mix-count").textContent = treffer ? `${treffer.count} Drinks` : "";
+    row.querySelector(".event-mix-count").textContent = treffer ? `${treffer.count} ${t("ui.drinks")}` : "";
   });
 
   if (plan.drinks.length === 0) {
-    shareSumEl.textContent = "Noch kein Rezept gewählt.";
+    shareSumEl.textContent = t("ui.noch_kein_rezept_gewaehlt");
     shareSumEl.style.color = "";
   } else if (Math.round(plan.shareSum) !== 100) {
-    shareSumEl.textContent = `Summe der Anteile: ${formatNumberDe(plan.shareSum)} % – sollte 100 % sein.`;
+    shareSumEl.textContent = `${t("ui.summe_der_anteile")} ${formatNumberLocal(plan.shareSum)} ${t("ui.sollte_100_sein")}`;
     shareSumEl.style.color = "var(--danger)";
   } else {
-    shareSumEl.textContent = "Summe der Anteile: 100 %.";
+    shareSumEl.textContent = t("ui.summe_der_anteile_100");
     shareSumEl.style.color = "";
   }
 
@@ -422,13 +423,13 @@ function render() {
 function uebernehmeAlsAnsaetze(ev, plan) {
   const batches = plan.drinks.filter((d) => d.found && d.batchMl > 0);
   if (batches.length === 0) {
-    alert("Kein Rezept mit Batchmenge – bitte zuerst Rezepte und Anteile eintragen.");
+    alert(t("ui.kein_rezept_mit_batchmenge_bitte_zuerst_f4cb"));
     return;
   }
   const offen = batches.slice(1).map((d) => d.recipeName);
   const erster = batches[0];
   prefillPreparation({
-    label: `${erster.recipeName} – ${ev.name || "Event"}`,
+    label: `${erster.recipeName} – ${ev.name || t("ui.event_ad89")}`,
     // Vorbelegung: alles mit Alkohol als Batch, sonst Sonstiges. Die Art
     // steuert die Haltbarkeit und gehört im Formular geprüft (Frischsaft!).
     prepType: erster.abv && erster.abv > 0 ? "batch" : "sonstiges",
@@ -439,20 +440,20 @@ function uebernehmeAlsAnsaetze(ev, plan) {
   switchTab("preparations");
   if (offen.length > 0) {
     alert(
-      `„${erster.recipeName}" ist im Mise en Place vorbelegt. Nach dem Speichern hier zurückkommen für: ${offen.join(", ")}.`
+      `„${erster.recipeName}${t("ui.ist_im_mise_en_place_vorbelegt_nach_dem_37e3")} ${offen.join(", ")}.`
     );
   }
 }
 
 function eventHtml(ev) {
   const datum = ev.eventDate
-    ? new Date(ev.eventDate).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
-    : "ohne Datum";
+    ? formatDate(ev.eventDate)
+    : t("ui.ohne_datum");
   const details = [
     datum,
-    ev.guests ? `${formatNumberDe(ev.guests)} Gäste` : "",
-    ev.durationHours ? `${formatNumberDe(ev.durationHours)} h` : "",
-    `${(ev.drinkMix ?? []).length} Rezept(e)`,
+    ev.guests ? `${formatNumberLocal(ev.guests)} ${t("ui.gaeste")}` : "",
+    ev.durationHours ? `${formatNumberLocal(ev.durationHours)} h` : "",
+    `${(ev.drinkMix ?? []).length} ${t("ui.rezept_e")}`,
   ].filter(Boolean);
 
   return `
@@ -463,7 +464,7 @@ function eventHtml(ev) {
       </div>
       <div class="prep-meta">${escapeHtml(details.join(" · "))}</div>
       <div class="actions no-print">
-        <button type="button" class="btn-secondary event-open">Laden</button>
+        <button type="button" class="btn-secondary event-open">${t("ui.laden")}</button>
         ${isAdmin() ? '<button type="button" class="btn-secondary event-delete">Löschen</button>' : ""}
       </div>
     </div>`;
@@ -477,7 +478,7 @@ function sortiereEvents(events) {
   const wert = (ev) => (ev.eventDate ? new Date(ev.eventDate).getTime() : null);
   const kommend = events.filter((e) => wert(e) !== null && wert(e) >= heute.getTime()).sort((a, b) => wert(a) - wert(b));
   const vergangen = events.filter((e) => wert(e) !== null && wert(e) < heute.getTime()).sort((a, b) => wert(b) - wert(a));
-  const ohne = events.filter((e) => wert(e) === null).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  const ohne = events.filter((e) => wert(e) === null).sort((a, b) => a.name.localeCompare(b.name, getLocale()));
   return [...kommend, ...vergangen, ...ohne];
 }
 
@@ -492,7 +493,7 @@ async function handleSubmit(e) {
   e.preventDefault();
   const ev = readForm();
   if (!ev.name) {
-    alert("Bitte einen Namen für die Veranstaltung eintragen.");
+    alert(t("ui.bitte_einen_namen_fuer_die_veranstaltung_6146"));
     return;
   }
   const nutzer = getCurrentUser();
@@ -501,11 +502,23 @@ async function handleSubmit(e) {
     await saveEvent(ev);
     resetForm();
   } catch (err) {
-    alert("Speichern fehlgeschlagen: " + err.message);
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
   }
 }
 
 export function initEvents() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderList();
+    render();
+    // Die Rezept-Auswahl je Zeile wird neu befüllt: der erste Eintrag ist
+    // eine Beschriftung ("Rezept wählen"), keine Rezeptdaten.
+    mixEl.querySelectorAll(".event-mix-recipe").forEach((sel) => {
+      sel.innerHTML = recipeOptionsHtml(sel.value);
+    });
+    applyTranslations(formEl);
+  });
+
   resetForm();
   renderList();
   onEventsChanged(renderList);
@@ -542,11 +555,11 @@ export function initEvents() {
     if (!ev) return;
     if (e.target.closest(".event-open")) loadIntoForm(ev);
     else if (e.target.closest(".event-delete")) {
-      if (!confirm(`Event „${ev.name}" wirklich löschen?`)) return;
+      if (!confirm(`${t("ui.event")}${ev.name}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
         await deleteEvent(ev.id);
       } catch (err) {
-        alert("Löschen fehlgeschlagen: " + err.message);
+        alert(t("ui.loeschen_fehlgeschlagen") + err.message);
       }
     }
   });

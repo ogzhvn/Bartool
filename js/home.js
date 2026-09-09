@@ -14,6 +14,7 @@ import { offeneAusLetzterSchicht } from "./shiftLog.js";
 import { focusRecipe } from "./recipes.js";
 import { focusProduct } from "./products.js";
 import { escapeHtml } from "./utils.js";
+import { t, onLanguageChanged } from "./i18n.js";
 
 const greetingEl = document.getElementById("home-greeting");
 const statsEl = document.getElementById("home-stats");
@@ -26,15 +27,15 @@ function renderGreeting() {
   const profile = getCurrentProfile();
   const user = getCurrentUser();
   const name = profile?.display_name || user?.email?.split("@")[0] || "";
-  greetingEl.textContent = name ? `Willkommen zurück, ${name}` : "Willkommen bei Bartool";
+  greetingEl.textContent = name ? `${t("ui.willkommen_zurueck")} ${name}` : t("ui.willkommen_bei_bartool");
 }
 
 function renderStats() {
   const stats = [
-    [getAllRecipes().length, "Rezepte im Buch"],
-    [loadRecipes().length, "davon eigene"],
-    [loadProducts().length, "Produkte im Katalog"],
-    [offeneAusLetzterSchicht(loadShiftLogs()).length, "offene Punkte aus der letzten Schicht"],
+    [getAllRecipes().length, t("ui.rezepte_im_buch")],
+    [loadRecipes().length, t("ui.davon_eigene")],
+    [loadProducts().length, t("ui.produkte_im_katalog")],
+    [offeneAusLetzterSchicht(loadShiftLogs()).length, t("ui.offene_punkte_aus_der_letzten_schicht")],
   ];
   statsEl.innerHTML = stats
     .map(
@@ -79,6 +80,13 @@ function renderShortcuts() {
 }
 
 export function initHome() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderGreeting();
+    renderStats();
+    renderShortcuts();
+  });
+
   renderGreeting();
   renderStats();
   renderShortcuts();

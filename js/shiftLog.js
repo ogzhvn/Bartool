@@ -1,7 +1,8 @@
 import { loadShiftLogs, saveShiftLog, deleteShiftLog, onShiftLogsChanged, loadPreparations } from "./storage.js";
-import { TYP_LABELS } from "./preparations.js";
+import { typLabel } from "./preparations.js";
 import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml } from "./utils.js";
+import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
 // Schichtübergabe / Barbuch: was ist leer, was muss angesetzt werden, was ist
 // offen geblieben. Statt Zettel steht das hier mit Autor und Zeitstempel.
@@ -11,11 +12,16 @@ import { escapeHtml } from "./utils.js";
 // Vorgeschlagen heißt vorgeschlagen – abwählbar, und gespeichert wird erst
 // auf Knopfdruck.
 
-export const SHIFT_LABELS = {
-  frueh: "Frühschicht",
-  spaet: "Spätschicht",
-  nacht: "Nachtschicht",
+const SHIFT_LABEL_KEYS = {
+  frueh: "ui.fruehschicht",
+  spaet: "ui.spaetschicht",
+  nacht: "ui.nachtschicht",
 };
+
+// Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
+export function shiftLabel(shift) {
+  return SHIFT_LABEL_KEYS[shift] ? t(SHIFT_LABEL_KEYS[shift]) : shift;
+}
 
 // Wie weit die Liste zurückreicht.
 const SICHTBARE_TAGE = 14;
@@ -42,8 +48,8 @@ function tageBis(datumIso, jetzt = new Date()) {
 // Neueste zuerst: erst nach Schichtdatum, bei gleichem Datum nach dem
 // Zeitpunkt des Anlegens. Damit steht die zuletzt geschriebene Übergabe oben.
 function zeitwert(iso) {
-  const t = iso ? new Date(iso).getTime() : 0;
-  return Number.isFinite(t) ? t : 0;
+  const zeit = iso ? new Date(iso).getTime() : 0;
+  return Number.isFinite(zeit) ? zeit : 0;
 }
 
 export function sortiereLogs(logs) {
@@ -78,13 +84,13 @@ export function ablaufendeAnsaetze(preparations, jetzt = new Date()) {
 }
 
 function ansatzText({ prep, tage }) {
-  const art = TYP_LABELS[prep.prepType] ?? prep.prepType;
+  const art = typLabel(prep.prepType);
   const frist =
     tage < 0
-      ? `seit ${Math.abs(tage)} Tag(en) abgelaufen`
+      ? `${t("ui.seit")} ${Math.abs(tage)} ${t("ui.tag_en_abgelaufen")}`
       : tage === 0
-        ? "läuft heute ab"
-        : `läuft in ${tage} Tag(en) ab`;
+        ? t("ui.laeuft_heute_ab")
+        : `${t("ui.laeuft_in")} ${tage} ${t("ui.tag_en_ab")}`;
   return `${prep.label} (${art}) – ${frist}`;
 }
 
@@ -92,11 +98,11 @@ function ansatzText({ prep, tage }) {
 export function vorschlaege(logs, preparations, jetzt = new Date()) {
   const ausSchicht = offeneAusLetzterSchicht(logs).map((p) => ({
     text: p.text,
-    herkunft: "letzte Schicht",
+    herkunft: t("ui.letzte_schicht"),
   }));
   const ausAnsaetzen = ablaufendeAnsaetze(preparations, jetzt).map((e) => ({
     text: ansatzText(e),
-    herkunft: "Mise en Place",
+    herkunft: t("ui.mise_en_place"),
   }));
   // Doppelte Texte (ein Ansatz, der schon letzte Schicht notiert wurde)
   // nur einmal anbieten.
@@ -150,13 +156,13 @@ function heuteInput(jetzt = new Date()) {
 }
 
 function formatDatum(iso) {
-  if (!iso) return "ohne Datum";
-  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  if (!iso) return t("ui.ohne_datum");
+  return formatDate(iso);
 }
 
 function formatZeitpunkt(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleString("de-DE", {
+  return formatDate(iso, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -192,8 +198,8 @@ function addItemRow(text = "") {
   const row = document.createElement("div");
   row.className = "menu-pick shift-item-row";
   row.innerHTML = `
-    <input type="text" class="shift-item-text" placeholder="z. B. Tonic-Nachschub bestellen" />
-    <button type="button" class="remove-btn" aria-label="Punkt entfernen">×</button>`;
+    <input type="text" class="shift-item-text" placeholder="${t("ui.z_b_tonic_nachschub_bestellen")}" />
+    <button type="button" class="remove-btn" aria-label="${t("ui.punkt_entfernen")}">×</button>`;
   row.querySelector(".shift-item-text").value = text;
   itemsEl.appendChild(row);
 }
@@ -204,9 +210,9 @@ function gewaehltePunkte() {
     .map((cb) => cb.value);
   const eigene = [...itemsEl.querySelectorAll(".shift-item-text")].map((el) => el.value.trim()).filter(Boolean);
   const gesehen = new Set();
-  return [...ausVorschlag, ...eigene].filter((t) => {
-    if (gesehen.has(t)) return false;
-    gesehen.add(t);
+  return [...ausVorschlag, ...eigene].filter((text) => {
+    if (gesehen.has(text)) return false;
+    gesehen.add(text);
     return true;
   });
 }
@@ -236,7 +242,7 @@ async function handleSubmit(e) {
   const punkte = gewaehltePunkte();
   const zusammenfassung = summaryEl.value.trim();
   if (!zusammenfassung && punkte.length === 0) {
-    alert("Bitte eine Notiz schreiben oder mindestens einen offenen Punkt eintragen.");
+    alert(t("ui.bitte_eine_notiz_schreiben_oder_mindestens_dd28"));
     return;
   }
   const log = {
@@ -251,7 +257,7 @@ async function handleSubmit(e) {
     await saveShiftLog(log);
     schliesseFormular();
   } catch (err) {
-    alert("Speichern fehlgeschlagen: " + err.message);
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
   }
 }
 
@@ -260,7 +266,7 @@ async function handleSubmit(e) {
 function punktHtml(log, index, punkt) {
   const erledigt = Boolean(punkt.done);
   const nachweis = erledigt
-    ? `erledigt von ${punkt.doneBy || "unbekannt"}${punkt.doneAt ? ` um ${formatZeitpunkt(punkt.doneAt)}` : ""}`
+    ? `${t("ui.erledigt_von")} ${punkt.doneBy || "unbekannt"}${punkt.doneAt ? ` um ${formatZeitpunkt(punkt.doneAt)}` : ""}`
     : "offen";
   return `
     <label class="menu-pick">
@@ -276,8 +282,8 @@ function punktHtml(log, index, punkt) {
 
 function logHtml(log) {
   const offen = offenePunkte(log).length;
-  const kopf = `${formatDatum(log.shiftDate)} · ${escapeHtml(SHIFT_LABELS[log.shift] ?? log.shift)}`;
-  const status = offen > 0 ? `${offen} offen` : "alles erledigt";
+  const kopf = `${formatDatum(log.shiftDate)} · ${escapeHtml(shiftLabel(log.shift))}`;
+  const status = offen > 0 ? `${offen} ${t("ui.offen_klein")}` : t("ui.alles_erledigt");
   const punkte = (log.openItems ?? []).map((p, i) => punktHtml(log, i, p)).join("");
 
   return `
@@ -292,7 +298,7 @@ function logHtml(log) {
           ? `<div class="menu-pick-list">${punkte}</div>`
           : '<p class="prep-meta">Keine offenen Punkte notiert.</p>'
       }
-      <p class="prep-meta">Angelegt ${escapeHtml(formatZeitpunkt(log.createdAt)) || "–"}</p>
+      <p class="prep-meta">${t("ui.angelegt")} ${escapeHtml(formatZeitpunkt(log.createdAt)) || "–"}</p>
       ${
         isAdmin()
           ? '<div class="actions no-print"><button type="button" class="btn-secondary shift-log-delete">Löschen</button></div>'
@@ -323,12 +329,18 @@ async function setzePunktStatus(logId, index, done) {
   try {
     await saveShiftLog({ ...log, openItems: punkte });
   } catch (err) {
-    alert("Speichern fehlgeschlagen: " + err.message);
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
     renderList();
   }
 }
 
 export function initShiftLog() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderList();
+    renderVorschlaege();
+  });
+
   schliesseFormular();
   renderList();
   onShiftLogsChanged(renderList);
@@ -356,11 +368,11 @@ export function initShiftLog() {
     const karte = e.target.closest(".prep-item");
     const log = loadShiftLogs().find((l) => l.id === karte?.dataset.id);
     if (!log) return;
-    if (!confirm(`Übergabe vom ${formatDatum(log.shiftDate)} wirklich löschen?`)) return;
+    if (!confirm(`${t("ui.uebergabe_vom")} ${formatDatum(log.shiftDate)} ${t("ui.wirklich_loeschen")}`)) return;
     try {
       await deleteShiftLog(log.id);
     } catch (err) {
-      alert("Löschen fehlgeschlagen: " + err.message);
+      alert(t("ui.loeschen_fehlgeschlagen") + err.message);
     }
   });
 }

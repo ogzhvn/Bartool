@@ -10,6 +10,7 @@ import { isAdmin } from "./auth.js";
 import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
+import { getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -164,7 +165,7 @@ const printBtn = document.getElementById("product-print");
 const selectedNames = new Set();
 
 function updateExportBar() {
-  selectedCountEl.textContent = `${selectedNames.size} ausgewählt`;
+  selectedCountEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
   exportExcelBtn.disabled = selectedNames.size === 0;
   exportWordBtn.disabled = selectedNames.size === 0;
   printBtn.disabled = selectedNames.size === 0;
@@ -283,7 +284,7 @@ function loadIntoForm(product) {
 async function handleSave() {
   const name = nameEl.value.trim();
   if (!name) {
-    alert("Bitte einen Produktnamen eingeben.");
+    alert(t("ui.bitte_einen_produktnamen_eingeben"));
     return;
   }
   const product = {};
@@ -310,11 +311,11 @@ async function handleSave() {
   if (!isAdmin()) {
     try {
       await submitChangeRequest("products", product);
-      alert("Danke! Dein Vorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      alert(t("ui.danke_dein_vorschlag_wurde_zur_pruefung_an_65b3"));
       resetForm();
       exitEditView();
     } catch (error) {
-      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+      alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
     }
     return;
   }
@@ -327,40 +328,40 @@ async function handleSave() {
     editingOriginalName = name;
     exitEditView();
   } catch (error) {
-    alert("Produkt konnte nicht gespeichert werden: " + error.message);
+    alert(t("ui.produkt_konnte_nicht_gespeichert_werden") + error.message);
   }
 }
 
 async function handleDelete() {
   if (!editingOriginalName) {
-    alert("Bitte zuerst ein Produkt auswählen.");
+    alert(t("ui.bitte_zuerst_ein_produkt_auswaehlen"));
     return;
   }
   if (!isCustomProduct(editingOriginalName)) {
-    alert("Dieses Produkt stammt aus dem Grundkatalog und wurde noch nicht in deinem Bestand gespeichert – es gibt nichts zu löschen.");
+    alert(t("ui.dieses_produkt_stammt_aus_dem_grundkatalog_24dc"));
     return;
   }
 
   if (!isAdmin()) {
-    if (!confirm(`Löschung von "${editingOriginalName}" zur Prüfung vorschlagen?`)) return;
+    if (!confirm(`${t("ui.loeschung_von")}${editingOriginalName}${t("ui.zur_pruefung_vorschlagen")}`)) return;
     try {
       await submitChangeRequest("products", { name: editingOriginalName }, "delete");
-      alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+      alert(t("ui.danke_der_loeschvorschlag_wurde_zur_a3bd"));
       resetForm();
       exitEditView();
     } catch (error) {
-      alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+      alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
     }
     return;
   }
 
-  if (!confirm(`Produkt "${editingOriginalName}" wirklich löschen?`)) return;
+  if (!confirm(`${t("ui.produkt_e1e4")}${editingOriginalName}${t("ui.wirklich_loeschen_b7a7")}`)) return;
   try {
     await deleteProduct(editingOriginalName);
     resetForm();
     exitEditView();
   } catch (error) {
-    alert("Produkt konnte nicht gelöscht werden: " + error.message);
+    alert(t("ui.produkt_konnte_nicht_geloescht_werden") + error.message);
   }
 }
 
@@ -464,11 +465,11 @@ function groupWinesByOrigin(products) {
     .sort(([a], [b]) => {
       if (a === "Deutschland") return -1;
       if (b === "Deutschland") return 1;
-      return a.localeCompare(b, "de");
+      return a.localeCompare(b, getLocale());
     })
     .map(([country, subregions]) => ({
       country,
-      subregions: [...subregions.entries()].sort(([a], [b]) => a.localeCompare(b, "de")),
+      subregions: [...subregions.entries()].sort(([a], [b]) => a.localeCompare(b, getLocale())),
     }));
 }
 
@@ -484,20 +485,20 @@ function groupProducts(products) {
   });
 
   return [...groups.entries()]
-    .sort(([a], [b]) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de"))
+    .sort(([a], [b]) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, getLocale()))
     .map(([groupName, subgroups]) => ({
       groupName,
       subgroups: [...subgroups.entries()].sort(
         ([a], [b]) =>
-          subgroupSortIndex(groupName, a) - subgroupSortIndex(groupName, b) || a.localeCompare(b, "de")
+          subgroupSortIndex(groupName, a) - subgroupSortIndex(groupName, b) || a.localeCompare(b, getLocale())
       ),
     }));
 }
 
 function formatPrice(product) {
   if (!product.priceValue) return "";
-  const unitLabel = product.priceUnit === "stueck" ? "Stück" : "Liter";
-  return `${product.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${unitLabel}`;
+  const unitLabel = product.priceUnit === "stueck" ? t("ui.stueck_26e1") : t("ui.liter_3629");
+  return `${product.priceValue.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${unitLabel}`;
 }
 
 // Preisverlauf als kleine Tabelle: wann galt welcher Einkaufspreis und wie
@@ -510,16 +511,16 @@ function renderPriceHistory(product) {
   const rows = entries
     .map((entry, index) => {
       const vorher = entries[index + 1];
-      const einheit = entry.priceUnit === "stueck" ? "Stück" : "Liter";
+      const einheit = entry.priceUnit === "stueck" ? t("ui.stueck_26e1") : t("ui.liter_3629");
       const preis =
         entry.priceValue == null
           ? "–"
-          : `${entry.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${einheit}`;
+          : `${entry.priceValue.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${einheit}`;
       let diff = "–";
       if (vorher && vorher.priceValue && entry.priceValue != null) {
         const prozent = ((entry.priceValue - vorher.priceValue) / vorher.priceValue) * 100;
         const vorzeichen = prozent > 0 ? "+" : "";
-        diff = `<span class="${prozent > 0 ? "menu-quote-high" : "menu-quote-ok"}">${vorzeichen}${prozent.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %</span>`;
+        diff = `<span class="${prozent > 0 ? "menu-quote-high" : "menu-quote-ok"}">${vorzeichen}${prozent.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %</span>`;
       }
       const datum = entry.validFrom ? entry.validFrom.split("-").reverse().join(".") : "–";
       return `<tr><td>${datum}</td><td>${preis}</td><td>${diff}</td><td>${escapeHtml(entry.source)}</td></tr>`;
@@ -527,10 +528,10 @@ function renderPriceHistory(product) {
     .join("");
 
   return `
-    <p><strong>Preisverlauf:</strong></p>
+    <p><strong>${t("ui.preisverlauf")}</strong></p>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Gültig ab</th><th>Einkaufspreis</th><th>Differenz</th><th>Quelle</th></tr></thead>
+        <thead><tr><th>${t("ui.gueltig_ab")}</th><th>${t("ui.einkaufspreis")}</th><th>${t("ui.differenz")}</th><th>${t("ui.quelle")}</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -538,37 +539,37 @@ function renderPriceHistory(product) {
 
 function renderProductItem(product) {
   const metaRows = [
-    ["Kategorie & Herkunft", product.category],
-    ["Alkoholgehalt", product.abv],
-    ["Herkunftsland", product.originCountry],
-    ["Herkunftsregion", product.originRegion],
-    ["Grundstoff", product.baseMaterial],
-    ["Herstellungsverfahren", product.productionMethod],
-    ["Altersangabe", product.ageStatement],
-    ["Aroma-Schlagworte", (product.flavorTags ?? []).join(", ")],
-    ["Region", product.region],
-    ["Rebsorte", product.grapeVariety],
-    ["Lage", product.vineyard],
-    ["Jahrgang", product.vintage],
-    ["Ausbau", product.aging],
-    ["Trinkfenster", product.drinkingWindow],
-    ["Erzeuger", product.producer],
-    ["Geschmacksrichtung", product.sweetness],
-    ["Klassifikation", product.classification],
-    ["Serviertemperatur", product.servingTemp],
-    ["Körper", product.body],
+    [t("ui.kategorie_herkunft"), product.category],
+    [t("ui.alkoholgehalt_006a"), product.abv],
+    [t("ui.herkunftsland"), product.originCountry],
+    [t("ui.herkunftsregion"), product.originRegion],
+    [t("ui.grundstoff"), product.baseMaterial],
+    [t("ui.herstellungsverfahren"), product.productionMethod],
+    [t("ui.altersangabe"), product.ageStatement],
+    [t("ui.aroma_schlagworte"), (product.flavorTags ?? []).join(", ")],
+    [t("ui.region"), product.region],
+    [t("ui.rebsorte"), product.grapeVariety],
+    [t("ui.lage"), product.vineyard],
+    [t("ui.jahrgang"), product.vintage],
+    [t("ui.ausbau"), product.aging],
+    [t("ui.trinkfenster"), product.drinkingWindow],
+    [t("ui.erzeuger"), product.producer],
+    [t("ui.geschmacksrichtung"), product.sweetness],
+    [t("ui.klassifikation"), product.classification],
+    [t("ui.serviertemperatur"), product.servingTemp],
+    [t("ui.koerper"), product.body],
     // Leer statt "nein": nur der gesetzte Prüfvermerk ist eine Aussage.
-    ["Geprüft", product.verified ? "ja" : ""],
-    ["Tasting Notes", product.tastingNotes],
-    ["Speiseempfehlung", product.foodPairing],
-    ["Serviervorschlag", product.service],
-    ["Alternativen", product.alternatives],
-    ["Story", product.story],
-    ["Herstellung", product.production],
-    ["Allergene", product.allergens],
-    ["Einkaufspreis", formatPrice(product)],
-    ["Kurzer Pitch", product.quickPitch],
-    ["Passt gut zu", (product.pairsWith ?? []).join(", ")],
+    [t("ui.geprueft"), product.verified ? "ja" : ""],
+    [t("ui.tasting_notes"), product.tastingNotes],
+    [t("ui.speiseempfehlung"), product.foodPairing],
+    [t("ui.serviervorschlag"), product.service],
+    [t("ui.alternativen"), product.alternatives],
+    [t("ui.story"), product.story],
+    [t("ui.herstellung"), product.production],
+    [t("ui.allergene"), product.allergens],
+    [t("ui.einkaufspreis"), formatPrice(product)],
+    [t("ui.kurzer_pitch"), product.quickPitch],
+    [t("ui.passt_gut_zu"), (product.pairsWith ?? []).join(", ")],
   ].filter(([, value]) => value);
 
   const usedIn = getRecipesUsingProduct(product.name);
@@ -583,15 +584,15 @@ function renderProductItem(product) {
         <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
         ${escapeHtml(product.name)}
       </span>
-      <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
+      <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderPriceHistory(product)}
-      ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
+      ${usedIn.length > 0 ? `<p><strong>${t("ui.verwendet_in")}</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
       <div class="actions">
-        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? "Bearbeiten" : "Änderung vorschlagen"}</button>
-        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? "Löschen" : "Löschung vorschlagen"}</button>` : ""}
+        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
+        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
       </div>
     </div>
   `;
@@ -630,21 +631,21 @@ function renderProductItem(product) {
     deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (!isAdmin()) {
-        if (!confirm(`Löschung von "${product.name}" zur Prüfung vorschlagen?`)) return;
+        if (!confirm(`${t("ui.loeschung_von")}${product.name}${t("ui.zur_pruefung_vorschlagen")}`)) return;
         try {
           await submitChangeRequest("products", { name: product.name }, "delete");
-          alert("Danke! Der Löschvorschlag wurde zur Prüfung an einen Admin eingereicht.");
+          alert(t("ui.danke_der_loeschvorschlag_wurde_zur_a3bd"));
         } catch (error) {
-          alert("Vorschlag konnte nicht eingereicht werden: " + error.message);
+          alert(t("ui.vorschlag_konnte_nicht_eingereicht_werden") + error.message);
         }
         return;
       }
-      if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
+      if (!confirm(`${t("ui.produkt_e1e4")}${product.name}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
         if (editingOriginalName === product.name) resetForm();
         await deleteProduct(product.name);
       } catch (error) {
-        alert("Produkt konnte nicht gelöscht werden: " + error.message);
+        alert(t("ui.produkt_konnte_nicht_geloescht_werden") + error.message);
       }
     });
   }
@@ -655,7 +656,7 @@ function renderBrowseList() {
   const products = currentFilteredProducts();
 
   if (products.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">Keine Produkte gefunden.</p>`;
+    listEl.innerHTML = `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
     updateExportBar();
     return;
   }
@@ -677,7 +678,7 @@ function renderBrowseList() {
           listEl.appendChild(subHeader);
         }
         items
-          .sort((a, b) => a.name.localeCompare(b.name, "de"))
+          .sort((a, b) => a.name.localeCompare(b.name, getLocale()))
           .forEach((product) => listEl.appendChild(renderProductItem(product)));
       });
     });
@@ -708,7 +709,7 @@ function renderBrowseList() {
         listEl.appendChild(subHeader);
       }
       items
-        .sort((a, b) => a.name.localeCompare(b.name, "de"))
+        .sort((a, b) => a.name.localeCompare(b.name, getLocale()))
         .forEach((product) => listEl.appendChild(renderProductItem(product)));
     });
   });
@@ -720,7 +721,7 @@ function renderSidebarList() {
   const products = getAllProducts().filter((p) => p.name.toLowerCase().includes(query));
 
   if (products.length === 0) {
-    sidebarListEl.innerHTML = `<p class="empty-note">Keine Produkte gefunden.</p>`;
+    sidebarListEl.innerHTML = `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
     return;
   }
   sidebarListEl.innerHTML = "";
@@ -737,17 +738,17 @@ function renderSidebarList() {
 function populateGroupFilter() {
   const groups = [...new Set(getAllProducts().map((p) => p.group).filter(Boolean))]
     .filter((g) => !activeOberkategorie || activeOberkategorie.groups.includes(g))
-    .sort((a, b) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, "de"));
+    .sort((a, b) => groupSortIndex(a) - groupSortIndex(b) || a.localeCompare(b, getLocale()));
   const currentValue = groupFilterEl.value;
   groupFilterEl.innerHTML =
-    `<option value="">Alle Kategorien</option>` +
+    `<option value="">${t("ui.alle_kategorien")}</option>` +
     groups.map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
   if (groups.includes(currentValue)) groupFilterEl.value = currentValue;
 }
 
 function populateSupplierOptions() {
   const lieferanten = [...new Set(getAllProducts().map((p) => p.supplier).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, "de")
+    a.localeCompare(b, getLocale())
   );
   supplierOptionsEl.innerHTML = lieferanten.map((l) => `<option value="${escapeHtml(l)}"></option>`).join("");
 }
@@ -755,8 +756,8 @@ function populateSupplierOptions() {
 function populateDatalists() {
   populateSupplierOptions();
   const products = getAllProducts();
-  const groups = [...new Set(products.map((p) => p.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
-  const subgroups = [...new Set(products.map((p) => p.subGroup).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  const groups = [...new Set(products.map((p) => p.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, getLocale()));
+  const subgroups = [...new Set(products.map((p) => p.subGroup).filter(Boolean))].sort((a, b) => a.localeCompare(b, getLocale()));
   groupOptionsEl.innerHTML = groups.map((g) => `<option value="${escapeHtml(g)}"></option>`).join("");
   subgroupOptionsEl.innerHTML = subgroups.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
 }
@@ -765,7 +766,7 @@ function populateDatalists() {
 // form (index.html references the same <datalist id="pairs-with-options">).
 function populatePairsWithOptions() {
   const names = [...new Set([...getAllProducts().map((p) => p.name), ...getAllRecipes().map((r) => r.name)])].sort(
-    (a, b) => a.localeCompare(b, "de")
+    (a, b) => a.localeCompare(b, getLocale())
   );
   pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
 }
@@ -811,9 +812,16 @@ export function focusProduct(name) {
 }
 
 export function initProducts() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    populateGroupFilter();
+    renderBrowseList();
+    renderSidebarList();
+  });
+
   if (!isAdmin()) {
-    document.getElementById("product-save").textContent = "Vorschlag einreichen";
-    document.getElementById("product-delete").textContent = "Löschung vorschlagen";
+    document.getElementById("product-save").textContent = t("ui.vorschlag_einreichen");
+    document.getElementById("product-delete").textContent = t("ui.loeschung_vorschlagen");
   }
   groupEl.addEventListener("input", updateWineFieldsVisibility);
   updateWineFieldsVisibility();

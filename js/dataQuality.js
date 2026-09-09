@@ -5,30 +5,31 @@ import { openRecipeForEdit } from "./recipes.js";
 import { onProductsChanged, onRecipesChanged } from "./storage.js";
 import { switchTab, setPendingEditReturn } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
+import { t, onLanguageChanged } from "./i18n.js";
 
 const containerEl = document.getElementById("data-quality-report");
 
 const PRODUCT_METRICS = [
-  { field: "Einkaufspreis", missing: (p) => !p.priceValue },
-  { field: "Kurzpitch", missing: (p) => !p.quickPitch },
-  { field: "Tasting Notes", missing: (p) => !p.tastingNotes },
+  { field: t("ui.einkaufspreis"), missing: (p) => !p.priceValue },
+  { field: t("ui.kurzpitch"), missing: (p) => !p.quickPitch },
+  { field: t("ui.tasting_notes"), missing: (p) => !p.tastingNotes },
   // Produktwissen (Paket 21): Grundlage für Schulung und Quiz.
-  { field: "Herkunftsland", missing: (p) => !p.originCountry },
-  { field: "Grundstoff", missing: (p) => !p.baseMaterial },
-  { field: "Aroma-Schlagworte", missing: (p) => (p.flavorTags ?? []).length === 0 },
+  { field: t("ui.herkunftsland"), missing: (p) => !p.originCountry },
+  { field: t("ui.grundstoff"), missing: (p) => !p.baseMaterial },
+  { field: t("ui.aroma_schlagworte"), missing: (p) => (p.flavorTags ?? []).length === 0 },
   // Nur dort ein Mangel, wo eine Textangabe existiert, aus der sich keine Zahl
   // ableiten ließ – "0 % vol" ist ein gepflegter Wert, kein fehlender.
   {
-    field: "Alkoholgehalt als Zahl",
+    field: t("ui.alkoholgehalt_als_zahl"),
     missing: (p) => Boolean(p.abv) && (p.abvValue === "" || p.abvValue == null),
   },
   // Ohne Prüfvermerk wird ein Produkt später im Quiz nicht abgefragt.
-  { field: "Prüfvermerk", missing: (p) => !p.verified },
+  { field: t("ui.pruefvermerk"), missing: (p) => !p.verified },
 ];
 
 const RECIPE_METRICS = [
-  { field: "Kurzpitch", missing: (r) => !r.quickPitch },
-  { field: "Zubereitung", missing: (r) => !r.method },
+  { field: t("ui.kurzpitch"), missing: (r) => !r.quickPitch },
+  { field: t("ui.zubereitung"), missing: (r) => !r.method },
 ];
 
 function renderMetricGroup(title, titleDative, tabId, items, metrics, openForEdit) {
@@ -36,11 +37,11 @@ function renderMetricGroup(title, titleDative, tabId, items, metrics, openForEdi
     .map((metric) => {
       const missing = items.filter(metric.missing);
       if (missing.length === 0) {
-        return `<p class="empty-note">✓ Alle ${items.length} ${title}: ${escapeHtml(metric.field)} hinterlegt.</p>`;
+        return `<p class="empty-note">${t("ui.alle_66a5")} ${items.length} ${title}: ${escapeHtml(metric.field)} ${t("ui.hinterlegt")}.</p>`;
       }
       return `
         <details class="audit-entry">
-          <summary>${missing.length} von ${items.length} ${titleDative} ohne ${escapeHtml(metric.field)}</summary>
+          <summary>${missing.length} ${t("ui.von")} ${items.length} ${titleDative} ${t("ui.ohne_klein")} ${escapeHtml(metric.field)}</summary>
           <div class="quality-item-list">
             ${missing
               .map(
@@ -69,14 +70,17 @@ function renderMetricGroup(title, titleDative, tabId, items, metrics, openForEdi
 function render() {
   containerEl.innerHTML = "";
   containerEl.appendChild(
-    renderMetricGroup("Produkte", "Produkten", "products", getAllProducts(), PRODUCT_METRICS, openProductForEdit)
+    renderMetricGroup(t("ui.produkte"), t("ui.produkten"), "products", getAllProducts(), PRODUCT_METRICS, openProductForEdit)
   );
   containerEl.appendChild(
-    renderMetricGroup("Rezepte", "Rezepten", "recipes", getAllRecipes(), RECIPE_METRICS, openRecipeForEdit)
+    renderMetricGroup(t("ui.rezepte"), t("ui.rezepten"), "recipes", getAllRecipes(), RECIPE_METRICS, openRecipeForEdit)
   );
 }
 
 export function initDataQuality() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(render);
+
   onProductsChanged(render);
   onRecipesChanged(render);
   render();

@@ -6,7 +6,8 @@ import {
 } from "./storage.js";
 import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { printLabels } from "./printView.js";
-import { escapeHtml, formatNumberDe } from "./utils.js";
+import { escapeHtml, formatNumberLocal } from "./utils.js";
+import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
 // Mise en Place: welche Ansätze stehen, wie lange halten sie noch.
 //
@@ -23,13 +24,18 @@ export const HALTBARKEIT_TAGE = {
   sonstiges: 7,
 };
 
-export const TYP_LABELS = {
-  superjuice: "Superjuice",
-  sirup: "Zuckersirup",
-  batch: "Batch (alkoholisch)",
-  batch_juice: "Batch mit Frischsaft",
-  sonstiges: "Sonstiges",
+const TYP_LABEL_KEYS = {
+  superjuice: "ui.superjuice",
+  sirup: "ui.zuckersirup",
+  batch: "ui.batch_alkoholisch",
+  batch_juice: "ui.batch_mit_frischsaft",
+  sonstiges: "ui.sonstiges",
 };
+
+// Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
+export function typLabel(typ) {
+  return TYP_LABEL_KEYS[typ] ? t(TYP_LABEL_KEYS[typ]) : typ;
+}
 
 const WARNUNG_TAGE = 2;
 
@@ -52,11 +58,6 @@ function toDateInput(value) {
   const d = value ? new Date(value) : new Date();
   const offset = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function formatDate(value) {
-  if (!value) return "–";
-  return new Date(value).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 // Volle Tage bis zum Ablauf, gerechnet ab heute 0 Uhr, damit "läuft morgen ab"
@@ -88,7 +89,7 @@ function resetForm() {
   madeAtEl.value = toDateInput();
   updateExpiryFromType();
   formEl.dataset.editId = "";
-  document.getElementById("prep-submit").textContent = "Ansatz speichern";
+  document.getElementById("prep-submit").textContent = t("ui.ansatz_speichern");
   document.getElementById("prep-cancel").hidden = true;
 }
 
@@ -96,18 +97,18 @@ function eintragHtml(prep) {
   const tage = tageBis(prep.expiresAt);
   const verbraucht = prep.status === "verbraucht";
   let status = "";
-  if (verbraucht) status = "verbraucht";
-  else if (tage === null) status = "ohne Datum";
-  else if (tage < 0) status = `seit ${Math.abs(tage)} Tag(en) abgelaufen`;
-  else if (tage === 0) status = "läuft heute ab";
-  else status = `noch ${tage} Tag(e)`;
+  if (verbraucht) status = t("ui.verbraucht_klein");
+  else if (tage === null) status = t("ui.ohne_datum");
+  else if (tage < 0) status = `${t("ui.seit")} ${Math.abs(tage)} ${t("ui.tag_en_abgelaufen")}`;
+  else if (tage === 0) status = t("ui.laeuft_heute_ab");
+  else status = t("ui.noch_tage", { tage });
 
   const details = [
-    prep.batchSizeMl ? `${formatNumberDe(prep.batchSizeMl)} ml` : "",
-    prep.abv !== "" && prep.abv != null ? `${formatNumberDe(prep.abv)} % ABV` : "",
+    prep.batchSizeMl ? `${formatNumberLocal(prep.batchSizeMl)} ml` : "",
+    prep.abv !== "" && prep.abv != null ? `${formatNumberLocal(prep.abv)} % ABV` : "",
     prep.location,
     `angesetzt ${formatDate(prep.madeAt)}`,
-    `haltbar bis ${formatDate(prep.expiresAt)}`,
+    `${t("ui.haltbar_bis_08c8")} ${formatDate(prep.expiresAt)}`,
   ].filter(Boolean);
 
   const abgelaufen = !verbraucht && tage !== null && tage < 0;
@@ -119,15 +120,15 @@ function eintragHtml(prep) {
         <strong>${escapeHtml(prep.label)}</strong>
         <span class="prep-status">${escapeHtml(status)}</span>
       </div>
-      <p class="prep-meta">${escapeHtml(TYP_LABELS[prep.prepType] ?? prep.prepType)} · ${escapeHtml(details.join(" · "))}</p>
+      <p class="prep-meta">${escapeHtml(typLabel(prep.prepType))} · ${escapeHtml(details.join(" · "))}</p>
       ${prep.notes ? `<p class="prep-meta">${escapeHtml(prep.notes)}</p>` : ""}
       <div class="actions">
         ${verbraucht
-          ? `<button type="button" class="btn-secondary prep-reactivate">Wieder aktiv</button>`
-          : `<button type="button" class="btn-secondary prep-done-btn">Verbraucht</button>
-             <button type="button" class="btn-secondary prep-edit">Bearbeiten</button>`}
-        <button type="button" class="btn-secondary prep-label-btn">Etikett</button>
-        ${isAdmin() ? `<button type="button" class="btn-secondary prep-delete">Löschen</button>` : ""}
+          ? `<button type="button" class="btn-secondary prep-reactivate">${t("ui.wieder_aktiv")}</button>`
+          : `<button type="button" class="btn-secondary prep-done-btn">${t("ui.verbraucht")}</button>
+             <button type="button" class="btn-secondary prep-edit">${t("ui.bearbeiten")}</button>`}
+        <button type="button" class="btn-secondary prep-label-btn">${t("ui.etikett")}</button>
+        ${isAdmin() ? `<button type="button" class="btn-secondary prep-delete">${t("ui.loeschen")}</button>` : ""}
       </div>
     </div>`;
 }
@@ -146,11 +147,11 @@ function render() {
   const verbraucht = alle.filter((p) => p.status === "verbraucht");
 
   const abgelaufen = aktiv.filter((p) => {
-    const t = tageBis(p.expiresAt);
+    const tage = tageBis(p.expiresAt);
     return t !== null && t < 0;
   });
   const bald = aktiv.filter((p) => {
-    const t = tageBis(p.expiresAt);
+    const tage = tageBis(p.expiresAt);
     return t !== null && t >= 0 && t <= WARNUNG_TAGE;
   });
   const laufend = aktiv.filter((p) => !abgelaufen.includes(p) && !bald.includes(p));
@@ -159,17 +160,17 @@ function render() {
     [...liste].sort((a, b) => new Date(a.expiresAt ?? 0) - new Date(b.expiresAt ?? 0));
 
   listEl.innerHTML =
-    gruppeHtml("Abgelaufen", sortiert(abgelaufen)) +
-    gruppeHtml(`Läuft bald ab (≤ ${WARNUNG_TAGE} Tage)`, sortiert(bald)) +
-    gruppeHtml("Aktiv", sortiert(laufend), alle.length === 0 ? "Noch keine Ansätze erfasst." : "") +
-    (showDoneEl.checked ? gruppeHtml("Verbraucht", sortiert(verbraucht)) : "");
+    gruppeHtml(t("ui.abgelaufen"), sortiert(abgelaufen)) +
+    gruppeHtml(`${t("ui.laeuft_bald_ab")} ${WARNUNG_TAGE} ${t("ui.tage")}`, sortiert(bald)) +
+    gruppeHtml(t("ui.aktiv"), sortiert(laufend), alle.length === 0 ? t("ui.noch_keine_ansaetze_erfasst") : "") +
+    (showDoneEl.checked ? gruppeHtml(t("ui.verbraucht"), sortiert(verbraucht)) : "");
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
   const label = labelEl.value.trim();
   if (!label) {
-    alert("Bitte einen Namen für den Ansatz eintragen.");
+    alert(t("ui.bitte_einen_namen_fuer_den_ansatz_eintragen"));
     return;
   }
   const prep = {
@@ -189,7 +190,7 @@ async function handleSubmit(e) {
     await savePreparation(prep);
     resetForm();
   } catch (error) {
-    alert("Ansatz konnte nicht gespeichert werden: " + error.message);
+    alert(t("ui.ansatz_konnte_nicht_gespeichert_werden") + error.message);
   }
 }
 
@@ -203,7 +204,7 @@ function loadIntoForm(prep) {
   expiresEl.value = prep.expiresAt ? toDateInput(prep.expiresAt) : "";
   notesEl.value = prep.notes;
   formEl.dataset.editId = prep.id;
-  document.getElementById("prep-submit").textContent = "Änderung speichern";
+  document.getElementById("prep-submit").textContent = t("ui.aenderung_speichern");
   document.getElementById("prep-cancel").hidden = false;
   formEl.scrollIntoView({ block: "start" });
 }
@@ -212,7 +213,7 @@ async function setStatus(prep, status) {
   try {
     await savePreparation({ ...prep, status });
   } catch (error) {
-    alert("Status konnte nicht geändert werden: " + error.message);
+    alert(t("ui.status_konnte_nicht_geaendert_werden") + error.message);
   }
 }
 
@@ -220,7 +221,7 @@ async function setStatus(prep, status) {
 export function prefillPreparation({ label, prepType, batchSizeMl, abv, recipeName }) {
   resetForm();
   labelEl.value = label ?? "";
-  if (prepType && TYP_LABELS[prepType]) typeEl.value = prepType;
+  if (prepType && TYP_LABEL_KEYS[prepType]) typeEl.value = prepType;
   sizeEl.value = batchSizeMl ?? "";
   abvEl.value = abv ?? "";
   formEl.dataset.recipeName = recipeName ?? "";
@@ -229,6 +230,9 @@ export function prefillPreparation({ label, prepType, batchSizeMl, abv, recipeNa
 }
 
 export function initPreparations() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(render);
+
   resetForm();
   render();
   onPreparationsChanged(render);
@@ -252,18 +256,18 @@ export function initPreparations() {
       const eigener = prep.madeBy && prep.madeBy === getCurrentUser()?.id;
       const profil = getCurrentProfile();
       const ersteller = eigener ? profil?.display_name || profil?.username || "" : "";
-      printLabels(prep, TYP_LABELS[prep.prepType] ?? prep.prepType, labelCountEl.value, ersteller);
+      printLabels(prep, typLabel(prep.prepType), labelCountEl.value, ersteller);
       return;
     }
     if (e.target.closest(".prep-done-btn")) await setStatus(prep, "verbraucht");
     else if (e.target.closest(".prep-reactivate")) await setStatus(prep, "aktiv");
     else if (e.target.closest(".prep-edit")) loadIntoForm(prep);
     else if (e.target.closest(".prep-delete")) {
-      if (!confirm(`Ansatz "${prep.label}" wirklich löschen?`)) return;
+      if (!confirm(`${t("ui.ansatz")}${prep.label}${t("ui.wirklich_loeschen_b7a7")}`)) return;
       try {
         await deletePreparation(prep.id);
       } catch (error) {
-        alert("Ansatz konnte nicht gelöscht werden: " + error.message);
+        alert(t("ui.ansatz_konnte_nicht_geloescht_werden") + error.message);
       }
     }
   });

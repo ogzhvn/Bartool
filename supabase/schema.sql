@@ -137,6 +137,39 @@ revoke execute on function public.complete_first_login(text) from anon;
 grant execute on function public.complete_first_login(text) to authenticated;
 
 -- ---------------------------------------------------------------------
+-- Oberflächensprache am Profil
+-- ---------------------------------------------------------------------
+-- Die Sprachwahl (DE/EN) liegt zusätzlich zum localStorage am Profil,
+-- damit sie auf jedem Gerät gilt, an dem sich der Nutzer anmeldet.
+
+alter table public.profiles add column if not exists language text not null default 'de';
+
+alter table public.profiles drop constraint if exists profiles_language_check;
+alter table public.profiles add constraint profiles_language_check
+  check (language in ('de', 'en'));
+
+-- Eng begrenzter RPC: setzt ausschließlich die Sprache des eigenen Profils.
+-- Ein generelles Self-Update auf profiles gibt es bewusst nicht (Rolle,
+-- Benutzername etc. bleiben Admin-Sache).
+create or replace function public.set_my_language(new_language text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new_language not in ('de', 'en') then
+    raise exception 'Unbekannte Sprache: %', new_language;
+  end if;
+  update public.profiles set language = new_language where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.set_my_language(text) from public;
+revoke execute on function public.set_my_language(text) from anon;
+grant execute on function public.set_my_language(text) to authenticated;
+
+-- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
 -- ---------------------------------------------------------------------
 

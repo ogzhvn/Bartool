@@ -9,8 +9,9 @@ import {
   onChecklistRunsChanged,
 } from "./storage.js";
 import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
-import { escapeHtml, formatNumberDe } from "./utils.js";
+import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { printChecklistRuns } from "./printView.js";
+import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Checklisten für wiederkehrende Abläufe: Opening, Closing, Reinigung,
 // Kühltemperaturen. Eine Vorlage sagt, was zu prüfen ist; ein Lauf ist der
@@ -24,13 +25,18 @@ import { printChecklistRuns } from "./printView.js";
 // Grenzwerte legt ausschließlich der Nutzer in der Vorlage fest – hier
 // steht bewusst keine einzige vorgegebene Temperatur.
 
-export const KIND_LABELS = {
-  opening: "Opening",
-  closing: "Closing",
-  reinigung: "Reinigung",
-  temperatur: "Temperatur",
-  sonstiges: "Sonstiges",
+const KIND_LABEL_KEYS = {
+  opening: "ui.opening",
+  closing: "ui.closing",
+  reinigung: "ui.reinigung",
+  temperatur: "ui.temperatur",
+  sonstiges: "ui.sonstiges",
 };
+
+// Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
+export function kindLabel(kind) {
+  return KIND_LABEL_KEYS[kind] ? t(KIND_LABEL_KEYS[kind]) : kind;
+}
 
 // Wie viele Läufe der Verlauf zeigt (und druckt).
 const VERLAUF_LAEUFE = 30;
@@ -68,9 +74,9 @@ export function grenzText(item) {
   const min = parseWert(item?.min);
   const max = parseWert(item?.max);
   const einheit = item?.unit ? ` ${item.unit}` : "";
-  if (min !== null && max !== null) return `${formatNumberDe(min)}–${formatNumberDe(max)}${einheit}`;
-  if (min !== null) return `min. ${formatNumberDe(min)}${einheit}`;
-  if (max !== null) return `max. ${formatNumberDe(max)}${einheit}`;
+  if (min !== null && max !== null) return `${formatNumberLocal(min)}–${formatNumberLocal(max)}${einheit}`;
+  if (min !== null) return `min. ${formatNumberLocal(min)}${einheit}`;
+  if (max !== null) return `max. ${formatNumberLocal(max)}${einheit}`;
   return "";
 }
 
@@ -110,8 +116,8 @@ export function laufStatus(template, run) {
 }
 
 function zeitwert(iso) {
-  const t = iso ? new Date(iso).getTime() : 0;
-  return Number.isFinite(t) ? t : 0;
+  const zeit = iso ? new Date(iso).getTime() : 0;
+  return Number.isFinite(zeit) ? zeit : 0;
 }
 
 // Neueste zuerst: erst nach Lauf-Datum, bei gleichem Datum nach dem
@@ -127,7 +133,7 @@ export function letzteLaeufe(runs, anzahl = VERLAUF_LAEUFE) {
 }
 
 export function aktiveVorlagen(templates) {
-  return templates.filter((t) => t.active !== false).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  return templates.filter((v) => v.active !== false).sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
 // ---------------------------------------------------------------------
@@ -166,13 +172,13 @@ function heuteInput(jetzt = new Date()) {
 }
 
 function formatDatum(iso) {
-  if (!iso) return "ohne Datum";
-  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  if (!iso) return t("ui.ohne_datum");
+  return formatDate(iso);
 }
 
 function formatZeitpunkt(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleString("de-DE", {
+  return formatDate(iso, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -183,7 +189,7 @@ function formatZeitpunkt(iso) {
 
 function formatUhrzeit(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  return formatDate(iso, { hour: "2-digit", minute: "2-digit" });
 }
 
 function eigenerName() {
@@ -193,7 +199,7 @@ function eigenerName() {
 }
 
 function vorlageZu(id) {
-  return loadChecklistTemplates().find((t) => t.id === id) ?? null;
+  return loadChecklistTemplates().find((v) => v.id === id) ?? null;
 }
 
 function findeLauf(templateId, datum) {
@@ -208,14 +214,14 @@ function renderVorlagenAuswahl() {
   pickEl.innerHTML = vorlagen.length
     ? vorlagen
         .map(
-          (t) =>
-            `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)} · ${escapeHtml(
-              KIND_LABELS[t.kind] ?? t.kind
+          (v) =>
+            `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)} · ${escapeHtml(
+              kindLabel(v.kind)
             )}</option>`
         )
         .join("")
-    : '<option value="">Noch keine aktive Vorlage</option>';
-  if (vorher && vorlagen.some((t) => t.id === vorher)) pickEl.value = vorher;
+    : `<option value="">${escapeHtml(t("ui.noch_keine_aktive_vorlage"))}</option>`;
+  if (vorher && vorlagen.some((v) => v.id === vorher)) pickEl.value = vorher;
   openBtn.disabled = vorlagen.length === 0;
 }
 
@@ -223,7 +229,7 @@ function itemZusatz(item) {
   const teile = [];
   if (item.type === "wert") {
     const grenzen = grenzText(item);
-    if (grenzen) teile.push(`Sollbereich ${grenzen}`);
+    if (grenzen) teile.push(`${t("ui.sollbereich")} ${grenzen}`);
   }
   if (item.hint) teile.push(item.hint);
   if (teile.length === 0) return "";
@@ -243,7 +249,7 @@ function notizZeile(item, notiz, gesperrt, pflicht) {
         class="checklist-note"
         data-field="note"
         data-item="${escapeHtml(item.id)}"
-        placeholder="${pflicht ? "Notiz zur Abweichung – Pflicht" : "Notiz"}"
+        placeholder="${pflicht ? t("ui.notiz_zur_abweichung_pflicht") : t("ui.notiz")}"
         value="${escapeHtml(notiz)}"
         style="flex: 1 1 auto; width: auto;"
         ${gesperrt ? "disabled" : ""}
@@ -268,7 +274,7 @@ function itemZeileHtml(item, eintrag, gesperrt) {
           class="checklist-value"
           data-field="value"
           data-item="${escapeHtml(item.id)}"
-          value="${wert === null ? "" : escapeHtml(formatNumberDe(wert))}"
+          value="${wert === null ? "" : escapeHtml(formatNumberLocal(wert))}"
           style="flex: none; width: 6.5rem;"
           ${gesperrt ? "disabled" : ""}
         />
@@ -311,7 +317,7 @@ function laufHtml(template, run) {
       </div>
       <div class="stat-tile">
         <span class="stat-value">${status.abweichungen.length}</span>
-        <span class="stat-label">Abweichungen</span>
+        <span class="stat-label">${t("ui.abweichungen")}</span>
       </div>
       <div class="stat-tile">
         <span class="stat-value">${gesperrt ? "ja" : "nein"}</span>
@@ -321,11 +327,11 @@ function laufHtml(template, run) {
 
   const hinweis =
     status.fehlendeNotizen.length > 0
-      ? `<p class="empty-note">${status.fehlendeNotizen.length} Wert(e) außerhalb des Sollbereichs ohne Notiz. Ohne Notiz lässt sich die Liste nicht abschließen.</p>`
+      ? `<p class="empty-note">${status.fehlendeNotizen.length} ${t("ui.wert_e_ausserhalb_des_sollbereichs_ohne_67b3")}</p>`
       : "";
 
   const abschluss = gesperrt
-    ? `<p class="prep-meta">Abgeschlossen ${escapeHtml(formatZeitpunkt(run.finishedAt))}</p>`
+    ? `<p class="prep-meta">${t("ui.abgeschlossen")} ${escapeHtml(formatZeitpunkt(run.finishedAt))}</p>`
     : "";
 
   return `
@@ -334,7 +340,7 @@ function laufHtml(template, run) {
     )}">
       <div class="prep-item-head">
         <strong>${escapeHtml(template.name)} · ${escapeHtml(formatDatum(run.runDate))}</strong>
-        <span class="prep-status">${escapeHtml(KIND_LABELS[template.kind] ?? template.kind)}</span>
+        <span class="prep-status">${escapeHtml(kindLabel(template.kind))}</span>
       </div>
       ${kacheln}
       ${zeilen || '<p class="prep-meta">Diese Vorlage hat noch keine Punkte.</p>'}
@@ -348,7 +354,7 @@ function laufHtml(template, run) {
               : ""
             : '<button type="button" class="btn-primary" id="checklist-finish">Liste abschließen</button>'
         }
-        <button type="button" class="btn-secondary" id="checklist-print-run">Drucken</button>
+        <button type="button" class="btn-secondary" id="checklist-print-run">${t("ui.drucken")}</button>
         ${isAdmin() ? '<button type="button" class="btn-secondary" id="checklist-delete-run">Löschen</button>' : ""}
       </div>
     </div>`;
@@ -391,9 +397,9 @@ function renderLauf() {
   }
   const run = findeLauf(offenerLauf.templateId, offenerLauf.datum);
   if (!run) {
-    runEl.innerHTML = `<p class="empty-note">Für ${escapeHtml(template.name)} am ${escapeHtml(
+    runEl.innerHTML = `<p class="empty-note">${t("ui.fuer")} ${escapeHtml(template.name)} am ${escapeHtml(
       formatDatum(offenerLauf.datum)
-    )} ist noch nichts eingetragen.</p>`;
+    )} ${t("ui.ist_noch_nichts_eingetragen")}</p>`;
     return;
   }
   merkeFokus();
@@ -417,7 +423,7 @@ async function oeffneLauf() {
       // 23505 = zwei Geräte haben gleichzeitig geöffnet. Der Lauf gibt es
       // dann bereits; er kommt über Realtime herein, nichts zu tun.
       if (err?.code !== "23505") {
-        alert("Liste konnte nicht geöffnet werden: " + err.message);
+        alert(t("ui.liste_konnte_nicht_geoeffnet_werden") + err.message);
         offenerLauf = null;
       }
     }
@@ -444,7 +450,7 @@ async function setzeEintrag(itemId, patch, mitNachweis = true) {
   try {
     await saveChecklistRun({ ...run, entries });
   } catch (err) {
-    alert("Speichern fehlgeschlagen: " + err.message);
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
     renderLauf();
   }
 }
@@ -457,17 +463,17 @@ async function schliesseLaufAb() {
   const status = laufStatus(template, run);
   if (status.fehlendeNotizen.length > 0) {
     alert(
-      "Zu diesen Werten außerhalb des Sollbereichs fehlt noch eine Notiz:\n\n" +
+      t("ui.zu_diesen_werten_ausserhalb_des_15cb") +
         status.fehlendeNotizen.map((i) => `· ${i.label}`).join("\n")
     );
     return;
   }
-  if (status.offen > 0 && !confirm(`${status.offen} Punkt(e) sind noch offen. Trotzdem abschließen?`)) return;
+  if (status.offen > 0 && !confirm(`${status.offen} ${t("ui.punkt_e_sind_noch_offen_trotzdem_6861")}`)) return;
 
   try {
     await saveChecklistRun({ ...run, finishedAt: new Date().toISOString() });
   } catch (err) {
-    alert("Abschließen fehlgeschlagen: " + err.message);
+    alert(t("ui.abschliessen_fehlgeschlagen") + err.message);
   }
 }
 
@@ -481,8 +487,8 @@ function druckLauf(template, run) {
     if (item.type === "wert") {
       const wert = parseWert(eintrag?.value);
       const einheit = item.unit ? ` ${item.unit}` : "";
-      ergebnis = wert === null ? "–" : `${formatNumberDe(wert)}${einheit}`;
-      if (istAusserhalb(item, wert)) ergebnis += ` (außerhalb ${grenzText(item)})`;
+      ergebnis = wert === null ? "–" : `${formatNumberLocal(wert)}${einheit}`;
+      if (istAusserhalb(item, wert)) ergebnis += ` ${t("ui.ausserhalb")} ${grenzText(item)})`;
     } else {
       ergebnis = eintrag?.done ? "erledigt" : "offen";
     }
@@ -498,10 +504,10 @@ function druckLauf(template, run) {
   return {
     titel: `${template.name} · ${formatDatum(run.runDate)}`,
     meta: [
-      ["Art", KIND_LABELS[template.kind] ?? template.kind],
-      ["Erledigt", `${status.erledigt} von ${status.gesamt}`],
-      ["Abweichungen", String(status.abweichungen.length)],
-      ["Abgeschlossen", run.finishedAt ? formatZeitpunkt(run.finishedAt) : "nein"],
+      [t("ui.art"), kindLabel(template.kind)],
+      [t("ui.erledigt"), `${status.erledigt} ${t("ui.von")} ${status.gesamt}`],
+      [t("ui.abweichungen"), String(status.abweichungen.length)],
+      [t("ui.abgeschlossen"), run.finishedAt ? formatZeitpunkt(run.finishedAt) : t("ui.nein_klein")],
     ],
     zeilen,
   };
@@ -524,11 +530,11 @@ function verlaufHtml({ template, run }) {
         <strong>${escapeHtml(template.name)} · ${escapeHtml(formatDatum(run.runDate))}</strong>
         <span class="prep-status">${escapeHtml(zustand)}</span>
       </div>
-      <p class="prep-meta">${status.erledigt} von ${status.gesamt} erledigt${
-        status.abweichungen.length > 0 ? ` · ${status.abweichungen.length} Abweichung(en)` : ""
+      <p class="prep-meta">${status.erledigt} ${t("ui.von")} ${status.gesamt} ${t("ui.erledigt_klein")}${
+        status.abweichungen.length > 0 ? ` · ${status.abweichungen.length} ${t("ui.abweichung_en")}` : ""
       }</p>
       <div class="actions no-print">
-        <button type="button" class="btn-secondary checklist-history-open">Öffnen</button>
+        <button type="button" class="btn-secondary checklist-history-open">${t("ui.oeffnen")}</button>
       </div>
     </div>`;
 }
@@ -550,37 +556,37 @@ function templateItemRow(item = {}) {
   row.innerHTML = `
     <div class="field-row">
       <label>
-        Bezeichnung
-        <input type="text" class="ci-label" placeholder="z. B. Kühlschrank Bar ablesen" />
+        ${t("ui.bezeichnung")}
+        <input type="text" class="ci-label" placeholder="${t("ui.z_b_kuehlschrank_bar_ablesen")}" />
       </label>
       <label>
-        Typ
+        ${t("ui.typ")}
         <select class="ci-type">
-          <option value="check">Abhaken</option>
-          <option value="wert">Messwert</option>
+          <option value="check">${t("ui.abhaken")}</option>
+          <option value="wert">${t("ui.messwert")}</option>
         </select>
       </label>
       <label class="ci-wert-only">
-        Einheit
+        ${t("ui.einheit")}
         <input type="text" class="ci-unit" placeholder="z. B. °C" />
       </label>
       <label class="ci-wert-only">
-        Sollwert min.
+        ${t("ui.sollwert_min")}
         <input type="text" inputmode="decimal" class="ci-min" placeholder="optional" />
       </label>
       <label class="ci-wert-only">
-        Sollwert max.
+        ${t("ui.sollwert_max")}
         <input type="text" inputmode="decimal" class="ci-max" placeholder="optional" />
       </label>
     </div>
     <label>
-      Hinweis
-      <input type="text" class="ci-hint" placeholder="optional, z. B. Thermometer im mittleren Fach" />
+      ${t("ui.hinweis")}
+      <input type="text" class="ci-hint" placeholder="${t("ui.optional_z_b_thermometer_im_mittleren_fach")}" />
     </label>
     <div class="actions">
-      <button type="button" class="btn-secondary ci-up" aria-label="nach oben">↑</button>
-      <button type="button" class="btn-secondary ci-down" aria-label="nach unten">↓</button>
-      <button type="button" class="btn-secondary ci-remove">Entfernen</button>
+      <button type="button" class="btn-secondary ci-up" aria-label="${t("ui.nach_oben")}">↑</button>
+      <button type="button" class="btn-secondary ci-down" aria-label="${t("ui.nach_unten")}">↓</button>
+      <button type="button" class="btn-secondary ci-remove">${t("ui.entfernen")}</button>
     </div>`;
 
   row.querySelector(".ci-label").value = item.label ?? "";
@@ -648,12 +654,12 @@ async function speichereVorlage(e) {
   e.preventDefault();
   const name = templateNameEl.value.trim();
   if (!name) {
-    alert("Bitte einen Namen für die Vorlage eintragen.");
+    alert(t("ui.bitte_einen_namen_fuer_die_vorlage_eintragen"));
     return;
   }
   const items = gesammelteItems();
   if (items.length === 0) {
-    alert("Bitte mindestens einen Punkt mit Bezeichnung eintragen.");
+    alert(t("ui.bitte_mindestens_einen_punkt_mit_3679"));
     return;
   }
   const template = {
@@ -667,14 +673,14 @@ async function speichereVorlage(e) {
     await saveChecklistTemplate(template);
     schliesseVorlagenFormular();
   } catch (err) {
-    alert("Speichern fehlgeschlagen: " + err.message);
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
   }
 }
 
 function vorlageHtml(template) {
   const wertPunkte = (template.items ?? []).filter((i) => i.type === "wert").length;
-  const beschreibung = `${(template.items ?? []).length} Punkt(e)${
-    wertPunkte > 0 ? ` · davon ${wertPunkte} Messwert(e)` : ""
+  const beschreibung = `${(template.items ?? []).length} ${t("ui.punkt_e")}${
+    wertPunkte > 0 ? ` · davon ${wertPunkte} ${t("ui.messwert_e")}` : ""
   }`;
   return `
     <div class="prep-item${template.active === false ? " prep-done" : ""}" data-template-id="${escapeHtml(
@@ -682,14 +688,14 @@ function vorlageHtml(template) {
     )}">
       <div class="prep-item-head">
         <strong>${escapeHtml(template.name)}</strong>
-        <span class="prep-status">${escapeHtml(KIND_LABELS[template.kind] ?? template.kind)}${
+        <span class="prep-status">${escapeHtml(kindLabel(template.kind))}${
           template.active === false ? " · inaktiv" : ""
         }</span>
       </div>
       <p class="prep-meta">${escapeHtml(beschreibung)}</p>
       <div class="actions no-print">
-        <button type="button" class="btn-secondary checklist-template-edit">Bearbeiten</button>
-        <button type="button" class="btn-secondary checklist-template-delete">Löschen</button>
+        <button type="button" class="btn-secondary checklist-template-edit">${t("ui.bearbeiten")}</button>
+        <button type="button" class="btn-secondary checklist-template-delete">${t("ui.loeschen")}</button>
       </div>
     </div>`;
 }
@@ -699,10 +705,10 @@ function renderVorlagenListe() {
     templateListEl.innerHTML = "";
     return;
   }
-  const vorlagen = [...loadChecklistTemplates()].sort((a, b) => a.name.localeCompare(b.name, "de"));
+  const vorlagen = [...loadChecklistTemplates()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
   templateListEl.innerHTML = vorlagen.length
     ? vorlagen.map(vorlageHtml).join("")
-    : '<p class="empty-note">Noch keine Vorlage angelegt.</p>';
+    : `<p class="empty-note">${escapeHtml(t("ui.noch_keine_vorlage_angelegt"))}</p>`;
 }
 
 // ---------------------------------------------------------------------
@@ -715,6 +721,12 @@ function renderAlles() {
 }
 
 export function initChecklists() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderAlles();
+    renderLauf();
+  });
+
   dateEl.value = heuteInput();
   schliesseVorlagenFormular();
   renderAlles();
@@ -765,7 +777,7 @@ export function initChecklists() {
       try {
         await saveChecklistRun({ ...run, finishedAt: null });
       } catch (err) {
-        alert("Wieder öffnen fehlgeschlagen: " + err.message);
+        alert(t("ui.wieder_oeffnen_fehlgeschlagen") + err.message);
       }
       return;
     }
@@ -778,13 +790,13 @@ export function initChecklists() {
     if (e.target.closest("#checklist-delete-run")) {
       const run = findeLauf(offenerLauf?.templateId, offenerLauf?.datum);
       if (!run) return;
-      if (!confirm(`Nachweis vom ${formatDatum(run.runDate)} wirklich löschen?`)) return;
+      if (!confirm(`${t("ui.nachweis_vom")} ${formatDatum(run.runDate)} ${t("ui.wirklich_loeschen")}`)) return;
       try {
         await deleteChecklistRun(run.id);
         offenerLauf = null;
         renderLauf();
       } catch (err) {
-        alert("Löschen fehlgeschlagen: " + err.message);
+        alert(t("ui.loeschen_fehlgeschlagen") + err.message);
       }
     }
   });
@@ -839,7 +851,7 @@ export function initChecklists() {
 
   templateListEl.addEventListener("click", async (e) => {
     const karte = e.target.closest(".prep-item");
-    const template = loadChecklistTemplates().find((t) => t.id === karte?.dataset.templateId);
+    const template = loadChecklistTemplates().find((v) => v.id === karte?.dataset.templateId);
     if (!template) return;
     if (e.target.closest(".checklist-template-edit")) {
       oeffneVorlagenFormular(template);
@@ -848,7 +860,7 @@ export function initChecklists() {
     if (e.target.closest(".checklist-template-delete")) {
       if (
         !confirm(
-          `Vorlage „${template.name}“ wirklich löschen? Alle ausgefüllten Nachweise dieser Vorlage werden mitgelöscht.`
+          `${t("ui.vorlage_7041")}${template.name}${t("ui.wirklich_loeschen_alle_ausgefuellten_1643")}`
         )
       )
         return;
@@ -857,7 +869,7 @@ export function initChecklists() {
         if (offenerLauf?.templateId === template.id) offenerLauf = null;
         renderAlles();
       } catch (err) {
-        alert("Löschen fehlgeschlagen: " + err.message);
+        alert(t("ui.loeschen_fehlgeschlagen") + err.message);
       }
     }
   });

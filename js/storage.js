@@ -1,5 +1,6 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { recordPriceChange } from "./priceHistory.js";
+import { t } from "./i18n.js";
 
 const RECIPES_UPDATED_EVENT = "bartool:recipes-updated";
 const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
@@ -65,7 +66,7 @@ export function isOffline() {
 }
 
 function offlineWriteError() {
-  return new Error("Offline – Änderungen sind erst wieder mit Netzverbindung möglich.");
+  return new Error(t("ui.offline_aenderungen_sind_erst_wieder_mit_b6dc"));
 }
 
 // ---------------------------------------------------------------------

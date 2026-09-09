@@ -2,14 +2,18 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
 import { saveRecipe, saveProduct, deleteRecipe, deleteProduct } from "./storage.js";
 import { escapeHtml } from "./utils.js";
+import { formatDateTime, onLanguageChanged, t } from "./i18n.js";
 
 const pendingListEl = document.getElementById("change-requests-list");
 const myWrapperEl = document.getElementById("my-change-requests-wrapper");
 const myListEl = document.getElementById("my-change-requests-list");
 
-const TABLE_LABELS = { recipes: "Rezept", products: "Produkt" };
-const ACTION_LABELS = { upsert: "Änderung", delete: "Löschung" };
-const STATUS_LABELS = { pending: "wird geprüft", approved: "übernommen", rejected: "abgelehnt" };
+// Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
+const TABLE_LABEL_KEYS = { recipes: "ui.rezept", products: "ui.produkt" };
+const ACTION_LABEL_KEYS = { upsert: "ui.aenderung", delete: "ui.loeschung" };
+const STATUS_LABEL_KEYS = { pending: "ui.wird_geprueft", approved: "ui.uebernommen", rejected: "ui.abgelehnt" };
+
+const label = (keys, wert) => (keys[wert] ? t(keys[wert]) : wert);
 
 // Von den Bearbeiten-Formularen (recipes.js/products.js) aufgerufen, wenn
 // eine nicht-Admin-Person eine Änderung oder Löschung einreicht – RLS
@@ -58,12 +62,12 @@ async function approveRequest(entry) {
     if (error) throw error;
     await loadPending();
   } catch (error) {
-    alert("Vorschlag konnte nicht übernommen werden: " + error.message);
+    alert(t("ui.vorschlag_konnte_nicht_uebernommen_werden") + error.message);
   }
 }
 
 async function rejectRequest(entry) {
-  const comment = prompt("Kommentar zur Ablehnung (optional):", "");
+  const comment = prompt(t("ui.kommentar_zur_ablehnung_optional"), "");
   if (comment === null) return;
   const supabase = getSupabaseClient();
   const { error } = await supabase
@@ -71,7 +75,7 @@ async function rejectRequest(entry) {
     .update({ status: "rejected", review_comment: comment || null, reviewed_by: getCurrentUser().id, reviewed_at: new Date().toISOString() })
     .eq("id", entry.id);
   if (error) {
-    alert("Vorschlag konnte nicht abgelehnt werden: " + error.message);
+    alert(t("ui.vorschlag_konnte_nicht_abgelehnt_werden") + error.message);
     return;
   }
   await loadPending();
@@ -79,28 +83,28 @@ async function rejectRequest(entry) {
 
 function renderPending(entries) {
   if (entries.length === 0) {
-    pendingListEl.innerHTML = `<p class="empty-note">Keine offenen Vorschläge.</p>`;
+    pendingListEl.innerHTML = `<p class="empty-note">${t("ui.keine_offenen_vorschlaege")}</p>`;
     return;
   }
   pendingListEl.innerHTML = "";
   entries.forEach((entry) => {
     const who = entry.proposer?.display_name || entry.proposer?.username || "unbekannt";
-    const when = new Date(entry.created_at).toLocaleString("de-DE");
-    const tableLabel = TABLE_LABELS[entry.table_name] ?? entry.table_name;
-    const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
+    const when = formatDateTime(entry.created_at);
+    const tableLabel = label(TABLE_LABEL_KEYS, entry.table_name);
+    const actionLabel = label(ACTION_LABEL_KEYS, entry.action);
     const body =
       entry.action === "delete"
-        ? `<p>Löschvorschlag – wird bei Annahme vollständig entfernt (bzw. auf die mitgelieferte Version zurückgesetzt, falls vorhanden).</p>`
+        ? `<p>${t("ui.loeschvorschlag_wird_bei_annahme_caf2")}</p>`
         : renderPayload(entry.payload ?? {});
 
     const item = document.createElement("details");
     item.className = "audit-entry";
     item.innerHTML = `
-      <summary>${escapeHtml(when)} · ${escapeHtml(actionLabel)}: ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“ · von ${escapeHtml(who)}</summary>
+      <summary>${escapeHtml(when)} · ${escapeHtml(actionLabel)}: ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“ · ${t("ui.von_person")} ${escapeHtml(who)}</summary>
       <div class="recipe-item-body">${body}</div>
       <div class="actions">
-        <button type="button" class="btn-primary approve-btn">Annehmen</button>
-        <button type="button" class="btn-secondary reject-btn">Ablehnen</button>
+        <button type="button" class="btn-primary approve-btn">${t("ui.annehmen")}</button>
+        <button type="button" class="btn-secondary reject-btn">${t("ui.ablehnen")}</button>
       </div>
     `;
     item.querySelector(".approve-btn").addEventListener("click", () => approveRequest(entry));
@@ -117,7 +121,7 @@ async function loadPending() {
     .eq("status", "pending")
     .order("created_at", { ascending: true });
   if (error) {
-    pendingListEl.innerHTML = `<p class="empty-note">Vorschläge konnten nicht geladen werden: ${escapeHtml(error.message)}</p>`;
+    pendingListEl.innerHTML = `<p class="empty-note">${t("ui.vorschlaege_konnten_nicht_geladen_werden")} ${escapeHtml(error.message)}</p>`;
     return;
   }
   renderPending(data ?? []);
@@ -132,10 +136,10 @@ function renderMine(entries) {
   myWrapperEl.hidden = false;
   myListEl.innerHTML = entries
     .map((entry) => {
-      const tableLabel = TABLE_LABELS[entry.table_name] ?? entry.table_name;
-      const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
-      const when = new Date(entry.created_at).toLocaleString("de-DE");
-      const statusLabel = STATUS_LABELS[entry.status] ?? entry.status;
+      const tableLabel = label(TABLE_LABEL_KEYS, entry.table_name);
+      const actionLabel = label(ACTION_LABEL_KEYS, entry.action);
+      const when = formatDateTime(entry.created_at);
+      const statusLabel = label(STATUS_LABEL_KEYS, entry.status);
       const comment = entry.status === "rejected" && entry.review_comment ? ` – ${escapeHtml(entry.review_comment)}` : "";
       return `<p><strong>${escapeHtml(actionLabel)}: ${escapeHtml(tableLabel)} „${escapeHtml(entry.payload?.name ?? "")}“</strong> (${escapeHtml(when)}): ${escapeHtml(statusLabel)}${comment}</p>`;
     })
@@ -157,6 +161,9 @@ async function loadMine() {
 }
 
 export function initChangeRequestsAdmin() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(loadPending);
+
   loadPending();
 }
 

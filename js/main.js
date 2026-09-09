@@ -33,6 +33,8 @@ import {
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
+import { t, initI18n, onLanguageChanged } from "./i18n.js";
+import { initLanguageSwitcher, applyProfileLanguage } from "./language.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
 // längerer Inaktivität lieber neu anmelden lassen statt dauerhaft offen zu
@@ -59,6 +61,7 @@ const passwordModalError = document.getElementById("password-modal-error");
 const passwordModalCancelBtn = document.getElementById("password-modal-cancel");
 
 let appInitialized = false;
+let currentAuthState = { session: null, profile: null };
 let lastActivityAt = Date.now();
 let sessionTimeoutIntervalId = null;
 
@@ -127,7 +130,18 @@ async function bootstrapAppOnce() {
   startSessionTimeoutWatch();
 }
 
+// Kopfzeile "Name · Rolle" – eigene Funktion, damit sie beim Sprachwechsel
+// noch einmal laufen kann.
+function renderHeaderUser() {
+  const { session, profile } = currentAuthState;
+  if (!session) return;
+  userInfoEl.textContent = `${profile?.display_name || profile?.username || session.user.email} · ${
+    profile?.role === "admin" ? t("ui.admin") : t("ui.mitarbeiter")
+  }`;
+}
+
 async function handleAuthState({ session, profile }) {
+  currentAuthState = { session, profile };
   if (!session) {
     // Nach einem Logout wird neu geladen statt den App-Zustand (Caches,
     // offene Formulare) manuell zurückzusetzen.
@@ -158,9 +172,8 @@ async function handleAuthState({ session, profile }) {
   appShell.hidden = false;
   headerUser.hidden = false;
   navToggle.hidden = false;
-  userInfoEl.textContent = `${profile?.display_name || profile?.username || session.user.email} · ${
-    profile?.role === "admin" ? "Admin" : "Mitarbeiter"
-  }`;
+  renderHeaderUser();
+  applyProfileLanguage(profile);
   applyRoleVisibility();
   await bootstrapAppOnce();
 }
@@ -173,7 +186,7 @@ loginForm.addEventListener("submit", async (e) => {
   const { error } = await signIn(username, password);
   if (error) {
     loginError.hidden = false;
-    loginError.textContent = "Login fehlgeschlagen: " + error.message;
+    loginError.textContent = t("ui.login_fehlgeschlagen") + error.message;
   }
 });
 
@@ -191,20 +204,20 @@ forcedPasswordForm.addEventListener("submit", async (e) => {
   if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
     forcedPasswordError.hidden = false;
     forcedPasswordError.textContent =
-      "Benutzername darf nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten (3–32 Zeichen).";
+      t("ui.benutzername_darf_nur_kleinbuchstaben_1c7d");
     return;
   }
   if (newPassword !== confirmPassword) {
     forcedPasswordError.hidden = false;
-    forcedPasswordError.textContent = "Die beiden Passwörter stimmen nicht überein.";
+    forcedPasswordError.textContent = t("ui.die_beiden_passwoerter_stimmen_nicht_d8fe");
     return;
   }
   const { error } = await completeFirstLogin(username, newPassword);
   if (error) {
     forcedPasswordError.hidden = false;
     forcedPasswordError.textContent =
-      "Konto konnte nicht eingerichtet werden: " +
-      (error.message.includes("profiles_username_key") ? "Dieser Benutzername ist bereits vergeben." : error.message);
+      t("ui.konto_konnte_nicht_eingerichtet_werden") +
+      (error.message.includes("profiles_username_key") ? t("ui.dieser_benutzername_ist_bereits_vergeben") : error.message);
     return;
   }
   forcedPasswordForm.reset();
@@ -228,13 +241,13 @@ passwordModalForm.addEventListener("submit", async (e) => {
   const confirmPassword = document.getElementById("password-modal-confirm").value;
   if (newPassword !== confirmPassword) {
     passwordModalError.hidden = false;
-    passwordModalError.textContent = "Die beiden Passwörter stimmen nicht überein.";
+    passwordModalError.textContent = t("ui.die_beiden_passwoerter_stimmen_nicht_d8fe");
     return;
   }
   const { error } = await changePassword(newPassword);
   if (error) {
     passwordModalError.hidden = false;
-    passwordModalError.textContent = "Passwort konnte nicht geändert werden: " + error.message;
+    passwordModalError.textContent = t("ui.passwort_konnte_nicht_geaendert_werden") + error.message;
     return;
   }
   passwordModalOverlay.hidden = true;
@@ -252,6 +265,12 @@ function updateOfflineBanner() {
 window.addEventListener("online", updateOfflineBanner);
 window.addEventListener("offline", updateOfflineBanner);
 updateOfflineBanner();
+
+// Sprache steht vor allem anderen: so erscheint auch die Login-Maske in der
+// zuletzt gewählten Sprache, ohne dass etwas nachträglich umspringt.
+initI18n();
+initLanguageSwitcher();
+onLanguageChanged(renderHeaderUser);
 
 onAuthChange(handleAuthState);
 initAuth();

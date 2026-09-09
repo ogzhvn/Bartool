@@ -1,6 +1,7 @@
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { formatNumberDe } from "./utils.js";
+import { formatNumberLocal } from "./utils.js";
+import { getLocale, t } from "./i18n.js";
 
 // Fragen-Generator für das Quiz (Paket 26).
 //
@@ -95,7 +96,7 @@ function gepruefteProdukte() {
 function formatAbv(value) {
   const zahl = Number(String(value ?? "").replace(",", "."));
   if (!Number.isFinite(zahl) || zahl <= 0) return "";
-  return `${formatNumberDe(zahl)} % vol`;
+  return `${formatNumberLocal(zahl)} % vol`;
 }
 
 // Erklärung nach der Antwort: der Fakt selbst, ergänzt um den Quick Pitch,
@@ -136,8 +137,8 @@ function abvFragen(produkte) {
     produkte,
     feld: "abvValue",
     keyPrefix: "abv",
-    frage: (p) => `Wie viel Alkohol hat ${p.name}?`,
-    erklaerung: (p, wert) => mitPitch(p, `${p.name} hat ${wert}.`),
+    frage: (p) => t("ui.quiz_frage_abv", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_abv", { name: p.name, wert })),
     formatiere: formatAbv,
     difficulty: 2,
   });
@@ -149,8 +150,8 @@ function herkunftFragen(produkte) {
     produkte,
     feld: "originCountry",
     keyPrefix: "country",
-    frage: (p) => `Aus welchem Land kommt ${p.name}?`,
-    erklaerung: (p, wert) => mitPitch(p, `${p.name} kommt aus ${wert}.`),
+    frage: (p) => t("ui.quiz_frage_land", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_land", { name: p.name, wert })),
     difficulty: 1,
   });
 }
@@ -161,8 +162,8 @@ function rohstoffFragen(produkte) {
     produkte,
     feld: "baseMaterial",
     keyPrefix: "base",
-    frage: (p) => `Aus welchem Grundstoff wird ${p.name} hergestellt?`,
-    erklaerung: (p, wert) => mitPitch(p, `Grundstoff von ${p.name}: ${wert}.`),
+    frage: (p) => t("ui.quiz_frage_grundstoff", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_grundstoff", { name: p.name, wert })),
     difficulty: 2,
   });
 }
@@ -173,8 +174,8 @@ function verfahrenFragen(produkte) {
     produkte,
     feld: "productionMethod",
     keyPrefix: "production",
-    frage: (p) => `Mit welchem Verfahren wird ${p.name} hergestellt?`,
-    erklaerung: (p, wert) => mitPitch(p, `${p.name} wird per ${wert} hergestellt.`),
+    frage: (p) => t("ui.quiz_frage_verfahren", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_verfahren", { name: p.name, wert })),
     difficulty: 3,
   });
 }
@@ -189,7 +190,7 @@ function aromaFragen(produkte) {
   const fragen = [];
   produkte.forEach((product) => {
     const tags = (Array.isArray(product.flavorTags) ? product.flavorTags : [])
-      .map((t) => txt(t))
+      .map((wert) => txt(wert))
       .filter(Boolean);
     if (tags.length < 2) return;
     const eigene = new Set(tags.map(normKey));
@@ -197,12 +198,12 @@ function aromaFragen(produkte) {
       .filter((p) => p.name !== product.name)
       .filter((p) => {
         const fremde = Array.isArray(p.flavorTags) ? p.flavorTags : [];
-        return !fremde.some((t) => eigene.has(normKey(t)));
+        return !fremde.some((wert) => eigene.has(normKey(wert)));
       })
       .map((p) => p.name);
     const frage = baueFrage({
       key: `gen:notes:${product.name}`,
-      question: `Welches Produkt aus der Gruppe „${txt(product.group)}" schmeckt nach ${tags.join(", ")}?`,
+      question: t("ui.quiz_frage_aroma", { gruppe: txt(product.group), tags: tags.join(", ") }),
       correct: product.name,
       candidates: kandidaten,
       explanation: mitPitch(product, `${product.name}: ${tags.join(", ")}.`),
@@ -230,10 +231,10 @@ function rezepteMitKategorie() {
 export function methodenTechnik(methodText) {
   const text = txt(methodText).toLowerCase();
   if (!text) return "";
-  if (text.includes("blender") || text.includes("mixer")) return "Im Blender";
-  if (text.includes("schüttel") || text.includes("shak")) return "Geschüttelt";
-  if (text.includes("rühr")) return "Gerührt";
-  if (text.includes("im glas") || text.includes("aufgießen") || text.includes("auffüllen")) return "Direkt im Glas gebaut";
+  if (text.includes("blender") || text.includes("mixer")) return t("ui.im_blender");
+  if (text.includes("schüttel") || text.includes("shak")) return t("ui.geschuettelt");
+  if (text.includes("rühr")) return t("ui.geruehrt");
+  if (text.includes("im glas") || text.includes("aufgießen") || text.includes("auffüllen")) return t("ui.direkt_im_glas_gebaut");
   return "";
 }
 
@@ -287,7 +288,7 @@ function zutatenFragen(rezepte) {
       });
     const frage = baueFrage({
       key: `gen:ingredient:${recipe.name}`,
-      question: `Was gehört in einen ${recipe.name}?`,
+      question: t("ui.quiz_frage_zutaten", { name: recipe.name }),
       correct: richtig,
       candidates: kandidaten,
       explanation: `${recipe.name}: ${zutaten.join(", ")}.`,
@@ -306,8 +307,8 @@ function glasFragen(rezepte) {
     rezepte,
     feld: "glass",
     keyPrefix: "glass",
-    frage: (r) => `In welchem Glas wird ein ${r.name} serviert?`,
-    erklaerung: (r, wert) => `${r.name} kommt ins ${wert}.`,
+    frage: (r) => t("ui.quiz_frage_glas", { name: r.name }),
+    erklaerung: (r, wert) => t("ui.quiz_erklaerung_glas", { name: r.name, wert }),
     difficulty: 2,
   });
 }
@@ -318,8 +319,8 @@ function garniturFragen(rezepte) {
     rezepte,
     feld: "garnish",
     keyPrefix: "garnish",
-    frage: (r) => `Womit wird ein ${r.name} garniert?`,
-    erklaerung: (r, wert) => `Garnitur für ${r.name}: ${wert}.`,
+    frage: (r) => t("ui.quiz_frage_garnitur", { name: r.name }),
+    erklaerung: (r, wert) => t("ui.quiz_erklaerung_garnitur", { name: r.name, wert }),
     difficulty: 2,
   });
 }
@@ -342,7 +343,7 @@ function methodenFragen(rezepte) {
       .filter(Boolean);
     const frage = baueFrage({
       key: `gen:method:${recipe.name}`,
-      question: `Wie wird ein ${recipe.name} zubereitet?`,
+      question: t("ui.quiz_frage_zubereitung", { name: recipe.name }),
       correct: richtig,
       candidates: [...ausKategorie, ...alleTechniken],
       explanation: txt(recipe.method) || `${recipe.name}: ${richtig}.`,
@@ -388,7 +389,7 @@ export function listGeneratedTopics(pool) {
   });
   return [...zaehler.entries()]
     .map(([topic, count]) => ({ topic, count }))
-    .sort((a, b) => a.topic.localeCompare(b.topic, "de"));
+    .sort((a, b) => a.topic.localeCompare(b.topic, getLocale()));
 }
 
 // Zieht `anzahl` Fragen aus einem Pool, ohne Dubletten (question_key ist

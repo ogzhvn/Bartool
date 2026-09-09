@@ -20,6 +20,7 @@ import {
   renderAuswertungHtml,
   renderBestellvorschlagHtml,
 } from "./ordering.js";
+import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Inventur, Teil 1: Erfassung.
 //
@@ -84,15 +85,6 @@ function clearDraft(id) {
   }
 }
 
-function formatDate(value) {
-  if (!value) return "–";
-  return new Date(value).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 function setStatus(text, warnung = false) {
   statusEl.hidden = !text;
   statusEl.textContent = text;
@@ -106,7 +98,7 @@ function setStatus(text, warnung = false) {
 function renderCountList() {
   const zaehlungen = loadInventoryCounts();
   if (zaehlungen.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">Noch keine Zählung angelegt.</p>`;
+    listEl.innerHTML = `<p class="empty-note">${t("ui.noch_keine_zaehlung_angelegt")}</p>`;
     return;
   }
   listEl.innerHTML = zaehlungen
@@ -114,13 +106,13 @@ function renderCountList() {
       (z) => `
       <div class="inv-count-item" data-id="${escapeHtml(z.id)}">
         <div class="prep-item-head">
-          <strong>${escapeHtml(z.title || "Inventur")}</strong>
+          <strong>${escapeHtml(z.title || t("ui.inventur"))}</strong>
           <span class="prep-status">${z.status === "abgeschlossen" ? "abgeschlossen" : "offen"}</span>
         </div>
-        <p class="prep-meta">Zähldatum ${formatDate(z.countedOn)}${z.note ? " · " + escapeHtml(z.note) : ""}</p>
+        <p class="prep-meta">${t("ui.zaehldatum")} ${formatDate(z.countedOn)}${z.note ? " · " + escapeHtml(z.note) : ""}</p>
         <div class="actions">
-          <button type="button" class="btn-secondary inv-open">${z.status === "abgeschlossen" ? "Ansehen" : "Weiterzählen"}</button>
-          ${isAdmin() ? `<button type="button" class="btn-secondary inv-delete">Löschen</button>` : ""}
+          <button type="button" class="btn-secondary inv-open">${z.status === "abgeschlossen" ? t("ui.ansehen") : t("ui.weiterzaehlen")}</button>
+          ${isAdmin() ? `<button type="button" class="btn-secondary inv-delete">${t("ui.loeschen")}</button>` : ""}
         </div>
       </div>`
     )
@@ -137,8 +129,8 @@ function gezaehlt() {
 
 function renderProgress() {
   const gesamt = getAllProducts().length;
-  progressEl.textContent = `${gezaehlt()} von ${gesamt} Produkten gezählt${
-    offen.size > 0 ? ` · ${offen.size} noch nicht hochgeladen` : ""
+  progressEl.textContent = `${gezaehlt()} ${t("ui.von")} ${gesamt} ${t("ui.produkten_gezaehlt")}${
+    offen.size > 0 ? ` · ${offen.size} ${t("ui.noch_nicht_hochgeladen")}` : ""
   }`;
 }
 
@@ -162,7 +154,7 @@ function renderItems() {
   // entlangarbeiten kann statt alphabetisch zu springen.
   const gruppen = new Map();
   produkte.forEach((p) => {
-    const key = p.group || p.category || "Ohne Kategorie";
+    const key = p.group || p.category || t("ui.ohne_kategorie");
     if (!gruppen.has(key)) gruppen.set(key, []);
     gruppen.get(key).push(p);
   });
@@ -170,7 +162,7 @@ function renderItems() {
   // Alphabetisch, damit die Reihenfolge beim nächsten Zählen dieselbe ist
   // und man eine Kategorie wiederfindet. Die Datenreihenfolge wäre zufällig.
   const sortierteGruppen = [...gruppen.entries()].sort((a, b) =>
-    a[0].localeCompare(b[0], "de")
+    a[0].localeCompare(b[0], getLocale())
   );
 
   const bloecke = sortierteGruppen.map(([gruppe, liste]) => {
@@ -192,7 +184,7 @@ function renderItems() {
     return `<h4 class="prep-group">${escapeHtml(gruppe)} (${liste.length})</h4>${zeilen}`;
   });
 
-  itemsEl.innerHTML = bloecke.join("") || `<p class="empty-note">Keine Produkte gefunden.</p>`;
+  itemsEl.innerHTML = bloecke.join("") || `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
 }
 
 function setQuantity(name, wert) {
@@ -206,13 +198,13 @@ function setQuantity(name, wert) {
 
 async function upload({ still = false } = {}) {
   if (!aktuelleZaehlung || offen.size === 0) {
-    if (!still) setStatus("Nichts zu speichern – alles ist schon hochgeladen.");
+    if (!still) setStatus(t("ui.nichts_zu_speichern_alles_ist_schon_aa17"));
     return;
   }
   if (isOffline()) {
     if (!still) {
       setStatus(
-        `Offline: ${offen.size} Eingabe(n) sind lokal gesichert und werden automatisch hochgeladen, sobald wieder Netz da ist.`,
+        `${t("ui.offline")} ${offen.size} ${t("ui.eingabe_n_sind_lokal_gesichert_und_werden_b629")}`,
         true
       );
     }
@@ -228,15 +220,15 @@ async function upload({ still = false } = {}) {
     offen.clear();
     writeDraft(aktuelleZaehlung.id);
     renderProgress();
-    setStatus(`${eintraege.length} Eingabe(n) gespeichert.`);
+    setStatus(`${eintraege.length} ${t("ui.eingabe_n_gespeichert")}`);
   } catch (error) {
-    setStatus("Speichern fehlgeschlagen: " + error.message + " Die Eingaben bleiben lokal gesichert.", true);
+    setStatus(t("ui.speichern_fehlgeschlagen") + error.message + t("ui.die_eingaben_bleiben_lokal_gesichert"), true);
   }
 }
 
 async function openCount(zaehlung) {
   aktuelleZaehlung = zaehlung;
-  titleEl.textContent = `${zaehlung.title || "Inventur"} · ${formatDate(zaehlung.countedOn)}`;
+  titleEl.textContent = `${zaehlung.title || t("ui.inventur")} · ${formatDate(zaehlung.countedOn)}`;
   setStatus("");
 
   // Erst den lokalen Zwischenstand, dann den Server – so ist sofort etwas da
@@ -252,7 +244,7 @@ async function openCount(zaehlung) {
       if (!offen.has(name)) stand[name] = wert;
     });
   } catch {
-    setStatus("Server nicht erreichbar – es wird mit dem lokalen Stand weitergezählt.", true);
+    setStatus(t("ui.server_nicht_erreichbar_es_wird_mit_dem_ff29"), true);
   }
 
   const gesperrt = zaehlung.status === "abgeschlossen";
@@ -278,8 +270,8 @@ function backToOverview() {
 async function handleNewCount() {
   const heute = new Date();
   const titel = prompt(
-    "Bezeichnung der Zählung:",
-    `Inventur ${heute.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}`
+    t("ui.bezeichnung_der_zaehlung"),
+    `${t("ui.inventur")} ${heute.toLocaleDateString(getLocale(), { month: "long", year: "numeric" })}`
   );
   if (titel === null) return;
   try {
@@ -287,13 +279,13 @@ async function handleNewCount() {
       countedOn: new Date(heute.getTime() - heute.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0, 10),
-      title: titel.trim() || "Inventur",
+      title: titel.trim() || t("ui.inventur"),
       status: "offen",
       createdBy: getCurrentUser()?.id ?? null,
     });
     await openCount(neu);
   } catch (error) {
-    alert("Zählung konnte nicht angelegt werden: " + error.message);
+    alert(t("ui.zaehlung_konnte_nicht_angelegt_werden") + error.message);
   }
 }
 
@@ -302,8 +294,8 @@ async function handleCloseCount() {
   const fehlend = getAllProducts().length - gezaehlt();
   const frage =
     fehlend > 0
-      ? `${fehlend} Produkt(e) wurden nicht gezählt. Zählung trotzdem abschließen? Danach ist sie schreibgeschützt.`
-      : "Zählung abschließen? Danach ist sie schreibgeschützt.";
+      ? `${fehlend} ${t("ui.produkt_e_wurden_nicht_gezaehlt_zaehlung_8957")}`
+      : t("ui.zaehlung_abschliessen_danach_ist_sie_a9a7");
   if (!confirm(frage)) return;
   await upload({ still: true });
   try {
@@ -312,7 +304,7 @@ async function handleCloseCount() {
     clearDraft(aktualisiert.id);
     backToOverview();
   } catch (error) {
-    alert("Zählung konnte nicht abgeschlossen werden: " + error.message);
+    alert(t("ui.zaehlung_konnte_nicht_abgeschlossen_werden") + error.message);
   }
 }
 
@@ -355,7 +347,7 @@ function exportZaehlung() {
   if (!aktuelleZaehlung) return;
   const a = auswertung(stand);
   if (a.zeilen.length === 0) {
-    setStatus("Noch nichts gezählt – es gibt nichts zu exportieren.");
+    setStatus(t("ui.noch_nichts_gezaehlt_es_gibt_nichts_zu_3ed4"));
     return;
   }
   const rows = a.zeilen.map((z) => ({
@@ -368,8 +360,8 @@ function exportZaehlung() {
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [{ wch: 34 }, { wch: 22 }, { wch: 10 }, { wch: 8 }, { wch: 12 }];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Inventur");
-  XLSX.writeFile(wb, `Bartool-Inventur_${aktuelleZaehlung.countedOn}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, t("ui.inventur"));
+  XLSX.writeFile(wb, `${t("ui.bartool_inventur")}${aktuelleZaehlung.countedOn}.xlsx`);
 }
 
 function exportBestellliste() {
@@ -400,17 +392,26 @@ function exportBestellliste() {
   });
 
   if (rows.length === 0) {
-    setStatus("Kein Bestellbedarf – oder es fehlen noch Soll-Bestände.");
+    setStatus(t("ui.kein_bestellbedarf_oder_es_fehlen_noch_82e5"));
     return;
   }
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 8 }, { wch: 11 }, { wch: 14 }];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Bestellung");
-  XLSX.writeFile(wb, `Bartool-Bestellung_${aktuelleZaehlung.countedOn}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, t("ui.bestellung"));
+  XLSX.writeFile(wb, `${t("ui.bartool_bestellung")}${aktuelleZaehlung.countedOn}.xlsx`);
 }
 
 export function initInventory() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderCountList();
+    if (aktuelleZaehlung) {
+      renderProgress();
+      renderItems();
+    }
+  });
+
   renderCountList();
   onInventoryCountsChanged(() => {
     if (!aktuelleZaehlung) renderCountList();
@@ -440,12 +441,12 @@ export function initInventory() {
     if (!zaehlung) return;
     if (e.target.closest(".inv-open")) await openCount(zaehlung);
     else if (e.target.closest(".inv-delete")) {
-      if (!confirm(`Zählung "${zaehlung.title || "Inventur"}" mit allen Positionen löschen?`)) return;
+      if (!confirm(`${t("ui.zaehlung_abc8")}${zaehlung.title || t("ui.inventur")}${t("ui.mit_allen_positionen_loeschen")}`)) return;
       try {
         await deleteInventoryCount(zaehlung.id);
         clearDraft(zaehlung.id);
       } catch (error) {
-        alert("Zählung konnte nicht gelöscht werden: " + error.message);
+        alert(t("ui.zaehlung_konnte_nicht_geloescht_werden") + error.message);
       }
     }
   });

@@ -2,6 +2,7 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { escapeHtml } from "./utils.js";
 import { saveRecipe, saveProduct, fromRecipeRow, fromProductRow, loadRecipes, loadProducts } from "./storage.js";
 import { isAdmin } from "./auth.js";
+import { formatDateTime, onLanguageChanged, t } from "./i18n.js";
 
 const filterEl = document.getElementById("audit-log-filter");
 const dateFilterEl = document.getElementById("audit-log-date-filter");
@@ -12,8 +13,9 @@ let loaded = false;
 // Zuletzt geladene Einträge – der Wiederherstellen-Knopf greift darauf zu.
 let entriesCache = [];
 
-const TABLE_LABELS = { recipes: "Rezept", products: "Produkt", profiles: "Konto" };
-const ACTION_LABELS = { insert: "angelegt", update: "geändert", delete: "gelöscht" };
+// Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
+const TABLE_LABEL_KEYS = { recipes: "ui.rezept", products: "ui.produkt", profiles: "ui.konto" };
+const ACTION_LABEL_KEYS = { insert: "ui.angelegt", update: "ui.geaendert", delete: "ui.geloescht" };
 
 // Rein technische Felder, die bei praktisch jeder Änderung mitlaufen und
 // im Diff nur Rauschen wären.
@@ -76,7 +78,7 @@ async function loadAuditLog() {
   }
   const { data, error } = await query;
   if (error) {
-    listEl.innerHTML = `<p class="empty-note">Änderungsverlauf konnte nicht geladen werden: ${escapeHtml(error.message)}</p>`;
+    listEl.innerHTML = `<p class="empty-note">${t("ui.aenderungsverlauf_konnte_nicht_geladen_6ed1")} ${escapeHtml(error.message)}</p>`;
     return;
   }
   entriesCache = data ?? [];
@@ -85,16 +87,16 @@ async function loadAuditLog() {
 
 function renderAuditLog(entries) {
   if (entries.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">Keine Änderungen gefunden.</p>`;
+    listEl.innerHTML = `<p class="empty-note">${t("ui.keine_aenderungen_gefunden")}</p>`;
     return;
   }
 
   listEl.innerHTML = entries
     .map((entry) => {
-      const who = entry.changed_by_profile?.display_name || entry.changed_by_profile?.username || "System";
-      const when = new Date(entry.changed_at).toLocaleString("de-DE");
-      const tableLabel = TABLE_LABELS[entry.table_name] ?? entry.table_name;
-      const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
+      const who = entry.changed_by_profile?.display_name || entry.changed_by_profile?.username || t("ui.system");
+      const when = formatDateTime(entry.changed_at);
+      const tableLabel = TABLE_LABEL_KEYS[entry.table_name] ? t(TABLE_LABEL_KEYS[entry.table_name]) : entry.table_name;
+      const actionLabel = ACTION_LABEL_KEYS[entry.action] ? t(ACTION_LABEL_KEYS[entry.action]) : entry.action;
       const label = entryLabel(entry);
       const rows = computeDiff(entry);
 
@@ -105,14 +107,14 @@ function renderAuditLog(entries) {
       } · ${escapeHtml(who)}</summary>
           ${
             isAdmin() && istWiederherstellbar(entry)
-              ? `<div class="actions"><button type="button" class="btn-secondary audit-restore" data-id="${escapeHtml(entry.id)}">Diesen Stand wiederherstellen</button></div>`
+              ? `<div class="actions"><button type="button" class="btn-secondary audit-restore" data-id="${escapeHtml(entry.id)}">${t("ui.diesen_stand_wiederherstellen")}</button></div>`
               : ""
           }
           ${
             rows.length === 0
-              ? `<p class="empty-note">Keine inhaltlichen Feldänderungen erkennbar.</p>`
+              ? `<p class="empty-note">${t("ui.keine_inhaltlichen_feldaenderungen_erkennbar")}</p>`
               : `<table>
-                  <thead><tr><th>Feld</th><th>Vorher</th><th>Nachher</th></tr></thead>
+                  <thead><tr><th>${t("ui.feld")}</th><th>${t("ui.vorher")}</th><th>${t("ui.nachher")}</th></tr></thead>
                   <tbody>
                     ${rows
                       .map(
@@ -144,14 +146,14 @@ export function bestaetigungsText(entry, alterStand) {
     const zurueck = alterStand[feld];
     if (JSON.stringify(jetzt ?? "") === JSON.stringify(zurueck ?? "")) return;
     const kurz = (v) => {
-      const t = v === null || v === undefined || v === "" ? "–" : JSON.stringify(v);
-      return t.length > 60 ? t.slice(0, 57) + "…" : t;
+      const kurz = v === null || v === undefined || v === "" ? "–" : JSON.stringify(v);
+      return kurz.length > 60 ? kurz.slice(0, 57) + "…" : kurz;
     };
     zeilen.push(`  ${feld}: ${kurz(jetzt)}  ->  ${kurz(zurueck)}`);
   });
 
-  const teile = [`"${name}" auf den Stand von diesem Eintrag zurücksetzen?`, ""];
-  teile.push(zeilen.length > 0 ? zeilen.join("\n") : "  (keine Unterschiede zum aktuellen Stand)");
+  const teile = [`"${name}${t("ui.auf_den_stand_von_diesem_eintrag_dc11")}`, ""];
+  teile.push(zeilen.length > 0 ? zeilen.join("\n") : t("ui.keine_unterschiede_zum_aktuellen_stand"));
 
   // Umbenennung: Wiederherstellen legt den alten Namen wieder an, der neue
   // bleibt daneben stehen. Das muss man vorher wissen.
@@ -159,13 +161,13 @@ export function bestaetigungsText(entry, alterStand) {
   if (entry.action === "update" && neuerName && neuerName !== name) {
     teile.push(
       "",
-      `Achtung: Der Eintrag wurde in "${neuerName}" umbenannt.`,
-      `Wiederherstellen legt "${name}" wieder an – "${neuerName}" bleibt bestehen`,
-      "und muss danach von Hand gelöscht werden."
+      `${t("ui.achtung_der_eintrag_wurde_in")}${neuerName}" umbenannt.`,
+      `${t("ui.wiederherstellen_legt")}${name}${t("ui.wieder_an")}${neuerName}${t("ui.bleibt_bestehen")}`,
+      t("ui.und_muss_danach_von_hand_geloescht_werden")
     );
   }
   if (entry.action === "delete") {
-    teile.push("", "Der gelöschte Eintrag wird neu angelegt.");
+    teile.push("", t("ui.der_geloeschte_eintrag_wird_neu_angelegt"));
   }
   return teile.join("\n");
 }
@@ -183,14 +185,17 @@ async function handleRestore(id) {
     // Über die normale Speicherfunktion: so landet auch die
     // Wiederherstellung selbst wieder im Änderungsverlauf.
     await RESTORABLE_TABLES[entry.table_name](alterStand);
-    alert(`"${alterStand.name}" wurde wiederhergestellt.`);
+    alert(`"${alterStand.name}${t("ui.wurde_wiederhergestellt")}`);
     await loadAuditLog();
   } catch (error) {
-    alert("Wiederherstellen fehlgeschlagen: " + error.message);
+    alert(t("ui.wiederherstellen_fehlgeschlagen") + error.message);
   }
 }
 
 export function initAuditLog() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(loadAuditLog);
+
   listEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".audit-restore");
     if (btn) handleRestore(btn.dataset.id);

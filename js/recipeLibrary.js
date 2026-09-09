@@ -1,3 +1,4 @@
+import { getLocale } from "./i18n.js";
 import { loadRecipes } from "./storage.js";
 import { CLASSIC_RECIPES } from "./classicsData.js";
 import { HOUSE_RECIPES } from "./houseRecipes.js";
@@ -15,7 +16,7 @@ export function getAllRecipes() {
 
   const classics = CLASSIC_RECIPES.filter((r) => !customNames.has(r.name) && !houseNames.has(r.name));
 
-  return [...custom, ...house, ...classics].sort((a, b) => a.name.localeCompare(b.name, "de"));
+  return [...custom, ...house, ...classics].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
 export function getRecipe(name) {

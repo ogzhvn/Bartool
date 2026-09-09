@@ -2,6 +2,7 @@ import { UNIT_LABELS } from "./units.js";
 import { escapeHtml } from "./utils.js";
 import { getProduct } from "./productLibrary.js";
 import { parseAbv } from "./abv.js";
+import { t } from "./i18n.js";
 
 // Sucht den Alkoholgehalt einer Zutat im Produktkatalog. Das Matching ist ein
 // strikter Teilstring-Vergleich, "Gin" allein findet also nichts – es braucht
@@ -18,8 +19,8 @@ export function createIngredientEditor(containerEl) {
     const row = document.createElement("div");
     row.className = "ingredient-row";
     row.innerHTML = `
-      <input class="ing-name" type="text" placeholder="Zutat" value="${escapeHtml(data.name ?? "")}" />
-      <input class="ing-amount" type="number" min="0" step="0.01" placeholder="Menge" value="${escapeHtml(data.amount ?? "")}" />
+      <input class="ing-name" type="text" placeholder="${t("ui.zutat")}" data-i18n-placeholder="ui.zutat" value="${escapeHtml(data.name ?? "")}" />
+      <input class="ing-amount" type="number" min="0" step="0.01" placeholder="${t("ui.menge")}" data-i18n-placeholder="ui.menge" value="${escapeHtml(data.amount ?? "")}" />
       <select class="ing-unit">
         ${Object.entries(UNIT_LABELS)
           .map(
@@ -28,8 +29,8 @@ export function createIngredientEditor(containerEl) {
           )
           .join("")}
       </select>
-      <input class="ing-abv" type="number" min="0" max="100" step="0.1" placeholder="% vol" title="Alkoholgehalt – nur für den Flaschen-Modus" />
-      <button type="button" class="remove-btn" title="Entfernen">✕</button>
+      <input class="ing-abv" type="number" min="0" max="100" step="0.1" placeholder="% vol" title="${t("ui.alkoholgehalt_nur_fuer_den_flaschen_modus")}" data-i18n-title="ui.alkoholgehalt_nur_fuer_den_flaschen_modus" />
+      <button type="button" class="remove-btn" title="${t("ui.entfernen")}" data-i18n-title="ui.entfernen">✕</button>
     `;
 
     const nameEl = row.querySelector(".ing-name");

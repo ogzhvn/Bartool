@@ -1,13 +1,13 @@
+import { t, formatDecimal } from "./i18n.js";
+// Zahlen laufen über Intl (js/i18n.js), damit sie der eingestellten Sprache
+// folgen: 12,5 auf Deutsch, 12.5 auf Englisch.
 export function formatNumber(n) {
-  return Number(n.toFixed(2)).toString();
+  return formatDecimal(Number(n), 2);
 }
 
-// Wie formatNumber, aber mit Komma als Dezimaltrennzeichen. Für alles, was
-// gedruckt oder neben Euro-Beträgen angezeigt wird – dort wirkt ein Punkt
-// wie ein Tippfehler. Die Rechner selbst nutzen weiter formatNumber.
-export function formatNumberDe(n) {
-  return Number(Number(n).toFixed(2)).toLocaleString("de-DE", { maximumFractionDigits: 2 });
-}
+// Alias aus der Zeit, als es nur Deutsch gab. Beide formatieren heute
+// gleich – der Name bleibt, weil ihn viele Module importieren.
+export const formatNumberLocal = formatNumber;
 
 // supabase-js liefert bei einer Edge Function, die einen Fehlerstatus (4xx)
 // zurückgibt, nur einen generischen Fehler ("Edge Function returned a
@@ -25,7 +25,7 @@ export async function functionErrorMessage(error, data) {
       // Response ohne JSON-Body - Fallback unten verwenden.
     }
   }
-  return error?.message ?? "Unbekannter Fehler.";
+  return error?.message ?? t("ui.unbekannter_fehler");
 }
 
 export function escapeHtml(str) {

@@ -5,6 +5,7 @@ import { getProduct } from "./productLibrary.js";
 import { previousPriceFor, onPricesChanged } from "./priceHistory.js";
 import { onRecipesChanged, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
+import { getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Kartenkalkulation: mehrere Drinks auf einen Blick.
 //
@@ -56,13 +57,13 @@ function speichereZielquote(wert) {
 }
 
 function formatEuro(n) {
-  return `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  return `${n.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
 // Deutsches Zahlenformat mit Komma – sonst stünde neben "14,50 €" ein
 // "13.91 %", was auf einem Blatt nebeneinander unsauber aussieht.
 function formatProzent(n) {
-  return `${n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+  return `${n.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 }
 
 function gefilterteRezepte() {
@@ -84,11 +85,11 @@ function renderList() {
       <label class="menu-pick">
         <input type="checkbox" value="${escapeHtml(r.name)}" ${selectedNames.has(r.name) ? "checked" : ""} />
         <span>${escapeHtml(r.name)}</span>
-        ${r.salesPrice !== "" && r.salesPrice != null ? `<span class="menu-pick-price">${formatEuro(Number(r.salesPrice))}</span>` : `<span class="menu-pick-price menu-pick-missing">kein Preis</span>`}
+        ${r.salesPrice !== "" && r.salesPrice != null ? `<span class="menu-pick-price">${formatEuro(Number(r.salesPrice))}</span>` : `<span class="menu-pick-price menu-pick-missing">${t("ui.kein_preis")}</span>`}
       </label>`
     )
     .join("");
-  countEl.textContent = `${selectedNames.size} ausgewählt`;
+  countEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
 }
 
 // Rechnet eine Zeile. Der Verkaufspreis am Rezept ist ein Bruttopreis, der
@@ -159,10 +160,10 @@ function renderPreisWarnungen() {
     )
     .join("");
   return `
-    <p class="summary">Kalkulation prüfen: bei ${warnungen.length} Drink(s) ist der Wareneinsatz seit dem letzten gespeicherten Preisstand um mehr als ${WARN_SCHWELLE_PROZENT} % gestiegen.</p>
+    <p class="summary">${t("ui.kalkulation_pruefen_bei")} ${warnungen.length} ${t("ui.drink_s_ist_der_wareneinsatz_seit_dem_7a93")} ${WARN_SCHWELLE_PROZENT} % gestiegen.</p>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Drink</th><th>Wareneinsatz vorher</th><th>Wareneinsatz jetzt</th><th>Anstieg</th></tr></thead>
+        <thead><tr><th>${t("ui.drink")}</th><th>${t("ui.wareneinsatz_vorher")}</th><th>${t("ui.wareneinsatz_jetzt")}</th><th>${t("ui.anstieg")}</th></tr></thead>
         <tbody>${zeilen}</tbody>
       </table>
     </div>`;
@@ -178,10 +179,10 @@ function renderDataStatus() {
 
   const luecken = [];
   if (mitEK < produkte.length) {
-    luecken.push(`${produkte.length - mitEK} von ${produkte.length} Produkten ohne Einkaufspreis`);
+    luecken.push(`${produkte.length - mitEK} ${t("ui.von")} ${produkte.length} ${t("ui.produkten_ohne_einkaufspreis")}`);
   }
   if (mitVK < rezepte.length) {
-    luecken.push(`${rezepte.length - mitVK} von ${rezepte.length} Drinks ohne Verkaufspreis`);
+    luecken.push(`${rezepte.length - mitVK} ${t("ui.von")} ${rezepte.length} ${t("ui.drinks_ohne_verkaufspreis")}`);
   }
 
   if (luecken.length === 0) {
@@ -190,9 +191,9 @@ function renderDataStatus() {
   }
   statusEl.hidden = false;
   statusEl.textContent =
-    "Datenbasis noch unvollständig: " +
+    t("ui.datenbasis_noch_unvollstaendig") +
     luecken.join(" · ") +
-    ". Einkaufspreise stehen im Produkt, Verkaufspreise im Rezept – je mehr gepflegt ist, desto belastbarer die Zahlen.";
+    t("ui.einkaufspreise_stehen_im_produkt_1a01");
 }
 
 function berechnen() {
@@ -201,7 +202,7 @@ function berechnen() {
   const rezepte = getAllRecipes().filter((r) => selectedNames.has(r.name));
 
   if (rezepte.length === 0) {
-    resultEl.innerHTML = `<p class="empty-note">Noch keine Drinks ausgewählt.</p>${renderPreisWarnungen()}`;
+    resultEl.innerHTML = `<p class="empty-note">${t("ui.noch_keine_drinks_ausgewaehlt")}</p>${renderPreisWarnungen()}`;
     return;
   }
 
@@ -223,7 +224,7 @@ function berechnen() {
           : `<span class="${z.quote > zielQuote ? "menu-quote-high" : "menu-quote-ok"}">${formatProzent(z.quote)}</span>`;
       return `
         <tr>
-          <td>${escapeHtml(z.name)}${z.preisKomplett ? "" : ` <span class="menu-pick-missing" title="Ohne Einkaufspreis: ${escapeHtml(z.fehlendePreise.join(", "))}">unvollständig</span>`}</td>
+          <td>${escapeHtml(z.name)}${z.preisKomplett ? "" : ` <span class="menu-pick-missing" title="Ohne Einkaufspreis: ${escapeHtml(z.fehlendePreise.join(", "))}">${t("ui.unvollstaendig")}</span>`}</td>
           <td>${formatEuro(z.wareneinsatz)}</td>
           <td>${z.brutto === null ? "–" : formatEuro(z.brutto)}</td>
           <td>${z.rohertrag === null ? "–" : formatEuro(z.rohertrag)}</td>
@@ -241,14 +242,14 @@ function berechnen() {
       <table>
         <thead>
           <tr>
-            <th>Drink</th><th>Wareneinsatz</th><th>Verkauf brutto</th>
-            <th>Rohertrag netto</th><th>Quote</th><th>Zielpreis brutto</th>
+            <th>${t("ui.drink")}</th><th>${t("ui.wareneinsatz")}</th><th>${t("ui.verkauf_brutto")}</th>
+            <th>${t("ui.rohertrag_netto")}</th><th>${t("ui.quote_3090")}</th><th>${t("ui.zielpreis_brutto")}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
         <tfoot>
           <tr>
-            <th>Summe (${zeilen.length})</th>
+            <th>${t("ui.summe")}${zeilen.length})</th>
             <th>${formatEuro(summeWareneinsatz)}</th>
             <th>${formatEuro(mitPreis.reduce((s, z) => s + z.brutto, 0))}</th>
             <th>${formatEuro(summeRohertrag)}</th>
@@ -259,17 +260,17 @@ function berechnen() {
       </table>
     </div>
     <p class="summary">
-      Quote = Wareneinsatz im Verhältnis zum Nettoverkaufspreis. Grün heißt: besser als die Zielquote von ${formatProzent(zielQuote)}.
-      Der Zielpreis zeigt, was der Drink kosten müsste, um die Zielquote genau zu treffen.
+      ${t("ui.quote_wareneinsatz_im_verhaeltnis_zum_5da2")} ${formatProzent(zielQuote)}.
+      ${t("ui.der_zielpreis_zeigt_was_der_drink_5f2a")}
     </p>
     ${
       ohnePreis > 0
-        ? `<p class="empty-note">${ohnePreis} Drink(s) ohne Verkaufspreis – Preis im Rezept eintragen, dann wird gerechnet.</p>`
+        ? `<p class="empty-note">${ohnePreis} ${t("ui.drink_s_ohne_verkaufspreis_preis_im_rezept_de83")}</p>`
         : ""
     }
     ${
       unvollstaendig > 0
-        ? `<p class="empty-note">${unvollstaendig} Drink(s) mit unvollständigem Wareneinsatz: bei mindestens einer Zutat fehlt der Einkaufspreis im Produktkatalog. Die Quote ist dort zu gut.</p>`
+        ? `<p class="empty-note">${unvollstaendig} ${t("ui.drink_s_mit_unvollstaendigem_wareneinsatz_42fe")}</p>`
         : ""
     }
     ${renderPreisWarnungen()}
@@ -285,24 +286,31 @@ function exportExcel() {
   const rows = rezepte.map((r) => {
     const z = berechneZeile(r, vat);
     return {
-      Drink: z.name,
-      Wareneinsatz: Number(z.wareneinsatz.toFixed(2)),
-      "Verkauf brutto": z.brutto ?? "",
-      "Rohertrag netto": z.rohertrag === null ? "" : Number(z.rohertrag.toFixed(2)),
-      "Quote %": z.quote === null ? "" : Number(z.quote.toFixed(2)),
-      "Zielpreis brutto": zielQuote > 0 ? Number(((z.wareneinsatz / (zielQuote / 100)) * (1 + vat / 100)).toFixed(2)) : "",
-      Wareneinsatz_vollständig: z.preisKomplett ? "ja" : "nein",
+      [t("ui.drink")]: z.name,
+      [t("ui.wareneinsatz")]: Number(z.wareneinsatz.toFixed(2)),
+      [t("ui.verkauf_brutto")]: z.brutto ?? "",
+      [t("ui.rohertrag_netto")]: z.rohertrag === null ? "" : Number(z.rohertrag.toFixed(2)),
+      [t("ui.quote")]: z.quote === null ? "" : Number(z.quote.toFixed(2)),
+      [t("ui.zielpreis_brutto")]: zielQuote > 0 ? Number(((z.wareneinsatz / (zielQuote / 100)) * (1 + vat / 100)).toFixed(2)) : "",
+      [t("ui.wareneinsatz_vollstaendig")]: z.preisKomplett ? t("ui.ja") : t("ui.nein"),
     };
   });
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
   worksheet["!cols"] = [{ wch: 28 }, { wch: 14 }, { wch: 15 }, { wch: 16 }, { wch: 10 }, { wch: 17 }, { wch: 22 }];
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Karte");
-  XLSX.writeFile(workbook, `Bartool-Karte_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, t("ui.karte"));
+  XLSX.writeFile(workbook, `${t("ui.bartool_karte")}${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 export function initMenuCosting() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    renderList();
+    renderDataStatus();
+    berechnen();
+  });
+
   quoteEl.value = ladeZielquote();
   renderList();
   renderDataStatus();
@@ -315,7 +323,7 @@ export function initMenuCosting() {
     if (!box) return;
     if (box.checked) selectedNames.add(box.value);
     else selectedNames.delete(box.value);
-    countEl.textContent = `${selectedNames.size} ausgewählt`;
+    countEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
     berechnen();
   });
 

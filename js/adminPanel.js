@@ -4,6 +4,7 @@ import { escapeHtml, functionErrorMessage } from "./utils.js";
 import { loadCuratedQuestionRows, saveCuratedQuestion, deleteCuratedQuestion } from "./quiz.js";
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
+import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
 const createForm = document.getElementById("admin-create-form");
 const createError = document.getElementById("admin-create-error");
@@ -13,7 +14,7 @@ async function loadEmployees() {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.from("profiles").select("*").order("email");
   if (error) {
-    employeeListEl.innerHTML = `<p class="empty-note">Konten konnten nicht geladen werden: ${escapeHtml(error.message)}</p>`;
+    employeeListEl.innerHTML = `<p class="empty-note">${t("ui.konten_konnten_nicht_geladen_werden")} ${escapeHtml(error.message)}</p>`;
     return;
   }
   renderEmployees(data ?? []);
@@ -21,13 +22,13 @@ async function loadEmployees() {
 
 function renderEmployees(profiles) {
   if (profiles.length === 0) {
-    employeeListEl.innerHTML = `<p class="empty-note">Keine Konten gefunden.</p>`;
+    employeeListEl.innerHTML = `<p class="empty-note">${t("ui.keine_konten_gefunden")}</p>`;
     return;
   }
 
   employeeListEl.innerHTML = `
     <table>
-      <thead><tr><th>Benutzername</th><th>E-Mail</th><th>Name</th><th>Rolle</th><th></th></tr></thead>
+      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th></th></tr></thead>
       <tbody>
         ${profiles
           .map(
@@ -38,13 +39,13 @@ function renderEmployees(profiles) {
             <td>${escapeHtml(p.display_name ?? "")}</td>
             <td>
               <select class="role-select" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>
-                <option value="mitarbeiter" ${p.role === "mitarbeiter" ? "selected" : ""}>Mitarbeiter</option>
-                <option value="admin" ${p.role === "admin" ? "selected" : ""}>Admin</option>
+                <option value="mitarbeiter" ${p.role === "mitarbeiter" ? "selected" : ""}>${t("ui.mitarbeiter")}</option>
+                <option value="admin" ${p.role === "admin" ? "selected" : ""}>${t("ui.admin")}</option>
               </select>
             </td>
             <td>
-              <button type="button" class="btn-secondary reset-password-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>Passwort zurücksetzen</button>
-              <button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>Löschen</button>
+              <button type="button" class="btn-secondary reset-password-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.passwort_zuruecksetzen")}</button>
+              <button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.loeschen")}</button>
             </td>
           </tr>`
           )
@@ -58,7 +59,7 @@ function renderEmployees(profiles) {
       const id = e.target.closest("tr").dataset.id;
       const username = e.target.value.trim().toLowerCase();
       if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
-        alert("Benutzername darf nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten (3–32 Zeichen).");
+        alert(t("ui.benutzername_darf_nur_kleinbuchstaben_1c7d"));
         loadEmployees();
         return;
       }
@@ -66,8 +67,8 @@ function renderEmployees(profiles) {
       const { error } = await supabase.from("profiles").update({ username }).eq("id", id);
       if (error) {
         alert(
-          "Benutzername konnte nicht geändert werden: " +
-            (error.message.includes("profiles_username_key") ? "Dieser Benutzername ist bereits vergeben." : error.message)
+          t("ui.benutzername_konnte_nicht_geaendert_werden") +
+            (error.message.includes("profiles_username_key") ? t("ui.dieser_benutzername_ist_bereits_vergeben") : error.message)
         );
         loadEmployees();
       }
@@ -80,7 +81,7 @@ function renderEmployees(profiles) {
       const supabase = getSupabaseClient();
       const { error } = await supabase.from("profiles").update({ role: e.target.value }).eq("id", id);
       if (error) {
-        alert("Rolle konnte nicht geändert werden: " + error.message);
+        alert(t("ui.rolle_konnte_nicht_geaendert_werden") + error.message);
         loadEmployees();
       }
     });
@@ -89,10 +90,10 @@ function renderEmployees(profiles) {
   employeeListEl.querySelectorAll(".reset-password-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.closest("tr").dataset.id;
-      const password = prompt("Neues temporäres Passwort (mind. 8 Zeichen):");
+      const password = prompt(t("ui.neues_temporaeres_passwort_mind_8_zeichen"));
       if (password === null) return;
       if (password.length < 8) {
-        alert("Das Passwort muss mindestens 8 Zeichen haben.");
+        alert(t("ui.das_passwort_muss_mindestens_8_zeichen_haben"));
         return;
       }
       const supabase = getSupabaseClient();
@@ -100,23 +101,23 @@ function renderEmployees(profiles) {
         body: { action: "reset-password", userId: id, password },
       });
       if (error || data?.error) {
-        alert("Passwort konnte nicht zurückgesetzt werden: " + (await functionErrorMessage(error, data)));
+        alert(t("ui.passwort_konnte_nicht_zurueckgesetzt_werden") + (await functionErrorMessage(error, data)));
         return;
       }
-      alert("Passwort wurde zurückgesetzt. Die Person muss beim nächsten Login ein neues Passwort setzen.");
+      alert(t("ui.passwort_wurde_zurueckgesetzt_die_person_1e04"));
     });
   });
 
   employeeListEl.querySelectorAll(".delete-employee-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.closest("tr").dataset.id;
-      if (!confirm("Dieses Konto wirklich löschen? Der Zugriff wird sofort entzogen.")) return;
+      if (!confirm(t("ui.dieses_konto_wirklich_loeschen_der_zugriff_1784"))) return;
       const supabase = getSupabaseClient();
       const { data, error } = await supabase.functions.invoke("admin-users", {
         body: { action: "delete", userId: id },
       });
       if (error || data?.error) {
-        alert("Konto konnte nicht gelöscht werden: " + (await functionErrorMessage(error, data)));
+        alert(t("ui.konto_konnte_nicht_geloescht_werden") + (await functionErrorMessage(error, data)));
         return;
       }
       loadEmployees();
@@ -141,7 +142,7 @@ async function handleCreate(e) {
 
   if (error || data?.error) {
     createError.hidden = false;
-    createError.textContent = "Konto konnte nicht angelegt werden: " + (await functionErrorMessage(error, data));
+    createError.textContent = t("ui.konto_konnte_nicht_angelegt_werden") + (await functionErrorMessage(error, data));
     return;
   }
 
@@ -202,12 +203,12 @@ function quizAddOptionRow(value = "", checked = false) {
   input.type = "text";
   input.className = "quiz-admin-option-input";
   input.value = value;
-  input.placeholder = "Antwortmöglichkeit";
+  input.placeholder = t("ui.antwortmoeglichkeit");
 
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.className = "btn-secondary";
-  removeBtn.textContent = "Entfernen";
+  removeBtn.textContent = t("ui.entfernen");
   removeBtn.addEventListener("click", () => {
     if (quizOptionsEl.children.length <= 2) return;
     row.remove();
@@ -244,11 +245,11 @@ function quizReadForm() {
 }
 
 function quizValidate(frage) {
-  if (!frage.question) return "Die Frage fehlt.";
-  if (frage.options.length < 2) return "Es braucht mindestens zwei ausgefüllte Antwortmöglichkeiten.";
+  if (!frage.question) return t("ui.die_frage_fehlt");
+  if (frage.options.length < 2) return t("ui.es_braucht_mindestens_zwei_ausgefuellte_c627");
   if (new Set(frage.options.map((o) => o.toLowerCase())).size !== frage.options.length)
-    return "Zwei Antworten sind identisch.";
-  if (frage.correctIndex < 0) return "Es ist keine richtige Antwort markiert.";
+    return t("ui.zwei_antworten_sind_identisch");
+  if (frage.correctIndex < 0) return t("ui.es_ist_keine_richtige_antwort_markiert");
   return "";
 }
 
@@ -265,7 +266,7 @@ function quizRenderPreview() {
   quizPreviewBox.textContent = "";
   const titel = document.createElement("p");
   titel.className = "quiz-topic-label";
-  titel.textContent = `${frage.topic || "Servicewissen"} · Hauswissen`;
+  titel.textContent = `${frage.topic || t("ui.servicewissen")} ${t("ui.hauswissen")}`;
   quizPreviewBox.appendChild(titel);
 
   const text = document.createElement("p");
@@ -331,7 +332,7 @@ function quizRenderList(rows) {
   if (rows.length === 0) {
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Noch keine kuratierten Fragen. Der Generator liefert trotzdem Fragen aus dem Katalog.";
+    p.textContent = t("ui.noch_keine_kuratierten_fragen_der_c7a4");
     quizListEl.appendChild(p);
     return;
   }
@@ -347,7 +348,7 @@ function quizRenderList(rows) {
     const meta = document.createElement("p");
     meta.className = "quiz-admin-item-meta";
     const optionen = Array.isArray(row.options) ? row.options : [];
-    meta.textContent = `${row.topic ?? ""} · ${optionen.length} Antworten${row.active === false ? " · inaktiv" : ""}`;
+    meta.textContent = `${row.topic ?? ""} · ${optionen.length} ${t("ui.antworten")}${row.active === false ? " · inaktiv" : ""}`;
     item.appendChild(meta);
 
     const actions = document.createElement("div");
@@ -356,20 +357,20 @@ function quizRenderList(rows) {
     const editBtn = document.createElement("button");
     editBtn.type = "button";
     editBtn.className = "btn-secondary";
-    editBtn.textContent = "Bearbeiten";
+    editBtn.textContent = t("ui.bearbeiten");
     editBtn.addEventListener("click", () => quizLoadIntoForm(row));
     actions.appendChild(editBtn);
 
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "btn-secondary";
-    deleteBtn.textContent = "Löschen";
+    deleteBtn.textContent = t("ui.loeschen");
     deleteBtn.addEventListener("click", async () => {
-      if (!confirm("Diese Frage wirklich löschen?")) return;
+      if (!confirm(t("ui.diese_frage_wirklich_loeschen"))) return;
       try {
         await deleteCuratedQuestion(row.id);
       } catch (error) {
-        quizSetError("Frage konnte nicht gelöscht werden: " + error.message);
+        quizSetError(t("ui.frage_konnte_nicht_geloescht_werden") + error.message);
         return;
       }
       if (quizEditId === row.id) quizResetForm();
@@ -389,7 +390,7 @@ async function quizLoadQuestions() {
     quizListEl.textContent = "";
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Fragen konnten nicht geladen werden: " + error.message;
+    p.textContent = t("ui.fragen_konnten_nicht_geladen_werden") + error.message;
     quizListEl.appendChild(p);
   }
 }
@@ -418,7 +419,7 @@ async function quizHandleSubmit(e) {
   try {
     await saveCuratedQuestion(frage);
   } catch (error) {
-    quizSetError("Frage konnte nicht gespeichert werden: " + error.message);
+    quizSetError(t("ui.frage_konnte_nicht_gespeichert_werden") + error.message);
     return;
   }
   quizResetForm();
@@ -467,14 +468,14 @@ function teamPersonName(row) {
   const name = String(row.display_name ?? "").trim();
   if (name) return name;
   // Ohne Anzeigenamen bleibt nur die Mailadresse als Kennung.
-  return String(row.email ?? "").trim() || "Unbekannt";
+  return String(row.email ?? "").trim() || t("ui.unbekannt");
 }
 
 function teamRenderOverview(rows) {
   teamListEl.textContent = "";
   const aktiv = rows.filter((row) => Number(row.attempts ?? 0) > 0);
   if (aktiv.length === 0) {
-    teamEmptyNote(teamListEl, "Noch hat niemand eine Quizrunde gespielt.");
+    teamEmptyNote(teamListEl, t("ui.noch_hat_niemand_eine_quizrunde_gespielt"));
     return;
   }
 
@@ -507,9 +508,9 @@ function teamRenderOverview(rows) {
     const zuletzt = row.last_answered_at ? new Date(row.last_answered_at) : null;
     const zuletztText =
       zuletzt && !Number.isNaN(zuletzt.getTime())
-        ? ` · zuletzt ${zuletzt.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`
+        ? ` · ${t("ui.zuletzt")} ${formatDate(zuletzt)}`
         : "";
-    meta.textContent = `${runden} ${runden === 1 ? "Runde" : "Runden"} · ${richtig} von ${versuche} Fragen richtig${zuletztText}`;
+    meta.textContent = `${runden} ${runden === 1 ? t("ui.runde") : t("ui.runden")} · ${richtig} ${t("ui.von")} ${versuche} ${t("ui.fragen_richtig_71e0")}${zuletztText}`;
     item.appendChild(meta);
 
     const schwach = Array.isArray(row.weakest_topics) ? row.weakest_topics : [];
@@ -517,9 +518,9 @@ function teamRenderOverview(rows) {
     themen.className = "quiz-team-topics";
     themen.textContent =
       schwach.length === 0
-        ? "Schwächste Themen: noch zu wenige Antworten pro Thema."
-        : "Schwächste Themen: " +
-          schwach.map((t) => `${t.topic} (${t.accuracy} %, ${t.attempts} Fragen)`).join(" · ");
+        ? t("ui.schwaechste_themen_noch_zu_wenige_dada")
+        : t("ui.schwaechste_themen") +
+          schwach.map((thema) => `${thema.topic} (${thema.accuracy} %, ${thema.attempts} ${t("ui.fragen")}`).join(" · ");
     item.appendChild(themen);
 
     teamListEl.appendChild(item);
@@ -529,7 +530,7 @@ function teamRenderOverview(rows) {
 function teamRenderHeatmap(rows) {
   teamHeatmapEl.textContent = "";
   if (rows.length === 0) {
-    teamEmptyNote(teamHeatmapEl, "Noch keine Antworten – die Heatmap füllt sich mit den ersten Runden.");
+    teamEmptyNote(teamHeatmapEl, t("ui.noch_keine_antworten_die_heatmap_fuellt_9261"));
     return;
   }
   rows.forEach((row) => {
@@ -553,7 +554,7 @@ function teamRenderHeatmap(rows) {
     const lernende = Number(row.learners ?? 0);
     const meta = document.createElement("span");
     meta.className = "quiz-quota-meta";
-    meta.textContent = `${Number(row.correct ?? 0)} von ${Number(row.attempts ?? 0)} Fragen richtig · ${lernende} ${lernende === 1 ? "Person" : "Personen"}`;
+    meta.textContent = `${Number(row.correct ?? 0)} ${t("ui.von")} ${Number(row.attempts ?? 0)} ${t("ui.fragen_richtig")} ${lernende} ${lernende === 1 ? t("ui.person") : t("ui.personen")}`;
     zeile.appendChild(meta);
 
     teamHeatmapEl.appendChild(zeile);
@@ -573,9 +574,9 @@ async function teamLoad() {
     teamRenderOverview(uebersicht.data ?? []);
     teamRenderHeatmap(heatmap.data ?? []);
   } catch (error) {
-    teamSetError("Die Team-Auswertung konnte nicht geladen werden: " + error.message);
-    teamEmptyNote(teamListEl, "Keine Daten geladen.");
-    teamEmptyNote(teamHeatmapEl, "Keine Daten geladen.");
+    teamSetError(t("ui.die_team_auswertung_konnte_nicht_geladen_34c6") + error.message);
+    teamEmptyNote(teamListEl, t("ui.keine_daten_geladen"));
+    teamEmptyNote(teamHeatmapEl, t("ui.keine_daten_geladen"));
   }
 }
 
@@ -598,6 +599,14 @@ function initQuizAdmin() {
 }
 
 export function initAdminPanel() {
+  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  onLanguageChanged(() => {
+    loadEmployees();
+    quizResetForm();
+    quizLoadQuestions();
+    if (isAdmin()) teamLoad();
+  });
+
   createForm.addEventListener("submit", handleCreate);
   loadEmployees();
   initQuizAdmin();

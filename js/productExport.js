@@ -1,57 +1,67 @@
 import { escapeHtml } from "./utils.js";
+import { t, formatDecimal } from "./i18n.js";
 
 // Feldreihenfolge für beide Exporte – identisch zur Detailansicht im Tab.
-const FIELDS = [
-  ["Name", (p) => p.name],
-  ["Kategorie & Herkunft", (p) => p.category],
-  ["Gruppe", (p) => p.group],
-  ["Untergruppe", (p) => p.subGroup],
-  ["Alkoholgehalt", (p) => p.abv],
-  ["Alkoholgehalt (Zahl)", (p) => p.abvValue],
-  ["Alkoholgehalt bis", (p) => p.abvMax],
-  ["Herkunftsland", (p) => p.originCountry],
-  ["Herkunftsregion", (p) => p.originRegion],
-  ["Grundstoff", (p) => p.baseMaterial],
-  ["Herstellungsverfahren", (p) => p.productionMethod],
-  ["Altersangabe", (p) => p.ageStatement],
-  ["Aroma-Schlagworte", (p) => (p.flavorTags ?? []).join(", ")],
-  ["Region", (p) => p.region],
-  ["Rebsorte", (p) => p.grapeVariety],
-  ["Lage", (p) => p.vineyard],
-  ["Jahrgang", (p) => p.vintage],
-  ["Ausbau", (p) => p.aging],
-  ["Trinkfenster", (p) => p.drinkingWindow],
-  ["Erzeuger", (p) => p.producer],
-  ["Geschmacksrichtung", (p) => p.sweetness],
-  ["Klassifikation", (p) => p.classification],
-  ["Serviertemperatur", (p) => p.servingTemp],
-  ["Körper", (p) => p.body],
+// Gespeichert wird der i18n-Schlüssel, nicht die fertige Beschriftung:
+// die Spaltennamen folgen so der eingestellten Sprache, ohne dass der
+// Import (js/productImport.js) die Zuordnung verliert.
+const FIELD_DEFS = [
+  ["ui.name", (p) => p.name],
+  ["ui.kategorie_herkunft", (p) => p.category],
+  ["ui.gruppe", (p) => p.group],
+  ["ui.untergruppe", (p) => p.subGroup],
+  ["ui.alkoholgehalt_006a", (p) => p.abv],
+  ["ui.alkoholgehalt_zahl", (p) => p.abvValue],
+  ["ui.alkoholgehalt_bis", (p) => p.abvMax],
+  ["ui.herkunftsland", (p) => p.originCountry],
+  ["ui.herkunftsregion", (p) => p.originRegion],
+  ["ui.grundstoff", (p) => p.baseMaterial],
+  ["ui.herstellungsverfahren", (p) => p.productionMethod],
+  ["ui.altersangabe", (p) => p.ageStatement],
+  ["ui.aroma_schlagworte", (p) => (p.flavorTags ?? []).join(", ")],
+  ["ui.region", (p) => p.region],
+  ["ui.rebsorte", (p) => p.grapeVariety],
+  ["ui.lage", (p) => p.vineyard],
+  ["ui.jahrgang", (p) => p.vintage],
+  ["ui.ausbau", (p) => p.aging],
+  ["ui.trinkfenster", (p) => p.drinkingWindow],
+  ["ui.erzeuger", (p) => p.producer],
+  ["ui.geschmacksrichtung", (p) => p.sweetness],
+  ["ui.klassifikation", (p) => p.classification],
+  ["ui.serviertemperatur", (p) => p.servingTemp],
+  ["ui.koerper", (p) => p.body],
   // Leer statt "nein", damit ungeprüfte Produkte den Druck/Word-Export nicht
   // mit einer nichtssagenden Zeile zumüllen.
-  ["Geprüft", (p) => (p.verified ? "ja" : "")],
-  ["Tasting Notes", (p) => p.tastingNotes],
-  ["Speiseempfehlung", (p) => p.foodPairing],
-  ["Serviervorschlag", (p) => p.service],
-  ["Alternativen", (p) => p.alternatives],
-  ["Story", (p) => p.story],
-  ["Herstellung", (p) => p.production],
-  ["Allergene", (p) => p.allergens],
-  ["Einkaufspreis", (p) => formatPrice(p)],
-  ["Kurzer Pitch", (p) => p.quickPitch],
-  ["Passt gut zu", (p) => (p.pairsWith ?? []).join(", ")],
-  ["Soll-Bestand", (p) => p.parLevel],
-  ["Lieferant", (p) => p.supplier],
-  ["Bestelleinheit", (p) => p.orderUnit],
+  ["ui.geprueft", (p) => (p.verified ? t("ui.ja") : "")],
+  ["ui.tasting_notes", (p) => p.tastingNotes],
+  ["ui.speiseempfehlung", (p) => p.foodPairing],
+  ["ui.serviervorschlag", (p) => p.service],
+  ["ui.alternativen", (p) => p.alternatives],
+  ["ui.story", (p) => p.story],
+  ["ui.herstellung", (p) => p.production],
+  ["ui.allergene", (p) => p.allergens],
+  ["ui.einkaufspreis", (p) => formatPrice(p)],
+  ["ui.kurzer_pitch", (p) => p.quickPitch],
+  ["ui.passt_gut_zu", (p) => (p.pairsWith ?? []).join(", ")],
+  ["ui.soll_bestand", (p) => p.parLevel],
+  ["ui.lieferant", (p) => p.supplier],
+  ["ui.bestelleinheit", (p) => p.orderUnit],
 ];
 
-// Die Spaltennamen werden vom Import (js/productImport.js) gebraucht, damit
-// eine exportierte Datei ohne Umbenennen wieder eingelesen werden kann.
-export const PRODUCT_COLUMNS = FIELDS.map(([label]) => label);
+// Die Spaltenschlüssel braucht der Import (js/productImport.js), damit eine
+// exportierte Datei ohne Umbenennen wieder eingelesen werden kann.
+export const PRODUCT_COLUMN_KEYS = FIELD_DEFS.map(([key]) => key);
+
+// Erst beim Export aufgelöst, nicht beim Laden des Moduls – sonst würde ein
+// Sprachwechsel die Spaltennamen nicht mehr erreichen.
+function fields() {
+  return FIELD_DEFS.map(([key, read]) => [key, t(key), read]);
+}
 
 function formatPrice(product) {
   if (!product.priceValue) return "";
-  const unitLabel = product.priceUnit === "stueck" ? "Stück" : "Liter";
-  return `${product.priceValue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / ${unitLabel}`;
+  const unitLabel = product.priceUnit === "stueck" ? t("ui.stueck_26e1") : t("ui.liter_3629");
+  return `${formatDecimal(product.priceValue, 2)} € / ${unitLabel}`;
 }
 
 function timestampedFilename(base, ext) {
@@ -62,22 +72,22 @@ function timestampedFilename(base, ext) {
 export function exportProductsToExcel(products) {
   const rows = products.map((product) => {
     const row = {};
-    FIELDS.forEach(([label, read]) => {
+    fields().forEach(([, label, read]) => {
       row[label] = read(product) ?? "";
     });
     return row;
   });
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
-  worksheet["!cols"] = FIELDS.map(([label]) => {
-    if (label === "Story" || label === "Tasting Notes") return { wch: 60 };
-    if (label === "Name" || label === "Kategorie & Herkunft") return { wch: 30 };
+  worksheet["!cols"] = FIELD_DEFS.map(([key]) => {
+    if (key === "ui.story" || key === "ui.tasting_notes") return { wch: 60 };
+    if (key === "ui.name" || key === "ui.kategorie_herkunft") return { wch: 30 };
     return { wch: 22 };
   });
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Produkte");
-  XLSX.writeFile(workbook, timestampedFilename("Bartool-Produkte", "xlsx"));
+  XLSX.utils.book_append_sheet(workbook, worksheet, t("ui.produkte"));
+  XLSX.writeFile(workbook, timestampedFilename(t("ui.bartool_produkte"), "xlsx"));
 }
 
 // Baut die Produktblöcke als HTML. Wird von Word-Export und Druckansicht
@@ -85,8 +95,9 @@ export function exportProductsToExcel(products) {
 export function buildProductBlocks(products) {
   return products
     .map((product, index) => {
-      const rows = FIELDS.filter(([label]) => label !== "Name")
-        .map(([label, read]) => [label, read(product)])
+      const rows = fields()
+        .filter(([key]) => key !== "ui.name")
+        .map(([, label, read]) => [label, read(product)])
         .filter(([, value]) => value)
         .map(
           ([label, value]) =>
@@ -111,7 +122,7 @@ export function exportProductsToWord(products) {
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta charset="utf-8" />
-  <title>Bartool Produkte</title>
+  <title>${t("ui.bartool_produkte_2329")}</title>
   <style>
     body { font-family: Calibri, Arial, sans-serif; color: #222; }
     h1 { color: #b8790f; margin-bottom: 4px; }
@@ -123,7 +134,7 @@ export function exportProductsToWord(products) {
   </style>
 </head>
 <body>
-  <h1>Bartool – Produkte</h1>
+  <h1>${t("ui.bartool_produkte_2939")}</h1>
   ${blocks}
 </body>
 </html>`;
@@ -132,7 +143,7 @@ export function exportProductsToWord(products) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = timestampedFilename("Bartool-Produkte", "doc");
+  link.download = timestampedFilename(t("ui.bartool_produkte"), "doc");
   link.click();
   URL.revokeObjectURL(url);
 }
