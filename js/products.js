@@ -134,12 +134,12 @@ const parLevelEl = document.getElementById("product-par-level");
 const supplierOptionsEl = document.getElementById("product-supplier-options");
 const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
+const photoImgEl = document.getElementById("product-photo-img");
+const photoPlaceholderEl = document.getElementById("product-photo-placeholder");
+const photoFileEl = document.getElementById("product-photo-file");
+const photoDeleteBtn = document.getElementById("product-photo-delete");
+const photoStatusEl = document.getElementById("product-photo-status");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
-
-const photoFieldEl = document.getElementById("product-photo-field");
-const photoPreviewEl = document.getElementById("product-photo-preview");
-const photoInputEl = document.getElementById("product-photo-input");
-const photoRemoveBtn = document.getElementById("product-photo-remove");
 
 // Kommagetrennte Liste (Aroma-Schlagworte, "Passt gut zu") in ein Array.
 function parsePairsWith(value) {
@@ -180,11 +180,9 @@ let editingOriginalName = null;
 // Zeitpunkt der letzten Prüfung des geladenen Produkts – bleibt erhalten,
 // solange der Haken „Angaben geprüft" gesetzt bleibt.
 let editingVerifiedAt = "";
-// Foto-Bearbeitung: Pfad des gespeicherten Fotos, neu gewähltes File (noch
-// nicht hochgeladen) und ob das bestehende Foto entfernt werden soll.
+// image_path des geladenen Produkts. Ein Upload/Löschen wirkt sofort im
+// Storage, landet aber wie alle anderen Felder erst mit "Speichern" in der DB.
 let editingImagePath = "";
-let pendingPhotoFile = null;
-let pendingPhotoRemoved = false;
 // Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
 // Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
 // gleichen Stelle landet statt oben in der Liste.
@@ -261,62 +259,30 @@ function updateWineFieldsVisibility() {
   wineFieldsEl.hidden = !WINE_GROUPS.includes(groupEl.value.trim());
 }
 
-// Setzt die Foto-Vorschau auf den Platzhalter zurück (Bild-Icon).
-function showPhotoPlaceholder() {
-  photoPreviewEl.innerHTML = '<i class="ph ph-image" aria-hidden="true"></i>';
-}
-
-function showPhotoImage(url) {
-  photoPreviewEl.innerHTML = `<img src="${url}" alt="" />`;
-}
-
-function updatePhotoControlsVisibility() {
-  photoFieldEl.hidden = !isAdmin();
-  photoRemoveBtn.hidden = !pendingPhotoFile && (pendingPhotoRemoved || !editingImagePath);
-}
-
-function resetPhotoField() {
-  pendingPhotoFile = null;
-  pendingPhotoRemoved = false;
-  editingImagePath = "";
-  photoInputEl.value = "";
-  showPhotoPlaceholder();
-  updatePhotoControlsVisibility();
-}
-
-async function loadPhotoField(product) {
-  pendingPhotoFile = null;
-  pendingPhotoRemoved = false;
-  editingImagePath = product.imagePath || "";
-  photoInputEl.value = "";
-  updatePhotoControlsVisibility();
+function renderPhotoPreview() {
+  photoDeleteBtn.hidden = !editingImagePath;
+  photoStatusEl.hidden = true;
   if (!editingImagePath) {
-    showPhotoPlaceholder();
+    photoImgEl.hidden = true;
+    photoImgEl.removeAttribute("src");
+    photoPlaceholderEl.hidden = false;
     return;
   }
-  showPhotoPlaceholder();
-  const url = await resolveImageUrl(editingImagePath);
-  // Zwischenzeitlich könnte schon ein anderes Produkt geladen worden sein.
-  if (editingImagePath !== product.imagePath) return;
-  if (url) showPhotoImage(url);
+  const requestedPath = editingImagePath;
+  resolveImageUrl(requestedPath).then((url) => {
+    // Nutzer könnte inzwischen ein anderes Produkt geladen haben.
+    if (editingImagePath !== requestedPath) return;
+    if (url) {
+      photoImgEl.src = url;
+      photoImgEl.hidden = false;
+      photoPlaceholderEl.hidden = true;
+    } else {
+      photoImgEl.hidden = true;
+      photoImgEl.removeAttribute("src");
+      photoPlaceholderEl.hidden = false;
+    }
+  });
 }
-
-photoInputEl.addEventListener("change", () => {
-  const file = photoInputEl.files?.[0];
-  if (!file) return;
-  pendingPhotoFile = file;
-  pendingPhotoRemoved = false;
-  showPhotoImage(URL.createObjectURL(file));
-  updatePhotoControlsVisibility();
-});
-
-photoRemoveBtn.addEventListener("click", () => {
-  pendingPhotoFile = null;
-  pendingPhotoRemoved = true;
-  photoInputEl.value = "";
-  showPhotoPlaceholder();
-  updatePhotoControlsVisibility();
-});
 
 function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
@@ -329,7 +295,9 @@ function resetForm() {
   verifiedEl.checked = false;
   editingVerifiedAt = "";
   editingOriginalName = null;
-  resetPhotoField();
+  editingImagePath = "";
+  photoFileEl.value = "";
+  renderPhotoPreview();
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -345,7 +313,9 @@ function loadIntoForm(product) {
   verifiedEl.checked = Boolean(product.verified);
   editingVerifiedAt = product.verifiedAt ?? "";
   editingOriginalName = product.name;
-  loadPhotoField(product);
+  editingImagePath = product.imagePath ?? "";
+  photoFileEl.value = "";
+  renderPhotoPreview();
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -374,6 +344,7 @@ async function handleSave() {
   product.parLevel = parLevelEl.value === "" ? "" : parseFloat(parLevelEl.value);
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
+  product.imagePath = editingImagePath || "";
 
   // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
   // reichen den Vorschlag zur Prüfung ein.
@@ -390,19 +361,6 @@ async function handleSave() {
   }
 
   try {
-    // Foto zuerst hochladen/löschen – schlägt das fehl, ist noch nichts am
-    // Produkt gespeichert.
-    if (pendingPhotoFile) {
-      const newPath = await uploadProductPhoto(pendingPhotoFile);
-      if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
-      product.imagePath = newPath;
-    } else if (pendingPhotoRemoved) {
-      if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
-      product.imagePath = "";
-    } else {
-      product.imagePath = editingImagePath;
-    }
-
     if (editingOriginalName && editingOriginalName !== name && isCustomProduct(editingOriginalName)) {
       await deleteProduct(editingOriginalName);
     }
@@ -665,13 +623,13 @@ function renderProductItem(product) {
     <summary>
       <span class="recipe-item-title">
         <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
-        ${product.imagePath ? `<span class="item-thumb-slot"></span>` : ""}
+        <span class="product-thumb"><i class="ph ph-wine" aria-hidden="true"></i></span>
         ${escapeHtml(product.name)}
       </span>
       <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
-      <div class="item-photo-slot"></div>
+      ${product.imagePath ? `<img class="product-photo-large" alt="${escapeHtml(product.name)}" loading="lazy" hidden />` : ""}
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
@@ -681,27 +639,32 @@ function renderProductItem(product) {
       </div>
     </div>
   `;
-  // Nur Produkte MIT Foto lösen überhaupt eine signierte URL aus – die
-  // meisten der 176 Einträge haben (noch) keins, das Listen-Scrollen bleibt
-  // also flüssig. Der große Bildslot bekommt loading="lazy": er lädt erst,
-  // wenn der Eintrag aufgeklappt und sichtbar ist.
-  if (product.imagePath) {
-    resolveImageUrl(product.imagePath).then((url) => {
-      // null bei Offline/Fehler – dann bleibt der Slot leer statt eines
-      // kaputten Bild-Icons.
-      if (!url) return;
-      const thumbSlot = item.querySelector(".item-thumb-slot");
-      if (thumbSlot) thumbSlot.innerHTML = `<img class="item-thumb" src="${url}" alt="" loading="lazy" />`;
-      const photoSlot = item.querySelector(".item-photo-slot");
-      if (photoSlot) photoSlot.innerHTML = `<img class="item-photo" src="${url}" alt="${escapeHtml(product.name)}" loading="lazy" />`;
-    });
-  }
   const favBtn = item.querySelector(".fav-btn");
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     favBtn.classList.toggle("is-fav", toggleFavorite("product", product.name));
   });
+
+  if (product.imagePath) {
+    resolveImageUrl(product.imagePath).then((url) => {
+      if (!url) return;
+      const thumbWrap = item.querySelector(".product-thumb");
+      if (thumbWrap) {
+        thumbWrap.innerHTML = "";
+        const thumbImg = document.createElement("img");
+        thumbImg.src = url;
+        thumbImg.alt = "";
+        thumbImg.loading = "lazy";
+        thumbWrap.appendChild(thumbImg);
+      }
+      const largeImg = item.querySelector(".product-photo-large");
+      if (largeImg) {
+        largeImg.src = url;
+        largeImg.hidden = false;
+      }
+    });
+  }
 
   item.addEventListener("toggle", () => {
     if (item.open) pushRecent("product", product.name);
@@ -928,6 +891,36 @@ export function initProducts() {
     showEditView();
   });
   document.getElementById("product-back-to-list").addEventListener("click", exitEditView);
+  photoFileEl.addEventListener("change", async () => {
+    const file = photoFileEl.files?.[0];
+    photoFileEl.value = "";
+    if (!file) return;
+    const previousPath = editingImagePath;
+    photoStatusEl.hidden = false;
+    photoStatusEl.textContent = "Foto wird verkleinert und hochgeladen…";
+    try {
+      editingImagePath = await uploadProductPhoto(file);
+      renderPhotoPreview();
+      // Altes Foto ersetzen: das vorherige Bild wird jetzt nicht mehr
+      // gebraucht und darf aus dem Storage verschwinden.
+      if (previousPath) await deleteProductPhoto(previousPath);
+    } catch (error) {
+      photoStatusEl.hidden = false;
+      photoStatusEl.textContent = "Foto konnte nicht hochgeladen werden: " + error.message;
+    }
+  });
+  photoDeleteBtn.addEventListener("click", async () => {
+    if (!editingImagePath) return;
+    if (!confirm("Foto wirklich löschen?")) return;
+    try {
+      await deleteProductPhoto(editingImagePath);
+      editingImagePath = "";
+      renderPhotoPreview();
+    } catch (error) {
+      photoStatusEl.hidden = false;
+      photoStatusEl.textContent = "Foto konnte nicht gelöscht werden: " + error.message;
+    }
+  });
   document.getElementById("product-sidebar-new").addEventListener("click", resetForm);
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);

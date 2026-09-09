@@ -6,6 +6,7 @@ const PRODUCTS_UPDATED_EVENT = "bartool:products-updated";
 const PREPARATIONS_UPDATED_EVENT = "bartool:preparations-updated";
 const EVENTS_UPDATED_EVENT = "bartool:events-updated";
 const SHIFT_LOGS_UPDATED_EVENT = "bartool:shift-logs-updated";
+const LOSSES_UPDATED_EVENT = "bartool:losses-updated";
 const CHECKLIST_TEMPLATES_UPDATED_EVENT = "bartool:checklist-templates-updated";
 const CHECKLIST_RUNS_UPDATED_EVENT = "bartool:checklist-runs-updated";
 
@@ -14,6 +15,7 @@ let productsCache = [];
 let preparationsCache = [];
 let eventsCache = [];
 let shiftLogsCache = [];
+let lossesCache = [];
 let checklistTemplatesCache = [];
 let checklistRunsCache = [];
 let recipesChannel = null;
@@ -21,6 +23,7 @@ let productsChannel = null;
 let preparationsChannel = null;
 let eventsChannel = null;
 let shiftLogsChannel = null;
+let lossesChannel = null;
 let checklistTemplatesChannel = null;
 let checklistRunsChannel = null;
 
@@ -39,6 +42,7 @@ const PRODUCTS_CACHE_KEY = "bartool:products";
 const PREPARATIONS_CACHE_KEY = "bartool:preparations";
 const EVENTS_CACHE_KEY = "bartool:events";
 const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
+const LOSSES_CACHE_KEY = "bartool:losses";
 const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
 
@@ -633,6 +637,103 @@ export async function deleteShiftLog(id) {
 
 export function onShiftLogsChanged(callback) {
   window.addEventListener(SHIFT_LOGS_UPDATED_EVENT, callback);
+}
+
+
+// ---------------------------------------------------------------------
+// Schwund-, Bruch- und Verkostungsbuch (Tabelle "losses")
+//
+// Eine Buchung gehoert immer genau einem Nutzer: recorded_by wird beim
+// Anlegen gesetzt und danach nie mehr angefasst, weil die RLS-Policy daran
+// haengt (aendern und loeschen darf nur der Autor oder ein Admin). Ein
+// upsert ohne recorded_by wuerde serverseitig abgelehnt, deshalb bleibt das
+// Feld hier immer erhalten.
+// ---------------------------------------------------------------------
+
+function toLossRecord(loss) {
+  const record = {
+    product_name: loss.productName,
+    amount: loss.amount === "" || loss.amount == null ? null : Number(loss.amount),
+    amount_unit: loss.amountUnit || "ml",
+    reason: loss.reason,
+    note: loss.note || null,
+    occurred_at: loss.occurredAt || new Date().toISOString(),
+  };
+  if (loss.id) record.id = loss.id;
+  if (loss.recordedBy) record.recorded_by = loss.recordedBy;
+  return record;
+}
+
+function fromLossRow(row) {
+  return {
+    id: row.id,
+    productName: row.product_name ?? "",
+    amount: row.amount == null ? "" : Number(row.amount),
+    amountUnit: row.amount_unit ?? "ml",
+    reason: row.reason ?? "",
+    note: row.note ?? "",
+    recordedBy: row.recorded_by ?? null,
+    occurredAt: row.occurred_at ?? null,
+    createdAt: row.created_at ?? null,
+  };
+}
+
+async function refreshLosses() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.from("losses").select("*").order("occurred_at", { ascending: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    lossesCache = (data ?? []).map(fromLossRow);
+    writeCache(LOSSES_CACHE_KEY, lossesCache);
+  } else {
+    const buffered = readCache(LOSSES_CACHE_KEY);
+    if (buffered) lossesCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(LOSSES_UPDATED_EVENT));
+}
+
+export async function initLossSync() {
+  const buffered = readCache(LOSSES_CACHE_KEY);
+  if (buffered) {
+    lossesCache = buffered;
+    window.dispatchEvent(new CustomEvent(LOSSES_UPDATED_EVENT));
+  }
+  await refreshLosses();
+  const supabase = getSupabaseClient();
+  if (lossesChannel) supabase.removeChannel(lossesChannel);
+  lossesChannel = supabase
+    .channel("public:losses")
+    .on("postgres_changes", { event: "*", schema: "public", table: "losses" }, refreshLosses)
+    .subscribe();
+}
+
+export function loadLosses() {
+  return lossesCache;
+}
+
+export async function saveLoss(loss) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("losses").upsert(toLossRecord(loss));
+  if (error) throw error;
+  await refreshLosses();
+}
+
+export async function deleteLoss(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("losses").delete().eq("id", id);
+  if (error) throw error;
+  await refreshLosses();
+}
+
+export function onLossesChanged(callback) {
+  window.addEventListener(LOSSES_UPDATED_EVENT, callback);
 }
 
 

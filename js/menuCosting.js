@@ -115,27 +115,36 @@ function berechneZeile(recipe, vat) {
 // beider Werte zeigt, welcher Drink durch Preiserhöhungen teurer geworden ist.
 // Zutaten ohne Vorwert werden mit dem aktuellen Preis gerechnet, sonst sähe
 // jede Preiserhöhung größer aus, als sie ist.
+// "seit" ist das jüngste Vorher-Datum unter den Zutaten mit Preishistorie –
+// die Reporting-Übersicht (Paket 29) nutzt es, um Preissprünge auf den
+// gewählten Zeitraum einzugrenzen.
 function wareneinsatzMitVorpreisen(recipe) {
   let total = 0;
   let hatVorwert = false;
+  let seit = null;
   for (const ing of recipe.ingredients ?? []) {
     const produkt = getProduct(ing.name);
     const aktuell = produkt && produkt.priceValue ? Number(produkt.priceValue) : 0;
     const vorher = produkt ? previousPriceFor(produkt.name) : null;
-    if (vorher) hatVorwert = true;
+    if (vorher) {
+      hatVorwert = true;
+      if (!seit || vorher.validFrom > seit) seit = vorher.validFrom;
+    }
     total += ingredientCost(ing.amount, ing.unit, vorher ? vorher.priceValue : aktuell);
   }
-  return hatVorwert ? total : null;
+  return hatVorwert ? { total, seit } : null;
 }
 
-function preisWarnungen() {
+export function preisWarnungen() {
   return getAllRecipes()
     .map((recipe) => {
       const vorher = wareneinsatzMitVorpreisen(recipe);
-      if (vorher === null || vorher <= 0) return null;
+      if (vorher === null || vorher.total <= 0) return null;
       const jetzt = calculateRecipeCost(recipe).total;
-      const anstieg = ((jetzt - vorher) / vorher) * 100;
-      return anstieg > WARN_SCHWELLE_PROZENT ? { name: recipe.name, jetzt, vorher, anstieg } : null;
+      const anstieg = ((jetzt - vorher.total) / vorher.total) * 100;
+      return anstieg > WARN_SCHWELLE_PROZENT
+        ? { name: recipe.name, jetzt, vorher: vorher.total, anstieg, seit: vorher.seit }
+        : null;
     })
     .filter(Boolean)
     .sort((a, b) => b.anstieg - a.anstieg);

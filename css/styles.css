@@ -475,7 +475,7 @@ select {
   margin-bottom: 1rem;
 }
 
-/* ── Fotos (Produkte/Rezepte) ─────────── */
+/* ── Rezeptfotos (Aufbau/Garnitur) ─────────── */
 
 .photo-field {
   display: flex;
@@ -520,18 +520,7 @@ select {
   margin: 0;
 }
 
-/* Kleines Vorschaubild in der Produkt-/Rezeptliste, nur wenn ein Foto
-   hinterlegt ist – ohne Foto entsteht kein Platzhalter-Icon in der Liste,
-   das würde bei hunderten Einträgen nur unnötig Fläche kosten. */
-.item-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-/* Großes Bild in der Detailansicht */
+/* Großes Bild in der Detailansicht (Rezepte: Aufbau/Garnitur) */
 .item-photo {
   max-width: 320px;
   width: 100%;
@@ -2165,6 +2154,79 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
+/* ── Produktfotos ────────────────────────────────────────── */
+
+.product-photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.product-photo-preview {
+  width: 120px;
+  height: 120px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.product-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-photo-preview i {
+  font-size: 2.4rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.product-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.product-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-thumb i {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.product-photo-large {
+  width: 100%;
+  max-width: 280px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  object-fit: cover;
+  margin-bottom: 0.6rem;
+}
+
 @media (max-width: 899px) {
   .import-bar {
     flex-direction: column;
@@ -2569,4 +2631,194 @@ input[type="datetime-local"] {
   margin: 0;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+/* ── Schwund-, Bruch- und Verkostungsbuch ────────────────── */
+
+/* Ein Griff pro Grund: die Kacheln sind bewusst groß genug, um sie
+   einhändig und mit nassen Fingern hinterm Tresen zu treffen. */
+.loss-reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.loss-reason-btn {
+  min-height: 56px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.loss-reason-btn:hover {
+  border-color: var(--accent-700);
+  color: var(--accent-300);
+}
+
+.loss-reason-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-900);
+  color: var(--accent-300);
+  font-weight: 600;
+}
+
+/* ── Reporting-Übersicht (js/reporting.js) ───────────────────── */
+
+.report-period-filter {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.report-period-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  padding: 0.4rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  /* Touch-Target hinterm Tresen: nicht kleiner als ein Daumen. */
+  min-height: 40px;
+}
+
+.report-period-btn:hover {
+  border-color: var(--accent-700);
+}
+
+.report-period-btn.active {
+  color: var(--accent);
+  border-color: var(--accent-700);
+  background: var(--accent-900);
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.9rem;
+}
+
+.report-tile {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-tile:hover,
+.report-tile:focus-visible {
+  border-color: var(--accent-700);
+}
+
+.report-tile-head h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+}
+
+.report-tile-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.report-quota-row {
+  margin-bottom: 0.7rem;
+}
+
+.report-quota-row:last-child {
+  margin-bottom: 0;
+}
+
+.report-quota-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.report-quota-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.report-quota-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-300);
+}
+
+.report-bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.report-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-700);
+}
+
+.report-bar-fill.is-ok {
+  background: #6fbf73;
+}
+
+.report-bar-fill.is-high {
+  background: var(--danger);
+}
+
+.report-trend-note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.report-bar-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(60px, 2fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.85rem;
+}
+
+.report-bar-row:last-child {
+  margin-bottom: 0;
+}
+
+.report-bar-row-label {
+  color: var(--text-muted);
+}
+
+.report-bar-row-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.report-list-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.report-list-row:last-child {
+  border-bottom: none;
 }

@@ -118,7 +118,22 @@ export function bestellvorschlag(stand) {
   };
 }
 
-export function renderAuswertungHtml(a, diff) {
+// Wie viel der Differenz durch gebuchte Verluste erklärt ist – in der
+// Einheit, in der auch gezählt wurde: Liter bei Produkten mit Literpreis,
+// Stück bei allen anderen. Verluste in einer nicht umrechenbaren Einheit
+// werden gezählt, aber nicht heimlich mitgerechnet.
+function erklaerteMenge(name, erklaert, produkte) {
+  if (!erklaert) return null;
+  const e = erklaert.get(name);
+  if (!e) return null;
+  const produkt = produkte.find((p) => p.name === name);
+  const proLiter = !produkt || produkt.priceUnit === "liter";
+  const menge = proLiter ? e.ml / 1000 : e.stueck;
+  const nichtGerechnet = e.unklar + (proLiter ? (e.stueck > 0 ? 1 : 0) : e.ml > 0 ? 1 : 0);
+  return { menge, nichtGerechnet };
+}
+
+export function renderAuswertungHtml(a, diff, erklaert = null) {
   const gruppenZeilen = a.gruppen
     .map(
       ([gruppe, d]) =>
@@ -126,20 +141,37 @@ export function renderAuswertungHtml(a, diff) {
     )
     .join("");
 
+  const produkte = getAllProducts();
+  const diffZeile = (d) => {
+    const e = erklaerteMenge(d.name, erklaert, produkte);
+    const erklaertZelle = !erklaert
+      ? ""
+      : e === null
+        ? "<td>–</td><td>–</td>"
+        : `<td>${formatNumberDe(Number(e.menge.toFixed(2)))}${
+            e.nichtGerechnet > 0 ? ` <span class="prep-status">(${e.nichtGerechnet} ohne Menge)</span>` : ""
+          }</td><td>${
+            d.delta < 0 ? formatNumberDe(Number(Math.min(0, d.delta + e.menge).toFixed(2))) : "–"
+          }</td>`;
+    return `<tr><td>${escapeHtml(d.name)}</td><td>${formatNumberDe(d.alt)}</td><td>${formatNumberDe(d.jetzt)}</td><td class="${d.delta < 0 ? "menu-quote-high" : "menu-quote-ok"}">${d.delta > 0 ? "+" : ""}${formatNumberDe(d.delta)}</td>${erklaertZelle}</tr>`;
+  };
+
   const diffBlock =
     diff && diff.length > 0
       ? `
       <h4 class="prep-group">Veränderung zur letzten Zählung (${diff.length})</h4>
+      ${
+        erklaert
+          ? '<p class="prep-meta">„davon erklärt" sind die Verluste, die seit der letzten abgeschlossenen Zählung im Schwund- und Bruchbuch gebucht wurden. „ungeklärt" ist der Rest des Fehlbestands.</p>'
+          : '<p class="prep-meta">Ohne frühere Zählung gibt es keinen Zeitraum, für den gebuchte Verluste zugeordnet werden könnten.</p>'
+      }
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Produkt</th><th>vorher</th><th>jetzt</th><th>Differenz</th></tr></thead>
+          <thead><tr><th>Produkt</th><th>vorher</th><th>jetzt</th><th>Differenz</th>${
+            erklaert ? "<th>davon erklärt</th><th>ungeklärt</th>" : ""
+          }</tr></thead>
           <tbody>
-            ${diff
-              .map(
-                (d) =>
-                  `<tr><td>${escapeHtml(d.name)}</td><td>${formatNumberDe(d.alt)}</td><td>${formatNumberDe(d.jetzt)}</td><td class="${d.delta < 0 ? "menu-quote-high" : "menu-quote-ok"}">${d.delta > 0 ? "+" : ""}${formatNumberDe(d.delta)}</td></tr>`
-              )
-              .join("")}
+            ${diff.map(diffZeile).join("")}
           </tbody>
         </table>
       </div>`

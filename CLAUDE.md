@@ -123,6 +123,7 @@ Die Empfehlung sieht immer so aus – **kurz und mit fertigem Startprompt**:
 
 > **Empfehlung: neues Fenster.** Grund: <ein Satz>.
 > Stand: <was ist fertig + Commit-Hash>.
+> Modell: <Modell + Denkaufwand + ein Halbsatz Begründung>.
 > Startprompt fürs neue Fenster:
 > ```
 > <vollständiger, selbsterklärender Prompt inkl. betroffener Dateien,
@@ -131,6 +132,21 @@ Die Empfehlung sieht immer so aus – **kurz und mit fertigem Startprompt**:
 
 Der Startprompt muss allein stehen können: betroffene Dateien mit Pfad, Ziel,
 bereits getroffene Entscheidungen, was ausdrücklich **nicht** angefasst werden soll.
+
+### Modellempfehlung – Raster
+
+Die Zeile „Modell" gehört zu **jeder** Fenster-Empfehlung. Faustregel nach Art
+der Aufgabe, nicht nach Paketnummer:
+
+| Art der Aufgabe | Modell | Denkaufwand |
+|---|---|---|
+| Schema-/RLS-Umbau, neue Datenart, mehrere Module gleichzeitig, Datenimport, Redesign | Opus 5 | hoch |
+| Ein Modul nach vorhandenem Muster, liest überwiegend vorhandene Daten, Auswertungs-/Anzeigeseiten | Sonnet 5 | mittel |
+| Textausbau vieler Produkte nach festem Raster (Massenänderung per Skript/SQL) | Sonnet 5 | niedrig |
+| Kleinkram: Tippfehler, CSS-Detail, eine einzelne Funktion, Cache-Bump | Haiku 4.5 | niedrig |
+
+Bei Grenzfällen das teurere Modell nennen: eine falsche Schema-Migration kostet
+mehr als eine Session auf Opus.
 
 ## Testaccount (Supabase Auth)
 Für Login-/Feature-Tests existiert ein Admin-Testaccount in der Supabase-
