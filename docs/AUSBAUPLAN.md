@@ -152,7 +152,7 @@ eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
 | # | Paket | Status |
 |---|---|---|
 | 28 | Schwund-, Bruch- und Verkostungsbuch | erledigt |
-| 29 | Reporting-Übersicht | offen |
+| 29 | Reporting-Übersicht | erledigt |
 | 30 | Fotos: Storage-Grundlage und Produktbilder | offen |
 | 31 | Fotos zu Rezepten: Aufbau und Garnitur | offen |
 | 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | offen |

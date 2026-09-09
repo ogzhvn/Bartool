@@ -104,6 +104,7 @@
     <nav class="sidebar" id="sidebar" role="tablist">
       <div class="sidebar-group">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
+        <button class="tab-btn" data-tab="reporting" role="tab" aria-selected="false"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title">Rechner</h3>
@@ -208,6 +209,19 @@
           <span class="tool-card-desc">Mitarbeiterkonten anlegen und Rollen verwalten</span>
         </button>
       </div>
+    </section>
+
+    <section id="reporting" class="tab-panel">
+      <h2>Reporting</h2>
+      <p class="hint">Vor der Schicht auf einen Blick: läuft der Wareneinsatz weg, was läuft ab, was hat die letzte Inventur ergeben. Nur vorhandene Daten – keine Kachel schätzt.</p>
+
+      <div class="report-period-filter no-print" role="group" aria-label="Zeitraum">
+        <button type="button" class="report-period-btn" data-days="30">30 Tage</button>
+        <button type="button" class="report-period-btn" data-days="90">90 Tage</button>
+        <button type="button" class="report-period-btn" data-days="365">365 Tage</button>
+      </div>
+
+      <div class="report-grid" id="report-grid"></div>
     </section>
 
     <!-- BATCHING -->

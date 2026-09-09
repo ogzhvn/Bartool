@@ -15,6 +15,7 @@ import { initQuiz } from "./quiz.js";
 import { initEvents } from "./events.js";
 import { initShiftLog } from "./shiftLog.js";
 import { initLosses } from "./losses.js";
+import { initReporting } from "./reporting.js";
 import { initChecklists } from "./checklists.js";
 import { initProductImport } from "./productImport.js";
 import { initAdminPanel } from "./adminPanel.js";
@@ -120,6 +121,7 @@ async function bootstrapAppOnce() {
   initEvents();
   initShiftLog();
   initLosses();
+  initReporting();
   initChecklists();
   initProductImport();
   initAdminPanel();
