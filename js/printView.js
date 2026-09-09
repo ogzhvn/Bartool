@@ -1,6 +1,7 @@
 import { buildRecipeBlocks } from "./recipeExport.js";
 import { buildProductBlocks } from "./productExport.js";
 import { escapeHtml, formatNumberDe } from "./utils.js";
+import { resolveImageUrl } from "./photos.js";
 
 // Druckansicht für ausgewählte Rezepte und Produkte.
 //
@@ -35,11 +36,19 @@ function printBlocks(title, blocksHtml) {
   }, 50);
 }
 
-export function printRecipes(recipes) {
+export async function printRecipes(recipes) {
   if (recipes.length === 0) return;
+  // Aufbaubild fürs Druckblatt vorab auflösen (Word-Export nutzt dieselben
+  // Blöcke, aber ohne Bild – siehe buildRecipeBlocks()).
+  const withPhotos = await Promise.all(
+    recipes.map(async (recipe) => ({
+      ...recipe,
+      printImageUrl: recipe.imagePath ? await resolveImageUrl(recipe.imagePath) : null,
+    }))
+  );
   printBlocks(
     recipes.length === 1 ? recipes[0].name : `Rezepte (${recipes.length})`,
-    buildRecipeBlocks(recipes)
+    buildRecipeBlocks(withPhotos)
   );
 }
 

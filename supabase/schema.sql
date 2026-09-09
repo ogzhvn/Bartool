@@ -170,6 +170,11 @@ create table if not exists public.recipes (
   pairs_with jsonb,
   -- Verkaufspreis brutto in Euro, Grundlage der Kartenkalkulation.
   sales_price numeric,
+  -- Fotos (Paket 31): Pfade im privaten Storage-Bucket "bilder",
+  -- Schema rezepte/<uuid>.jpg. Aufbaubild (fertiger Drink) und Detailbild
+  -- der Garnitur getrennt, weil beide unterschiedliche Motive zeigen.
+  image_path text,
+  garnish_image_path text,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
@@ -178,6 +183,8 @@ alter table public.recipes add column if not exists quick_pitch text;
 alter table public.recipes add column if not exists pairs_with jsonb;
 alter table public.recipes add column if not exists category text;
 alter table public.recipes add column if not exists sales_price numeric;
+alter table public.recipes add column if not exists image_path text;
+alter table public.recipes add column if not exists garnish_image_path text;
 
 alter table public.recipes enable row level security;
 
@@ -266,6 +273,10 @@ create table if not exists public.products (
   par_level numeric,
   supplier text,
   order_unit text,
+  -- Foto (Paket 30): Pfad im privaten Storage-Bucket "bilder",
+  -- Schema produkte/<uuid>.jpg. Nie der Produktname im Pfad, sonst bricht
+  -- jede Umbenennung das Bild.
+  image_path text,
   created_by uuid references public.profiles (id) on delete set null,
   updated_at timestamptz not null default now()
 );
@@ -308,6 +319,7 @@ alter table public.products add column if not exists serving_temp text;
 alter table public.products add column if not exists body text;
 alter table public.products add column if not exists verified boolean not null default false;
 alter table public.products add column if not exists verified_at timestamptz;
+alter table public.products add column if not exists image_path text;
 
 alter table public.products enable row level security;
 
@@ -326,6 +338,38 @@ create policy "products: admin write"
   on public.products for all
   using (private.is_admin())
   with check (private.is_admin());
+
+-- ---------------------------------------------------------------------
+-- Fotos (Paket 30/31): privater Storage-Bucket für Produkt- und Rezeptfotos
+-- ---------------------------------------------------------------------
+-- Bewusst privat statt public: ein öffentlicher Bucket wäre offline-
+-- tauglicher, die Bilder wären dann aber ohne Login abrufbar, wer die URL
+-- kennt (Entscheidung vom 09.09.2026). Zugriff im Client daher ausschließlich
+-- über signierte URLs (js/photos.js: resolveImageUrl()).
+insert into storage.buckets (id, name, public)
+values ('bilder', 'bilder', false)
+on conflict (id) do nothing;
+
+drop policy if exists "bilder: eingeloggte lesen" on storage.objects;
+create policy "bilder: eingeloggte lesen"
+  on storage.objects for select
+  using (bucket_id = 'bilder' and auth.role() = 'authenticated');
+
+drop policy if exists "bilder: admin schreibt" on storage.objects;
+create policy "bilder: admin schreibt"
+  on storage.objects for insert
+  with check (bucket_id = 'bilder' and private.is_admin());
+
+drop policy if exists "bilder: admin aktualisiert" on storage.objects;
+create policy "bilder: admin aktualisiert"
+  on storage.objects for update
+  using (bucket_id = 'bilder' and private.is_admin())
+  with check (bucket_id = 'bilder' and private.is_admin());
+
+drop policy if exists "bilder: admin loescht" on storage.objects;
+create policy "bilder: admin loescht"
+  on storage.objects for delete
+  using (bucket_id = 'bilder' and private.is_admin());
 
 -- ---------------------------------------------------------------------
 -- Audit-Log: Änderungshistorie für recipes/products/profiles

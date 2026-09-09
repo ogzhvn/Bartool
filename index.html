@@ -838,6 +838,32 @@
               </label>
             </div>
 
+            <h3>Fotos</h3>
+            <div class="field-row">
+              <div class="photo-field" id="recipe-photo-field">
+                <p class="photo-field-label">Aufbau (fertiger Drink)</p>
+                <div class="photo-preview" id="recipe-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+                <div class="photo-field-actions">
+                  <label class="btn-secondary photo-upload-label">
+                    Foto wählen
+                    <input type="file" id="recipe-photo-input" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="recipe-photo-remove" class="btn-secondary" hidden>Foto entfernen</button>
+                </div>
+              </div>
+              <div class="photo-field" id="recipe-garnish-photo-field">
+                <p class="photo-field-label">Garnitur (Detail)</p>
+                <div class="photo-preview" id="recipe-garnish-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+                <div class="photo-field-actions">
+                  <label class="btn-secondary photo-upload-label">
+                    Foto wählen
+                    <input type="file" id="recipe-garnish-photo-input" accept="image/*" hidden />
+                  </label>
+                  <button type="button" id="recipe-garnish-photo-remove" class="btn-secondary" hidden>Foto entfernen</button>
+                </div>
+              </div>
+            </div>
+
             <h3>Zutaten</h3>
             <div id="recipe-ingredients" class="ingredient-list"></div>
             <button type="button" id="recipe-add-ingredient" class="btn-secondary"><i class="ph ph-plus" aria-hidden="true"></i> Zutat hinzufügen</button>
@@ -962,6 +988,18 @@
                 <input type="text" id="product-category" placeholder="z. B. Bitterlikör · Italien" />
               </label>
             </div>
+
+            <div class="photo-field" id="product-photo-field">
+              <div class="photo-preview" id="product-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+              <div class="photo-field-actions">
+                <label class="btn-secondary photo-upload-label">
+                  Foto wählen
+                  <input type="file" id="product-photo-input" accept="image/*" hidden />
+                </label>
+                <button type="button" id="product-photo-remove" class="btn-secondary" hidden>Foto entfernen</button>
+              </div>
+            </div>
+
             <div class="field-row">
               <label>
                 Gruppe

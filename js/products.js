@@ -10,6 +10,7 @@ import { isAdmin } from "./auth.js";
 import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
+import { uploadProductPhoto, deleteProductPhoto, resolveImageUrl } from "./photos.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -135,6 +136,11 @@ const quickPitchEl = document.getElementById("product-quick-pitch");
 const pairsWithEl = document.getElementById("product-pairs-with");
 const pairsWithOptionsEl = document.getElementById("pairs-with-options");
 
+const photoFieldEl = document.getElementById("product-photo-field");
+const photoPreviewEl = document.getElementById("product-photo-preview");
+const photoInputEl = document.getElementById("product-photo-input");
+const photoRemoveBtn = document.getElementById("product-photo-remove");
+
 // Kommagetrennte Liste (Aroma-Schlagworte, "Passt gut zu") in ein Array.
 function parsePairsWith(value) {
   return value
@@ -174,6 +180,11 @@ let editingOriginalName = null;
 // Zeitpunkt der letzten Prüfung des geladenen Produkts – bleibt erhalten,
 // solange der Haken „Angaben geprüft" gesetzt bleibt.
 let editingVerifiedAt = "";
+// Foto-Bearbeitung: Pfad des gespeicherten Fotos, neu gewähltes File (noch
+// nicht hochgeladen) und ob das bestehende Foto entfernt werden soll.
+let editingImagePath = "";
+let pendingPhotoFile = null;
+let pendingPhotoRemoved = false;
 // Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
 // Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
 // gleichen Stelle landet statt oben in der Liste.
@@ -250,6 +261,63 @@ function updateWineFieldsVisibility() {
   wineFieldsEl.hidden = !WINE_GROUPS.includes(groupEl.value.trim());
 }
 
+// Setzt die Foto-Vorschau auf den Platzhalter zurück (Bild-Icon).
+function showPhotoPlaceholder() {
+  photoPreviewEl.innerHTML = '<i class="ph ph-image" aria-hidden="true"></i>';
+}
+
+function showPhotoImage(url) {
+  photoPreviewEl.innerHTML = `<img src="${url}" alt="" />`;
+}
+
+function updatePhotoControlsVisibility() {
+  photoFieldEl.hidden = !isAdmin();
+  photoRemoveBtn.hidden = !pendingPhotoFile && (pendingPhotoRemoved || !editingImagePath);
+}
+
+function resetPhotoField() {
+  pendingPhotoFile = null;
+  pendingPhotoRemoved = false;
+  editingImagePath = "";
+  photoInputEl.value = "";
+  showPhotoPlaceholder();
+  updatePhotoControlsVisibility();
+}
+
+async function loadPhotoField(product) {
+  pendingPhotoFile = null;
+  pendingPhotoRemoved = false;
+  editingImagePath = product.imagePath || "";
+  photoInputEl.value = "";
+  updatePhotoControlsVisibility();
+  if (!editingImagePath) {
+    showPhotoPlaceholder();
+    return;
+  }
+  showPhotoPlaceholder();
+  const url = await resolveImageUrl(editingImagePath);
+  // Zwischenzeitlich könnte schon ein anderes Produkt geladen worden sein.
+  if (editingImagePath !== product.imagePath) return;
+  if (url) showPhotoImage(url);
+}
+
+photoInputEl.addEventListener("change", () => {
+  const file = photoInputEl.files?.[0];
+  if (!file) return;
+  pendingPhotoFile = file;
+  pendingPhotoRemoved = false;
+  showPhotoImage(URL.createObjectURL(file));
+  updatePhotoControlsVisibility();
+});
+
+photoRemoveBtn.addEventListener("click", () => {
+  pendingPhotoFile = null;
+  pendingPhotoRemoved = true;
+  photoInputEl.value = "";
+  showPhotoPlaceholder();
+  updatePhotoControlsVisibility();
+});
+
 function resetForm() {
   FIELDS.forEach(([key, el]) => (el.value = key === "priceUnit" ? "liter" : ""));
   priceValueEl.value = "";
@@ -261,6 +329,7 @@ function resetForm() {
   verifiedEl.checked = false;
   editingVerifiedAt = "";
   editingOriginalName = null;
+  resetPhotoField();
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -276,6 +345,7 @@ function loadIntoForm(product) {
   verifiedEl.checked = Boolean(product.verified);
   editingVerifiedAt = product.verifiedAt ?? "";
   editingOriginalName = product.name;
+  loadPhotoField(product);
   updateWineFieldsVisibility();
   renderSidebarList();
 }
@@ -320,6 +390,19 @@ async function handleSave() {
   }
 
   try {
+    // Foto zuerst hochladen/löschen – schlägt das fehl, ist noch nichts am
+    // Produkt gespeichert.
+    if (pendingPhotoFile) {
+      const newPath = await uploadProductPhoto(pendingPhotoFile);
+      if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
+      product.imagePath = newPath;
+    } else if (pendingPhotoRemoved) {
+      if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
+      product.imagePath = "";
+    } else {
+      product.imagePath = editingImagePath;
+    }
+
     if (editingOriginalName && editingOriginalName !== name && isCustomProduct(editingOriginalName)) {
       await deleteProduct(editingOriginalName);
     }
@@ -356,6 +439,7 @@ async function handleDelete() {
 
   if (!confirm(`Produkt "${editingOriginalName}" wirklich löschen?`)) return;
   try {
+    if (editingImagePath) await deleteProductPhoto(editingImagePath).catch(() => {});
     await deleteProduct(editingOriginalName);
     resetForm();
     exitEditView();
@@ -581,11 +665,13 @@ function renderProductItem(product) {
     <summary>
       <span class="recipe-item-title">
         <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
+        ${product.imagePath ? `<span class="item-thumb-slot"></span>` : ""}
         ${escapeHtml(product.name)}
       </span>
       <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="Favorit" aria-label="Als Favorit merken"><i class="ph ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
+      <div class="item-photo-slot"></div>
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>Verwendet in:</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
@@ -595,6 +681,21 @@ function renderProductItem(product) {
       </div>
     </div>
   `;
+  // Nur Produkte MIT Foto lösen überhaupt eine signierte URL aus – die
+  // meisten der 176 Einträge haben (noch) keins, das Listen-Scrollen bleibt
+  // also flüssig. Der große Bildslot bekommt loading="lazy": er lädt erst,
+  // wenn der Eintrag aufgeklappt und sichtbar ist.
+  if (product.imagePath) {
+    resolveImageUrl(product.imagePath).then((url) => {
+      // null bei Offline/Fehler – dann bleibt der Slot leer statt eines
+      // kaputten Bild-Icons.
+      if (!url) return;
+      const thumbSlot = item.querySelector(".item-thumb-slot");
+      if (thumbSlot) thumbSlot.innerHTML = `<img class="item-thumb" src="${url}" alt="" loading="lazy" />`;
+      const photoSlot = item.querySelector(".item-photo-slot");
+      if (photoSlot) photoSlot.innerHTML = `<img class="item-photo" src="${url}" alt="${escapeHtml(product.name)}" loading="lazy" />`;
+    });
+  }
   const favBtn = item.querySelector(".fav-btn");
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -641,6 +742,7 @@ function renderProductItem(product) {
       }
       if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return;
       try {
+        if (product.imagePath) await deleteProductPhoto(product.imagePath).catch(() => {});
         if (editingOriginalName === product.name) resetForm();
         await deleteProduct(product.name);
       } catch (error) {

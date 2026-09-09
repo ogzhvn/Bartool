@@ -87,6 +87,8 @@ function toRecipeRecord(recipe) {
     pairs_with: recipe.pairsWith ?? null,
     sales_price:
       recipe.salesPrice === "" || recipe.salesPrice == null ? null : Number(recipe.salesPrice),
+    image_path: recipe.imagePath || null,
+    garnish_image_path: recipe.garnishImagePath || null,
   };
 }
 
@@ -104,6 +106,8 @@ export function fromRecipeRow(row) {
     quickPitch: row.quick_pitch ?? "",
     pairsWith: row.pairs_with ?? [],
     salesPrice: row.sales_price ?? "",
+    imagePath: row.image_path ?? "",
+    garnishImagePath: row.garnish_image_path ?? "",
   };
 }
 
@@ -219,6 +223,7 @@ function toProductRecord(product) {
     par_level: product.parLevel === "" || product.parLevel == null ? null : Number(product.parLevel),
     supplier: product.supplier || null,
     order_unit: product.orderUnit || null,
+    image_path: product.imagePath || null,
   };
 }
 
@@ -265,6 +270,7 @@ export function fromProductRow(row) {
     parLevel: row.par_level ?? "",
     supplier: row.supplier ?? "",
     orderUnit: row.order_unit ?? "",
+    imagePath: row.image_path ?? "",
   };
 }
 

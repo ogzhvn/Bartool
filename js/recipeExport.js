@@ -57,9 +57,13 @@ export function buildRecipeBlocks(recipes) {
         )
         .join("");
 
+      // printImageUrl wird nur von der Druckansicht (js/printView.js) gesetzt,
+      // nachdem sie die signierte Bild-URL aufgelöst hat – der Word-Export
+      // nutzt dieselben Blöcke, aber ohne Bild.
       return `
         <div class="recipe-block${index > 0 ? " pagebreak" : ""}">
           <h2>${escapeHtml(recipe.name)}</h2>
+          ${recipe.printImageUrl ? `<img class="recipe-print-photo" src="${recipe.printImageUrl}" alt="${escapeHtml(recipe.name)}" />` : ""}
           <table>
             <thead><tr><th>Zutat</th><th>Menge</th></tr></thead>
             <tbody>${ingredientRows}</tbody>

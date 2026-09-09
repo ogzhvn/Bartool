@@ -475,6 +475,87 @@ select {
   margin-bottom: 1rem;
 }
 
+/* ── Fotos (Produkte/Rezepte) ─────────── */
+
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.photo-field-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.photo-preview {
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border-strong);
+  background: var(--bg-elevated-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 2rem;
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-field-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.photo-upload-label {
+  margin: 0;
+}
+
+/* Kleines Vorschaubild in der Produkt-/Rezeptliste, nur wenn ein Foto
+   hinterlegt ist – ohne Foto entsteht kein Platzhalter-Icon in der Liste,
+   das würde bei hunderten Einträgen nur unnötig Fläche kosten. */
+.item-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Großes Bild in der Detailansicht */
+.item-photo {
+  max-width: 320px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  display: block;
+  margin: 0.6rem 0;
+}
+
+.item-photo-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.item-photo-row figure {
+  margin: 0.6rem 0;
+}
+
+.item-photo-row figcaption {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
 /* ── Buttons (Gold als Kontur, nicht als Fläche) ─────────── */
 
 .btn-primary,
@@ -1593,6 +1674,16 @@ select {
   .print-area .history {
     margin-top: 6pt;
     font-size: 9pt;
+  }
+  /* Graustufen statt Farbe (druckt sich sauberer) und begrenzte Höhe, damit
+     ein Rezept mit Bild weiterhin auf eine Seite passt. */
+  .print-area .recipe-print-photo {
+    display: block;
+    max-height: 90pt;
+    max-width: 100%;
+    object-fit: contain;
+    filter: grayscale(1) !important;
+    margin: 0 0 6pt;
   }
   .print-area td.label {
     font-weight: bold;
