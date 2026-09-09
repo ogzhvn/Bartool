@@ -230,11 +230,11 @@ export function printChecklistRuns(laeufe, titel = t("ui.checklisten_nachweis"))
         .map(([label, wert]) => `<p class="meta"><strong>${escapeHtml(label)}</strong> ${escapeHtml(wert)}</p>`)
         .join("");
       const zeilen = tabelle(
-        [t("ui.punkt"), t("ui.ergebnis"), "Von", t("ui.zeitpunkt"), t("ui.notiz")],
+        [t("ui.punkt"), t("ui.ergebnis"), t("ui.von_kopf"), t("ui.zeitpunkt"), t("ui.notiz")],
         (lauf.zeilen ?? []).map((z) => z.map((c) => escapeHtml(c)))
       );
       const ueberschrift = einzeln ? "" : `<h2>${escapeHtml(lauf.titel)}</h2>`;
-      return `${ueberschrift}${kopf}${zeilen || "<p>Keine Punkte in dieser Vorlage.</p>"}`;
+      return `${ueberschrift}${kopf}${zeilen || `<p>${t("ui.keine_punkte_in_dieser_vorlage")}</p>`}`;
     })
     .join("");
 

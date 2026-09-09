@@ -1425,6 +1425,11 @@ damit die Einarbeitung nicht am „so ungefähr" hängt.
 
 **Commit:** `Mehrsprachigkeit: Grundgerüst und englische Oberfläche`
 
+**Nachtrag 09.09.2026:** In Checklisten, Schichtbuch, Events, Schwundbuch, Reporting,
+„Was kann ich bauen?" und der Druckansicht waren noch feste deutsche Beschriftungen
+übrig (u. a. „erledigt", „offen", „Löschen", „Liste abschließen", „davon", „inaktiv").
+Sie laufen jetzt ebenfalls über `t()`; die Schlüssel stehen in beiden Sprachdateien.
+
 ---
 
 # Paket 33 – Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb

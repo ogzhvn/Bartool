@@ -182,8 +182,11 @@ function renderWareneinsatzKachel() {
     const klasse = jetzt > zielquote ? "is-high" : "is-ok";
     const trend =
       vorher === null
-        ? '<span class="report-trend-note">kein Preisstand so weit zurück</span>'
-        : `<span class="report-trend-note">vor ${periodDays} ${t("ui.tagen")} ${formatProzent(vorher)}</span>`;
+        ? `<span class="report-trend-note">${t("ui.kein_preisstand_so_weit_zurueck")}</span>`
+        : `<span class="report-trend-note">${t("ui.vor_x_tagen_wert", {
+            tage: periodDays,
+            wert: formatProzent(vorher),
+          })}</span>`;
     return `
       <div class="report-quota-row">
         <div class="report-quota-head">
@@ -386,7 +389,7 @@ function renderPreissprungKachel() {
     .map(
       (w) => `
       <div class="report-list-row">
-        <span>${escapeHtml(w.name)} <span class="report-tile-hint">seit ${escapeHtml(formatDatum(w.seit))}</span></span>
+        <span>${escapeHtml(w.name)} <span class="report-tile-hint">${escapeHtml(t("ui.seit_datum", { datum: formatDatum(w.seit) }))}</span></span>
         <span class="menu-quote-high">+${formatProzent(w.anstieg)}</span>
       </div>`
     )

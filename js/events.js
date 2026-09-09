@@ -295,7 +295,7 @@ function ergebnisHtml(ev, plan) {
   const drinkZeilen = plan.drinks
     .map((d) =>
       zeileHtml([
-        escapeHtml(d.recipeName) + (d.found ? "" : ' <em>(Rezept nicht gefunden)</em>'),
+        escapeHtml(d.recipeName) + (d.found ? "" : ` <em>${t("ui.rezept_nicht_gefunden_klammer")}</em>`),
         `${formatNumberLocal(d.share)} %`,
         `${d.count} ${t("ui.drinks")}`,
         d.found ? formatMenge(d.batchMl) : "–",
@@ -312,9 +312,9 @@ function ergebnisHtml(ev, plan) {
         formatMenge(l.ml),
         l.bottles !== null
           ? `${l.bottles} × ${formatMenge(l.bottleSizeMl)}`
-          : '<span style="color: var(--danger)">Gebinde unbekannt</span>',
+          : `<span style="color: var(--danger)">${t("ui.gebinde_unbekannt")}</span>`,
         l.supplier ? escapeHtml(l.supplier) : "–",
-        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
+        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : `<span style="color: var(--danger)">${t("ui.kein_preis_hinterlegt")}</span>`,
       ])
     )
     .join("");
@@ -325,7 +325,7 @@ function ergebnisHtml(ev, plan) {
         escapeHtml(l.name),
         `${formatNumberLocal(Math.ceil(l.amount))} ${escapeHtml(UNIT_LABELS[l.unit] ?? l.unit)}`,
         l.supplier ? escapeHtml(l.supplier) : "–",
-        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : '<span style="color: var(--danger)">kein Preis hinterlegt</span>',
+        l.priceKnown ? `${formatNumberLocal(l.cost)} €` : `<span style="color: var(--danger)">${t("ui.kein_preis_hinterlegt")}</span>`,
       ])
     )
     .join("");
@@ -340,7 +340,7 @@ function ergebnisHtml(ev, plan) {
     hinweise.push(
       `${t("ui.ohne_einkaufspreis_im_katalog_und_deshalb_5804")} ${escapeHtml(
         plan.missingPrices.join(", ")
-      )}. Der Wareneinsatz ist damit zu niedrig.`
+      )}. ${t("ui.der_wareneinsatz_ist_damit_zu_niedrig")}`
     );
   }
 
@@ -465,7 +465,7 @@ function eventHtml(ev) {
       <div class="prep-meta">${escapeHtml(details.join(" · "))}</div>
       <div class="actions no-print">
         <button type="button" class="btn-secondary event-open">${t("ui.laden")}</button>
-        ${isAdmin() ? '<button type="button" class="btn-secondary event-delete">Löschen</button>' : ""}
+        ${isAdmin() ? `<button type="button" class="btn-secondary event-delete">${t("ui.loeschen")}</button>` : ""}
       </div>
     </div>`;
 }
@@ -486,7 +486,7 @@ function renderList() {
   const events = sortiereEvents(loadEvents());
   listEl.innerHTML = events.length
     ? events.map(eventHtml).join("")
-    : '<p class="empty-note">Noch keine Events gespeichert.</p>';
+    : `<p class="empty-note">${t("ui.noch_keine_events_gespeichert")}</p>`;
 }
 
 async function handleSubmit(e) {

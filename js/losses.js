@@ -324,7 +324,7 @@ function eintragHtml(loss, produkt, darfLoeschen) {
       ${loss.note ? `<p class="prep-meta">${escapeHtml(loss.note)}</p>` : ""}
       ${
         darfLoeschen
-          ? '<div class="actions no-print"><button type="button" class="btn-secondary loss-delete">Löschen</button></div>'
+          ? `<div class="actions no-print"><button type="button" class="btn-secondary loss-delete">${t("ui.loeschen")}</button></div>`
           : ""
       }
     </div>`;

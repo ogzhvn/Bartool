@@ -177,7 +177,7 @@ function render() {
       : "";
 
   const machbarBlock = `
-    <h3 class="prep-group">${t("ui.machbar")}${machbar.length}${machbar.length !== a.machbar.length ? ` von ${a.machbar.length}` : ""})</h3>
+    <h3 class="prep-group">${t("ui.machbar")}${machbar.length}${machbar.length !== a.machbar.length ? ` ${t("ui.von")} ${a.machbar.length}` : ""})</h3>
     ${
       machbar.length > 0
         ? `<div class="shortcut-list">${rezeptChips(machbar)}</div>`
@@ -185,7 +185,7 @@ function render() {
     }`;
 
   const eineFehltBlock = `
-    <h3 class="prep-group">${t("ui.eine_zutat_fehlt")}${eineFehlt.length}${eineFehlt.length !== a.eineFehlt.length ? ` von ${a.eineFehlt.length}` : ""})</h3>
+    <h3 class="prep-group">${t("ui.eine_zutat_fehlt")}${eineFehlt.length}${eineFehlt.length !== a.eineFehlt.length ? ` ${t("ui.von")} ${a.eineFehlt.length}` : ""})</h3>
     ${
       eineFehlt.length > 0
         ? `<div class="table-scroll">
@@ -209,7 +209,7 @@ function render() {
 
   const unklarBlock = `
     <h3 class="prep-group">${t("ui.nicht_zuordenbare_zutaten")}${unklareZutaten.length}${
-      unklareZutaten.length !== a.unklareZutaten.length ? ` von ${a.unklareZutaten.length}` : ""
+      unklareZutaten.length !== a.unklareZutaten.length ? ` ${t("ui.von")} ${a.unklareZutaten.length}` : ""
     })</h3>
     ${
       a.unklareZutaten.length === 0

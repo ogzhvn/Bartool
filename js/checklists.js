@@ -335,15 +335,15 @@ function laufHtml(template, run) {
     <div class="home-stats">
       <div class="stat-tile">
         <span class="stat-value">${status.erledigt}/${status.gesamt}</span>
-        <span class="stat-label">erledigt</span>
+        <span class="stat-label">${t("ui.erledigt_klein")}</span>
       </div>
       <div class="stat-tile">
         <span class="stat-value">${status.abweichungen.length}</span>
         <span class="stat-label">${t("ui.abweichungen")}</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-value">${gesperrt ? "ja" : "nein"}</span>
-        <span class="stat-label">abgeschlossen</span>
+        <span class="stat-value">${gesperrt ? t("ui.ja") : t("ui.nein_klein")}</span>
+        <span class="stat-label">${t("ui.abgeschlossen_klein")}</span>
       </div>
     </div>`;
 
@@ -367,19 +367,23 @@ function laufHtml(template, run) {
         <span class="prep-status">${escapeHtml(kindLabel(template.kind))}</span>
       </div>
       ${kacheln}
-      ${zeilen || '<p class="prep-meta">Diese Vorlage hat noch keine Punkte.</p>'}
+      ${zeilen || `<p class="prep-meta">${t("ui.diese_vorlage_hat_noch_keine_punkte")}</p>`}
       ${hinweis}
       ${abschluss}
       <div class="actions no-print">
         ${
           gesperrt
             ? isAdmin()
-              ? '<button type="button" class="btn-secondary" id="checklist-reopen">Wieder öffnen</button>'
+              ? `<button type="button" class="btn-secondary" id="checklist-reopen">${t("ui.wieder_oeffnen")}</button>`
               : ""
-            : '<button type="button" class="btn-primary" id="checklist-finish">Liste abschließen</button>'
+            : `<button type="button" class="btn-primary" id="checklist-finish">${t("ui.liste_abschliessen")}</button>`
         }
         <button type="button" class="btn-secondary" id="checklist-print-run">${t("ui.drucken")}</button>
-        ${isAdmin() ? '<button type="button" class="btn-secondary" id="checklist-delete-run">Löschen</button>' : ""}
+        ${
+          isAdmin()
+            ? `<button type="button" class="btn-secondary" id="checklist-delete-run">${t("ui.loeschen")}</button>`
+            : ""
+        }
       </div>
     </div>`;
 }
@@ -421,9 +425,12 @@ function renderLauf() {
   }
   const run = findeLauf(offenerLauf.templateId, offenerLauf.datum);
   if (!run) {
-    runEl.innerHTML = `<p class="empty-note">${t("ui.fuer")} ${escapeHtml(localizedText(template, "name"))} am ${escapeHtml(
-      formatDatum(offenerLauf.datum)
-    )} ${t("ui.ist_noch_nichts_eingetragen")}</p>`;
+    runEl.innerHTML = `<p class="empty-note">${escapeHtml(
+      t("ui.fuer_am_ist_noch_nichts_eingetragen", {
+        name: localizedText(template, "name"),
+        datum: formatDatum(offenerLauf.datum),
+      })
+    )}</p>`;
     return;
   }
   merkeFokus();
@@ -514,7 +521,7 @@ function druckLauf(template, run) {
       ergebnis = wert === null ? "–" : `${formatNumberLocal(wert)}${einheit}`;
       if (istAusserhalb(item, wert)) ergebnis += ` ${t("ui.ausserhalb")} ${grenzText(item)})`;
     } else {
-      ergebnis = eintrag?.done ? "erledigt" : "offen";
+      ergebnis = eintrag?.done ? t("ui.erledigt_klein") : t("ui.offen_klein");
     }
     return [
       localizedText(item, "label"),
@@ -545,7 +552,9 @@ function verlaufLaeufe() {
 
 function verlaufHtml({ template, run }) {
   const status = laufStatus(template, run);
-  const zustand = run.finishedAt ? `abgeschlossen ${formatZeitpunkt(run.finishedAt)}` : "offen";
+  const zustand = run.finishedAt
+    ? `${t("ui.abgeschlossen_klein")} ${formatZeitpunkt(run.finishedAt)}`
+    : t("ui.offen_klein");
   return `
     <div class="prep-item${status.abweichungen.length > 0 ? " prep-expired" : ""}" data-run-id="${escapeHtml(
       run.id
@@ -569,7 +578,7 @@ function renderVerlauf() {
   const laeufe = verlaufLaeufe();
   historyEl.innerHTML = laeufe.length
     ? laeufe.map(verlaufHtml).join("")
-    : '<p class="empty-note">Noch keine Liste ausgefüllt.</p>';
+    : `<p class="empty-note">${t("ui.noch_keine_liste_ausgefuellt")}</p>`;
   printHistoryBtn.disabled = laeufe.length === 0;
 }
 
@@ -728,7 +737,7 @@ async function speichereVorlage(e) {
 function vorlageHtml(template) {
   const wertPunkte = (template.items ?? []).filter((i) => i.type === "wert").length;
   const beschreibung = `${(template.items ?? []).length} ${t("ui.punkt_e")}${
-    wertPunkte > 0 ? ` · davon ${wertPunkte} ${t("ui.messwert_e")}` : ""
+    wertPunkte > 0 ? ` · ${t("ui.davon")} ${wertPunkte} ${t("ui.messwert_e")}` : ""
   }`;
   return `
     <div class="prep-item${template.active === false ? " prep-done" : ""}" data-template-id="${escapeHtml(
@@ -737,7 +746,7 @@ function vorlageHtml(template) {
       <div class="prep-item-head">
         <strong>${escapeHtml(localizedText(template, "name"))}</strong>
         <span class="prep-status">${escapeHtml(kindLabel(template.kind))}${
-          template.active === false ? " · inaktiv" : ""
+          template.active === false ? ` · ${t("ui.inaktiv")}` : ""
         }</span>
       </div>
       <p class="prep-meta">${escapeHtml(beschreibung)}</p>

@@ -266,8 +266,10 @@ async function handleSubmit(e) {
 function punktHtml(log, index, punkt) {
   const erledigt = Boolean(punkt.done);
   const nachweis = erledigt
-    ? `${t("ui.erledigt_von")} ${punkt.doneBy || "unbekannt"}${punkt.doneAt ? ` um ${formatZeitpunkt(punkt.doneAt)}` : ""}`
-    : "offen";
+    ? `${t("ui.erledigt_von")} ${punkt.doneBy || t("ui.unbekannt_klein")}${
+        punkt.doneAt ? ` ${t("ui.um")} ${formatZeitpunkt(punkt.doneAt)}` : ""
+      }`
+    : t("ui.offen_klein");
   return `
     <label class="menu-pick">
       <input type="checkbox" class="shift-item-done" data-id="${escapeHtml(log.id)}" data-index="${index}" ${
@@ -296,12 +298,12 @@ function logHtml(log) {
       ${
         punkte
           ? `<div class="menu-pick-list">${punkte}</div>`
-          : '<p class="prep-meta">Keine offenen Punkte notiert.</p>'
+          : `<p class="prep-meta">${t("ui.keine_offenen_punkte_notiert")}</p>`
       }
       <p class="prep-meta">${t("ui.angelegt")} ${escapeHtml(formatZeitpunkt(log.createdAt)) || "–"}</p>
       ${
         isAdmin()
-          ? '<div class="actions no-print"><button type="button" class="btn-secondary shift-log-delete">Löschen</button></div>'
+          ? `<div class="actions no-print"><button type="button" class="btn-secondary shift-log-delete">${t("ui.loeschen")}</button></div>`
           : ""
       }
     </div>`;
@@ -311,7 +313,7 @@ function renderList() {
   const logs = sichtbareLogs(loadShiftLogs());
   listEl.innerHTML = logs.length
     ? logs.map(logHtml).join("")
-    : '<p class="empty-note">Noch keine Übergabe geschrieben.</p>';
+    : `<p class="empty-note">${t("ui.noch_keine_uebergabe_geschrieben")}</p>`;
 }
 
 // Abhaken schreibt Name und Zeitpunkt mit – ohne die anderen Punkte
