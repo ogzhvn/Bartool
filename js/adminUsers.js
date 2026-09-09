@@ -2,6 +2,7 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
 import { escapeHtml, functionErrorMessage } from "./utils.js";
 import { onLanguageChanged, t } from "./i18n.js";
+import { loadRoles, getRolesSync } from "./roles.js";
 
 // Kontenverwaltung im Adminbereich (Sub-Tab "admin-users").
 // Aus js/adminPanel.js herausgelöst (Paket 34) – der Inhalt ist unverändert,
@@ -9,8 +10,28 @@ import { onLanguageChanged, t } from "./i18n.js";
 const createForm = document.getElementById("admin-create-form");
 const createError = document.getElementById("admin-create-error");
 const employeeListEl = document.getElementById("admin-employee-list");
+const newRoleSelect = document.getElementById("admin-new-role");
+
+// Rollen kommen seit Paket 35 aus der DB-Tabelle "roles" (mit Rangfolge),
+// nicht mehr aus einem festen Enum. Die Labels sind bewusst nicht übersetzt.
+function roleOptions(selectedKey) {
+  return getRolesSync()
+    .map(
+      (r) =>
+        `<option value="${escapeHtml(r.key)}"${r.key === selectedKey ? " selected" : ""}>${escapeHtml(r.label)}</option>`
+    )
+    .join("");
+}
+
+function fillCreateRoleSelect() {
+  if (!newRoleSelect) return;
+  const previous = newRoleSelect.value;
+  newRoleSelect.innerHTML = roleOptions(previous || "barkeeper");
+}
 
 async function loadEmployees() {
+  await loadRoles();
+  fillCreateRoleSelect();
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.from("profiles").select("*").order("email");
   if (error) {
@@ -39,8 +60,7 @@ function renderEmployees(profiles) {
             <td>${escapeHtml(p.display_name ?? "")}</td>
             <td>
               <select class="role-select" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>
-                <option value="mitarbeiter" ${p.role === "mitarbeiter" ? "selected" : ""}>${t("ui.mitarbeiter")}</option>
-                <option value="admin" ${p.role === "admin" ? "selected" : ""}>${t("ui.admin")}</option>
+                ${roleOptions(p.role)}
               </select>
             </td>
             <td>
@@ -133,7 +153,7 @@ async function handleCreate(e) {
   const username = document.getElementById("admin-new-username").value.trim().toLowerCase();
   const password = document.getElementById("admin-new-password").value;
   const displayName = document.getElementById("admin-new-name").value.trim();
-  const role = document.getElementById("admin-new-role").value;
+  const role = newRoleSelect.value;
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke("admin-users", {

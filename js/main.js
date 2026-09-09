@@ -34,6 +34,7 @@ import {
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
 import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
+import { loadRoles, roleLabel } from "./roles.js";
 import { t, initI18n, onLanguageChanged } from "./i18n.js";
 import { initLanguageSwitcher, applyProfileLanguage } from "./language.js";
 
@@ -138,9 +139,10 @@ async function bootstrapAppOnce() {
 function renderHeaderUser() {
   const { session, profile } = currentAuthState;
   if (!session) return;
-  userInfoEl.textContent = `${profile?.display_name || profile?.username || session.user.email} · ${
-    profile?.role === "admin" ? t("ui.admin") : t("ui.mitarbeiter")
-  }`;
+  // Rollenname kommt aus der DB (Tabelle "roles"), nicht aus der Übersetzung.
+  userInfoEl.textContent = `${profile?.display_name || profile?.username || session.user.email} · ${roleLabel(
+    profile?.role
+  )}`;
 }
 
 async function handleAuthState({ session, profile }) {
@@ -175,6 +177,8 @@ async function handleAuthState({ session, profile }) {
   appShell.hidden = false;
   headerUser.hidden = false;
   navToggle.hidden = false;
+  // Rollenliste einmal holen, danach steht das Label für die Kopfzeile bereit.
+  await loadRoles();
   renderHeaderUser();
   applyProfileLanguage(profile);
   applyRoleVisibility();

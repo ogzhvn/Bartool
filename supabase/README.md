@@ -17,14 +17,23 @@ Functions).
 Im Supabase-Dashboard unter **SQL Editor** den Inhalt von
 [`schema.sql`](./schema.sql) einfügen und ausführen. Das legt an:
 
-- `profiles` – ein Datensatz pro Nutzer:in mit Rolle (`admin` oder
-  `mitarbeiter`)
+- `profiles` – ein Datensatz pro Nutzer:in mit Rolle (Fremdschlüssel auf
+  `roles`)
+- `roles` / `permissions` / `role_permissions` – Rollen mit Rangfolge
+  (`admin` 100, `barchef` 80, `stellv_barchef` 60, `barkeeper` 40, `azubi` 20),
+  der Rechtekatalog und die Zuordnung. Wer eine Rolle vergibt oder ein Konto
+  bearbeitet, kann das nur für Rollen mit kleinerem Rang als dem eigenen.
 - `recipes` / `products` – die eigentlichen Daten, per Row Level Security
   so abgesichert, dass jeder eingeloggte Nutzer lesen, aber nur Admins
   schreiben dürfen
-- eine `private.is_admin()`-Hilfsfunktion, die die Policies benutzen (bewusst
-  in einem eigenen, nicht öffentlich per REST-API aufrufbaren Schema statt in
-  `public`)
+- die Hilfsfunktionen `private.my_rank()`, `private.has_permission(text)` und
+  `private.is_admin()`, die die Policies benutzen (bewusst in einem eigenen,
+  nicht öffentlich per REST-API aufrufbaren Schema statt in `public`).
+  `is_admin()` bedeutet „Rang 100 oder höher“, `has_permission()` lässt Rang
+  100 immer durch – sonst könnte ein falsch gesetztes Häkchen die Verwaltung
+  aussperren
+- einen Trigger, der das letzte Konto mit der Rolle `admin` gegen Herabstufen
+  und Löschen sichert
 
 ## 3. Edge Functions deployen
 

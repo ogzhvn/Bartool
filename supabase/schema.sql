@@ -13,31 +13,131 @@ create extension if not exists pgcrypto;
 -- Rollen & Profile
 -- ---------------------------------------------------------------------
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_type where typname = 'user_role' and typnamespace = 'public'::regnamespace
-  ) then
-    create type public.user_role as enum ('admin', 'mitarbeiter');
-  end if;
-end $$;
+-- Rollen mit Rangfolge (Paket 35). "rank" entscheidet, wer wen verwalten
+-- darf: vergeben, bearbeiten und löschen geht nur für Rollen mit kleinerem
+-- Rang als dem eigenen. admin (100) ist die technische Rolle, barchef (80) die
+-- fachliche Leitung. Die Labels stehen bewusst hier in der Datenbank und
+-- werden nicht übersetzt – wie Produktkatalog und Kategorienamen.
+create table if not exists public.roles (
+  key text primary key,
+  label text not null,
+  rank int not null unique,
+  is_system boolean not null default false,
+  sort int not null default 0
+);
+
+-- Ein Recht je Bereich, nicht je Aktion. label_key/group_key zeigen auf
+-- Übersetzungsschlüssel im Frontend (js/i18n/de.js, js/i18n/en.js).
+create table if not exists public.permissions (
+  key text primary key,
+  label_key text not null,
+  group_key text not null,
+  sort int not null default 0
+);
+
+create table if not exists public.role_permissions (
+  role_key text not null references public.roles (key) on update cascade on delete cascade,
+  permission_key text not null references public.permissions (key) on update cascade on delete cascade,
+  primary key (role_key, permission_key)
+);
+
+insert into public.roles (key, label, rank, is_system, sort) values
+  ('admin',          'Administrator',    100, true,  10),
+  ('barchef',        'Barchef',           80, false, 20),
+  ('stellv_barchef', 'Stellv. Barchef',   60, false, 30),
+  ('barkeeper',      'Barkeeper',         40, true,  40),
+  ('azubi',          'Auszubildende:r',   20, false, 50)
+on conflict (key) do update
+  set label = excluded.label,
+      rank = excluded.rank,
+      is_system = excluded.is_system,
+      sort = excluded.sort;
+
+insert into public.permissions (key, label_key, group_key, sort) values
+  ('recipes.write',       'perm.recipes.write',       'inhalte',    10),
+  ('products.write',      'perm.products.write',      'inhalte',    20),
+  ('requests.review',     'perm.requests.review',     'inhalte',    30),
+  ('quiz.manage',         'perm.quiz.manage',         'inhalte',    40),
+  ('inventory.manage',    'perm.inventory.manage',    'betrieb',    10),
+  ('preparations.manage', 'perm.preparations.manage', 'betrieb',    20),
+  ('events.manage',       'perm.events.manage',       'betrieb',    30),
+  ('checklists.manage',   'perm.checklists.manage',   'betrieb',    40),
+  ('shiftlog.manage',     'perm.shiftlog.manage',     'betrieb',    50),
+  ('losses.manage',       'perm.losses.manage',       'betrieb',    60),
+  ('reports.view',        'perm.reports.view',        'auswertung', 10),
+  ('audit.view',          'perm.audit.view',          'auswertung', 20),
+  ('audit.restore',       'perm.audit.restore',       'auswertung', 30),
+  ('data.manage',         'perm.data.manage',         'verwaltung', 10),
+  ('users.manage',        'perm.users.manage',        'verwaltung', 20),
+  ('roles.manage',        'perm.roles.manage',        'verwaltung', 30)
+on conflict (key) do update
+  set label_key = excluded.label_key,
+      group_key = excluded.group_key,
+      sort = excluded.sort;
+
+-- Startbelegung. admin bekommt alles (auch wenn has_permission() ihn ohnehin
+-- immer durchlässt – so stimmt die Matrix in der Oberfläche). barkeeper und
+-- azubi behalten nur das, was für "authenticated" offen ist, und brauchen
+-- dafür keine Zeile.
+insert into public.role_permissions (role_key, permission_key)
+select 'admin', key from public.permissions
+on conflict do nothing;
+
+insert into public.role_permissions (role_key, permission_key)
+select 'barchef', key from public.permissions where key <> 'roles.manage'
+on conflict do nothing;
+
+insert into public.role_permissions (role_key, permission_key)
+select 'stellv_barchef', key from public.permissions
+where key in ('recipes.write', 'products.write', 'requests.review',
+              'inventory.manage', 'preparations.manage', 'events.manage',
+              'checklists.manage', 'shiftlog.manage', 'losses.manage',
+              'reports.view', 'audit.view')
+on conflict do nothing;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   display_name text,
-  role public.user_role not null default 'mitarbeiter',
+  role text not null default 'barkeeper',
   created_at timestamptz not null default now()
 );
 
-alter table public.profiles enable row level security;
+-- Bestandsinstallation aus der Zeit vor Paket 35: role lag als Enum
+-- public.user_role ('admin' | 'mitarbeiter') vor. Reihenfolge zwingend:
+-- Default weg, auf text casten, Werte mappen, Default neu, dann FK, dann Enum.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'profiles'
+       and column_name = 'role' and udt_name = 'user_role'
+  ) then
+    alter table public.profiles alter column role drop default;
+    alter table public.profiles alter column role type text using role::text;
+    update public.profiles set role = 'barkeeper' where role = 'mitarbeiter';
+    alter table public.profiles alter column role set default 'barkeeper';
+  end if;
+end $$;
 
--- is_admin() lebt bewusst in einem eigenen, nicht von PostgREST exponierten
--- Schema statt in "public": Funktionen in "public" werden automatisch als
--- /rest/v1/rpc/<name>-Endpunkt exposed, auch SECURITY DEFINER-Funktionen.
--- In "private" bleibt sie trotzdem ganz normal in RLS-Policies nutzbar
+alter table public.profiles drop constraint if exists profiles_role_fkey;
+alter table public.profiles add constraint profiles_role_fkey
+  foreign key (role) references public.roles (key) on update cascade;
+
+drop type if exists public.user_role;
+
+alter table public.profiles enable row level security;
+alter table public.roles enable row level security;
+alter table public.permissions enable row level security;
+alter table public.role_permissions enable row level security;
+
+-- Rang- und Rechtefunktionen leben bewusst in einem eigenen, nicht von
+-- PostgREST exponierten Schema statt in "public": Funktionen in "public"
+-- werden automatisch als /rest/v1/rpc/<name>-Endpunkt exposed, auch
+-- SECURITY DEFINER-Funktionen.
+-- In "private" bleiben sie trotzdem ganz normal in RLS-Policies nutzbar
 -- (Postgres wertet Policies serverseitig aus, unabhängig vom PostgREST-
--- Schema-Exposure), ist aber nicht mehr direkt von außen aufrufbar.
+-- Schema-Exposure), sind aber nicht direkt von außen aufrufbar.
 create schema if not exists private;
 
 -- Alte Version aus "public" entfernen, falls aus einem früheren Setup noch
@@ -45,21 +145,161 @@ create schema if not exists private;
 -- die werden weiter unten ohnehin neu angelegt).
 drop function if exists public.is_admin() cascade;
 
+-- Rang der eigenen Rolle, 0 wenn nicht angemeldet.
+create or replace function private.my_rank()
+returns int
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce(
+    (select r.rank
+       from public.profiles p
+       join public.roles r on r.key = p.role
+      where p.id = auth.uid()),
+    0);
+$$;
+
+create or replace function private.role_rank(p_role text)
+returns int
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce((select r.rank from public.roles r where r.key = p_role), 0);
+$$;
+
+-- Ab Rang 100 (admin) gilt alles als erlaubt, unabhängig von der
+-- Rechtetabelle – sonst sperrt ein falsch gesetztes Häkchen die Verwaltung aus.
+create or replace function private.has_permission(p text)
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select private.my_rank() >= 100
+      or exists (
+        select 1
+          from public.profiles pr
+          join public.role_permissions rp on rp.role_key = pr.role
+         where pr.id = auth.uid()
+           and rp.permission_key = p);
+$$;
+
+-- is_admin() bleibt bestehen (daran hängen alle Policies) und bedeutet ab
+-- Paket 35 "Rang 100 oder höher".
 create or replace function private.is_admin()
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
-  select exists (
-    select 1 from public.profiles where id = auth.uid() and role = 'admin'
-  );
+  select private.my_rank() >= 100;
 $$;
 
 grant usage on schema private to authenticated;
+revoke all on function private.my_rank() from public;
+revoke all on function private.role_rank(text) from public;
+revoke all on function private.has_permission(text) from public;
 revoke all on function private.is_admin() from public;
+grant execute on function private.my_rank() to authenticated;
+grant execute on function private.role_rank(text) to authenticated;
+grant execute on function private.has_permission(text) to authenticated;
 grant execute on function private.is_admin() to authenticated;
+
+-- Rollen und Rechte: lesen darf jede angemeldete Person (die Oberfläche muss
+-- die eigenen Rechte kennen), schreiben nur mit roles.manage und nur für
+-- Rollen unter dem eigenen Rang.
+grant select on public.roles, public.permissions, public.role_permissions to authenticated;
+grant insert, update, delete on public.roles, public.permissions, public.role_permissions to authenticated;
+
+drop policy if exists "roles: authenticated read" on public.roles;
+create policy "roles: authenticated read"
+  on public.roles for select to authenticated
+  using (true);
+
+drop policy if exists "roles: roles.manage insert" on public.roles;
+create policy "roles: roles.manage insert"
+  on public.roles for insert to authenticated
+  with check (private.has_permission('roles.manage') and rank < private.my_rank());
+
+drop policy if exists "roles: roles.manage update" on public.roles;
+create policy "roles: roles.manage update"
+  on public.roles for update to authenticated
+  using (private.has_permission('roles.manage') and rank < private.my_rank())
+  with check (private.has_permission('roles.manage') and rank < private.my_rank());
+
+drop policy if exists "roles: roles.manage delete" on public.roles;
+create policy "roles: roles.manage delete"
+  on public.roles for delete to authenticated
+  using (private.has_permission('roles.manage') and rank < private.my_rank() and not is_system);
+
+drop policy if exists "permissions: authenticated read" on public.permissions;
+create policy "permissions: authenticated read"
+  on public.permissions for select to authenticated
+  using (true);
+
+drop policy if exists "permissions: roles.manage write" on public.permissions;
+create policy "permissions: roles.manage write"
+  on public.permissions for all to authenticated
+  using (private.has_permission('roles.manage'))
+  with check (private.has_permission('roles.manage'));
+
+drop policy if exists "role_permissions: authenticated read" on public.role_permissions;
+create policy "role_permissions: authenticated read"
+  on public.role_permissions for select to authenticated
+  using (true);
+
+drop policy if exists "role_permissions: roles.manage insert" on public.role_permissions;
+create policy "role_permissions: roles.manage insert"
+  on public.role_permissions for insert to authenticated
+  with check (private.has_permission('roles.manage') and private.role_rank(role_key) < private.my_rank());
+
+drop policy if exists "role_permissions: roles.manage delete" on public.role_permissions;
+create policy "role_permissions: roles.manage delete"
+  on public.role_permissions for delete to authenticated
+  using (private.has_permission('roles.manage') and private.role_rank(role_key) < private.my_rank());
+
+-- Das letzte Admin-Konto lässt sich weder herabstufen noch löschen. Als
+-- Trigger, nicht als Policy: die Edge Function arbeitet mit Service-Role und
+-- umgeht damit RLS, einen Trigger aber nicht.
+create or replace function private.guard_last_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  admin_count int;
+begin
+  if tg_op = 'UPDATE' then
+    if old.role = 'admin' and new.role is distinct from 'admin' then
+      select count(*) into admin_count from public.profiles where role = 'admin';
+      if admin_count <= 1 then
+        raise exception 'Das letzte Administrator-Konto kann nicht herabgestuft werden.';
+      end if;
+    end if;
+    return new;
+  end if;
+
+  if old.role = 'admin' then
+    select count(*) into admin_count from public.profiles where role = 'admin';
+    if admin_count <= 1 then
+      raise exception 'Das letzte Administrator-Konto kann nicht gelöscht werden.';
+    end if;
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists profiles_guard_last_admin on public.profiles;
+create trigger profiles_guard_last_admin
+  before update or delete on public.profiles
+  for each row execute function private.guard_last_admin();
 
 drop policy if exists "profiles: read own or admin reads all" on public.profiles;
 create policy "profiles: read own or admin reads all"

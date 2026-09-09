@@ -94,8 +94,8 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 ## 1. Fortschritt
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
-vollständig umgesetzt.** Runde 5 (34–38) ist am 09.09.2026 geplant
-worden und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die
+Pakete 34 und 35 erledigt, 36–38 sind offen. Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -177,7 +177,7 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5, mittlerer Denkaufwand |
-| 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | offen | Opus 5, hoher Denkaufwand |
+| 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5, hoher Denkaufwand |
 | 36 | Rechte-Matrix im Adminbereich + Durchsetzung | offen | Opus 5, hoher Denkaufwand |
 | 37 | Reporting unter Admin + Betrieb & Team | offen | Sonnet 5, mittlerer Denkaufwand |
 | 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
@@ -1693,6 +1693,40 @@ Dieses Paket macht ausschließlich die Datenbank fertig; die Oberfläche folgt i
 - [ ] `select private.has_permission('roles.manage')` liefert für `barchef` false, für `admin` true.
 - [ ] `supabase/schema.sql` bildet den neuen Stand vollständig ab.
 - [ ] Der Supabase-Advisor meldet keine Tabelle ohne RLS.
+
+**Ergebnis (09.09.2026):** Umgesetzt wie beschrieben. Migration
+`rollenmodell_rollen_rechte_rangfolge` legt `roles` (5 Rollen mit Rang 100/80/60/40/20),
+`permissions` (16 Rechte, gruppiert nach inhalte/betrieb/auswertung/verwaltung) und
+`role_permissions` an; RLS auf allen dreien: lesen für `authenticated`, schreiben nur mit
+`roles.manage` und nur für Rollen unter dem eigenen Rang. `profiles.role` ist jetzt `text`
+mit FK auf `roles.key`, das Enum `public.user_role` ist weg, die sieben Bestandskonten mit
+`mitarbeiter` sind auf `barkeeper` gemappt (kein `null`). Neu in `private`: `my_rank()`,
+`role_rank(text)`, `has_permission(text)` (Rang 100 gilt immer als berechtigt);
+`is_admin()` bleibt und heißt jetzt `my_rank() >= 100`. Keine bestehende Policy angefasst.
+Das letzte Admin-Konto ist per Trigger `profiles_guard_last_admin` gegen Herabstufen und
+Löschen gesichert – als Trigger und nicht als Policy, weil die Edge Function mit
+Service-Role arbeitet und RLS damit umgeht. `admin-users` prüft jetzt `users.manage` statt
+`role = 'admin'` und lässt Anlegen, Passwort-Zurücksetzen und Löschen nur für Rollen mit
+kleinerem Rang zu (Version 4 deployt). Folge davon: ein Admin kann über die Oberfläche kein
+zweites Admin-Konto direkt anlegen – Konto als Barchef o. ä. anlegen und anschließend in der
+Kontenliste auf Administrator hochstufen; das Hochstufen läuft über ein normales Update auf
+`profiles` und bleibt erlaubt.
+
+Frontend nur so weit angefasst, wie es zum Weiterlaufen nötig war (die Rechte-Matrix kommt
+in Paket 36): neues Modul `js/roles.js` (`loadRoles()`, `roleLabel()`, `roleRank()`), die
+Rollen-Auswahl in der Kontenliste und im Anlegen-Formular kommt aus der DB statt aus zwei
+fest verdrahteten `<option>`, die Kopfzeile zeigt das Rollen-Label aus der DB. Rollen-Labels
+bleiben unübersetzt (Entscheidung aus Paket 33); die 16 Rechte- und 4 Gruppen-Labels liegen
+als `perm.*`-Schlüssel in `js/i18n/de.js` und `js/i18n/en.js` bereit.
+
+Geprüft: Rechte- und Rangfunktionen für Barchef (rank 80, `roles.manage` false,
+`users.manage` true) und Admin (rank 100, alles true); Schreibversuch eines Barchefs auf
+`role_permissions` wird von RLS abgewiesen, derselbe Versuch als Admin geht durch;
+Herabstufen und Löschen des letzten Admin-Kontos scheitern beide am Trigger (Testlauf
+zurückgerollt); Supabase-Advisor meldet keine Tabelle ohne RLS. Die Live-Datenbank und das
+CDN waren aus der Session per Browser nicht erreichbar, deshalb wurde die Kontenverwaltung
+wie in Paket 34 gegen einen Stub-Client durchgeklickt (Rollenliste, Vorbelegung
+`barkeeper`, Escaping).
 
 **Commit:** `Rollenmodell: Rollen mit Rangfolge, Rechtekatalog, has_permission()`
 

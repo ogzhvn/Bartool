@@ -1585,10 +1585,8 @@
           </label>
           <label data-i18n="ui.rolle">
             Rolle
-            <select id="admin-new-role">
-              <option value="mitarbeiter" data-i18n="ui.mitarbeiter">Mitarbeiter</option>
-              <option value="admin" data-i18n="ui.admin">Admin</option>
-            </select>
+            <!-- Optionen kommen aus der DB-Tabelle "roles" (js/adminUsers.js) -->
+            <select id="admin-new-role"></select>
           </label>
         </div>
         <div class="field-row">
