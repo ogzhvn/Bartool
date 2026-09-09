@@ -93,8 +93,8 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Runde 1 (Pakete 1–15) ist vollständig umgesetzt.** Runde 2 (Pakete 16–21) ist
-geplant und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+**Runde 1 (Pakete 1–15), Runde 2 (16–20) und Runde 3 (21–27) sind vollständig
+umgesetzt.** Runde 4 (28–33) ist geplant und noch offen. Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -140,6 +140,23 @@ untereinander tauschen, 21 nicht.
 | 25 | Wein & Schaumwein ausbauen (30) | erledigt |
 | 26 | Quiz-Modul (Generator + kuratierte Fragen) | erledigt |
 | 27 | Quiz-Auswertung und Team-Übersicht | erledigt |
+
+### Runde 4 – Auswertung, Bilder, Sprache (geplant am 09.09.2026)
+
+Reihenfolge begründet: 28 zuerst, weil es klein und eigenständig ist und die Datenquelle
+liefert, ohne die 29 Inventurdifferenzen nur raten kann. 29 danach, weil es ausschließlich
+vorhandene Daten liest. 30/31 danach, weil kein anderes Paket darauf wartet. 32/33 zuletzt,
+weil Mehrsprachigkeit jede Datei anfasst – so werden die Strings aus 28–31 einmal
+eingesammelt statt zweimal. 30 vor 31 und 32 vor 33 ist zwingend.
+
+| # | Paket | Status |
+|---|---|---|
+| 28 | Schwund-, Bruch- und Verkostungsbuch | offen |
+| 29 | Reporting-Übersicht | offen |
+| 30 | Fotos: Storage-Grundlage und Produktbilder | offen |
+| 31 | Fotos zu Rezepten: Aufbau und Garnitur | offen |
+| 32 | Mehrsprachigkeit: Grundgerüst und Oberfläche EN | offen |
+| 33 | Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb | offen |
 
 ---
 
@@ -1222,13 +1239,232 @@ kein zweiter Datenbestand, der gepflegt werden muss.
 
 ---
 
-## Backlog Runde 4 (bewusst noch nicht eingeplant)
+# Paket 28 – Schwund-, Bruch- und Verkostungsbuch
 
-Reihenfolge offen, erst nach Runde 3 entscheiden:
-- **Reporting-Startseite:** Wareneinsatzquote über Zeit, Inventurhistorie, ablaufende Ansätze.
-- **Fotos zu Rezepten/Produkten:** Supabase Storage, Garnitur- und Glasbild.
-- **Schwund-/Bruch-/Verkostungsbuch:** erklärt Inventurdifferenzen.
-- **Mehrsprachigkeit (EN)** für Saisonkräfte.
+**Abhängigkeit:** Pakete 11/12 (Inventur) für die Produktzuordnung, Muster aus Paket 17 (Barbuch).
+**Ziel:** Jeder Milliliter, der nicht über den Tresen verkauft wurde, bekommt einen Grund.
+Damit ist die Inventurdifferenz erklärbar statt geschätzt.
+
+**Dateien:** neu `js/losses.js`; geändert `js/main.js` (`initLosses()`), `index.html` (Tab + Panel),
+`js/inventory.js` bzw. `js/ordering.js` (Auswertungsteil), `css/styles.css`, `supabase/schema.sql`, `sw.js`
+
+**Schritte**
+1. Migration `losses`: `product_name text`, `amount numeric`, `amount_unit text`
+   (`ml` · `cl` · `Flasche` · `Glas`), `reason text` (`Bruch` · `Verkostung Gast` · `Schulung` ·
+   `Retoure/verdorben` · `Schwund unklar`), `note text`, `recorded_by uuid`,
+   `occurred_at timestamptz default now()`. RLS: alle Eingeloggten lesen und einfügen;
+   ändern und löschen nur der eigene Eintrag oder Admin. Migration über die Supabase-MCP-Tools,
+   danach `supabase/schema.sql` von Hand nachziehen.
+2. Produktauswahl ausschließlich aus `getAllProducts()`, Freitext nur als Fallback mit sichtbarer
+   Warnung – sonst bricht die Zuordnung am strikten Namensmatching.
+3. Wert je Eintrag über `price_value` / `price_unit` bzw. `priceForIngredient()`. Produkt ohne
+   hinterlegten EK erzeugt **keinen 0-€-Wert**, sondern den Hinweis „kein Einkaufspreis hinterlegt".
+4. Schnellerfassung: ein großer Button pro Grund, Menge, Produkt, fertig. Vorbelegung Datum = heute.
+   Einhändig auf dem Handy bedienbar.
+5. Liste der letzten 30 Tage, Filter nach Grund und Produkt, Summe in € je Grund.
+6. In der Inventur-Auswertung je Produkt die im Zeitraum gebuchten Verluste ausweisen:
+   „Differenz" und „davon erklärt" stehen nebeneinander.
+7. Alle Freitexte per `textContent` / `escapeHtml()`.
+8. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Eintrag auf dem Handy in unter 15 Sekunden anlegbar.
+- [ ] Nicht-Admin kann fremde Einträge nicht löschen – gegen RLS geprüft, nicht nur gegen die UI.
+- [ ] Produkt ohne EK erzeugt einen Hinweis statt 0 €.
+- [ ] Inventur-Auswertung zeigt „davon erklärt" für den gewählten Zeitraum.
+- [ ] Nach Deploy ohne Hard Reload sichtbar (`CACHE` hochgezählt).
+
+**Commit:** `Schwund-, Bruch- und Verkostungsbuch`
+
+---
+
+# Paket 29 – Reporting-Übersicht
+
+**Abhängigkeit:** Paket 28 (Verluste), 12 (Inventur), 19 (Preishistorie), 9 (Ansätze).
+**Ziel:** Eine Seite, die vor der Schicht drei Fragen beantwortet: Läuft die Wareneinsatzquote weg?
+Was läuft ab? Was hat die letzte Inventur ergeben?
+**Entscheidung vom 09.09.2026:** Eigener Tab `reporting`. Die Startseite aus Paket 14 bleibt
+Favoriten/zuletzt benutzt und bleibt schnell; ein Umbau der Startseite würde das Layout-Grundgerüst
+anfassen und ist ohne neue Ansage des Nutzers nicht erlaubt.
+
+**Dateien:** neu `js/reporting.js`; geändert `js/main.js`, `index.html`, `css/styles.css`, `sw.js`.
+**Keine Migration.**
+
+**Schritte**
+1. Nur lesend: Inventurstände, `price_history`, Ansätze, `losses`, Kartenkalkulation.
+   Kein neues Schema, keine neue Erfassung.
+2. Kacheln: (a) Wareneinsatzquote je Karte/Kategorie im Zeitverlauf, (b) Bestandswert je
+   Inventurstichtag, (c) Ansätze, die in den nächsten drei Tagen ablaufen (aus `HALTBARKEIT_TAGE`),
+   (d) Verluste der letzten 30 Tage nach Grund, (e) Produkte mit Preissprung seit der letzten
+   Kalkulation.
+3. Diagramme als inline-SVG bzw. CSS-Balken. **Keine neue CDN-Bibliothek** – für Balken und Linien
+   lohnt keine Abhängigkeit.
+4. Ein gemeinsamer Zeitraumfilter (30 / 90 / 365 Tage) für alle Kacheln.
+5. Jede Kachel verlinkt per `switchTab()` in den zuständigen Tab.
+6. Ausformulierte Leerzustände statt leerer Diagramme
+   („noch keine zweite Inventur – Verlauf ab der nächsten").
+7. Zahlen über `formatNumber()`. Nichts einbauen, was Verkaufszahlen bräuchte – das bleibt laut
+   „Bewusst nicht im Scope" draußen.
+8. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Jede Kennzahl ist auf eine vorhandene Datenquelle zurückführbar, nichts ist geschätzt.
+- [ ] Bei leerer Datenlage steht überall ein erklärender Text, kein 0-Wert und kein Fehler.
+- [ ] Zeitraumfilter wirkt auf alle Kacheln gleichzeitig.
+- [ ] Klick auf eine Kachel landet im richtigen Tab.
+- [ ] Ladezeit auf dem Handy unter zwei Sekunden.
+
+**Commit:** `Reporting-Übersicht: Wareneinsatz, Inventurverlauf, ablaufende Ansätze`
+
+---
+
+# Paket 30 – Fotos: Storage-Grundlage und Produktbilder
+
+**Abhängigkeit:** keine zu 28/29, aber danach einsortiert, weil kein anderes Paket darauf wartet.
+**Ziel:** Ein Bild pro Produkt (Flasche/Etikett), damit am Regal erkennbar ist, was gemeint ist.
+**Entscheidung vom 09.09.2026:** Bucket privat, Zugriff über signierte URLs. Ein öffentlicher Bucket
+wäre einfacher und offline-tauglicher, die Bilder wären dann aber ohne Login abrufbar, wer die URL kennt.
+
+**Dateien:** neu `js/photos.js` (Upload, Verkleinerung, URL-Auflösung); geändert `js/products.js`,
+`js/adminPanel.js`, `index.html`, `css/styles.css`, `supabase/schema.sql`, `sw.js`
+
+**Schritte**
+1. Storage-Bucket `bilder` anlegen, Policies auf `storage.objects`: lesen für alle Eingeloggten,
+   schreiben und löschen nur Admin. Migration über die Supabase-MCP-Tools,
+   `supabase/schema.sql` nachziehen.
+2. Spalte `products.image_path text`. Pfadschema `produkte/<uuid>.jpg` – nie der Produktname im Pfad,
+   sonst bricht jede Umbenennung das Bild.
+3. Verkleinerung im Browser vor dem Upload per Canvas auf max. 1200 px lange Kante, JPEG ~0,8.
+   Kein Build-Schritt, keine Bibliothek. Handyfotos mit 5 MB dürfen nicht ungeprüft in den Storage.
+4. `js/photos.js` kapselt Upload, Löschen und das Auflösen von `image_path` zu einer anzeigbaren URL,
+   inklusive Cache der signierten URLs pro Session.
+5. Anzeige: Thumbnail in der Produktliste, großes Bild in der Detailansicht, `loading="lazy"`,
+   `alt` = Produktname.
+6. Ohne Bild ein neutraler Platzhalter, offline ebenfalls Platzhalter statt kaputtem Bild-Icon.
+7. Bilder **nicht** in den Service-Worker-Cache aufnehmen (signierte URLs laufen ab).
+   `CACHE` in `sw.js` trotzdem hochzählen.
+
+**Abnahme**
+- [ ] Foto vom Handy hochladen → landet verkleinert im Storage, die Originalgröße wird nicht übertragen.
+- [ ] Bild-URL ohne Login nicht abrufbar.
+- [ ] Nicht-Admin kann kein Bild hochladen oder löschen (gegen die Policy geprüft).
+- [ ] Produktliste bleibt mit 176 Einträgen flüssig scrollbar.
+- [ ] Offline: Platzhalter, kein Fehler in der Konsole.
+
+**Commit:** `Produktfotos über Supabase Storage`
+
+---
+
+# Paket 31 – Fotos zu Rezepten: Aufbau und Garnitur
+
+**Abhängigkeit:** Paket 30 zwingend.
+**Ziel:** Ein Drink sieht bei jedem gleich aus. Bild vom fertigen Glas und Detailbild der Garnitur,
+damit die Einarbeitung nicht am „so ungefähr" hängt.
+
+**Dateien:** geändert `js/recipes.js`, `js/photos.js`, `js/printView.js`, `index.html`,
+`css/styles.css`, `supabase/schema.sql`, `sw.js`
+
+**Schritte**
+1. Spalten `recipes.image_path text` (fertiger Drink) und `recipes.garnish_image_path text`.
+   Pfadschema `rezepte/<uuid>.jpg`.
+2. Upload-Feld in der Rezept-Bearbeitung, gleiche Verkleinerungslogik aus `js/photos.js` –
+   nicht kopieren, wiederverwenden.
+3. Anzeige in der Rezept-Leseansicht: Aufbaubild groß, Garniturbild daneben,
+   auf dem Handy untereinander.
+4. Druckansicht: `printRecipes()` nimmt das Aufbaubild mit, Graustufen und begrenzte Höhe,
+   damit ein Rezept weiter auf eine Seite passt.
+5. Optional, nur wenn ohne Zusatzaufwand machbar: Bildfrage im Quiz („Welcher Drink ist das?"),
+   ausschließlich mit Rezepten, die ein Bild haben.
+6. Bilder als `img`-Element mit gesetztem `alt`, nie als HTML-String zusammengebaut.
+7. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Beide Bilder pro Rezept anleg- und wieder entfernbar.
+- [ ] Rezept ohne Bild sieht unverändert aus, kein Leerraum.
+- [ ] Druckansicht bleibt einseitig pro Rezept.
+- [ ] Rezept löschen entfernt auch die Dateien im Storage (keine Karteileichen).
+
+**Commit:** `Aufbau- und Garniturbilder für Rezepte`
+
+---
+
+# Paket 32 – Mehrsprachigkeit: Grundgerüst und Oberfläche EN
+
+**Abhängigkeit:** Pakete 28–31 müssen stehen, sonst werden deren Strings zweimal angefasst.
+**Ziel:** Saisonkräfte ohne Deutsch können das Tool bedienen. Dieses Paket übersetzt die
+**Oberfläche**, nicht die Inhalte.
+
+**Dateien:** neu `js/i18n.js`, `js/i18n/de.js`, `js/i18n/en.js`; geändert `index.html`
+(alle festen Beschriftungen), alle Module mit festen Texten, `js/auth.js` (Sprache am Profil),
+`css/styles.css`, `supabase/schema.sql`, `sw.js`
+
+**Schritte**
+1. `js/i18n.js` mit `t(key)`, `setLanguage(lang)` und `onLanguageChanged()`.
+   Kein Framework, keine Bibliothek.
+2. Feste Beschriftungen in `index.html` bekommen `data-i18n="key"`; `js/i18n.js` füllt sie beim Start
+   und beim Umschalten. Texte aus JS über `t()`.
+3. Sprachumschalter im Header (DE/EN). Speicherung in `localStorage` **und**, wenn eingeloggt,
+   in `profiles.language`, damit die Wahl auf jedem Gerät gilt.
+4. Zahlen, Datumsangaben und Währung über `Intl`, nicht über eigene Formatierung.
+   `formatNumber()` zieht die aktive Sprache.
+5. Umschalten ohne Neuladen: alle Module rendern auf `onLanguageChanged()` neu.
+6. Zwei Sprachdateien mit identischen Schlüsselsätzen; ein fehlender EN-Schlüssel fällt sichtbar
+   auf Deutsch zurück, statt leer zu bleiben.
+7. Der Übersetzungsumfang endet an der Oberfläche: Produkt- und Rezeptinhalte bleiben in diesem
+   Paket deutsch.
+8. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Umschalten wirkt sofort in jedem Tab, ohne Neuladen.
+- [ ] Nach Neuladen und nach Login auf einem zweiten Gerät ist die Sprache noch gesetzt.
+- [ ] Kein Tab mit deutschen Restbeschriftungen auf EN (jeden Tab einmal durchklicken).
+- [ ] Druckansicht und Etiketten folgen der eingestellten Sprache.
+- [ ] Fehlender Schlüssel führt zu deutschem Text, nie zu leerem Feld.
+
+**Commit:** `Mehrsprachigkeit: Grundgerüst und englische Oberfläche`
+
+---
+
+# Paket 33 – Mehrsprachigkeit: Inhalte EN für den Schichtbetrieb
+
+**Abhängigkeit:** Paket 32.
+**Ziel:** Genau die Inhalte auf Englisch, die eine Saisonkraft in der Schicht wirklich braucht.
+**Nicht der ganze Produktkatalog** – 176 Produkttexte zu übersetzen und danach doppelt zu pflegen
+ist eine Falle.
+
+**Dateien:** geändert `js/recipes.js`, `js/checklists.js`, `js/allergens.js`, `js/adminPanel.js`,
+`js/i18n.js`, `supabase/schema.sql`, `sw.js`
+
+**Schritte**
+1. Spalten `..._en` nur dort, wo es gebraucht wird: Rezept-Zubereitung und -Kurzbeschreibung,
+   Glas/Methode/Garnitur, Checklistenpunkte. Kein `jsonb`-Sammelfeld – die Felder sind wenige
+   und bekannt.
+2. Anzeigelogik zentral in `js/i18n.js`: bei EN das `_en`-Feld, sonst Deutsch mit dem Zusatz
+   „only available in German". Nie stillschweigend auf Deutsch fallen.
+3. Admin-Maske zweispaltig DE/EN im selben Formular, damit beim Anlegen beides entsteht.
+4. Allergene sind eine feste, überschaubare Liste → fest übersetzt in den Sprachdateien,
+   nicht in der DB.
+5. Nichts maschinell übersetzen und einspielen: Rezepttexte trägt der Nutzer ein oder bestätigt sie.
+   Keine erfundenen Fachbegriffe (Regel „nicht raten, nicht erfinden").
+6. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Rezept auf EN zeigt Zubereitung, Glas, Methode und Garnitur auf Englisch, sofern gepflegt.
+- [ ] Nicht gepflegtes Feld zeigt Deutsch **mit** Hinweis, nicht kommentarlos.
+- [ ] Allergene auf EN vollständig, ohne DB-Eintrag.
+- [ ] Admin kann DE und EN in einem Durchgang speichern.
+- [ ] Der Produktkatalog bleibt unangetastet – kein halb übersetzter Zustand.
+
+**Commit:** `Englische Inhalte für Rezepte, Checklisten und Allergene`
+
+---
+
+## Backlog Runde 5 (bewusst noch nicht eingeplant)
+
+Reihenfolge offen, erst nach Runde 4 entscheiden:
+- **Produktkatalog auf Englisch** – die 176 Produkttexte. Bewusst aus Paket 33 herausgehalten:
+  eigene Runde oder gar nicht, aber nicht nebenbei.
+- **Bildfragen im Quiz** als eigenes Thema, sobald genug Rezepte ein Bild haben (aus Paket 31).
 
 ---
 
