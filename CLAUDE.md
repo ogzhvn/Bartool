@@ -143,8 +143,10 @@ bereits getroffene Entscheidungen, was ausdrücklich **nicht** angefasst werden 
 
 ### Modellempfehlung – Raster
 
-Die Zeile „Modell" gehört zu **jeder** Fenster-Empfehlung. Faustregel nach Art
-der Aufgabe, nicht nach Paketnummer:
+Die Zeile „Modell" gehört zu **jeder** Fenster-Empfehlung und zu **jedem**
+Startprompt, den ich ausgebe – auch außerhalb der Pakete aus dem Ausbauplan.
+Wo `docs/AUSBAUPLAN.md` in der Spalte „Modell" schon etwas vorgibt, gilt das;
+sonst als Faustregel nach Art der Aufgabe, nicht nach Paketnummer:
 
 | Art der Aufgabe | Modell | Denkaufwand |
 |---|---|---|
