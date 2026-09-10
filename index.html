@@ -1625,6 +1625,14 @@
       </form>
 
       <h3 data-i18n="ui.konten">Konten</h3>
+      <div class="field-row no-print">
+        <select id="admin-users-role-filter"></select>
+        <select id="admin-users-status-filter">
+          <option value="" data-i18n="ui.alle_konten">Alle Konten</option>
+          <option value="active" data-i18n="ui.nur_aktive">Nur aktive</option>
+          <option value="inactive" data-i18n="ui.nur_inaktive">Nur inaktive</option>
+        </select>
+      </div>
       <div id="admin-employee-list"></div>
     </section>
 
@@ -1732,6 +1740,20 @@
       <h2 data-i18n="ui.datenqualitaet">Datenqualität</h2>
       <p class="hint" data-i18n="ui.welche_produkte_rezepte_fehlen_noch_9ef7">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>
       <div id="data-quality-report"></div>
+
+      <h3 data-i18n="ui.import_export">Import &amp; Export</h3>
+      <p class="hint" data-i18n="ui.import_export_hinweis_3ad1">Zusätzlicher Einstieg – die Funktionen bleiben auch in den Fach-Tabs erreichbar.</p>
+      <div class="actions">
+        <button type="button" id="admin-data-import-products" class="btn-secondary" data-i18n="ui.produkte_importieren">Produkte importieren</button>
+        <button type="button" id="admin-data-export-products-excel" class="btn-secondary" data-i18n="ui.produkte_als_excel_exportieren">Alle Produkte als Excel exportieren</button>
+        <button type="button" id="admin-data-export-products-word" class="btn-secondary" data-i18n="ui.produkte_als_word_exportieren">Alle Produkte als Word exportieren</button>
+        <button type="button" id="admin-data-export-recipes-excel" class="btn-secondary" data-i18n="ui.rezepte_als_excel_exportieren">Alle Rezepte als Excel exportieren</button>
+        <button type="button" id="admin-data-export-recipes-word" class="btn-secondary" data-i18n="ui.rezepte_als_word_exportieren">Alle Rezepte als Word exportieren</button>
+      </div>
+
+      <h3 data-i18n="ui.papierkorb">Papierkorb</h3>
+      <p class="hint" data-i18n="ui.papierkorb_hinweis_7cd2">Gelöschte Rezepte und Produkte der letzten 30 Tage – mit einem Klick zurückholen.</p>
+      <div id="admin-trash-list" data-perm="audit.view"></div>
     </section>
 
     <!-- ADMIN – Änderungsverlauf (js/auditLog.js) -->

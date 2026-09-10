@@ -8,10 +8,14 @@ const filterEl = document.getElementById("audit-log-filter");
 const dateFilterEl = document.getElementById("audit-log-date-filter");
 const sectionEl = document.getElementById("audit-log-section");
 const listEl = document.getElementById("audit-log-list");
+// Papierkorb (Paket 38): eigene, auf Löschungen der letzten 30 Tage
+// eingeschränkte Ansicht in admin-data, nutzt dieselbe Wiederherstell-Logik.
+const trashListEl = document.getElementById("admin-trash-list");
 
 let loaded = false;
 // Zuletzt geladene Einträge – der Wiederherstellen-Knopf greift darauf zu.
 let entriesCache = [];
+let trashCache = [];
 
 // Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
 const TABLE_LABEL_KEYS = { recipes: "ui.rezept", products: "ui.produkt", profiles: "ui.konto" };
@@ -173,8 +177,9 @@ export function bestaetigungsText(entry, alterStand) {
   return teile.join("\n");
 }
 
-async function handleRestore(id) {
-  const entry = entriesCache.find((e) => e.id === id);
+// Gemeinsame Wiederherstell-Logik für den Änderungsverlauf und den
+// Papierkorb (Paket 38) – nicht doppeln, beide rufen dieselbe Funktion.
+async function restoreEntry(entry, onDone) {
   if (!entry || !can("audit.restore") || !istWiederherstellbar(entry)) return;
 
   const alterStand =
@@ -188,10 +193,86 @@ async function handleRestore(id) {
     // Wiederherstellung selbst wieder im Änderungsverlauf.
     await RESTORABLE_TABLES[entry.table_name](alterStand);
     alert(`"${alterStand.name}${t("ui.wurde_wiederhergestellt")}`);
-    await loadAuditLog();
+    if (onDone) await onDone();
   } catch (error) {
     alert(t("ui.wiederherstellen_fehlgeschlagen") + error.message);
   }
+}
+
+async function handleRestore(id) {
+  await restoreEntry(
+    entriesCache.find((e) => e.id === id),
+    loadAuditLog
+  );
+}
+
+// Papierkorb (Paket 38): nur Löschungen von Rezepten/Produkten der letzten
+// 30 Tage, ohne den vollen Diff aus dem Änderungsverlauf – nur Name, Zeit
+// und ein Wiederherstellen-Knopf.
+async function loadTrash() {
+  if (!trashListEl) return;
+  // Lesen von audit_log verlangt audit.view (RLS); ohne das Recht bliebe
+  // die Abfrage ohnehin leer, hier wird sie gleich gespart.
+  if (!can("audit.view")) {
+    trashListEl.innerHTML = "";
+    return;
+  }
+  const supabase = getSupabaseClient();
+  const seit = new Date();
+  seit.setDate(seit.getDate() - 30);
+  const { data, error } = await supabase
+    .from("audit_log")
+    .select("*, changed_by_profile:profiles!audit_log_changed_by_fkey(username, display_name)")
+    .in("table_name", Object.keys(RESTORABLE_TABLES))
+    .eq("action", "delete")
+    .gte("changed_at", seit.toISOString())
+    .order("changed_at", { ascending: false });
+  if (error) {
+    trashListEl.innerHTML = `<p class="empty-note">${t("ui.papierkorb_konnte_nicht_geladen_werden")} ${escapeHtml(error.message)}</p>`;
+    return;
+  }
+  trashCache = data ?? [];
+  renderTrash(trashCache);
+}
+
+function renderTrash(entries) {
+  if (!trashListEl) return;
+  if (entries.length === 0) {
+    trashListEl.innerHTML = `<p class="empty-note">${t("ui.papierkorb_ist_leer")}</p>`;
+    return;
+  }
+  trashListEl.innerHTML = entries
+    .map((entry) => {
+      const tableLabel = t(TABLE_LABEL_KEYS[entry.table_name] ?? entry.table_name);
+      const who = entry.changed_by_profile?.display_name || entry.changed_by_profile?.username || t("ui.system");
+      const when = formatDateTime(entry.changed_at);
+      const name = entry.old_data?.name ?? "";
+      return `
+        <div class="trash-item" data-id="${escapeHtml(entry.id)}">
+          <span>${escapeHtml(when)} · ${escapeHtml(tableLabel)} · ${escapeHtml(name)} · ${escapeHtml(who)}</span>
+          ${can("audit.restore") ? `<button type="button" class="btn-secondary trash-restore-btn">${t("ui.wiederherstellen")}</button>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  trashListEl.querySelectorAll(".trash-restore-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.closest(".trash-item").dataset.id;
+      await restoreEntry(
+        trashCache.find((entry) => entry.id === id),
+        loadTrash
+      );
+    });
+  });
+}
+
+// Wird von js/dataQuality.js aus initDataQuality() aufgerufen, damit der
+// Papierkorb im Sub-Tab "admin-data" erscheint, ohne die
+// Wiederherstell-Logik hier zu verdoppeln.
+export function initAuditTrash() {
+  if (!trashListEl) return;
+  onLanguageChanged(loadTrash);
+  loadTrash();
 }
 
 export function initAuditLog() {
