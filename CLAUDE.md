@@ -174,7 +174,17 @@ verwenden, nur zum Durchklicken des Tools.
   und lokal in `.claude/local/testaccount.md` ablegen (nicht committen).
 
 ## Git
-- Entwicklung und Push auf `main`.
+- **Zu Beginn jeder Session sofort prüfen, ob der zugewiesene Branch veraltet ist**,
+  bevor irgendetwas anderes gelesen wird: `git fetch origin main` und
+  `git merge-base HEAD origin/main` mit `git log origin/main -1` vergleichen.
+  Liegt die Merge-Base deutlich hinter `origin/main` (typisches Symptom: eine
+  in der Architektur-Map genannte Datei wie `docs/AUSBAUPLAN.md` fehlt) –
+  ohne weitere Diagnose sofort `git checkout -B <aktueller-branch-name>
+  origin/main`, dann normal weiterarbeiten. Kein Rückfragen nötig, das kostet
+  nur Zeit; nur bei tatsächlich vorhandenen, noch nicht gemergten Commits auf
+  dem alten Branch vorher fragen, ob die erhalten bleiben sollen.
+- Entwicklung und Push auf `main` (außer eine Session-Vorgabe schreibt
+  ausdrücklich einen anderen Branch vor – dann gilt die).
 - Commit-Messages auf Deutsch: kurzer Titel, bei Bedarf 1–2 Zeilen Kontext.
 - Automatisch committen, wenn ein Arbeitsschritt fertig und lauffähig ist.
 
