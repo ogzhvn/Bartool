@@ -8,7 +8,7 @@ import {
   deleteChecklistRun,
   onChecklistRunsChanged,
 } from "./storage.js";
-import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
+import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { printChecklistRuns } from "./printView.js";
 import {
@@ -373,14 +373,14 @@ function laufHtml(template, run) {
       <div class="actions no-print">
         ${
           gesperrt
-            ? isAdmin()
+            ? can("checklists.manage")
               ? `<button type="button" class="btn-secondary" id="checklist-reopen">${t("ui.wieder_oeffnen")}</button>`
               : ""
             : `<button type="button" class="btn-primary" id="checklist-finish">${t("ui.liste_abschliessen")}</button>`
         }
         <button type="button" class="btn-secondary" id="checklist-print-run">${t("ui.drucken")}</button>
         ${
-          isAdmin()
+          can("checklists.manage")
             ? `<button type="button" class="btn-secondary" id="checklist-delete-run">${t("ui.loeschen")}</button>`
             : ""
         }
@@ -758,7 +758,7 @@ function vorlageHtml(template) {
 }
 
 function renderVorlagenListe() {
-  if (!isAdmin()) {
+  if (!can("checklists.manage")) {
     templateListEl.innerHTML = "";
     return;
   }

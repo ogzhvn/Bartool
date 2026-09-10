@@ -7,7 +7,7 @@ import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { allergensForRecipe, allergenLabel } from "./allergens.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { printRecipes } from "./printView.js";
-import { isAdmin } from "./auth.js";
+import { can } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 import { germanOnlyNote, getLocale, localizedContent, onLanguageChanged, t } from "./i18n.js";
@@ -133,7 +133,7 @@ function createPhotoField({ fieldEl, previewEl, inputEl, removeBtn }) {
     previewEl.innerHTML = `<img src="${url}" alt="" />`;
   }
   function updateVisibility() {
-    fieldEl.hidden = !isAdmin();
+    fieldEl.hidden = !can("recipes.write");
     removeBtn.hidden = !pendingFile && (pendingRemoved || !existingPath);
   }
   function reset() {
@@ -285,9 +285,9 @@ async function handleSave() {
   const pairsWith = parsePairsWith(pairsWithEl.value);
   if (pairsWith.length > 0) recipe.pairsWith = pairsWith;
 
-  // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
-  // reichen den Vorschlag zur Prüfung ein.
-  if (!isAdmin()) {
+  // Ohne recipes.write wird nicht direkt geschrieben (die Policy lehnt es ab),
+  // sondern der Vorschlag zur Prüfung eingereicht.
+  if (!can("recipes.write")) {
     try {
       await submitChangeRequest("recipes", recipe);
       alert(t("ui.danke_dein_vorschlag_wurde_zur_pruefung_an_65b3"));
@@ -326,7 +326,7 @@ async function handleDelete() {
     return;
   }
 
-  if (!isAdmin()) {
+  if (!can("recipes.write")) {
     if (!confirm(`${t("ui.loeschung_von")}${editingOriginalName}${t("ui.zur_pruefung_vorschlagen")}`)) return;
     try {
       await submitChangeRequest("recipes", { name: editingOriginalName }, "delete");
@@ -478,8 +478,8 @@ function renderRecipeItem(recipe) {
         .join("")}
       ${renderAllergenBlock(recipe)}
       <div class="actions">
-        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
-        ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
+        <button type="button" class="btn-secondary edit-btn">${can("recipes.write") ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
+        ${isCustomRecipe(recipe.name) ? `<button type="button" class="btn-secondary delete-btn">${can("recipes.write") ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
       </div>
     </div>
   `;
@@ -532,7 +532,7 @@ function renderRecipeItem(recipe) {
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      if (!isAdmin()) {
+      if (!can("recipes.write")) {
         if (!confirm(`${t("ui.loeschung_von")}${recipe.name}${t("ui.zur_pruefung_vorschlagen")}`)) return;
         try {
           await submitChangeRequest("recipes", { name: recipe.name }, "delete");
@@ -686,7 +686,7 @@ export function initRecipes() {
     renderSidebarList();
   });
 
-  if (!isAdmin()) {
+  if (!can("recipes.write")) {
     document.getElementById("recipe-save").textContent = t("ui.vorschlag_einreichen");
     document.getElementById("recipe-delete").textContent = t("ui.loeschung_vorschlagen");
   }

@@ -1,7 +1,7 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { escapeHtml } from "./utils.js";
-import { saveRecipe, saveProduct, fromRecipeRow, fromProductRow, loadRecipes, loadProducts } from "./storage.js";
-import { isAdmin } from "./auth.js";
+import { restoreRecipe, restoreProduct, fromRecipeRow, fromProductRow, loadRecipes, loadProducts } from "./storage.js";
+import { can } from "./auth.js";
 import { formatDateTime, onLanguageChanged, t } from "./i18n.js";
 
 const filterEl = document.getElementById("audit-log-filter");
@@ -46,10 +46,11 @@ function computeDiff(entry) {
 // Änderungen und Löschungen an Rezepten und Produkten. Bei einem Neuanlegen
 // gibt es keinen Vorzustand; Konten bleiben außen vor, die gehören ins
 // Admin-Panel.
-const RESTORABLE_TABLES = { recipes: saveRecipe, products: saveProduct };
+const RESTORABLE_TABLES = { recipes: restoreRecipe, products: restoreProduct };
 
-// Prüft nur die Daten, nicht die Rechte – der Admin-Check sitzt bewusst
-// getrennt davon beim Rendern und beim Ausführen.
+// Prüft nur die Daten, nicht die Rechte – die Prüfung auf audit.restore sitzt
+// bewusst getrennt davon beim Rendern und beim Ausführen, und ein letztes Mal
+// serverseitig in public.restore_row().
 export function istWiederherstellbar(entry) {
   if (!RESTORABLE_TABLES[entry.table_name]) return false;
   if (!entry.old_data || !entry.old_data.name) return false;
@@ -106,7 +107,7 @@ function renderAuditLog(entries) {
         label ? " · " + escapeHtml(label) : ""
       } · ${escapeHtml(who)}</summary>
           ${
-            isAdmin() && istWiederherstellbar(entry)
+            can("audit.restore") && istWiederherstellbar(entry)
               ? `<div class="actions"><button type="button" class="btn-secondary audit-restore" data-id="${escapeHtml(entry.id)}">${t("ui.diesen_stand_wiederherstellen")}</button></div>`
               : ""
           }
@@ -174,7 +175,7 @@ export function bestaetigungsText(entry, alterStand) {
 
 async function handleRestore(id) {
   const entry = entriesCache.find((e) => e.id === id);
-  if (!entry || !isAdmin() || !istWiederherstellbar(entry)) return;
+  if (!entry || !can("audit.restore") || !istWiederherstellbar(entry)) return;
 
   const alterStand =
     entry.table_name === "recipes" ? fromRecipeRow(entry.old_data) : fromProductRow(entry.old_data);
@@ -182,7 +183,8 @@ async function handleRestore(id) {
   if (!confirm(bestaetigungsText(entry, alterStand))) return;
 
   try {
-    // Über die normale Speicherfunktion: so landet auch die
+    // Über restore_row() in der Datenbank: die prüft audit.restore und das
+    // Schreibrecht des Bereichs, und der Audit-Trigger protokolliert die
     // Wiederherstellung selbst wieder im Änderungsverlauf.
     await RESTORABLE_TABLES[entry.table_name](alterStand);
     alert(`"${alterStand.name}${t("ui.wurde_wiederhergestellt")}`);

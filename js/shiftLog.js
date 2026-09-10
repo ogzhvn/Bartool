@@ -1,6 +1,6 @@
 import { loadShiftLogs, saveShiftLog, deleteShiftLog, onShiftLogsChanged, loadPreparations } from "./storage.js";
 import { typLabel } from "./preparations.js";
-import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
+import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml } from "./utils.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
@@ -302,7 +302,7 @@ function logHtml(log) {
       }
       <p class="prep-meta">${t("ui.angelegt")} ${escapeHtml(formatZeitpunkt(log.createdAt)) || "–"}</p>
       ${
-        isAdmin()
+        can("shiftlog.manage")
           ? `<div class="actions no-print"><button type="button" class="btn-secondary shift-log-delete">${t("ui.loeschen")}</button></div>`
           : ""
       }

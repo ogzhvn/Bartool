@@ -1,4 +1,4 @@
-import { isAdmin } from "./auth.js";
+import { can } from "./auth.js";
 import { getSupabaseClient } from "./supabaseClient.js";
 import { loadCuratedQuestionRows, saveCuratedQuestion, deleteCuratedQuestion } from "./quiz.js";
 import { getAllProducts } from "./productLibrary.js";
@@ -440,10 +440,11 @@ async function teamLoad() {
 
 function initQuizTeam() {
   teamRefreshBtn.addEventListener("click", teamLoad);
-  // Das Admin-Panel wird für alle initialisiert und nur per data-admin-only
-  // versteckt. Der RPC-Aufruf würde für Mitarbeitende mit einem Rechtefehler
-  // enden – also gar nicht erst anfragen.
-  if (isAdmin()) teamLoad();
+  // Die Team-Auswertung hängt an reports.view, nicht an quiz.manage: Zahlen
+  // über das Team sind eine Auswertung, keine Fragenpflege (Paket 36, in
+  // Paket 37 zieht dieser Block ins Reporting um). Ohne das Recht gäbe der
+  // RPC-Aufruf einen Rechtefehler zurück – also gar nicht erst anfragen.
+  if (can("reports.view")) teamLoad();
 }
 
 function initQuizAdmin() {
@@ -461,7 +462,7 @@ export function initAdminQuiz() {
   onLanguageChanged(() => {
     quizResetForm();
     quizLoadQuestions();
-    if (isAdmin()) teamLoad();
+    if (can("reports.view")) teamLoad();
   });
 
   initQuizAdmin();

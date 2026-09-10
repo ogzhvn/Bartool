@@ -95,7 +95,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
 vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die
-Pakete 34 und 35 erledigt, 36–38 sind offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+Pakete 34, 35 und 36 erledigt, 37 und 38 sind offen. Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -178,7 +178,7 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 |---|---|---|---|
 | 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5, mittlerer Denkaufwand |
 | 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5, hoher Denkaufwand |
-| 36 | Rechte-Matrix im Adminbereich + Durchsetzung | offen | Opus 5, hoher Denkaufwand |
+| 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5, hoher Denkaufwand |
 | 37 | Reporting unter Admin + Betrieb & Team | offen | Sonnet 5, mittlerer Denkaufwand |
 | 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
 
@@ -1790,6 +1790,106 @@ nicht erst angezeigt werden.
 - [ ] Rollennamen mit HTML-Sonderzeichen werden als Text angezeigt, nicht ausgeführt.
 - [ ] Kein Recht in der Matrix ohne zugehörige Policy.
 - [ ] Rechte-Labels sind auf Deutsch und Englisch beschriftet.
+
+**Ergebnis (10.09.2026):** Umgesetzt wie beschrieben. Migration
+`rechte_durchsetzung_policies` schreibt alle 19 `is_admin()`-Policies auf
+`has_permission('<recht>')` um (Rezepte, Produkte, Preisstände, Vorschläge,
+Inventur, Ansätze, Veranstaltungen, Checklisten, Übergaben, Verluste, Quiz,
+Änderungsverlauf, Konten) plus die drei Storage-Policies auf dem Bucket
+`bilder`; dort entscheidet der Ordner: `produkte/` hängt an `products.write`,
+`rezepte/` an `recipes.write`. Danach hängt **keine** Policy mehr an
+`is_admin()` (geprüft über `pg_policies`). Konten laufen über die neue Funktion
+`private.can_manage_profile(role)` = `users.manage` **und** kleinerer Rang als
+der eigene (ab Rang 100 ohne Einschränkung, sonst könnte ein Administrator kein
+zweites Administratorkonto mehr hochstufen). Wichtig dabei: Policies werden mit
+den Rechten des aufrufenden Kontos ausgewertet, die Funktion braucht also
+`grant execute ... to authenticated` – ohne das scheitert jede Abfrage auf
+`profiles` (Migration `can_manage_profile_execute_grant`).
+
+Zwei Rechte hätten sonst keine Durchsetzung gehabt und sind deshalb an echte
+Prüfungen gehängt worden:
+- `audit.restore` → neue Funktion `public.restore_row(p_table, p_row)`
+  (SECURITY DEFINER). Von außen ist ein Wiederherstellen ein ganz normaler
+  Upsert und von einer Bearbeitung nicht zu unterscheiden; die Funktion
+  verlangt `audit.restore` **und** das Schreibrecht des Bereichs. Semantik
+  unverändert (Upsert über den Namen, nur mitgeschickte Spalten), der
+  Audit-Trigger protokolliert die Wiederherstellung wie bisher.
+  `js/auditLog.js` schreibt jetzt über `restoreRecipe()`/`restoreProduct()` aus
+  `js/storage.js` statt über `saveRecipe()`/`saveProduct()`. Nebenwirkung: beim
+  Wiederherstellen eines Produkts entsteht kein neuer Preisstand mehr – das
+  Wiederherstellen ist keine Preisänderung.
+- `reports.view` → `quiz_team_overview()` und `quiz_topic_heatmap()` prüfen
+  statt `is_admin()` jetzt `has_permission('reports.view')` (Migration
+  `team_auswertung_an_reports_view`). Passt zu Paket 37, das diese Auswertung
+  ins Reporting umzieht.
+
+**Eine Ausnahme, bewusst und sichtbar gemacht:** `data.manage` hat keine eigene
+Policy. Die Datenqualität ist eine reine Auswertung über Daten, die jedes
+angemeldete Konto ohnehin lesen darf, und der Excel-Import schreibt über
+dieselbe Policy wie eine normale Produktbearbeitung (`products.write`). Es gibt
+also nichts, was dieses Recht in der Datenbank zusätzlich verbieten könnte.
+Statt es aus der Matrix zu nehmen (die Tabelle `permissions` kennt es), steht es
+dort mit dem Vermerk „nur Sichtbarkeit" – so verspricht die Oberfläche keinen
+Schutz, den es nicht gibt. `users.manage` und `roles.manage` tragen aus
+demselben Grund den Vermerk „mit Rangfolge".
+
+Frontend: neu `js/permissions.js` (Rechtekatalog mit Gruppen, i18n-Schlüsseln
+und der Angabe, welche Policy das Recht durchsetzt) und `js/adminRoles.js`
+(Matrix). `js/auth.js` holt beim Laden des Profils Rang und Rechte mit und
+exportiert `can()`, `canAny()`, `myRank()`, `myPermissions()`; `isAdmin()`
+bleibt und heißt jetzt `myRank() >= 100`. `applyRoleVisibility()` in
+`js/main.js` kennt zusätzlich `data-perm="x.y"` und `data-perm-any="a,b"`
+(leerer Wert = irgendein Adminrecht). Alle `isAdmin()`-Aufrufe in den zehn
+Modulen sind auf `can('<recht>')` umgestellt; `js/photos.js` entscheidet nach
+Ordner wie die Storage-Policy. `js/adminSections.js` startet jeden Unterpunkt
+nur mit dem passenden Recht, `js/adminPanel.js` zeigt nur die erlaubten
+Kacheln, `js/adminUsers.js` bietet nur Rollen unterhalb des eigenen Rangs an
+und sperrt Zeilen von Konten auf gleicher oder höherer Ebene.
+
+**Abweichungen vom Plan** (beide bewusst): `admin-roles` hängt an
+`data-perm="roles.manage"` statt an `data-admin-only` – damit deckt sich die
+Sichtbarkeit mit der Policy, `barchef` sieht den Tab trotzdem nicht (kein
+`roles.manage`), und ein Konto, dem man `roles.manage` gibt, kommt hinein.
+Und die Matrix ist eine Karte je Rolle mit gruppierten Häkchen statt einer
+16 Spalten breiten Tabelle: das Tool wird hinterm Tresen auf dem Handy
+gelesen. „Speichern je Zeile" bleibt – eine Karte ist eine Zeile.
+
+Geprüft (Datenbank, mit echten Konten per `set local role authenticated`,
+Testlauf zurückgerollt): barkeeper (Rang 40) hat keines der Rechte, sein
+Insert auf `recipes` wird abgewiesen, `restore_row` und die Team-Auswertung
+ebenfalls, er sieht genau ein Profil und keine Zeile im Änderungsverlauf.
+barchef (Rang 80) hat `recipes.write`, `users.manage`, `reports.view` und
+`audit.restore`, aber nicht `roles.manage`; er liest alle Konten, sein Update
+auf ein Admin-Konto trifft 0 Zeilen, auf ein Barkeeper-Konto 1 Zeile, sein
+Insert auf `role_permissions` wird abgewiesen, die Team-Auswertung bekommt er.
+Admin (Rang 100) hat alles. Die dynamische Upsert-Logik von `restore_row` ist
+gegen ein echtes Rezept getestet (Insert- und Konflikt-Zweig, Testlauf
+zurückgerollt).
+
+Geprüft (Oberfläche): Live-DB und CDN sind aus der Session nicht erreichbar,
+deshalb wie in Paket 34/35 gegen einen Stub-Client durchgeklickt (Chromium,
+1280×900), einmal je Rolle. Als Admin: fünf Rollenkarten, Administrator ohne
+Häkchen mit dem Hinweis „hat immer alle Rechte", Systemrollen ohne
+Löschknopf, Speichern schreibt nur die Differenz (ein Insert für das eine neu
+gesetzte Recht), Rolle anlegen mit belegtem Rang wird abgelehnt, eine neue
+Rolle lässt sich anlegen und wieder löschen, eine Rolle mit zugewiesenem Konto
+nicht. Ein Rollen-Label mit `<img src=x onerror=…>` erscheint als Text, kein
+`<img>` im DOM, der Handler läuft nicht. Sprachwechsel auf Englisch übersetzt
+die Rechte-Labels, die Rollen-Labels bleiben wie in der Datenbank. Als
+barchef: Adminbereich sichtbar, `admin-roles` nicht. Als stellv. Barchef: vom
+Adminbereich nur der Änderungsverlauf. Als barkeeper: kein Adminbereich, keine
+Import-Leiste, keine Foto-Schaltflächen, und am Rezept steht „Vorschlag
+einreichen" statt „Speichern". Keine Konsolenfehler in allen vier Durchläufen.
+
+`supabase/schema.sql` ist nachgezogen (60 Policy-Namen, identisch zur
+Live-Datenbank), `CACHE` in `sw.js` steht auf `bartool-v52`,
+`js/adminRoles.js` und `js/permissions.js` sind im Precache.
+
+**Offen geblieben:** Die Checkliste „wieder öffnen" und das Abhaken laufen
+weiter über dieselbe UPDATE-Policy für alle Angemeldeten – `checklists.manage`
+wirkt dort nur in der Oberfläche. Das sauber zu trennen hieße, die Policy auf
+ein eigenes Recht `operations.write` umzubauen; das ist derselbe Schritt, den
+Paket 35 für `azubi` schon zurückgestellt hat, und gehört in ein eigenes Paket.
 
 **Commit:** `Rechte-Matrix im Adminbereich, Rechte in Oberfläche und Policies durchgesetzt`
 

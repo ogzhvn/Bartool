@@ -3,6 +3,12 @@ import { functionErrorMessage } from "./utils.js";
 
 let currentSession = null;
 let currentProfile = null;
+// Rechte und Rang der eigenen Rolle (Paket 36). Beides kommt aus der DB und
+// wird beim Laden des Profils mitgeholt, damit can() überall synchron
+// aufrufbar bleibt. Durchgesetzt wird trotzdem in den Policies – hier geht es
+// nur um die Sichtbarkeit in der Oberfläche.
+let currentPermissions = new Set();
+let currentRank = 0;
 const listeners = new Set();
 
 function notify() {
@@ -12,6 +18,8 @@ function notify() {
 async function loadProfile() {
   if (!currentSession) {
     currentProfile = null;
+    currentPermissions = new Set();
+    currentRank = 0;
     return;
   }
   const supabase = getSupabaseClient();
@@ -21,6 +29,26 @@ async function loadProfile() {
     .eq("id", currentSession.user.id)
     .single();
   currentProfile = error ? null : data;
+  await loadPermissions();
+}
+
+// Rang und Rechte der eigenen Rolle. Beide Tabellen sind für angemeldete
+// Konten lesbar (Paket 35), es braucht also keine eigene Funktion dafür.
+// Fällt eine der Abfragen aus (kein Netz), bleibt es bei Rang 0 und leerer
+// Rechteliste: die Oberfläche zeigt dann nur, was allen offensteht, statt
+// Schaltflächen anzubieten, die die Policy hinterher abweist.
+async function loadPermissions() {
+  currentPermissions = new Set();
+  currentRank = 0;
+  const role = currentProfile?.role;
+  if (!role) return;
+  const supabase = getSupabaseClient();
+  const [rangAntwort, rechteAntwort] = await Promise.all([
+    supabase.from("roles").select("rank").eq("key", role).maybeSingle(),
+    supabase.from("role_permissions").select("permission_key").eq("role_key", role),
+  ]);
+  currentRank = rangAntwort.data?.rank ?? 0;
+  (rechteAntwort.data ?? []).forEach((zeile) => currentPermissions.add(zeile.permission_key));
 }
 
 export async function initAuth() {
@@ -116,6 +144,26 @@ export function getCurrentProfile() {
   return currentProfile;
 }
 
+// Spiegelt private.has_permission(): Rang 100 gilt immer als berechtigt,
+// damit ein falsch gesetztes Häkchen die Verwaltung nicht aussperrt.
+export function can(permission) {
+  return currentRank >= 100 || currentPermissions.has(permission);
+}
+
+export function canAny(permissions) {
+  return permissions.some((permission) => can(permission));
+}
+
+export function myRank() {
+  return currentRank;
+}
+
+export function myPermissions() {
+  return [...currentPermissions];
+}
+
+// Bleibt erhalten und bedeutet jetzt "oberste Ebene" statt "Rolle heißt
+// admin" – gleichbedeutend mit private.is_admin() in der Datenbank.
 export function isAdmin() {
-  return currentProfile?.role === "admin";
+  return currentRank >= 100;
 }

@@ -1,8 +1,8 @@
 import { getSupabaseClient } from "./supabaseClient.js";
-import { getCurrentUser } from "./auth.js";
+import { getCurrentUser, myRank } from "./auth.js";
 import { escapeHtml, functionErrorMessage } from "./utils.js";
 import { onLanguageChanged, t } from "./i18n.js";
-import { loadRoles, getRolesSync } from "./roles.js";
+import { loadRoles, getRolesSync, roleRank } from "./roles.js";
 
 // Kontenverwaltung im Adminbereich (Sub-Tab "admin-users").
 // Aus js/adminPanel.js herausgelöst (Paket 34) – der Inhalt ist unverändert,
@@ -14,8 +14,16 @@ const newRoleSelect = document.getElementById("admin-new-role");
 
 // Rollen kommen seit Paket 35 aus der DB-Tabelle "roles" (mit Rangfolge),
 // nicht mehr aus einem festen Enum. Die Labels sind bewusst nicht übersetzt.
+//
+// Vergeben werden dürfen nur Rollen unterhalb des eigenen Rangs (Paket 36) –
+// so steht es in der Policy auf "profiles" und in der Edge Function
+// "admin-users". Eine Rolle, die dieses Konto nicht setzen darf, taucht
+// deshalb nicht in der Auswahl auf. Ausnahme: die bereits gesetzte Rolle
+// eines Kontos bleibt sichtbar, sonst stünde in der Liste die falsche.
 function roleOptions(selectedKey) {
+  const eigenerRang = myRank();
   return getRolesSync()
+    .filter((r) => r.rank < eigenerRang || r.key === selectedKey)
     .map(
       (r) =>
         `<option value="${escapeHtml(r.key)}"${r.key === selectedKey ? " selected" : ""}>${escapeHtml(r.label)}</option>`
@@ -52,23 +60,28 @@ function renderEmployees(profiles) {
       <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th></th></tr></thead>
       <tbody>
         ${profiles
-          .map(
-            (p) => `
+          .map((p) => {
+            // Gesperrt ist das eigene Konto und jedes Konto auf der eigenen
+            // oder einer höheren Ebene – Policy und Edge Function lehnen es
+            // ohnehin ab, hier bleiben die Felder nur konsequent grau.
+            const gesperrt = p.id === getCurrentUser()?.id || roleRank(p.role) >= myRank();
+            const disabled = gesperrt ? "disabled" : "";
+            return `
           <tr data-id="${p.id}">
-            <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._-]{3,32}" /></td>
+            <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._-]{3,32}" ${disabled} /></td>
             <td>${escapeHtml(p.email)}</td>
             <td>${escapeHtml(p.display_name ?? "")}</td>
             <td>
-              <select class="role-select" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>
+              <select class="role-select" ${disabled}>
                 ${roleOptions(p.role)}
               </select>
             </td>
             <td>
-              <button type="button" class="btn-secondary reset-password-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.passwort_zuruecksetzen")}</button>
-              <button type="button" class="btn-secondary delete-employee-btn" ${p.id === getCurrentUser()?.id ? "disabled" : ""}>${t("ui.loeschen")}</button>
+              <button type="button" class="btn-secondary reset-password-btn" ${disabled}>${t("ui.passwort_zuruecksetzen")}</button>
+              <button type="button" class="btn-secondary delete-employee-btn" ${disabled}>${t("ui.loeschen")}</button>
             </td>
-          </tr>`
-          )
+          </tr>`;
+          })
           .join("")}
       </tbody>
     </table>

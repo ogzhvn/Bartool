@@ -4,7 +4,7 @@ import {
   deletePreparation,
   onPreparationsChanged,
 } from "./storage.js";
-import { isAdmin, getCurrentUser, getCurrentProfile } from "./auth.js";
+import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { printLabels } from "./printView.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
@@ -128,7 +128,7 @@ function eintragHtml(prep) {
           : `<button type="button" class="btn-secondary prep-done-btn">${t("ui.verbraucht")}</button>
              <button type="button" class="btn-secondary prep-edit">${t("ui.bearbeiten")}</button>`}
         <button type="button" class="btn-secondary prep-label-btn">${t("ui.etikett")}</button>
-        ${isAdmin() ? `<button type="button" class="btn-secondary prep-delete">${t("ui.loeschen")}</button>` : ""}
+        ${can("preparations.manage") ? `<button type="button" class="btn-secondary prep-delete">${t("ui.loeschen")}</button>` : ""}
       </div>
     </div>`;
 }

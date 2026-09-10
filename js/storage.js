@@ -179,6 +179,23 @@ export async function saveRecipe(recipe) {
   await refreshRecipes();
 }
 
+// Wiederherstellen aus dem Änderungsverlauf (Paket 36). Läuft absichtlich
+// nicht über saveRecipe(), sondern über public.restore_row() in der Datenbank:
+// von außen ist ein Wiederherstellen ein ganz normaler Upsert und damit von
+// einer Bearbeitung nicht zu unterscheiden. Nur so hängt das Recht
+// audit.restore an einer echten serverseitigen Prüfung. Die Semantik ist
+// dieselbe – Upsert über den Namen, nur die mitgeschickten Felder.
+export async function restoreRecipe(recipe) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.rpc("restore_row", {
+    p_table: "recipes",
+    p_row: toRecipeRecord(recipe),
+  });
+  if (error) throw error;
+  await refreshRecipes();
+}
+
 export async function deleteRecipe(name) {
   if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
@@ -336,6 +353,18 @@ export async function saveProduct(product, options = {}) {
   const { error } = await supabase.from("products").upsert(toProductRecord(product), { onConflict: "name" });
   if (error) throw error;
   await recordPriceChange(product, previous, options.priceSource);
+  await refreshProducts();
+}
+
+// Gegenstück zu restoreRecipe() – siehe Kommentar dort.
+export async function restoreProduct(product) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.rpc("restore_row", {
+    p_table: "products",
+    p_row: toProductRecord(product),
+  });
+  if (error) throw error;
   await refreshProducts();
 }
 

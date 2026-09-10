@@ -189,8 +189,10 @@ as $$
            and rp.permission_key = p);
 $$;
 
--- is_admin() bleibt bestehen (daran hängen alle Policies) und bedeutet ab
--- Paket 35 "Rang 100 oder höher".
+-- is_admin() bedeutet "Rang 100 oder höher" (Paket 35). Seit Paket 36 hängt
+-- keine Policy mehr daran – jede prüft ihr eigenes Recht über
+-- has_permission(). Die Funktion bleibt als Kurzform für "oberste Ebene"
+-- (Frontend: isAdmin()) und für den Trigger unten.
 create or replace function private.is_admin()
 returns boolean
 language sql
@@ -210,6 +212,27 @@ grant execute on function private.my_rank() to authenticated;
 grant execute on function private.role_rank(text) to authenticated;
 grant execute on function private.has_permission(text) to authenticated;
 grant execute on function private.is_admin() to authenticated;
+
+-- Konten verwalten (Paket 36): users.manage plus Rangfolge – verwalten darf
+-- man nur Konten mit kleinerem Rang als dem eigenen. Ab Rang 100 gilt das
+-- ohne Einschränkung, sonst könnte ein Administrator kein zweites
+-- Administratorkonto mehr hochstufen.
+create or replace function private.can_manage_profile(p_role text)
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select private.has_permission('users.manage')
+     and (private.my_rank() >= 100 or private.role_rank(p_role) < private.my_rank());
+$$;
+
+revoke all on function private.can_manage_profile(text) from public;
+-- Policies werden mit den Rechten des aufrufenden Kontos ausgewertet: ohne
+-- dieses grant scheitert jede Abfrage auf profiles mit
+-- "permission denied for function can_manage_profile".
+grant execute on function private.can_manage_profile(text) to authenticated;
 
 -- Rollen und Rechte: lesen darf jede angemeldete Person (die Oberfläche muss
 -- die eigenen Rechte kennen), schreiben nur mit roles.manage und nur für
@@ -302,18 +325,21 @@ create trigger profiles_guard_last_admin
   for each row execute function private.guard_last_admin();
 
 drop policy if exists "profiles: read own or admin reads all" on public.profiles;
-create policy "profiles: read own or admin reads all"
+drop policy if exists "profiles: eigenes oder users.manage liest" on public.profiles;
+create policy "profiles: eigenes oder users.manage liest"
   on public.profiles for select
-  using (id = auth.uid() or private.is_admin());
+  using (id = auth.uid() or private.has_permission('users.manage'));
 
 -- Anlegen/Ändern/Löschen von Konten läuft über die admin-users Edge
--- Function (Service-Role) bzw. – für reine Rollenänderungen – direkt vom
--- Admin-Panel aus (per Update, ebenfalls nur für Admins erlaubt).
+-- Function (Service-Role) bzw. – für reine Rollenänderungen – direkt aus der
+-- Kontenliste (per Update). Erlaubt ist beides nur mit users.manage und nur
+-- für Konten unterhalb des eigenen Rangs.
 drop policy if exists "profiles: admin manages all" on public.profiles;
-create policy "profiles: admin manages all"
+drop policy if exists "profiles: users.manage verwaltet niedrigere Raenge" on public.profiles;
+create policy "profiles: users.manage verwaltet niedrigere Raenge"
   on public.profiles for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.can_manage_profile(role))
+  with check (private.can_manage_profile(role));
 
 -- ---------------------------------------------------------------------
 -- Benutzername-Login & erzwungener Passwortwechsel
@@ -487,10 +513,11 @@ create policy "recipes: any authenticated user can read"
 
 -- Nur Admins dürfen anlegen/ändern/löschen.
 drop policy if exists "recipes: admin write" on public.recipes;
-create policy "recipes: admin write"
+drop policy if exists "recipes: recipes.write schreibt" on public.recipes;
+create policy "recipes: recipes.write schreibt"
   on public.recipes for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('recipes.write'))
+  with check (private.has_permission('recipes.write'));
 
 -- ---------------------------------------------------------------------
 -- Produkte
@@ -622,10 +649,11 @@ create policy "products: any authenticated user can read"
   using (auth.role() = 'authenticated');
 
 drop policy if exists "products: admin write" on public.products;
-create policy "products: admin write"
+drop policy if exists "products: products.write schreibt" on public.products;
+create policy "products: products.write schreibt"
   on public.products for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('products.write'))
+  with check (private.has_permission('products.write'));
 
 -- ---------------------------------------------------------------------
 -- Audit-Log: Änderungshistorie für recipes/products/profiles
@@ -680,9 +708,10 @@ create policy "preparations: any authenticated user can update"
   with check (auth.role() = 'authenticated');
 
 drop policy if exists "preparations: admin deletes" on public.preparations;
-create policy "preparations: admin deletes"
+drop policy if exists "preparations: preparations.manage loescht" on public.preparations;
+create policy "preparations: preparations.manage loescht"
   on public.preparations for delete
-  using (private.is_admin());
+  using (private.has_permission('preparations.manage'));
 
 -- ---------------------------------------------------------------------
 -- Event-/Bankett-Planer
@@ -734,9 +763,10 @@ create policy "events: any authenticated user can update"
   with check (auth.role() = 'authenticated');
 
 drop policy if exists "events: admin deletes" on public.events;
-create policy "events: admin deletes"
+drop policy if exists "events: events.manage loescht" on public.events;
+create policy "events: events.manage loescht"
   on public.events for delete
-  using (private.is_admin());
+  using (private.has_permission('events.manage'));
 
 -- ---------------------------------------------------------------------
 -- Schichtübergabe / Barbuch
@@ -784,9 +814,10 @@ create policy "shift_logs: any authenticated user can update"
   with check (auth.role() = 'authenticated');
 
 drop policy if exists "shift_logs: admin deletes" on public.shift_logs;
-create policy "shift_logs: admin deletes"
+drop policy if exists "shift_logs: shiftlog.manage loescht" on public.shift_logs;
+create policy "shift_logs: shiftlog.manage loescht"
   on public.shift_logs for delete
-  using (private.is_admin());
+  using (private.has_permission('shiftlog.manage'));
 
 -- ---------------------------------------------------------------------
 -- Checklisten Opening/Closing + Nachweisdokumentation
@@ -824,10 +855,11 @@ create policy "checklist_templates: any authenticated user can read"
   using (auth.role() = 'authenticated');
 
 drop policy if exists "checklist_templates: admin write" on public.checklist_templates;
-create policy "checklist_templates: admin write"
+drop policy if exists "checklist_templates: checklists.manage schreibt" on public.checklist_templates;
+create policy "checklist_templates: checklists.manage schreibt"
   on public.checklist_templates for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('checklists.manage'))
+  with check (private.has_permission('checklists.manage'));
 
 create table if not exists public.checklist_runs (
   id uuid primary key default gen_random_uuid(),
@@ -875,9 +907,10 @@ create policy "checklist_runs: any authenticated user can update"
   with check (auth.role() = 'authenticated');
 
 drop policy if exists "checklist_runs: admin deletes" on public.checklist_runs;
-create policy "checklist_runs: admin deletes"
+drop policy if exists "checklist_runs: checklists.manage loescht" on public.checklist_runs;
+create policy "checklist_runs: checklists.manage loescht"
   on public.checklist_runs for delete
-  using (private.is_admin());
+  using (private.has_permission('checklists.manage'));
 
 -- ---------------------------------------------------------------------
 -- Einkaufspreis-Historie
@@ -911,10 +944,11 @@ create policy "product_prices: any authenticated user can read"
   using (auth.role() = 'authenticated');
 
 drop policy if exists "product_prices: admin write" on public.product_prices;
-create policy "product_prices: admin write"
+drop policy if exists "product_prices: products.write schreibt" on public.product_prices;
+create policy "product_prices: products.write schreibt"
   on public.product_prices for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('products.write'))
+  with check (private.has_permission('products.write'));
 
 -- Startpunkt: der Ist-Stand aller gepflegten Einkaufspreise als erste Zeile.
 insert into public.product_prices (product_name, price_value, price_unit, valid_from, source)
@@ -984,8 +1018,10 @@ create policy "inventory_counts: update" on public.inventory_counts for update
   using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 drop policy if exists "inventory_counts: admin deletes" on public.inventory_counts;
-create policy "inventory_counts: admin deletes" on public.inventory_counts for delete
-  using (private.is_admin());
+drop policy if exists "inventory_counts: inventory.manage loescht" on public.inventory_counts;
+create policy "inventory_counts: inventory.manage loescht"
+  on public.inventory_counts for delete
+  using (private.has_permission('inventory.manage'));
 
 drop policy if exists "inventory_items: read" on public.inventory_items;
 create policy "inventory_items: read" on public.inventory_items for select
@@ -1000,8 +1036,10 @@ create policy "inventory_items: update" on public.inventory_items for update
   using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 drop policy if exists "inventory_items: admin deletes" on public.inventory_items;
-create policy "inventory_items: admin deletes" on public.inventory_items for delete
-  using (private.is_admin());
+drop policy if exists "inventory_items: inventory.manage loescht" on public.inventory_items;
+create policy "inventory_items: inventory.manage loescht"
+  on public.inventory_items for delete
+  using (private.has_permission('inventory.manage'));
 
 -- ---------------------------------------------------------------------
 
@@ -1019,9 +1057,10 @@ create table if not exists public.audit_log (
 alter table public.audit_log enable row level security;
 
 drop policy if exists "audit_log: admin reads all" on public.audit_log;
-create policy "audit_log: admin reads all"
+drop policy if exists "audit_log: audit.view liest alles" on public.audit_log;
+create policy "audit_log: audit.view liest alles"
   on public.audit_log for select
-  using (private.is_admin());
+  using (private.has_permission('audit.view'));
 
 -- Bewusst keine Insert/Update/Delete-Policy für authenticated/anon – nur
 -- die SECURITY DEFINER-Trigger-Funktion unten schreibt hier hinein, sie
@@ -1066,6 +1105,68 @@ create trigger profiles_audit
   after insert or update or delete on public.profiles
   for each row execute function public.log_audit();
 
+-- Wiederherstellen eines alten Stands (Paket 36). Braucht eine eigene
+-- Funktion, weil das Recht audit.restore sonst nicht durchsetzbar wäre: von
+-- außen ist ein Wiederherstellen ein ganz normaler Upsert auf
+-- recipes/products und von einer Bearbeitung nicht zu unterscheiden.
+-- Verlangt audit.restore UND das Schreibrecht des jeweiligen Bereichs.
+-- Semantik wie saveRecipe()/saveProduct() im Frontend: Upsert über den Namen,
+-- gesetzt werden nur die mitgeschickten Spalten. Der Audit-Trigger
+-- protokolliert die Wiederherstellung wie jede andere Änderung.
+create or replace function public.restore_row(p_table text, p_row jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_perm text;
+  v_cols text;
+  v_sets text;
+begin
+  if p_table not in ('recipes', 'products') then
+    raise exception 'Wiederherstellen ist nur für Rezepte und Produkte vorgesehen.'
+      using errcode = '22023';
+  end if;
+  if p_row is null or jsonb_typeof(p_row) <> 'object' or coalesce(p_row->>'name', '') = '' then
+    raise exception 'Zum Wiederherstellen fehlt der Name.' using errcode = '22023';
+  end if;
+
+  v_perm := case p_table when 'recipes' then 'recipes.write' else 'products.write' end;
+  if not private.has_permission('audit.restore') or not private.has_permission(v_perm) then
+    raise exception 'Fehlendes Recht zum Wiederherstellen.' using errcode = '42501';
+  end if;
+
+  -- Nur echte Spalten der Zieltabelle, und nur die, die auch mitgeschickt
+  -- wurden. So kann ein Aufruf keine Spalte auf null zurücksetzen, die er
+  -- gar nicht kennt.
+  select string_agg(quote_ident(c.column_name), ', ' order by c.ordinal_position),
+         string_agg(
+           quote_ident(c.column_name) || ' = excluded.' || quote_ident(c.column_name),
+           ', ' order by c.ordinal_position
+         )
+    into v_cols, v_sets
+    from information_schema.columns c
+   where c.table_schema = 'public'
+     and c.table_name = p_table
+     and c.column_name not in ('id', 'name')
+     and c.is_generated = 'NEVER'
+     and p_row ? c.column_name;
+
+  if v_cols is null then
+    raise exception 'Zum Wiederherstellen sind keine Felder angekommen.' using errcode = '22023';
+  end if;
+
+  execute format(
+    'insert into public.%1$I (name, %2$s) select r.name, %2$s from jsonb_populate_record(null::public.%1$I, $1) r on conflict (name) do update set %3$s',
+    p_table, v_cols, v_sets
+  ) using p_row;
+end;
+$$;
+
+revoke all on function public.restore_row(text, jsonb) from public;
+grant execute on function public.restore_row(text, jsonb) to authenticated;
+
 -- ---------------------------------------------------------------------
 -- Freigabe-Workflow: Mitarbeiter schlagen Änderungen vor, Admin prüft
 -- ---------------------------------------------------------------------
@@ -1096,15 +1197,17 @@ create policy "change_requests: own insert"
   with check (proposed_by = auth.uid());
 
 drop policy if exists "change_requests: own or admin select" on public.change_requests;
-create policy "change_requests: own or admin select"
+drop policy if exists "change_requests: eigene oder requests.review" on public.change_requests;
+create policy "change_requests: eigene oder requests.review"
   on public.change_requests for select
-  using (proposed_by = auth.uid() or private.is_admin());
+  using (proposed_by = auth.uid() or private.has_permission('requests.review'));
 
 drop policy if exists "change_requests: admin update" on public.change_requests;
-create policy "change_requests: admin update"
+drop policy if exists "change_requests: requests.review entscheidet" on public.change_requests;
+create policy "change_requests: requests.review entscheidet"
   on public.change_requests for update
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('requests.review'))
+  with check (private.has_permission('requests.review'));
 
 do $$
 begin
@@ -1161,10 +1264,11 @@ create policy "quiz_questions: any authenticated user can read"
   using (auth.role() = 'authenticated');
 
 drop policy if exists "quiz_questions: admin write" on public.quiz_questions;
-create policy "quiz_questions: admin write"
+drop policy if exists "quiz_questions: quiz.manage schreibt" on public.quiz_questions;
+create policy "quiz_questions: quiz.manage schreibt"
   on public.quiz_questions for all
-  using (private.is_admin())
-  with check (private.is_admin());
+  using (private.has_permission('quiz.manage'))
+  with check (private.has_permission('quiz.manage'));
 
 -- quiz_attempts = eine Zeile pro beantworteter Frage. Grundlage für die
 -- Auswertung in Paket 27; question_key ist über Sessions hinweg stabil
@@ -1207,9 +1311,10 @@ create policy "quiz_attempts: own insert"
   with check (user_id = auth.uid());
 
 drop policy if exists "quiz_attempts: admin deletes" on public.quiz_attempts;
-create policy "quiz_attempts: admin deletes"
+drop policy if exists "quiz_attempts: quiz.manage loescht" on public.quiz_attempts;
+create policy "quiz_attempts: quiz.manage loescht"
   on public.quiz_attempts for delete
-  using (private.is_admin());
+  using (private.has_permission('quiz.manage'));
 
 -- ---------------------------------------------------------------------
 -- Quiz-Auswertung fuer die Barleitung (Paket 27)
@@ -1236,7 +1341,10 @@ security definer
 set search_path = public, private, pg_temp
 as $$
 begin
-  if not private.is_admin() then
+  -- Zahlen über das Team sind eine Auswertung, keine Systemverwaltung
+  -- (Paket 36): reports.view statt is_admin(). Einzelantworten gibt die
+  -- Datenbank weiterhin niemandem heraus.
+  if not private.has_permission('reports.view') then
     raise exception 'Nur die Barleitung darf die Team-Auswertung lesen.'
       using errcode = '42501';
   end if;
@@ -1332,7 +1440,10 @@ security definer
 set search_path = public, private, pg_temp
 as $$
 begin
-  if not private.is_admin() then
+  -- Zahlen über das Team sind eine Auswertung, keine Systemverwaltung
+  -- (Paket 36): reports.view statt is_admin(). Einzelantworten gibt die
+  -- Datenbank weiterhin niemandem heraus.
+  if not private.has_permission('reports.view') then
     raise exception 'Nur die Barleitung darf die Team-Auswertung lesen.'
       using errcode = '42501';
   end if;
@@ -1404,15 +1515,17 @@ create policy "losses: any authenticated user can insert"
   with check (auth.role() = 'authenticated' and recorded_by = auth.uid());
 
 drop policy if exists "losses: own entry or admin updates" on public.losses;
-create policy "losses: own entry or admin updates"
+drop policy if exists "losses: eigene oder losses.manage aendert" on public.losses;
+create policy "losses: eigene oder losses.manage aendert"
   on public.losses for update
-  using (recorded_by = auth.uid() or private.is_admin())
-  with check (recorded_by = auth.uid() or private.is_admin());
+  using (recorded_by = auth.uid() or private.has_permission('losses.manage'))
+  with check (recorded_by = auth.uid() or private.has_permission('losses.manage'));
 
 drop policy if exists "losses: own entry or admin deletes" on public.losses;
-create policy "losses: own entry or admin deletes"
+drop policy if exists "losses: eigene oder losses.manage loescht" on public.losses;
+create policy "losses: eigene oder losses.manage loescht"
   on public.losses for delete
-  using (recorded_by = auth.uid() or private.is_admin());
+  using (recorded_by = auth.uid() or private.has_permission('losses.manage'));
 
 -- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen
@@ -1484,17 +1597,44 @@ create policy "bilder: eingeloggte lesen"
   using (bucket_id = 'bilder' and auth.role() = 'authenticated');
 
 drop policy if exists "bilder: admin schreibt" on storage.objects;
-create policy "bilder: admin schreibt"
+drop policy if exists "bilder: fotorecht schreibt" on storage.objects;
+create policy "bilder: fotorecht schreibt"
   on storage.objects for insert
-  with check (bucket_id = 'bilder' and private.is_admin());
+  with check (
+    bucket_id = 'bilder'
+    and (
+      (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
+      or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+    )
+  );
 
 drop policy if exists "bilder: admin aktualisiert" on storage.objects;
-create policy "bilder: admin aktualisiert"
+drop policy if exists "bilder: fotorecht aktualisiert" on storage.objects;
+create policy "bilder: fotorecht aktualisiert"
   on storage.objects for update
-  using (bucket_id = 'bilder' and private.is_admin())
-  with check (bucket_id = 'bilder' and private.is_admin());
+  using (
+    bucket_id = 'bilder'
+    and (
+      (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
+      or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+    )
+  )
+  with check (
+    bucket_id = 'bilder'
+    and (
+      (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
+      or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+    )
+  );
 
 drop policy if exists "bilder: admin loescht" on storage.objects;
-create policy "bilder: admin loescht"
+drop policy if exists "bilder: fotorecht loescht" on storage.objects;
+create policy "bilder: fotorecht loescht"
   on storage.objects for delete
-  using (bucket_id = 'bilder' and private.is_admin());
+  using (
+    bucket_id = 'bilder'
+    and (
+      (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
+      or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+    )
+  );

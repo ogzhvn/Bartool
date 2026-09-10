@@ -9,7 +9,7 @@ import { t } from "./i18n.js";
 // Rezeptfotos (Paket 31, Aufbau- und Garniturbild teilen sich den Ordner).
 // Nie der Name im Pfad, sonst bricht jede Umbenennung das Bild.
 import { getSupabaseClient } from "./supabaseClient.js";
-import { isAdmin } from "./auth.js";
+import { can } from "./auth.js";
 
 const BUCKET = "bilder";
 const MAX_EDGE_PX = 1200;
@@ -51,12 +51,19 @@ function resizeToJpeg(file) {
   });
 }
 
+// Welches Recht ein Bild braucht, entscheidet der Ordner: Produktfotos
+// hängen an products.write, Rezeptfotos an recipes.write. Genauso steht es in
+// den Storage-Policies (Paket 36) – hier wird nur derselbe Schnitt gespiegelt.
+function fotoRecht(folderOrPath) {
+  return String(folderOrPath).split("/")[0] === "rezepte" ? "recipes.write" : "products.write";
+}
+
 // Lädt ein Handyfoto verkleinert in den angegebenen Ordner hoch und gibt den
-// neuen image_path zurück. Wirft, wenn kein Admin (Policy lehnt es
-// serverseitig ohnehin ab – die Prüfung hier verhindert nur den unnötigen
+// neuen image_path zurück. Wirft, wenn das Schreibrecht fehlt (Policy lehnt
+// es serverseitig ohnehin ab – die Prüfung hier verhindert nur den unnötigen
 // Upload-Versuch).
 async function uploadPhoto(file, folder) {
-  if (!isAdmin()) throw new Error(t("ui.nur_admins_duerfen_fotos_hochladen"));
+  if (!can(fotoRecht(folder))) throw new Error(t("ui.kein_recht_fotos_hochzuladen"));
   if (!file || !file.type.startsWith("image/")) {
     throw new Error(t("ui.bitte_eine_bilddatei_auswaehlen"));
   }
@@ -73,7 +80,7 @@ async function uploadPhoto(file, folder) {
 
 async function deletePhoto(path) {
   if (!path) return;
-  if (!isAdmin()) throw new Error(t("ui.nur_admins_duerfen_fotos_loeschen"));
+  if (!can(fotoRecht(path))) throw new Error(t("ui.kein_recht_fotos_zu_loeschen"));
   const client = getSupabaseClient();
   const { error } = await client.storage.from(BUCKET).remove([path]);
   if (error) throw new Error(error.message);

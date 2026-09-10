@@ -6,7 +6,7 @@ import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
-import { isAdmin } from "./auth.js";
+import { can } from "./auth.js";
 import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
@@ -347,9 +347,9 @@ async function handleSave() {
   if (pairsWith.length > 0) product.pairsWith = pairsWith;
   product.imagePath = editingImagePath || "";
 
-  // Mitarbeitende schreiben nicht direkt (RLS erlaubt nur Admins), sondern
-  // reichen den Vorschlag zur Prüfung ein.
-  if (!isAdmin()) {
+  // Ohne products.write wird nicht direkt geschrieben (die Policy lehnt es ab),
+  // sondern der Vorschlag zur Prüfung eingereicht.
+  if (!can("products.write")) {
     try {
       await submitChangeRequest("products", product);
       alert(t("ui.danke_dein_vorschlag_wurde_zur_pruefung_an_65b3"));
@@ -383,7 +383,7 @@ async function handleDelete() {
     return;
   }
 
-  if (!isAdmin()) {
+  if (!can("products.write")) {
     if (!confirm(`${t("ui.loeschung_von")}${editingOriginalName}${t("ui.zur_pruefung_vorschlagen")}`)) return;
     try {
       await submitChangeRequest("products", { name: editingOriginalName }, "delete");
@@ -635,8 +635,8 @@ function renderProductItem(product) {
       ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>${t("ui.verwendet_in")}</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
       <div class="actions">
-        <button type="button" class="btn-secondary edit-btn">${isAdmin() ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
-        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${isAdmin() ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
+        <button type="button" class="btn-secondary edit-btn">${can("products.write") ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
+        ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${can("products.write") ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
       </div>
     </div>
   `;
@@ -694,7 +694,7 @@ function renderProductItem(product) {
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      if (!isAdmin()) {
+      if (!can("products.write")) {
         if (!confirm(`${t("ui.loeschung_von")}${product.name}${t("ui.zur_pruefung_vorschlagen")}`)) return;
         try {
           await submitChangeRequest("products", { name: product.name }, "delete");
@@ -884,7 +884,7 @@ export function initProducts() {
     renderSidebarList();
   });
 
-  if (!isAdmin()) {
+  if (!can("products.write")) {
     document.getElementById("product-save").textContent = t("ui.vorschlag_einreichen");
     document.getElementById("product-delete").textContent = t("ui.loeschung_vorschlagen");
   }

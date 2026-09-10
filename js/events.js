@@ -7,7 +7,7 @@ import { parseAbv, alcoholMl } from "./abv.js";
 import { prefillPreparation } from "./preparations.js";
 import { printEventPlan } from "./printView.js";
 import { switchTab } from "./tabs.js";
-import { isAdmin, getCurrentUser } from "./auth.js";
+import { can, getCurrentUser } from "./auth.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { applyTranslations, formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
@@ -465,7 +465,7 @@ function eventHtml(ev) {
       <div class="prep-meta">${escapeHtml(details.join(" · "))}</div>
       <div class="actions no-print">
         <button type="button" class="btn-secondary event-open">${t("ui.laden")}</button>
-        ${isAdmin() ? `<button type="button" class="btn-secondary event-delete">${t("ui.loeschen")}</button>` : ""}
+        ${can("events.manage") ? `<button type="button" class="btn-secondary event-delete">${t("ui.loeschen")}</button>` : ""}
       </div>
     </div>`;
 }

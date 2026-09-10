@@ -3,7 +3,7 @@ import { loadLosses, saveLoss, deleteLoss, onLossesChanged } from "./storage.js"
 import { getAllProducts, getProduct } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
 import { ingredientCost } from "./costing.js";
-import { isAdmin, getCurrentUser } from "./auth.js";
+import { can, getCurrentUser } from "./auth.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 
 // Schwund-, Bruch- und Verkostungsbuch.
@@ -366,7 +366,7 @@ function renderList() {
   const losses = gefilterte();
   const produkte = getAllProducts();
   const nutzer = getCurrentUser();
-  const admin = isAdmin();
+  const admin = can("losses.manage");
   renderSummary(losses);
   listEl.innerHTML = losses.length
     ? losses

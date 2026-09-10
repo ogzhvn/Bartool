@@ -18,7 +18,7 @@ import { initLosses } from "./losses.js";
 import { initReporting } from "./reporting.js";
 import { initChecklists } from "./checklists.js";
 import { initProductImport } from "./productImport.js";
-import { initAdminSections } from "./adminSections.js";
+import { initAdminSections, ADMIN_AREA_PERMISSIONS } from "./adminSections.js";
 import { initQuickSearch } from "./quickSearch.js";
 import { initMyChangeRequests } from "./changeRequests.js";
 import {
@@ -33,7 +33,17 @@ import {
   initChecklistRunSync,
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
-import { initAuth, onAuthChange, signIn, signOut, isAdmin, changePassword, completeFirstLogin } from "./auth.js";
+import {
+  initAuth,
+  onAuthChange,
+  signIn,
+  signOut,
+  isAdmin,
+  can,
+  canAny,
+  changePassword,
+  completeFirstLogin,
+} from "./auth.js";
 import { loadRoles, roleLabel } from "./roles.js";
 import { t, initI18n, onLanguageChanged } from "./i18n.js";
 import { initLanguageSwitcher, applyProfileLanguage } from "./language.js";
@@ -67,10 +77,26 @@ let currentAuthState = { session: null, profile: null };
 let lastActivityAt = Date.now();
 let sessionTimeoutIntervalId = null;
 
+// Sichtbarkeit nach Rechten (Paket 36). Drei Marker am Element:
+//   data-admin-only        – nur oberste Ebene (Rang >= 100)
+//   data-perm="x.y"        – nur mit diesem Recht
+//   data-perm-any="a,b"    – mit mindestens einem der Rechte
+// Das ist bewusst reine Kosmetik: verboten wird in den Policies, hier wird
+// nur weggeräumt, was das Konto ohnehin nicht darf.
 function applyRoleVisibility() {
   const admin = isAdmin();
   document.querySelectorAll("[data-admin-only]").forEach((el) => {
     el.hidden = !admin;
+  });
+  document.querySelectorAll("[data-perm]").forEach((el) => {
+    el.hidden = !can(el.dataset.perm);
+  });
+  document.querySelectorAll("[data-perm-any]").forEach((el) => {
+    const rechte = el.dataset.permAny
+      .split(",")
+      .map((eintrag) => eintrag.trim())
+      .filter(Boolean);
+    el.hidden = !canAny(rechte.length > 0 ? rechte : ADMIN_AREA_PERMISSIONS);
   });
 }
 

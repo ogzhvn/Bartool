@@ -9,7 +9,7 @@ import {
 } from "./storage.js";
 import { getAllProducts } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
-import { isAdmin, getCurrentUser } from "./auth.js";
+import { can, getCurrentUser } from "./auth.js";
 import { switchTab } from "./tabs.js";
 import { openBuildableForCount } from "./buildable.js";
 import { verlusteImZeitraum } from "./losses.js";
@@ -113,7 +113,7 @@ function renderCountList() {
         <p class="prep-meta">${t("ui.zaehldatum")} ${formatDate(z.countedOn)}${z.note ? " · " + escapeHtml(z.note) : ""}</p>
         <div class="actions">
           <button type="button" class="btn-secondary inv-open">${z.status === "abgeschlossen" ? t("ui.ansehen") : t("ui.weiterzaehlen")}</button>
-          ${isAdmin() ? `<button type="button" class="btn-secondary inv-delete">${t("ui.loeschen")}</button>` : ""}
+          ${can("inventory.manage") ? `<button type="button" class="btn-secondary inv-delete">${t("ui.loeschen")}</button>` : ""}
         </div>
       </div>`
     )
