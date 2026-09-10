@@ -94,8 +94,9 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 ## 1. Fortschritt
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
-vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die
-Pakete 34, 35 und 36 erledigt, 37 und 38 sind offen. Es gelten weiter die Spielregeln aus Kapitel 0:
+vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die Pakete 34–37
+erledigt, 38 ist offen. Runde 6 (39–46, geplant am 10.09.2026) ist komplett offen und hängt
+nicht an Paket 38 – wer hier neu anfängt, kann direkt mit **Paket 39** beginnen. Es gelten weiter die Spielregeln aus Kapitel 0:
 ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
 `erledigt` setzen und mitcommitten.
 
@@ -181,6 +182,30 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 | 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5, hoher Denkaufwand |
 | 37 | Reporting unter Admin + Betrieb & Team | erledigt | Sonnet 5, mittlerer Denkaufwand |
 | 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
+
+### Runde 6 – Quiz-Ausbau (geplant am 10.09.2026)
+
+Hängt nicht an Paket 38 – die Kontenverwaltung und der Quiz-Ausbau berühren sich nicht.
+Reihenfolge innerhalb der Runde: 39 zuerst, weil es den Themenschnitt und die Rundenbalancierung
+setzt, auf denen 42 und 43 aufbauen. 40 vor 41, sonst wird die Rangliste zweimal gebaut – einmal
+ohne und einmal mit Sichtbarkeitsregel. 42 vor 43, sonst wird über einen Fragenpool kalibriert,
+der sich gleich darauf ändert. 44–46 hängen an keinem anderen Paket und können jederzeit
+dazwischen, sobald die Quellen für die Produktdaten vorliegen.
+
+Es gilt weiter, was schon für Runde 5 galt: alle neuen Beschriftungen über `data-i18n` bzw.
+`t()`, Schlüssel in `js/i18n/de.js` **und** `js/i18n/en.js`, Module mit JS-Rendering hängen sich
+an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 39 | Wein und Direktprodukte ins Quiz | offen | Opus 5, mittlerer Denkaufwand |
+| 40 | Sichtbarkeit in Heatmap und Rangliste | offen | Opus 5, hoher Denkaufwand |
+| 41 | Rangliste im Quiz | offen | Opus 5, mittlerer Denkaufwand |
+| 42 | Fragen ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
+| 43 | Schwierigkeitsranking der Fragen | offen | Opus 5, hoher Denkaufwand |
+| 44 | Datenpflege: Bier und Mixer & Softdrink | offen | Opus 5, mittlerer Denkaufwand |
+| 45 | Datenpflege: Sirup, Saft, Fruchtpüree | offen | Opus 5, mittlerer Denkaufwand |
+| 46 | Datenpflege: Tee & Kaffee, Sonstiges | offen | Opus 5, mittlerer Denkaufwand |
 
 ---
 
@@ -2011,6 +2036,518 @@ mitnehmen.
 - [ ] `supabase/schema.sql` bildet die neuen Spalten ab.
 
 **Commit:** `Kontenverwaltung: Passwort-Reset, Deaktivieren, letzte Anmeldung, Papierkorb`
+
+---
+
+# Paket 39 – Wein und Direktprodukte ins Quiz
+
+**Abhängigkeit:** keine. Erstes Paket der Runde 6.
+**Ziel:** Wein, Schaumwein, Tequila/Mezcal und Absinth erscheinen im Quiz, die Themenliste
+bleibt bedienbar, und eine Schnellrunde wird nicht von Wein überschwemmt.
+
+**Ausgangslage (gemessen am 10.09.2026, in der Session nachmessen statt glauben):** Der Generator
+filtert in `gepruefteProdukte()` auf `verified === true`. Wein (76 Produkte) ist seit Paket 25
+vollständig gepflegt – ABV, Land, Region, Rebsorte (73), Erzeuger, Süße, Ausbau (73),
+Jahrgang (62), Serviertemperatur, Food-Pairing, Klassifikation, Körper, Service, Quick Pitch –
+steht aber komplett auf `verified = false` und ist deshalb im Quiz unsichtbar. Schaumwein:
+15 gepflegt, 3 verifiziert. Tequila & Mezcal (3) und Absinth (1): gepflegt, nicht verifiziert.
+`sub_group` ist bei Wein gesetzt: Rotwein 37, Weißwein 34, Roséwein 5.
+
+**Dateien:** geändert `js/quizGenerator.js`, `js/quizStats.js`, `js/quiz.js`, `js/i18n/de.js`,
+`js/i18n/en.js`, `js/productsData.js` (nur das `verified`-Flag, per Skript), `sw.js`.
+Keine Schemaänderung.
+
+**Schritte**
+1. Zahlen neu messen: `select group_name, count(*), count(*) filter (where verified) from products group by 1`.
+2. Verifizieren, mit Schutzbedingung gegen halb gepflegte Zeilen:
+   `update products set verified = true, verified_at = now() where group_name in ('Wein','Schaumwein','Tequila & Mezcal','Absinth') and abv_value is not null and coalesce(origin_country,'') <> '';`
+   Die alkoholfreien Alternativen (`sub_group = 'Alkoholfreie Alternative'`, 2 Zeilen) fallen
+   dadurch heraus – so gewollt, ein alkoholfreier Sekt gehört nicht in eine ABV-Frage.
+   Danach `verified: true` in `js/productsData.js` per Skript nachziehen (Regel 7: DB ist führend,
+   die statische Datei darf nicht divergieren). Keine hundert Einzel-Edits.
+3. Themenschnitt: neue Funktion `quizThema(product)` in `js/quizGenerator.js`. Hat ein Produkt
+   eine `sub_group`, ist **sie** das Thema (Rotwein, Weißwein, Roséwein), sonst die Gruppe.
+   Ablenker kommen aus derselben Themen-Einheit – sonst konkurriert ein Rotwein gegen Rosé.
+   Ohne diesen Schritt steht in der Themenliste ein Eintrag „Wein" mit mehreren hundert Fragen.
+4. Neue Fragetypen über das vorhandene `feldFragen()`-Gerüst, ein `keyPrefix` je Feld:
+   `grape` (`grapeVariety`), `region` (`region`), `producer` (`producer`), `sweet` (`sweetness`),
+   `aging` (`aging`), `temp` (`servingTemp`), `class` (`classification`), `body` (`body`).
+   Die Fragetexte laufen über `t()` mit Platzhalter, nicht als deutsche Template-Strings –
+   `js/quizGenerator.js` ist seit Paket 32 zweisprachig.
+5. Jahrgang (`vintage`) nur mit Bremse: Ablenker wären sonst benachbarte Jahreszahlen und die
+   Frage rät sich von selbst. Erst erzeugen, wenn die Themen-Einheit mindestens vier
+   verschiedene Jahrgänge hat, und mit `difficulty: 3`.
+6. Food-Pairing (`foodPairing`) erst nach Sichtprüfung: die Texte sind teils lange Sätze und
+   taugen dann nicht als Antwortoption. Passen sie in eine Zeile, als eigener Typ; sonst in
+   diesem Paket weglassen und im Commit vermerken.
+7. **Balancierung** in `waehleFragen()` (`js/quizStats.js`): neuer Parameter `maxProThema`,
+   Vorgabe `Math.max(2, Math.ceil(anzahl / 4))`. Bei einer Themenrunde (`topic` gesetzt) greift
+   die Grenze nicht. Ohne diesen Schritt besteht eine Schnellrunde nach dem Wein-Import
+   überwiegend aus Wein – der Pool wächst grob um das Zwei- bis Dreifache.
+8. Themen-Select in `js/quiz.js` bei mehr als zwölf Themen nach Oberkategorie in `<optgroup>`
+   gruppieren, sonst wird die Liste hinterm Tresen unbedienbar.
+9. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Themenliste enthält Rotwein, Weißwein und Roséwein mit plausibler Fragenzahl; kein Thema mit mehreren hundert Fragen.
+- [ ] Zehn Schnellrunden hintereinander: kein Thema stellt mehr als ein Viertel der Fragen.
+- [ ] Bei einer Rotwein-Frage sind alle Ablenker Rotweine.
+- [ ] Eine Jahrgangsfrage erscheint nur dort, wo es echte Alternativen gibt.
+- [ ] Kein Produkt steht auf `verified = true` ohne Herkunftsland und ABV.
+- [ ] `js/productsData.js` und die DB stimmen im `verified`-Flag überein (Stichprobe von fünf Weinen).
+- [ ] Auf EN umgeschaltet: kein deutscher Fragetext, keine leere Beschriftung.
+
+**Commit:** `Quiz: Wein und Direktprodukte als Fragenquelle`
+
+**Modell:** Opus 5, mittlerer Denkaufwand – drei Module gleichzeitig plus eine Massendatenänderung
+in DB und statischer Datei. Kein Schema-Umbau, deshalb nicht „hoch".
+
+**Startprompt fürs neue Fenster**
+```
+Paket 39 aus docs/AUSBAUPLAN.md: Wein und Direktprodukte ins Quiz. Lies dort erst Kapitel 0
+(Spielregeln) und das Paket, dann arbeite es ab.
+
+Kern: js/quizGenerator.js filtert auf verified === true. Wein (76) und Schaumwein (15) sind in
+der Supabase-DB (Projekt hwahjjihajgajcnzngwv) seit Paket 25 vollständig gepflegt, stehen aber
+auf verified = false und tauchen deshalb im Quiz nicht auf. Tequila & Mezcal (3) und Absinth (1)
+ebenso. sub_group ist bei Wein gesetzt: Rotwein/Weißwein/Roséwein.
+
+Zu tun: (1) diese Gruppen per SQL verifizieren, aber nur Zeilen mit abv_value und
+origin_country – die zwei alkoholfreien Schaumwein-Alternativen bleiben bewusst draußen;
+das verified-Flag danach per Skript in js/productsData.js nachziehen. (2) Themenschnitt auf
+sub_group umstellen, Ablenker aus derselben Untergruppe. (3) Neue Fragetypen für Rebsorte,
+Region, Erzeuger, Süße, Ausbau, Serviertemperatur, Klassifikation, Körper über das vorhandene
+feldFragen()-Gerüst. (4) Jahrgang nur bei mindestens vier verschiedenen Jahrgängen je
+Untergruppe. (5) waehleFragen() in js/quizStats.js bekommt eine Obergrenze pro Thema je Runde.
+
+Alle neuen Fragetexte laufen über t() mit Platzhaltern und gehören in js/i18n/de.js UND
+js/i18n/en.js (Regel 11) – der Generator ist seit Paket 32 zweisprachig.
+
+Nicht anfassen: Datenpflege der alkoholfreien Gruppen (Pakete 44–46), Rangliste und
+Sichtbarkeitslogik (Pakete 40–41), Dark Theme und Layout-Grundgerüst.
+```
+
+---
+
+# Paket 40 – Sichtbarkeit in Heatmap und Rangliste
+
+**Abhängigkeit:** keine, aber zwingend vor Paket 41 – sonst wird die Rangliste zweimal gebaut.
+**Ziel:** Die Barleitung taucht in den Team-Auswertungen standardmäßig nicht auf, und für jede
+Person lässt sich das einzeln umschalten.
+
+**Ausgangslage:** Das Rollen- und Rechtemodell aus den Paketen 35/36 ist fertig und wird hier
+**nur benutzt, nicht angefasst**: `public.roles` (`key`, `label`, `rank`) mit admin 100,
+barchef 80, stellv_barchef 60, barkeeper 40, azubi 20; `public.permissions` und
+`public.role_permissions`; `private.my_rank()`, `private.role_rank(text)`,
+`private.has_permission(text)`, `private.is_admin()` (= Rang ≥ 100). Im Frontend
+`can()`, `canAny()`, `myRank()`, `isAdmin()` aus `js/auth.js`. Das Quiz-Reporting liegt seit
+Paket 37 in `js/adminReports.js` (Aufrufe von `quiz_team_overview()` und
+`quiz_topic_heatmap()` um Zeile 764), die Fragenpflege in `js/adminQuiz.js`.
+
+**Entscheidung zur Standardregel:** Ausgeblendet wird nach **Rang ≥ 60**, nicht nach dem Recht
+`reports.view`. Beides trifft heute dieselben drei Rollen, aber der Rang ist der stabilere Anker:
+ein Recht kann in der Rechte-Matrix einzeln vergeben werden, ohne dass jemand damit auch die
+Rangfolge verschieben will – ein Barkeeper, der Auswertungen sehen darf, soll trotzdem in der
+Rangliste stehen.
+
+**Dateien:** neu eine Migration; geändert `supabase/schema.sql`, `js/adminUsers.js`,
+`js/adminReports.js`, `index.html`, `js/i18n/de.js`, `js/i18n/en.js`, `css/styles.css`, `sw.js`
+
+**Schritte**
+1. Migration: `alter table public.profiles add column if not exists quiz_visible boolean;`
+   Bewusst **nullable**. `NULL` heißt „richte dich nach der Rolle", `true`/`false` ist die
+   Übersteuerung von Hand. Vorteil: Wer befördert wird, verschwindet automatisch aus der
+   Auswertung, ohne dass jemand daran denken muss.
+2. Helferfunktion `private.quiz_sichtbar(p_role text, p_flag boolean)`:
+   `select coalesce(p_flag, private.role_rank(p_role) < 60)`.
+3. `quiz_topic_heatmap()` filtert die Versuche darüber – ausgeblendete Personen fließen gar
+   nicht erst in die Themenzahlen ein, nicht nur „werden nicht angezeigt".
+4. `quiz_team_overview()` bleibt vollständig: das ist die Verwaltungssicht und listet Personen,
+   keine Aggregate über alle. Ausgeblendete Zeilen bekommen dort ein Kennzeichen.
+5. Der Umschalter gehört in die Kontenverwaltung (`js/adminUsers.js`), nicht ins Reporting:
+   ein `<select>` mit drei Zuständen – „Rolle (Standard)" (`""` → `NULL`), „sichtbar" (`true`),
+   „ausgeblendet" (`false`). Beschriftungen über `data-i18n`/`t()` in beiden Sprachdateien.
+6. RLS: `quiz_visible` darf nur schreiben, wer `users.manage` hat. Die Sichtbarkeit ist eine
+   Entscheidung der Barleitung, kein Selbstbedienungsschalter – sonst blendet sich jeder aus,
+   sobald die Quote unangenehm wird. Die Update-Policy auf `profiles` entsprechend erweitern.
+7. `supabase/schema.sql` nachziehen: neue Spalte, neue Funktion, geänderte RPCs.
+8. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Ein frisch angelegter Barkeeper taucht ohne Zutun in der Heatmap auf.
+- [ ] Ein Konto auf `barchef` verschwindet aus der Heatmap, ohne dass jemand einen Schalter anfasst.
+- [ ] „sichtbar" holt die Barleitung zurück, „ausgeblendet" nimmt einen Barkeeper heraus.
+- [ ] Ein Konto ohne `users.manage` kann `quiz_visible` nicht setzen – per REST mit einem Barkeeper-Token gegengeprüft.
+- [ ] Ein Barkeeper mit zusätzlichem Recht `reports.view` bleibt in der Auswertung sichtbar.
+- [ ] `supabase/schema.sql` beschreibt den Ist-Stand.
+- [ ] Auf EN umgeschaltet: alle drei Zustände des Umschalters lesbar.
+
+**Commit:** `Quiz-Auswertung: Sichtbarkeit pro Person und Rolle`
+
+**Modell:** Opus 5, hoher Denkaufwand – Schema, RLS und zwei SECURITY-DEFINER-Funktionen.
+Ein Fehler kostet hier entweder Datenschutz oder eine falsch gesperrte Kontenverwaltung.
+
+**Startprompt fürs neue Fenster**
+```
+Paket 40 aus docs/AUSBAUPLAN.md: Sichtbarkeit in Heatmap und Rangliste. Lies dort erst Kapitel 0
+(Spielregeln) und das Paket, dann arbeite es ab.
+
+Das Rollen- und Rechtemodell aus den Paketen 35/36 wird hier nur benutzt, nicht angefasst:
+public.roles (admin 100, barchef 80, stellv_barchef 60, barkeeper 40, azubi 20),
+public.permissions/role_permissions, private.my_rank(), private.role_rank(text),
+private.has_permission(text), private.is_admin(). Im Frontend can()/canAny()/myRank() aus
+js/auth.js. Quiz-Reporting liegt in js/adminReports.js (RPC-Aufrufe um Zeile 764),
+Kontenverwaltung in js/adminUsers.js. Supabase-Projekt hwahjjihajgajcnzngwv.
+
+Zu tun: profiles.quiz_visible als nullable boolean (NULL = Rollen-Default über
+private.role_rank(role) < 60), Helferfunktion private.quiz_sichtbar(), quiz_topic_heatmap()
+filtert darüber (ausgeblendete Versuche fließen gar nicht erst ein), quiz_team_overview() bleibt
+vollständig und kennzeichnet ausgeblendete Zeilen, Dreizustands-Umschalter in der
+Kontenverwaltung, schreibbar nur mit dem Recht users.manage, schema.sql nachziehen.
+
+Entscheidung, die feststeht: Der Default hängt am Rang (>= 60), nicht am Recht reports.view –
+ein Barkeeper, der Auswertungen sehen darf, soll trotzdem in der Rangliste stehen.
+
+Alle neuen Beschriftungen über data-i18n/t() in js/i18n/de.js UND js/i18n/en.js (Regel 11).
+
+Nicht anfassen: die Rangliste selbst (Paket 41), die Rechte-Matrix, den Fragen-Generator,
+Dark Theme und Layout-Grundgerüst.
+```
+
+---
+
+# Paket 41 – Rangliste im Quiz
+
+**Abhängigkeit:** Paket 40 zwingend – die Rangliste muss die Sichtbarkeitsregel von Anfang an kennen.
+**Ziel:** Wer hat wie viel gelöst und wie viel davon richtig. Sichtbar für alle, weil der
+Motivationseffekt sonst verpufft.
+
+**Entscheidung des Nutzers (10.09.2026):** Die Rangliste steht im Quiz-Tab für jeden eingeloggten
+Nutzer, nicht nur im Adminbereich. Sie ist damit die erste Team-Auswertung ohne `reports.view` –
+genau deshalb gibt sie nur Summen je Person heraus.
+
+**Dateien:** neu eine Migration; geändert `supabase/schema.sql`, `js/quizStats.js`, `js/quiz.js`,
+`js/adminReports.js`, `index.html`, `js/i18n/de.js`, `js/i18n/en.js`, `css/styles.css`, `sw.js`
+
+**Schritte**
+1. RPC `quiz_leaderboard(p_zeitraum text default 'gesamt')` mit `'gesamt' | '30tage' | 'monat'`.
+   `security definer`, ausführbar für alle `authenticated` – **kein** Rechte-Gate, sonst sieht das
+   Team nichts. Die `select`-Policy auf `quiz_attempts` bleibt unangetastet: einzelne Antworten
+   bleiben privat, auch für Admins.
+2. Rückgabe je Person: `user_id`, `display_name`, `attempts`, `correct`, `accuracy`, `rounds`,
+   `last_answered_at`, `ist_selbst`. Gefiltert über `private.quiz_sichtbar()`, **plus** immer die
+   eigene Zeile – sonst sieht die ausgeblendete Barleitung ihren eigenen Stand nirgends.
+3. Quotenrang erst ab 20 Versuchen im Zeitraum. Darunter läuft die Person in den absoluten Zahlen
+   mit, bekommt aber keinen Quotenplatz – sonst gewinnt, wer drei Fragen richtig hatte.
+4. Anzeigename: `display_name`, ersatzweise `username`. **Nie die E-Mail** – die Liste sehen alle.
+5. Frontend: Tabelle im Quiz-Tab unter der eigenen Auswertung. Drei Sortierungen (beantwortet /
+   richtig / Quote), Vorgabe „richtig". Zeitraum als Chip-Reihe. Die eigene Zeile ist immer
+   hervorgehoben und wird angehängt, wenn sie außerhalb der ersten zehn liegt.
+6. Gleichstände: gleiche Zahl → gleicher Rang, danach Lücke (1, 2, 2, 4).
+7. Rechnen (Rangvergabe, Gleichstände) in `js/quizStats.js`, Anzeige in `js/quiz.js` – dieselbe
+   Trennung wie bisher, damit die Logik prüfbar bleibt.
+8. Im Reporting (`js/adminReports.js`) dieselbe RPC unter der Team-Übersicht wiederverwenden,
+   kein zweites Rendering.
+9. Datum und Zahlen über `formatDate`/`formatDecimal` aus `js/i18n.js`, nie von Hand.
+10. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Ein Barkeeper ohne `reports.view` sieht die Rangliste.
+- [ ] Ausgeblendete Personen fehlen in der Liste, sehen sich selbst aber mit eigenem Rang.
+- [ ] Keine E-Mail-Adresse im DOM – in den Devtools gegengeprüft.
+- [ ] Umschalten auf „30 Tage" ändert die Reihenfolge nachvollziehbar.
+- [ ] Wer fünf Fragen beantwortet hat, steht nicht mit 100 % auf Platz 1.
+- [ ] Auf 400 px Breite lesbar, ohne horizontale Scrollleiste.
+- [ ] Kein Aufruf gibt einzelne Antworten heraus (RPC-Rückgabe geprüft).
+- [ ] Auf EN umgeschaltet: Spaltenköpfe, Zeitraum-Chips und Datumsangaben stimmen.
+
+**Commit:** `Quiz: Rangliste für das Team`
+
+**Modell:** Opus 5, mittlerer Denkaufwand – eine RPC mit Sichtbarkeitsregel, Zeitfenster und
+Rängen in einem Statement, der Rest ist Anzeige nach vorhandenem Muster.
+
+**Startprompt fürs neue Fenster**
+```
+Paket 41 aus docs/AUSBAUPLAN.md: Rangliste im Quiz. Lies dort erst Kapitel 0 (Spielregeln) und
+das Paket, dann arbeite es ab. Paket 40 muss erledigt sein – die Rangliste baut auf
+private.quiz_sichtbar() und profiles.quiz_visible auf.
+
+Entscheidungen, die feststehen: Die Rangliste steht im Quiz-Tab für alle eingeloggten Nutzer,
+nicht nur im Adminbereich – sie ist die erste Team-Auswertung ohne das Recht reports.view und
+gibt deshalb nur Summen je Person heraus. Neue RPC quiz_leaderboard(p_zeitraum) mit
+gesamt/30tage/monat, security definer, ausführbar für alle authenticated. Gefiltert über die
+Sichtbarkeitsregel, aber die eigene Zeile kommt immer mit. Quotenrang erst ab 20 Versuchen.
+Anzeigename display_name, Fallback username, niemals E-Mail. Gleichstände teilen sich den Rang.
+Rechnen in js/quizStats.js, Anzeige in js/quiz.js, Wiederverwendung im Reporting
+(js/adminReports.js). Supabase-Projekt hwahjjihajgajcnzngwv.
+
+Beschriftungen über data-i18n/t() in beiden Sprachdateien, Datum und Zahlen über
+formatDate/formatDecimal aus js/i18n.js (Regel 11).
+
+Nicht anfassen: die select-Policy auf quiz_attempts (einzelne Antworten bleiben privat, auch für
+Admins), den Fragen-Generator, Dark Theme und Layout-Grundgerüst.
+```
+
+---
+
+# Paket 42 – Fragen ausbauen
+
+**Abhängigkeit:** Paket 39 (Themenschnitt und Balancierung müssen stehen, sonst kippt die
+Verteilung mit jedem neuen Fragetyp weiter).
+**Ziel:** Deutlich mehr Fragetypen aus Feldern, die schon gepflegt sind – ohne einen einzigen
+neuen Datenbestand.
+
+**Dateien:** geändert `js/quizGenerator.js`, `js/quizStats.js`, `js/i18n/de.js`,
+`js/i18n/en.js`, `sw.js`
+
+**Schritte**
+1. Weitere Produktfelder als Fragetypen: `service`, `allergens`, `ageStatement`, `originRegion`,
+   `pairsWith`. Alle über `feldFragen()`, alle mit eigenem `keyPrefix`.
+2. Vergleichsfrage: „Welches dieser Produkte hat den höchsten Alkoholgehalt?" – vier Produkte
+   einer Themen-Einheit, nach `abvValue` sortiert. Nur bilden, wenn der Abstand zwischen Platz 1
+   und 2 mindestens 2 % vol beträgt, sonst ist die Frage unfair.
+3. Zuordnungsfrage: „Zu welcher Gruppe gehört …?" mit den echten Gruppennamen als Ablenkern.
+4. `zutatenFragen()` fragt heute nur die **erste** Zutat je Rezept – das sind bei 163 Rezepten
+   163 Fragen. Auf alle Zutaten ausweiten, `key` wird `gen:ingredient:<Rezept>:<Zutat>`.
+   Der bisherige Key `gen:ingredient:<Rezept>` verschwindet damit; das ist in Ordnung, die alten
+   Versuche zählen weiter in der Gesamtstatistik, nur die Wiederholungslogik verliert sie.
+   Im Commit vermerken.
+5. Neues Rezeptfeld: `ice` („Auf welchem Eis wird … serviert?").
+6. Negativfrage: „Welche Zutat gehört **nicht** in einen …?" – die falsche Antwort ist eine Zutat
+   aus einem anderen Drink derselben Kategorie, die drei richtigen sind echte Zutaten des Drinks.
+   Achtung: hier sind die Rollen von richtiger Antwort und Ablenkern vertauscht, das
+   `baueFrage()`-Gerüst passt nicht ohne Anpassung.
+7. Umkehrfrage: „In welchem Drink ist …?" – gesucht ist der Drink, gegeben eine markante Zutat.
+   Nur mit Zutaten, die in genau einem Rezept der Kategorie vorkommen, sonst gibt es zwei
+   richtige Antworten.
+8. Mengenfrage: „Wie viel … kommt in einen …?" aus `ingredients[].amount` und `unit`. Ablenker
+   sind benachbarte Standardmengen (2, 3, 4, 5 cl), **nicht** Werte aus anderen Rezepten – ein
+   geschlossenes Vokabular, kein erfundener Produktwert.
+9. `history` bleibt vorerst außen vor: 350–500 Zeichen Freitext lassen sich nicht verlässlich zu
+   einer Frage parsen. Einzige Ausnahme, wenn sie sauber läuft: eine Jahresfrage, wenn im Text
+   genau eine Jahreszahl `\b(1[89]|20)\d{2}\b` steht. Bei mehr als einer: überspringen.
+10. Nach jedem neuen Typ die Verteilung prüfen: `listGeneratedTopics()` ausgeben und sehen, ob
+    ein Thema davonläuft.
+11. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Der Pool wächst messbar (Zahl vorher/nachher im Commit festhalten).
+- [ ] Keine Frage mit zwei richtigen Antworten – Negativ- und Umkehrfragen je zehnmal stichprobenartig geprüft.
+- [ ] Die Mengenfrage nennt nie eine Menge, die es im Rezept nicht gibt.
+- [ ] Kein Thema stellt nach dem Ausbau mehr als ein Viertel einer Schnellrunde.
+- [ ] Zwanzig Fragen am Stück durchgeklickt, ohne dass eine Option leer oder abgeschnitten ist.
+- [ ] Auf EN umgeschaltet: jeder neue Fragetyp hat einen englischen Text.
+
+**Commit:** `Quiz: neue Fragetypen aus Produkt- und Rezeptfeldern`
+
+**Modell:** Sonnet 5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest
+ausschließlich vorhandene Daten. Nur die Schritte 6 und 7 brechen aus dem `baueFrage()`-Muster
+aus; hakt es dort, für dieses Teilstück auf Opus 5 wechseln.
+
+**Startprompt fürs neue Fenster**
+```
+Paket 42 aus docs/AUSBAUPLAN.md: Fragen ausbauen. Lies dort erst Kapitel 0 (Spielregeln) und das
+Paket, dann arbeite es ab. Paket 39 muss erledigt sein.
+
+Kern: js/quizGenerator.js hat heute neun Fragetypen, alle über das Gerüst feldFragen() bzw.
+baueFrage(). Dazu kommen: service, allergens, ageStatement, originRegion, pairsWith als
+Feldfragen; eine Vergleichsfrage nach Alkoholgehalt; eine Gruppenzuordnung; bei Rezepten das
+Feld ice, eine Negativfrage ("Welche Zutat gehört nicht rein?"), eine Umkehrfrage ("In welchem
+Drink ist X?") und eine Mengenfrage aus ingredients[].amount.
+
+Wichtig: zutatenFragen() fragt bisher nur die erste Zutat je Rezept – auf alle Zutaten ausweiten,
+key wird gen:ingredient:<Rezept>:<Zutat>. Negativ- und Umkehrfrage passen nicht ohne Anpassung
+ins baueFrage()-Gerüst, weil dort die Rollen von richtiger Antwort und Ablenkern vertauscht sind.
+Umkehrfragen nur mit Zutaten, die in genau einem Rezept der Kategorie vorkommen, sonst gibt es
+zwei richtige Antworten. Mengen-Ablenker sind benachbarte Standardmengen, nicht Werte aus anderen
+Rezepten. Das Feld history bleibt außen vor (Freitext, nicht verlässlich parsebar).
+
+Alle Fragetexte über t() mit Platzhaltern, Schlüssel in js/i18n/de.js UND js/i18n/en.js (Regel 11).
+
+Nicht anfassen: das Schwierigkeitsranking (Paket 43), Rangliste und Sichtbarkeit (40–41),
+Dark Theme und Layout-Grundgerüst.
+```
+
+---
+
+# Paket 43 – Schwierigkeitsranking der Fragen
+
+**Abhängigkeit:** Pakete 40 (Sichtbarkeitsregel) und 42 (sonst wird über einen Pool kalibriert,
+der sich gleich darauf ändert).
+**Ziel:** Nicht mehr raten, welche Frage schwer ist, sondern es messen – und das Ergebnis für
+Runden und Teammeeting nutzen.
+
+**Ausgangslage:** `difficulty` wird vom Generator pauschal je Fragetyp gesetzt (1, 2 oder 3) und
+danach **nirgends ausgewertet**. Der Wert ist heute reine Dekoration.
+
+**Dateien:** neu eine Migration; geändert `supabase/schema.sql`, `js/quizGenerator.js`,
+`js/quizStats.js`, `js/quiz.js`, `js/adminReports.js`, `index.html`, `js/i18n/de.js`,
+`js/i18n/en.js`, `css/styles.css`, `sw.js`
+
+**Schritte**
+1. RPC `quiz_question_difficulty()`: je `question_key` Versuche, richtig, Quote und Zahl der
+   Lernenden, über alle sichtbaren Personen (`private.quiz_sichtbar()`, wie die Heatmap).
+   Aufsteigend nach Quote – oben stehen die Fragen, an denen das Team scheitert.
+   Lesbar mit dem Recht `reports.view`.
+2. Zwei Schwellen, beide nötig: mindestens 10 Versuche **und** mindestens 3 verschiedene
+   Lernende. Ein Aggregat aus zehn Versuchen einer einzigen Person ist faktisch personenbezogen –
+   genau das, was die Auswertung nicht herausgeben soll.
+3. **Kalibrierung:** Der Generator ersetzt seinen Vorgabewert durch die Messung, wo genug Daten
+   da sind: ab 75 % richtig → `difficulty 1`, 45–74 % → `2`, unter 45 % → `3`. Unter den Schwellen
+   aus Schritt 2 bleibt der Vorgabewert stehen.
+4. Die Messwerte einmal beim Öffnen des Quiz-Tabs laden und cachen, **nicht** pro Runde – sonst
+   hängt jeder Rundenstart an einem Netzaufruf.
+5. Neuer Modus „Harte Fragen" neben Schnellrunde und Prüfungsmodus: zieht nur aus `difficulty 3`.
+   Die Themenrunde bekommt zusätzlich einen Schwierigkeitsfilter.
+6. Im Reporting (`js/adminReports.js`) unter der Heatmap eine Liste „Fragen, an denen es hakt" –
+   dieselbe Balkenoptik wie `quiz-quota-row`.
+7. **Knackpunkt:** `quiz_attempts` speichert nur `question_key`, nicht den Fragetext. Für
+   generierte Fragen (`gen:abv:<Produktname>`) muss das Frontend den Text aus dem aktuellen Pool
+   rekonstruieren. Keys ohne Treffer – Produkt umbenannt oder gelöscht – werden mit dem Key als
+   Ersatzbeschriftung und einem Hinweis angezeigt, nicht stillschweigend weggelassen: sonst
+   wundert sich die Barleitung über fehlende Zeilen.
+8. `CACHE` in `sw.js` hochzählen.
+
+**Abnahme**
+- [ ] Eine Frage, die im Test dreimal von drei Personen falsch beantwortet wurde, steht oben in der Liste.
+- [ ] Eine Frage mit 10 Versuchen von nur einer Person taucht **nicht** auf.
+- [ ] Der Modus „Harte Fragen" liefert nachweislich nur `difficulty 3`.
+- [ ] Ein Rundenstart macht keinen zusätzlichen Netzaufruf (Netzwerk-Tab).
+- [ ] Ein Key ohne passende Frage im Pool wird angezeigt, nicht verschluckt.
+- [ ] Ohne Netz läuft das Quiz weiter, nur ohne Kalibrierung.
+- [ ] Auf EN umgeschaltet: Modusname und Listenüberschrift stimmen.
+
+**Commit:** `Quiz: gemessene Schwierigkeit je Frage`
+
+**Modell:** Opus 5, hoher Denkaufwand – RPC mit zwei Schutzschwellen, eine Kalibrierung, die in
+den Generator zurückgreift, und die Key-zu-Text-Rekonstruktion. Drei Stellen, an denen ein
+falscher Kurzschluss lange unbemerkt bleibt.
+
+**Startprompt fürs neue Fenster**
+```
+Paket 43 aus docs/AUSBAUPLAN.md: Schwierigkeitsranking der Fragen. Lies dort erst Kapitel 0
+(Spielregeln) und das Paket, dann arbeite es ab. Pakete 40 und 42 müssen erledigt sein.
+
+Kern: difficulty wird in js/quizGenerator.js pauschal je Fragetyp gesetzt und nirgends
+ausgewertet. Neue RPC quiz_question_difficulty() misst je question_key Versuche, richtig, Quote
+und Zahl der Lernenden über alle sichtbaren Personen (private.quiz_sichtbar(), wie die Heatmap),
+lesbar mit dem Recht reports.view. Zwei Schwellen: mindestens 10 Versuche UND mindestens 3
+verschiedene Lernende – ein Aggregat aus einer Person ist faktisch personenbezogen.
+Kalibrierung: ab 75 % richtig difficulty 1, 45–74 % 2, unter 45 % 3; darunter bleibt der
+Vorgabewert. Messwerte einmal beim Öffnen des Quiz-Tabs laden und cachen, nicht pro Runde.
+Neuer Modus "Harte Fragen" (nur difficulty 3) und ein Schwierigkeitsfilter für die Themenrunde.
+Im Reporting (js/adminReports.js) unter der Heatmap eine Liste "Fragen, an denen es hakt".
+Supabase-Projekt hwahjjihajgajcnzngwv.
+
+Knackpunkt: quiz_attempts speichert nur question_key, nicht den Fragetext. Der Text muss im
+Frontend aus dem aktuellen Pool rekonstruiert werden; Keys ohne Treffer werden mit dem Key als
+Ersatzbeschriftung angezeigt, nicht weggelassen.
+
+Beschriftungen über data-i18n/t() in beiden Sprachdateien (Regel 11).
+
+Nicht anfassen: die select-Policy auf quiz_attempts, den Themenschnitt aus Paket 39,
+Dark Theme und Layout-Grundgerüst.
+```
+
+---
+
+# Pakete 44–46 – Datenpflege: Bier und alkoholfreies Sortiment
+
+**Abhängigkeit:** keine. Unabhängig von 39–43 und jederzeit dazwischen machbar, **sobald die
+Quellen vorliegen** (siehe Blocker). Sind sie fertig, laufen die Produkte automatisch ins Quiz,
+weil Paket 39 den Themenschnitt schon kann.
+
+**Ziel:** 132 Produkte bekommen die Felder, die für Quiz **und** Gastgespräch taugen. Aktuell ist
+in diesen Gruppen fast nichts gepflegt, und sie sind alle `verified = false`.
+
+**Blocker, der vor dem ersten dieser Pakete geklärt sein muss:** Regel 6 – Produktdaten werden
+nicht erfunden und nicht geschätzt. Es braucht je Gruppe eine belastbare Quelle: Herstellerangaben,
+Etikett, Bestell- oder Sortimentsliste. Ohne Quelle bleibt das Feld leer und das Produkt
+`verified = false`. Ein plausibel klingender Bierstil, den niemand geprüft hat, ist im Quiz
+schlimmer als gar keine Frage.
+
+**Alle benötigten Spalten existieren bereits** – kein Schema-Umbau in diesen Paketen.
+
+**Stand am 10.09.2026 (in der Session nachmessen):**
+
+| Gruppe | Produkte | gepflegt |
+|---|---|---|
+| Bier | 11 | ABV (11), Land (9), Service (11) – sonst nichts |
+| Mixer & Softdrink | 31 | nur Land (15) |
+| Sirup | 27 | nur Land (19) |
+| Saft | 16 | nur Land (13) |
+| Tee & Kaffee | 26 | nichts |
+| Fruchtpüree | 8 | nur Land (4) |
+| Sonstiges | 13 | nichts |
+
+**Aufteilung in drei Fenster** – die Gruppen sind zu groß für eine Session:
+
+- **Paket 44 – Bier und Mixer & Softdrink (42 Produkte).**
+  Bier: `producer` (Brauerei), `classification` (Bierstil), `originCountry`, `flavorTags`,
+  `servingTemp`, `foodPairing`, `quickPitch`. Die beiden alkoholfreien Biere und die zwei Cider
+  gehören in die `sub_group`, nicht in denselben Ablenkertopf wie Pils.
+  Mixer & Softdrink: `producer`, `classification` (Tonic / Ginger Ale / Cola / Soda / Bitter
+  Lemon), `flavorTags`, `sweetness`, `service`, `quickPitch`, `pairsWith`.
+- **Paket 45 – Sirup, Saft, Fruchtpüree (51 Produkte).**
+  `producer`, `originCountry`, `flavorTags`, `allergens`, `service`, `quickPitch`, `pairsWith`.
+  Bei `pairsWith` gilt Regel 8: die Rezeptnamen vorher gegen `getAllRecipes()` verifizieren.
+- **Paket 46 – Tee & Kaffee, Sonstiges (39 Produkte).**
+  Tee & Kaffee: `producer`, `originCountry`/`originRegion`, `classification` (Sorte),
+  `flavorTags` und vor allem `service` mit **Ziehzeit und Wassertemperatur** – das ist der Punkt,
+  an dem es im Service tatsächlich hakt, und daraus werden die nützlichsten Fragen.
+  „Sonstiges" vorher durchsehen: was dort keine sinnvolle Gruppe hat, wird umsortiert statt gepflegt.
+
+**Vorgehen in jedem der drei Pakete**
+1. Betroffene Produkte aus der DB ziehen, nicht aus `js/productsData.js` raten.
+2. Werte gegen die Quelle zusammentragen und dem Nutzer **vor dem Schreiben** als Tabelle vorlegen.
+3. Erst nach Freigabe schreiben, per generiertem SQL-Skript (`UPDATE ... WHERE name = '...'`),
+   nicht als hunderte Einzel-Edits.
+4. `js/productsData.js` mit demselben Skript nachziehen (Regel 7).
+5. `verified = true` nur für Zeilen mit belegter Quelle.
+6. Produktinhalte bleiben deutsch (Regel 11) – hier entstehen keine i18n-Schlüssel.
+
+**Abnahme (je Paket)**
+- [ ] Kein Feld enthält einen Wert ohne Quelle – Stichprobe von fünf Produkten gegen die Vorlage.
+- [ ] DB und `js/productsData.js` stimmen überein.
+- [ ] Die neuen Produkte tauchen im Quiz auf, mit Ablenkern aus der richtigen Untergruppe.
+- [ ] Kein Produkt ist `verified = true` mit leeren Pflichtfeldern.
+
+**Commits:** `Produktdaten: Bier und Softdrinks`, `Produktdaten: Sirup, Saft, Fruchtpüree`,
+`Produktdaten: Tee, Kaffee und Sonstiges`
+
+**Modell:** Opus 5, mittlerer Denkaufwand für Recherche, Zuordnung und den Abgleich gegen die
+Quelle – Regel 6 ist hier scharf, und ein kleineres Modell füllt Lücken erfahrungsgemäß mit
+Plausiblem. Steht die Tabelle und ist sie abgenommen, reicht für das reine Erzeugen der
+`UPDATE`-Statements und des Skripts für `js/productsData.js` Haiku 4.5, niedriger Denkaufwand.
+
+**Startprompt fürs neue Fenster (Beispiel Paket 44, für 45/46 sinngemäß)**
+```
+Paket 44 aus docs/AUSBAUPLAN.md: Datenpflege Bier und Mixer & Softdrink. Lies dort erst Kapitel 0
+(Spielregeln) und das Paket, dann arbeite es ab.
+
+42 Produkte in der Supabase-DB (Projekt hwahjjihajgajcnzngwv), Gruppen "Bier" (11) und
+"Mixer & Softdrink" (31). Bei Bier sind nur abv_value, origin_country und service gepflegt, bei
+den Softdrinks nur teilweise origin_country. Alle Zielspalten existieren bereits – kein
+Schema-Umbau.
+
+Harte Vorgabe (Regel 6 aus CLAUDE.md): Produktdaten werden nicht erfunden und nicht geschätzt.
+Trag die Werte gegen eine belastbare Quelle zusammen und leg sie mir als Tabelle vor, BEVOR du
+schreibst. Erst nach meiner Freigabe schreiben, per generiertem SQL-Skript
+(UPDATE ... WHERE name = '...'), und js/productsData.js mit demselben Skript nachziehen.
+verified = true nur für Zeilen mit belegter Quelle.
+
+Bier: producer (Brauerei), classification (Bierstil), origin_country, flavor_tags, serving_temp,
+food_pairing, quick_pitch. Die zwei alkoholfreien Biere und die zwei Cider gehören in die
+sub_group, nicht in denselben Ablenkertopf wie Pils.
+Mixer & Softdrink: producer, classification (Tonic/Ginger Ale/Cola/Soda/Bitter Lemon),
+flavor_tags, sweetness, service, quick_pitch, pairs_with. Bei pairs_with Regel 8 beachten:
+Rezeptnamen vorher gegen getAllRecipes() verifizieren.
+
+Produktinhalte bleiben deutsch – hier entstehen keine i18n-Schlüssel.
+
+Nicht anfassen: Sirup, Saft, Fruchtpüree, Tee & Kaffee, Sonstiges (Pakete 45–46), den
+Quiz-Code, Dark Theme und Layout-Grundgerüst.
+```
 
 ---
 
