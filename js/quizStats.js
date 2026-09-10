@@ -45,11 +45,30 @@ export function letzterStandProFrage(versuche) {
   return stand;
 }
 
+// Obergrenze pro Thema in einer gemischten Runde: seit die Weine im Pool
+// sind (Paket 39), stellen Rot- und Weißwein sonst den Großteil einer
+// Schnellrunde. In einer Themenrunde (topic gesetzt) greift die Grenze nicht –
+// dort ist ja gerade ein Thema gewollt.
+export function maxProThemaVorgabe(anzahl) {
+  return Math.max(2, Math.ceil(anzahl / 4));
+}
+
 // Wiederholungslogik: zuletzt falsch beantwortete Fragen kommen bevorzugt
 // wieder, aber nie mehr als die halbe Runde. Danach Fragen, die noch nie
 // dran waren, dann die sitzenden, zum Schluss der Rest der alten Fehler.
-export function waehleFragen(pool, anzahl, topic, stand) {
+export function waehleFragen(pool, anzahl, topic, stand, maxProThema) {
   const gefiltert = topic ? pool.filter((f) => f.topic === topic) : pool;
+  const grenze = topic ? Infinity : maxProThema ?? maxProThemaVorgabe(anzahl);
+  const proThema = new Map();
+  const themaFrei = (frage) => {
+    const thema = String(frage.topic ?? "").trim();
+    if (!thema) return true;
+    return (proThema.get(thema) ?? 0) < grenze;
+  };
+  const themaBuchen = (frage) => {
+    const thema = String(frage.topic ?? "").trim();
+    if (thema) proThema.set(thema, (proThema.get(thema) ?? 0) + 1);
+  };
 
   const falsch = [];
   const neu = [];
@@ -64,17 +83,39 @@ export function waehleFragen(pool, anzahl, topic, stand) {
   });
 
   const auswahl = [];
+  // Zieht aus einem Topf, überspringt Fragen, deren Thema die Grenze schon
+  // erreicht hat, und legt sie in den Nachrücker-Topf: bleibt am Ende eine
+  // Runde unter der gewünschten Länge, werden sie doch noch genommen.
   const nimm = (bucket, wieviele) => {
+    const zurueck = [];
     while (bucket.length > 0 && auswahl.length < anzahl && wieviele > 0) {
-      auswahl.push(bucket.shift());
+      const frage = bucket.shift();
+      if (!themaFrei(frage)) {
+        zurueck.push(frage);
+        continue;
+      }
+      auswahl.push(frage);
+      themaBuchen(frage);
       wieviele -= 1;
     }
+    bucket.unshift(...zurueck);
   };
 
   nimm(falsch, Math.max(1, Math.ceil(anzahl * WIEDERHOLUNG_ANTEIL)));
   nimm(neu, anzahl - auswahl.length);
   nimm(sitzt, anzahl - auswahl.length);
   nimm(falsch, anzahl - auswahl.length);
+
+  // Notnagel: reicht der Pool unter der Themengrenze nicht für eine volle
+  // Runde, lieber eine unbalancierte volle Runde als eine halbe.
+  if (auswahl.length < anzahl) {
+    const schonDrin = new Set(auswahl.map((f) => f.key));
+    [...falsch, ...neu, ...sitzt].forEach((frage) => {
+      if (auswahl.length >= anzahl || schonDrin.has(frage.key)) return;
+      schonDrin.add(frage.key);
+      auswahl.push(frage);
+    });
+  }
   return auswahl;
 }
 

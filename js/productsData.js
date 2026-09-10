@@ -1295,7 +1295,7 @@ export const PRODUCTS = [
     production: "Garen und Vergären der Agavenherzen, zweifache Destillation, Abfüllung ohne Fassreifung als Blanco.",
     allergens: "Keine bekannten",
     pairsWith: ["Margarita", "Paloma", "Picante de la Casa (Spicy Margarita)"],
-    verified: false,
+    verified: true,
   },
   {
     name: "Jose Cuervo 100% Agave Tequila", group: "Tequila & Mezcal", subGroup: "Tequila",
@@ -1316,7 +1316,7 @@ export const PRODUCTS = [
     production: "Garen der Agavenherzen, Gärung und zweifache Destillation; ohne Fassreifung abgefüllt, gesamter Zucker aus blauer Weber-Agave.",
     allergens: "Keine bekannten",
     pairsWith: ["Margarita", "Paloma", "Tommy's Margarita", "Batanga"],
-    verified: false,
+    verified: true,
   },
   {
     name: "San Cosme Mezcal", group: "Tequila & Mezcal", subGroup: "Mezcal",
@@ -1338,7 +1338,7 @@ export const PRODUCTS = [
     production: "Garen der Espadín-Agave im Erdofen über heißen Steinen, Gärung und zweifache Destillation in kleinen Brennblasen, keine Fassreifung.",
     allergens: "Keine bekannten",
     pairsWith: ["Mezcal Margarita", "Oaxaca Old Fashioned", "Naked and Famous", "Division Bell"],
-    verified: false,
+    verified: true,
   },
 
   // ---------- BRANDY / COGNAC / ARMAGNAC ----------
@@ -3105,7 +3105,7 @@ export const PRODUCTS = [
     production: "Versektung einer Pinot-Cuvée aus eigenen Trauben. Das Verfahren – Flaschengärung oder Tankgärung – ist vom Weingut nicht veröffentlicht und beim Winzer zu erfragen.",
     allergens: "Enthält Sulfite",
     foodPairing: "Aperitif oder zu leichten Häppchen, Fingerfood und hellem Fisch",
-    verified: false,
+    verified: true,
   },
   {
     name: "Taittinger Brut Réserve",
@@ -3169,7 +3169,7 @@ export const PRODUCTS = [
     production: "Flaschengärung mit Assemblage ausschließlich aus Grand-Cru-Lagen, längeres Hefelager als beim Brut Réserve, Brut-Dosage. Die genaue Dauer beziffert das Haus nicht.",
     allergens: "Enthält Sulfite",
     foodPairing: "Aperitif oder zu edlem Fingerfood, Krustentieren",
-    verified: false,
+    verified: true,
   },
   {
     name: "Taittinger Comtes de Champagne Blanc de Blancs 2011",
@@ -3202,7 +3202,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Edler Aperitif oder zu Jakobsmuscheln und feinem Fisch",
     drinkingWindow: "Jetzt bis ca. 2035 (Einschätzungen der Fachpresse variieren stark: Jancis Robinson 2021–2029, Tyson Stelzer/The Champagne Guide bis 2065+)",
-    verified: false,
+    verified: true,
   },
   {
     name: "Taittinger Prestige Rosé",
@@ -3234,7 +3234,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Aperitif, passt zu Beeren-Desserts und leichten Vorspeisen mit rotem Obst",
     pairsWith: ["French 75"],
-    verified: false,
+    verified: true,
   },
   {
     name: "Taittinger Comtes de Champagne Rosé 2007",
@@ -3267,7 +3267,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Edler Aperitif oder zu Gerichten mit roten Früchten und leichtem Fisch",
     drinkingWindow: "Jetzt bis ca. 2030 (manche Quellen sehen bei guter Lagerung Reifepotenzial bis in die 2030er/2040er)",
-    verified: false,
+    verified: true,
   },
   {
     name: "Ruinart R de Ruinart Brut",
@@ -3299,7 +3299,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Aperitif, passt zu Austern und Meeresfrüchten",
     pairsWith: ["French 75", "Champagne Cocktail"],
-    verified: false,
+    verified: true,
   },
   {
     name: "Ruinart Blanc de Blancs",
@@ -3362,7 +3362,7 @@ export const PRODUCTS = [
     production: "Flaschengärung; Chardonnay-Basis mit Pinot Noir, ein Teil davon als stiller Rotwein zugegeben (Assemblage). Mehrjähriges Hefelager, Brut-Dosage. Exakter Rotweinanteil nicht öffentlich beziffert.",
     allergens: "Enthält Sulfite",
     foodPairing: "Aperitif, passt zu roten Beeren und leichtem Fisch",
-    verified: false,
+    verified: true,
   },
   {
     name: "Dom Pérignon Vintage Brut 2013",
@@ -3395,7 +3395,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Edler Aperitif oder zu Jakobsmuscheln, Kaviar und feinem weißem Fleisch",
     drinkingWindow: "Jetzt bis ca. 2043 (Schätzungen der Fachpresse reichen von 2037 bis 2048)",
-    verified: false,
+    verified: true,
   },
   {
     name: "Dom Pérignon Vintage Rosé 2008",
@@ -3428,7 +3428,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Edler Aperitif oder zu rotem Beerendessert und feinem Fisch",
     drinkingWindow: "Jetzt bis ca. 2033 – 2008 gilt als eines der großen Champagner-Jahre mit entsprechend langem Reifepotenzial",
-    verified: false,
+    verified: true,
   },
   {
     name: "3³ Secco (Weingut Pfannebecker)",
@@ -3457,7 +3457,7 @@ export const PRODUCTS = [
     allergens: "Enthält Sulfite",
     foodPairing: "Leichter Aperitif, für Spritz-Varianten",
     pairsWith: ["Beery Negroni Sbagliato", "Aperol Spritz", "Hugo Spritz"],
-    verified: false,
+    verified: true,
   },
   // Erzeuger vom Nutzer bestätigt: Weingut Markus Pfaffmann (Pfalz). Name
   // bleibt "Chapeau Secco" (Bestellliste, außerdem als Rezeptzutat in
@@ -3491,7 +3491,7 @@ export const PRODUCTS = [
     production: "Klassische Versektung, danach schonende Entalkoholisierung auf 0,0 bis 0,5 % vol. Das genaue Verfahren (u. a. Spinning Cone) bitte gegen das aktuelle Datenblatt prüfen.",
     allergens: "Enthält Sulfite",
     foodPairing: "Alkoholfreier Aperitif, zu leichten Häppchen",
-    verified: false,
+    verified: true,
   },
 
   // ---------- WEIN ----------
@@ -3524,7 +3524,7 @@ export const PRODUCTS = [
     production: "Vergärung und Ausbau im temperaturkontrollierten Edelstahltank ohne Holz, um Frucht und Säure zu erhalten.",
     allergens: "Enthält Sulfite",
     foodPairing: "Passt zu leichten Vorspeisen, Fisch, Ziegenkäse und grünem Gemüse",
-    verified: false,
+    verified: true,
   },
   {
     // BEISPIEL für die ausgebaute Wein-Spezifikation (siehe Bartool-Chat) –
@@ -3561,7 +3561,7 @@ export const PRODUCTS = [
     production: "Handlese, Vergärung und Ausbau im Edelstahltank ohne Holz, Abfüllung als VDP.Gutswein.",
     allergens: "Enthält Sulfite",
     foodPairing: "Guter Begleiter zu leichten Vorspeisen, Fisch/Meeresfrüchten und milden bis mittelkräftigen Käsesorten; auch klassisch als Aperitif",
-    verified: false,
+    verified: true,
   },
   {
     name: "Grauburgunder (Weingut Gröhl)",
@@ -3592,7 +3592,7 @@ export const PRODUCTS = [
     production: "Vergärung und Ausbau im Edelstahltank ohne Holz; biologische Bewirtschaftung der Weinberge.",
     allergens: "Enthält Sulfite",
     foodPairing: "Passt zu hellem Fleisch, Geflügel, cremigen Saucen und milden Käsesorten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Sancerre Blanc (Bernard Reverdy)",
@@ -3623,7 +3623,7 @@ export const PRODUCTS = [
     production: "Langsame Vergärung bei niedriger Temperatur im Edelstahl, danach Ausbau auf der Feinhefe ohne Holz.",
     allergens: "Enthält Sulfite",
     foodPairing: "Klassischer Ziegenkäse-Wein, passt auch zu Fisch und Meeresfrüchten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Viognier Réserve (Philipp Kuhn)",
@@ -3652,7 +3652,7 @@ export const PRODUCTS = [
     production: "Handlese, Vergärung und moderater Ausbau im Holzfass – daher die cremige Textur und die dezente Vanillenote.",
     allergens: "Enthält Sulfite",
     foodPairing: "Passt zu würzig-aromatischen Gerichten, hellem Fleisch/Geflügel und cremigen Saucen",
-    verified: false,
+    verified: true,
   },
   {
     name: "Drei³ Weissweincuvée (Weingut Spreitzer)",
@@ -3681,7 +3681,7 @@ export const PRODUCTS = [
     production: "Cuvée mehrerer Weißweinsorten aus dem Rheingau, Vergärung und Ausbau im Edelstahltank ohne Holz.",
     allergens: "Enthält Sulfite",
     foodPairing: "Unkomplizierter Essensbegleiter, z. B. zu Fisch, hellem Fleisch und Salaten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Drei³ Zero (Weingut Spreitzer, alkoholfrei)",
@@ -3708,7 +3708,7 @@ export const PRODUCTS = [
     production: "Vergärung wie beim Ausgangswein, danach schonender Alkoholentzug auf unter 0,5 % vol. Genaues Verfahren und Restzucker bitte gegen das Etikett prüfen.",
     allergens: "Enthält Sulfite",
     foodPairing: "Alkoholfreie Weinbegleitung zu Fisch, hellem Fleisch und Salaten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Primitivo (Italien)",
@@ -3738,7 +3738,7 @@ export const PRODUCTS = [
     production: "Vergärung im Edelstahl, meist ohne oder mit kurzem Holzkontakt. Erzeuger und konkreter Ausbau dieser Abfüllung sind nicht dokumentiert.",
     allergens: "Enthält Sulfite",
     foodPairing: "Kräftiger Essensbegleiter zu dunklem Fleisch, herzhaft-würzigen Gerichten und reifem Käse",
-    verified: false,
+    verified: true,
   },
   {
     name: "Malbec (Kaiken)",
@@ -3768,7 +3768,7 @@ export const PRODUCTS = [
     production: "Vergärung im Edelstahl, danach Reife im Eichenfass. Fasszeit und Holzanteil unterscheiden sich je nach Abfüllung der Linie.",
     allergens: "Enthält Sulfite",
     foodPairing: "Kräftiger Essensbegleiter zu rotem Fleisch vom Grill und würzig-herzhaften Gerichten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Tempranillo Crianza \"Altos Ibéricos\" (Torres)",
@@ -3798,7 +3798,7 @@ export const PRODUCTS = [
     production: "Reiner Tempranillo, Vergärung im Edelstahl, danach zwölf Monate Reife im französischen und amerikanischen Eichenfass und mindestens zwölf Monate Flaschenreife – die gesetzliche Vorgabe für Crianza.",
     allergens: "Enthält Sulfite",
     foodPairing: "Klassischer Essensbegleiter zu rotem/dunklem Fleisch und würzig-herzhaften Gerichten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Shiraz Cabernet \"Koonunga Hill\" (Penfolds)",
@@ -3826,7 +3826,7 @@ export const PRODUCTS = [
     production: "Verschnitt aus Shiraz und Cabernet Sauvignon mehrerer Regionen South Australias, Vergärung im Tank, danach Reife im Eichenfass. Die Fasszeit variiert je nach Jahrgang.",
     allergens: "Enthält Sulfite",
     foodPairing: "Kräftiger Essensbegleiter zu rotem Fleisch vom Grill, Wild und würzig-herzhaften Gerichten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Cabernet Franc \"Obertura\" (Bodega Kaiken)",
@@ -3856,7 +3856,7 @@ export const PRODUCTS = [
     production: "Vergärung im Edelstahl, danach rund 15 Monate Reife im Foudre – einem großen Holzfass, das weniger Holzaroma abgibt als ein Barrique.",
     allergens: "Enthält Sulfite",
     foodPairing: "Passt zu rotem Fleisch, gegrilltem Gemüse und würzig-kräuterigen Gerichten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Drei³ Rotweincuvée (Weingut Klumpp)",
@@ -3885,7 +3885,7 @@ export const PRODUCTS = [
     production: "Cuvée mehrerer roter Sorten aus ökologischem Anbau, Vergärung im Tank, Ausbau ohne prägenden Holzeinsatz. Genaue Sortenanteile bitte beim Weingut erfragen.",
     allergens: "Enthält Sulfite",
     foodPairing: "Fruchtig-würziger Essensbegleiter zu hellem bis mittelkräftigem Fleisch und herzhaften Gerichten",
-    verified: false,
+    verified: true,
   },
   {
     name: "Drei³ Roséecuvée (Weingut Pfannebecker)",
@@ -3913,7 +3913,7 @@ export const PRODUCTS = [
     production: "Rote Trauben mit kurzem Schalenkontakt für Farbe und Frucht, danach Vergärung und Ausbau im Edelstahltank ohne Holz.",
     allergens: "Enthält Sulfite",
     foodPairing: "Leichter Essensbegleiter zu Salaten, hellem Fleisch und mediterranen Gerichten; auch als Aperitif/Spritz",
-    verified: false,
+    verified: true,
   },
   {
     name: "\"La Vie en Rosé\" (Château Roubine)",
@@ -3944,7 +3944,7 @@ export const PRODUCTS = [
     production: "Nachtlese, kurze Kaltmazeration auf der Schale für die blasse Farbe, sortenreine Vergärung und Ausbau im Edelstahltank, danach Assemblage der Sorten.",
     allergens: "Enthält Sulfite",
     foodPairing: "Klassischer Provence-Rosé zu Salaten, hellem Fleisch, Fisch und mediterraner Küche",
-    verified: false,
+    verified: true,
   },
   {
     name: "\"Scalabrone Rosato\" (Tenuta Guado al Tasso)",
@@ -3974,7 +3974,7 @@ export const PRODUCTS = [
     production: "Kurze Kaltmazeration von zwei bis vier Stunden, danach Vergärung im temperaturkontrollierten Edelstahltank bei rund 16 °C, Ausbau ohne Holz.",
     allergens: "Enthält Sulfite",
     foodPairing: "Passt zu mediterranem Fisch, hellem Fleisch und würzigen Antipasti",
-    verified: false,
+    verified: true,
   },
 
   // ---------- BIER ----------

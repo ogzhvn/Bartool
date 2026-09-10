@@ -22,6 +22,11 @@ import { getLocale, t } from "./i18n.js";
 // damit Wiederholung und Schwächenanalyse (Paket 27) daran andocken können.
 
 const MIN_ABLENKER = 3;
+// Antwortoptionen müssen in eine Zeile passen. Die Weintexte aus Paket 25
+// sind teils ganze Sätze (Ausbau, Food-Pairing, Süße mit Klammerhinweis);
+// als Antwortmöglichkeit taugen sie dann nicht. Wer länger ist, fliegt raus –
+// die Frage entsteht dann nur für die Produkte, deren Wert kurz genug ist.
+const MAX_ANTWORT_LAENGE = 60;
 
 function txt(value) {
   return String(value ?? "").trim();
@@ -43,7 +48,7 @@ function shuffle(list) {
 // Baut aus richtiger Antwort + Kandidaten eine fertige Frage. Gibt null
 // zurück, wenn zu wenige unterschiedliche Ablenker übrig bleiben – so kann
 // jeder Fragetyp einfach `.filter(Boolean)` anhängen.
-function baueFrage({ key, question, correct, candidates, explanation, topic, difficulty, refProduct, refRecipe }) {
+function baueFrage({ key, question, correct, candidates, explanation, topic, topicGroup, difficulty, refProduct, refRecipe }) {
   const richtig = txt(correct);
   if (!richtig) return null;
 
@@ -65,11 +70,25 @@ function baueFrage({ key, question, correct, candidates, explanation, topic, dif
     correctIndex: options.indexOf(richtig),
     explanation: txt(explanation),
     topic,
+    // Oberkategorie des Themas – nur für die Gruppierung der Themenliste.
+    // Bei Produkten mit Untergruppe ist das die Gruppe (Rotwein → Wein).
+    topicGroup: txt(topicGroup) || topic,
     difficulty: difficulty ?? 2,
     refProduct: refProduct ?? "",
     refRecipe: refRecipe ?? "",
     source: "generator",
   };
+}
+
+function gruppiereNach(items, schluesselFn) {
+  const map = new Map();
+  items.forEach((item) => {
+    const schluessel = txt(schluesselFn(item));
+    if (!schluessel) return;
+    if (!map.has(schluessel)) map.set(schluessel, []);
+    map.get(schluessel).push(item);
+  });
+  return map;
 }
 
 function gruppiere(items, feld) {
@@ -93,6 +112,51 @@ function gepruefteProdukte() {
   return getAllProducts().filter((p) => p?.verified === true && txt(p.group));
 }
 
+// Ab so vielen geprüften Produkten wird eine Gruppe im Quiz überhaupt nach
+// Untergruppe aufgeteilt – darunter ist ein Sammelthema kein Problem.
+const GRUPPE_SPLIT_AB = 20;
+// So viele Produkte braucht eine Untergruppe mindestens, um als eigenes Thema
+// zu taugen: die richtige Antwort plus drei Ablenker.
+const MIN_EINHEIT = 1 + MIN_ABLENKER;
+
+// Welche Gruppen werden geteilt? Nur die, bei denen der Schnitt aufgeht:
+// die Gruppe ist groß, jedes Produkt darin hat eine Untergruppe und jede
+// Untergruppe hat genug Produkte für eigene Ablenker. Bei Wein (76 Produkte,
+// Rotwein/Weißwein/Roséwein) ist das der Fall – ohne den Schnitt stünde dort
+// ein Thema mit mehreren hundert Fragen und ein Rotwein träte gegen einen
+// Rosé an. Whisky, Gin, Rum und Liköre bleiben ungeteilt: dort blieben pro
+// Untergruppe ein bis vier Produkte übrig, zu wenig für saubere Ablenker.
+function geteilteGruppen(produkte) {
+  const proGruppe = gruppiere(produkte, "group");
+  const geteilt = new Set();
+  proGruppe.forEach((liste, gruppe) => {
+    if (liste.length < GRUPPE_SPLIT_AB) return;
+    if (liste.some((p) => !txt(p.subGroup))) return;
+    const einheiten = gruppiere(liste, "subGroup");
+    let tragfaehig = einheiten.size > 1;
+    einheiten.forEach((einheit) => {
+      if (einheit.length < MIN_EINHEIT) tragfaehig = false;
+    });
+    if (tragfaehig) geteilt.add(gruppe);
+  });
+  return geteilt;
+}
+
+// Themen-Einheit eines Produkts: die Untergruppe, wenn die Gruppe geteilt
+// wird, sonst die Gruppe. Ablenker kommen immer aus derselben Einheit.
+export function quizThema(product, geteilt) {
+  const gruppe = txt(product?.group);
+  const unter = txt(product?.subGroup);
+  const teilung = geteilt ?? geteilteGruppen(gepruefteProdukte());
+  return unter && teilung.has(gruppe) ? unter : gruppe;
+}
+
+// Kurz genug für eine Antwortzeile?
+function passtInEineZeile(wert) {
+  const text = txt(wert);
+  return text.length > 0 && text.length <= MAX_ANTWORT_LAENGE;
+}
+
 function formatAbv(value) {
   const zahl = Number(String(value ?? "").replace(",", "."));
   if (!Number.isFinite(zahl) || zahl <= 0) return "";
@@ -107,22 +171,30 @@ function mitPitch(product, satz) {
 }
 
 // Gemeinsames Gerüst für alle Fragen "ein Feld eines Produkts erraten".
-function feldFragen({ produkte, feld, keyPrefix, frage, erklaerung, formatiere, difficulty }) {
-  const nachGruppe = gruppiere(produkte, "group");
+function feldFragen({ produkte, thema: themaVon, feld, keyPrefix, frage, erklaerung, formatiere, difficulty, nurKurz = false, zusatzFilter }) {
+  const nachThema = gruppiereNach(produkte, themaVon);
   const fragen = [];
   produkte.forEach((product) => {
-    const richtig = formatiere ? formatiere(product[feld]) : txt(product[feld]);
+    const wert = (p) => {
+      const roh = formatiere ? formatiere(p[feld]) : txt(p[feld]);
+      return nurKurz && !passtInEineZeile(roh) ? "" : roh;
+    };
+    const richtig = wert(product);
     if (!richtig) return;
-    const kandidaten = (nachGruppe.get(txt(product.group)) ?? [])
+    const thema = themaVon(product);
+    const einheit = nachThema.get(thema) ?? [];
+    if (zusatzFilter && !zusatzFilter(product, einheit)) return;
+    const kandidaten = einheit
       .filter((p) => p.name !== product.name)
-      .map((p) => (formatiere ? formatiere(p[feld]) : txt(p[feld])));
+      .map(wert);
     const frageObjekt = baueFrage({
       key: `gen:${keyPrefix}:${product.name}`,
       question: frage(product),
       correct: richtig,
       candidates: kandidaten,
       explanation: erklaerung(product, richtig),
-      topic: txt(product.group),
+      topic: thema,
+      topicGroup: txt(product.group),
       difficulty,
       refProduct: product.name,
     });
@@ -132,9 +204,10 @@ function feldFragen({ produkte, feld, keyPrefix, frage, erklaerung, formatiere, 
 }
 
 // 1. Alkoholgehalt
-function abvFragen(produkte) {
+function abvFragen(produkte, themaVon) {
   return feldFragen({
     produkte,
+    thema: themaVon,
     feld: "abvValue",
     keyPrefix: "abv",
     frage: (p) => t("ui.quiz_frage_abv", { name: p.name }),
@@ -145,9 +218,10 @@ function abvFragen(produkte) {
 }
 
 // 2. Herkunftsland
-function herkunftFragen(produkte) {
+function herkunftFragen(produkte, themaVon) {
   return feldFragen({
     produkte,
+    thema: themaVon,
     feld: "originCountry",
     keyPrefix: "country",
     frage: (p) => t("ui.quiz_frage_land", { name: p.name }),
@@ -157,9 +231,10 @@ function herkunftFragen(produkte) {
 }
 
 // 3. Rohstoff
-function rohstoffFragen(produkte) {
+function rohstoffFragen(produkte, themaVon) {
   return feldFragen({
     produkte,
+    thema: themaVon,
     feld: "baseMaterial",
     keyPrefix: "base",
     frage: (p) => t("ui.quiz_frage_grundstoff", { name: p.name }),
@@ -169,9 +244,10 @@ function rohstoffFragen(produkte) {
 }
 
 // 7. Herstellungsverfahren
-function verfahrenFragen(produkte) {
+function verfahrenFragen(produkte, themaVon) {
   return feldFragen({
     produkte,
+    thema: themaVon,
     feld: "productionMethod",
     keyPrefix: "production",
     frage: (p) => t("ui.quiz_frage_verfahren", { name: p.name }),
@@ -180,13 +256,78 @@ function verfahrenFragen(produkte) {
   });
 }
 
+// ---------------------------------------------------------------------
+// Wein- und Schaumweinfragen (Paket 39)
+//
+// Alle über dasselbe feldFragen()-Gerüst, mit zwei Zusätzen: `nurKurz`
+// wirft Werte raus, die als Antwortzeile zu lang sind (die Pflegetexte aus
+// Paket 25 sind teils ganze Sätze), und die Themen-Einheit ist die
+// Untergruppe – ein Rotwein bekommt damit nur Rotweine als Ablenker.
+// ---------------------------------------------------------------------
+
+const WEIN_FELDER = [
+  { feld: "grapeVariety", keyPrefix: "grape", frage: "ui.quiz_frage_rebsorte", erklaerung: "ui.quiz_erklaerung_rebsorte", difficulty: 3 },
+  { feld: "region", keyPrefix: "region", frage: "ui.quiz_frage_region", erklaerung: "ui.quiz_erklaerung_region", difficulty: 2 },
+  { feld: "producer", keyPrefix: "producer", frage: "ui.quiz_frage_erzeuger", erklaerung: "ui.quiz_erklaerung_erzeuger", difficulty: 3 },
+  { feld: "sweetness", keyPrefix: "sweet", frage: "ui.quiz_frage_suesse", erklaerung: "ui.quiz_erklaerung_suesse", difficulty: 1 },
+  { feld: "aging", keyPrefix: "aging", frage: "ui.quiz_frage_ausbau", erklaerung: "ui.quiz_erklaerung_ausbau", difficulty: 3 },
+  { feld: "servingTemp", keyPrefix: "temp", frage: "ui.quiz_frage_serviertemperatur", erklaerung: "ui.quiz_erklaerung_serviertemperatur", difficulty: 2 },
+  { feld: "classification", keyPrefix: "class", frage: "ui.quiz_frage_klassifikation", erklaerung: "ui.quiz_erklaerung_klassifikation", difficulty: 3 },
+  { feld: "body", keyPrefix: "body", frage: "ui.quiz_frage_koerper", erklaerung: "ui.quiz_erklaerung_koerper", difficulty: 2 },
+];
+
+// Food-Pairing bleibt in diesem Paket bewusst draußen: die Texte sind
+// durchgängig ganze Sätze und taugen nicht als Antwortoption.
+
+function weinFeldFragen(produkte, themaVon) {
+  return WEIN_FELDER.flatMap(({ feld, keyPrefix, frage, erklaerung, difficulty }) =>
+    feldFragen({
+      produkte,
+      thema: themaVon,
+      feld,
+      keyPrefix,
+      frage: (p) => t(frage, { name: p.name }),
+      erklaerung: (p, wert) => mitPitch(p, t(erklaerung, { name: p.name, wert })),
+      difficulty,
+      nurKurz: true,
+    })
+  );
+}
+
+// Jahrgang nur mit Bremse: `vintage` ist ein Textfeld und enthält teils
+// Hinweise statt einer Jahreszahl ("Aktueller Jahrgang – bitte laut Etikett
+// eintragen"). Gefragt wird nur, wo eine echte vierstellige Jahreszahl steht
+// und die Themen-Einheit mindestens vier verschiedene davon kennt – sonst
+// wären die Ablenker Nachbarjahre und die Frage rät sich von selbst.
+const MIN_JAHRGAENGE = 4;
+
+function jahrgang(value) {
+  const text = txt(value);
+  return /^[0-9]{4}$/.test(text) ? text : "";
+}
+
+function jahrgangFragen(produkte, themaVon) {
+  return feldFragen({
+    produkte,
+    thema: themaVon,
+    feld: "vintage",
+    keyPrefix: "vintage",
+    frage: (p) => t("ui.quiz_frage_jahrgang", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_jahrgang", { name: p.name, wert })),
+    formatiere: jahrgang,
+    difficulty: 3,
+    zusatzFilter: (_product, einheit) =>
+      new Set(einheit.map((p) => jahrgang(p.vintage)).filter(Boolean)).size >= MIN_JAHRGAENGE,
+  });
+}
+
 // 4. Tasting Notes → welches Produkt passt
 //
 // Umgekehrte Richtung: die Aromen sind die Frage, gesucht ist das Produkt.
 // Ablenker sind Produkte derselben Gruppe, deren Aromen sich nicht mit den
 // genannten überschneiden – sonst gäbe es zwei richtige Antworten.
-function aromaFragen(produkte) {
-  const nachGruppe = gruppiere(produkte, "group");
+function aromaFragen(produkte, themaVon) {
+  const nachThema = gruppiereNach(produkte, themaVon);
   const fragen = [];
   produkte.forEach((product) => {
     const tags = (Array.isArray(product.flavorTags) ? product.flavorTags : [])
@@ -194,7 +335,7 @@ function aromaFragen(produkte) {
       .filter(Boolean);
     if (tags.length < 2) return;
     const eigene = new Set(tags.map(normKey));
-    const kandidaten = (nachGruppe.get(txt(product.group)) ?? [])
+    const kandidaten = (nachThema.get(themaVon(product)) ?? [])
       .filter((p) => p.name !== product.name)
       .filter((p) => {
         const fremde = Array.isArray(p.flavorTags) ? p.flavorTags : [];
@@ -203,11 +344,12 @@ function aromaFragen(produkte) {
       .map((p) => p.name);
     const frage = baueFrage({
       key: `gen:notes:${product.name}`,
-      question: t("ui.quiz_frage_aroma", { gruppe: txt(product.group), tags: tags.join(", ") }),
+      question: t("ui.quiz_frage_aroma", { gruppe: themaVon(product), tags: tags.join(", ") }),
       correct: product.name,
       candidates: kandidaten,
       explanation: mitPitch(product, `${product.name}: ${tags.join(", ")}.`),
-      topic: txt(product.group),
+      topic: themaVon(product),
+      topicGroup: txt(product.group),
       difficulty: 3,
       refProduct: product.name,
     });
@@ -365,12 +507,18 @@ function methodenFragen(rezepte) {
 export function generateQuestions() {
   const produkte = gepruefteProdukte();
   const rezepte = rezepteMitKategorie();
+  // Einmal pro Durchlauf bestimmen, welche Gruppen geteilt werden, statt für
+  // jedes Produkt neu zu zählen.
+  const geteilt = geteilteGruppen(produkte);
+  const themaVon = (product) => quizThema(product, geteilt);
   return [
-    ...abvFragen(produkte),
-    ...herkunftFragen(produkte),
-    ...rohstoffFragen(produkte),
-    ...verfahrenFragen(produkte),
-    ...aromaFragen(produkte),
+    ...abvFragen(produkte, themaVon),
+    ...herkunftFragen(produkte, themaVon),
+    ...rohstoffFragen(produkte, themaVon),
+    ...verfahrenFragen(produkte, themaVon),
+    ...aromaFragen(produkte, themaVon),
+    ...weinFeldFragen(produkte, themaVon),
+    ...jahrgangFragen(produkte, themaVon),
     ...zutatenFragen(rezepte),
     ...glasFragen(rezepte),
     ...garniturFragen(rezepte),
@@ -385,11 +533,12 @@ export function listGeneratedTopics(pool) {
   const zaehler = new Map();
   fragen.forEach((f) => {
     if (!f.topic) return;
-    zaehler.set(f.topic, (zaehler.get(f.topic) ?? 0) + 1);
+    if (!zaehler.has(f.topic)) {
+      zaehler.set(f.topic, { topic: f.topic, count: 0, group: txt(f.topicGroup) || f.topic });
+    }
+    zaehler.get(f.topic).count += 1;
   });
-  return [...zaehler.entries()]
-    .map(([topic, count]) => ({ topic, count }))
-    .sort((a, b) => a.topic.localeCompare(b.topic, getLocale()));
+  return [...zaehler.values()].sort((a, b) => a.topic.localeCompare(b.topic, getLocale()));
 }
 
 // Zieht `anzahl` Fragen aus einem Pool, ohne Dubletten (question_key ist

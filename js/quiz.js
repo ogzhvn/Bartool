@@ -359,16 +359,52 @@ function buildPool() {
   return [...generateQuestions(), ...curatedCache];
 }
 
+// Ab so vielen Themen wird die Auswahlliste nach Oberkategorie gruppiert –
+// darunter ist eine flache Liste übersichtlicher als Überschriften.
+const THEMEN_GRUPPIERUNG_AB = 12;
+
+function themaOption({ topic, count }) {
+  const option = document.createElement("option");
+  option.value = topic;
+  option.textContent = `${topic} (${count} ${t("ui.fragen")})`;
+  return option;
+}
+
 function renderTopics(pool) {
   const themen = listGeneratedTopics(pool);
   const vorher = topicSelectEl.value;
   topicSelectEl.textContent = "";
-  themen.forEach(({ topic, count }) => {
-    const option = document.createElement("option");
-    option.value = topic;
-    option.textContent = `${topic} (${count} ${t("ui.fragen")}`;
-    topicSelectEl.appendChild(option);
-  });
+
+  if (themen.length < THEMEN_GRUPPIERUNG_AB) {
+    themen.forEach((thema) => topicSelectEl.appendChild(themaOption(thema)));
+  } else {
+    // Nur Oberkategorien mit mehreren Themen bekommen eine eigene Überschrift
+    // (Wein → Rotwein/Weißwein/Roséwein). Alles andere sammelt sich unter
+    // "Weitere Themen", sonst hätte fast jede Gruppe ihre eigene Überschrift.
+    const nachOberkategorie = new Map();
+    themen.forEach((thema) => {
+      const gruppe = thema.group || thema.topic;
+      if (!nachOberkategorie.has(gruppe)) nachOberkategorie.set(gruppe, []);
+      nachOberkategorie.get(gruppe).push(thema);
+    });
+    const mehrfach = [...nachOberkategorie.entries()].filter(([, liste]) => liste.length > 1);
+    const einzeln = [...nachOberkategorie.entries()]
+      .filter(([, liste]) => liste.length === 1)
+      .flatMap(([, liste]) => liste);
+
+    const gruppeAnhaengen = (label, liste) => {
+      if (liste.length === 0) return;
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = label;
+      liste.forEach((thema) => optgroup.appendChild(themaOption(thema)));
+      topicSelectEl.appendChild(optgroup);
+    };
+    mehrfach
+      .sort((a, b) => a[0].localeCompare(b[0], getLocale()))
+      .forEach(([gruppe, liste]) => gruppeAnhaengen(gruppe, liste));
+    gruppeAnhaengen(t("ui.quiz_weitere_themen"), einzeln);
+  }
+
   if (vorher && themen.some((thema) => thema.topic === vorher)) topicSelectEl.value = vorher;
   topicBtn.disabled = themen.length === 0;
 }
