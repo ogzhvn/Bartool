@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 // On the collapsed mobile nav, picking an entry should close the dropdown
 // instead of leaving it open over the newly shown panel. Auch von den
 // Unterpunkten des Produkt-Kategoriebaums aufgerufen.
@@ -27,6 +29,20 @@ function tabExists(tabId) {
 
 function currentTabId() {
   return document.querySelector(".tab-btn.active")?.dataset.tab ?? null;
+}
+
+// Im mobilen Header (< 900px) steht statt "Bartool" der Name des offenen
+// Tabs, damit man nach dem Schließen des Drawers noch weiß, wo man ist.
+// Quelle ist der data-i18n-Key des zugehörigen .tab-btn, deshalb bleibt der
+// Titel auch nach einem Sprachwechsel korrekt (applyTranslations() rendert
+// jedes [data-i18n]-Element neu, dieses hier eingeschlossen).
+function updateMobileHeaderTitle(tabId) {
+  const titleTab = document.getElementById("app-title-tab");
+  if (!titleTab) return;
+  const key = document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.dataset.i18n;
+  if (!key) return;
+  titleTab.dataset.i18n = key;
+  titleTab.textContent = t(key);
 }
 
 function setGroupExpanded(group, expanded) {
@@ -63,6 +79,48 @@ export function takePendingEditReturn() {
   const target = pendingEditReturn;
   pendingEditReturn = null;
   return target;
+}
+
+// Filterfeld im Kopf des mobilen Drawers: durchsucht die Nav-Einträge
+// (.tab-btn, .subnav-btn – Haupttabs, Admin-Unterpunkte, Rezept-/Produkt-
+// Kategoriebäume) live per Teilstring-Vergleich. Verändert dabei nie die
+// echten collapsed/expanded-Klassen, sondern nur die eigenen
+// nav-filter-*-Klassen (siehe CSS) – so muss beim Leeren des Felds nichts
+// zurückgesetzt werden, der vorherige Accordion-Zustand steht einfach
+// wieder da.
+function filterNav(rawQuery) {
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar) return;
+  const query = rawQuery.trim().toLowerCase();
+  const active = query !== "";
+  sidebar.classList.toggle("nav-filtering", active);
+
+  const items = sidebar.querySelectorAll(".tab-btn, .subnav-btn");
+  const containers = sidebar.querySelectorAll(".sidebar-group, .sidebar-subnav");
+
+  if (!active) {
+    items.forEach((el) => el.classList.remove("nav-filter-hidden"));
+    containers.forEach((el) => el.classList.remove("nav-filter-hidden", "nav-filter-expanded"));
+    return;
+  }
+
+  items.forEach((el) => {
+    const matches = el.textContent.trim().toLowerCase().includes(query);
+    el.classList.toggle("nav-filter-hidden", !matches);
+  });
+
+  containers.forEach((container) => {
+    const hasVisibleItem = [...container.querySelectorAll(".tab-btn, .subnav-btn")].some(
+      (el) => !el.classList.contains("nav-filter-hidden")
+    );
+    container.classList.toggle("nav-filter-hidden", !hasVisibleItem);
+    container.classList.toggle("nav-filter-expanded", hasVisibleItem);
+  });
+}
+
+function setupNavFilter() {
+  const filterInput = document.getElementById("nav-filter-input");
+  filterInput?.addEventListener("input", () => filterNav(filterInput.value));
 }
 
 export function initTabs() {
@@ -102,6 +160,8 @@ export function initTabs() {
 
   navBackdrop?.addEventListener("click", closeMobileNav);
 
+  setupNavFilter();
+
   document.getElementById("app-title")?.addEventListener("click", () => {
     switchTab("home");
     closeMobileNav();
@@ -133,6 +193,7 @@ export function switchTab(tabId, { updateHash = true, replace = false, keepEditR
     panel.classList.toggle("active", panel.id === tabId);
   });
   syncGroupsToTab(tabId);
+  updateMobileHeaderTitle(tabId);
   document.querySelectorAll(".sidebar-subnav").forEach((subnav) => {
     // Offen bleibt eine Untergruppe, solange ihr eigener Punkt aktiv ist
     // (Kategoriebaum bei Rezepten/Produkten) oder der aktive Tab selbst in

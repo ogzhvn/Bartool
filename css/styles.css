@@ -109,6 +109,13 @@ a:hover {
   cursor: pointer;
 }
 
+/* Auf dem Handy ersetzt der Name des offenen Tabs den Markennamen im Header
+   (siehe .app-title-tab im mobilen Media Query weiter unten) – auf dem
+   Desktop bleibt immer "Bartool" stehen. */
+.app-title-tab {
+  display: none;
+}
+
 .subtitle {
   margin: 0;
   color: var(--text-muted);
@@ -286,8 +293,30 @@ a:hover {
   overflow-y: auto;
 }
 
+/* Filterfeld im Drawer-Kopf – nur mobil sichtbar, siehe Media Query unten. */
+.sidebar-filter {
+  display: none;
+}
+
 .sidebar-group {
   margin-bottom: 1.4rem;
+}
+
+/* Live-Filter der Nav-Einträge (mobil): Treffer bleiben, der Rest wird
+   ausgeblendet; Gruppen ohne Treffer verschwinden ganz, Gruppen mit
+   Treffern klappen unabhängig von ihrem eigentlichen collapsed/expanded-
+   Zustand auf. Die echten Zustandsklassen bleiben dabei unangetastet, daher
+   steht beim Leeren des Felds der vorherige Zustand einfach wieder da. */
+.nav-filter-hidden {
+  display: none !important;
+}
+
+.sidebar-group.nav-filter-expanded .sidebar-group-items {
+  display: block !important;
+}
+
+.sidebar-subnav.nav-filter-expanded {
+  display: block !important;
 }
 
 .sidebar-group-title {
@@ -435,6 +464,17 @@ main:has(#products-edit-view.active) {
     display: none;
   }
 
+  /* Statt "Bartool" steht im Header der Name des offenen Tabs (js/tabs.js
+     updateMobileHeaderTitle()) – so sieht man nach dem Schließen des
+     Drawers noch, wo man ist. */
+  .app-title-brand {
+    display: none;
+  }
+
+  .app-title-tab {
+    display: inline;
+  }
+
   .app-layout {
     display: block;
   }
@@ -447,6 +487,33 @@ main:has(#products-edit-view.active) {
     border-right: none;
     padding: 0.75rem;
     display: none;
+  }
+
+  .sidebar-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0 0.6rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+  }
+
+  .sidebar-filter-input {
+    flex: 1;
+    min-height: 44px;
+    padding: 0.6rem 0;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+
+  .sidebar-filter-input:focus {
+    outline: none;
   }
 
   .sidebar.open {

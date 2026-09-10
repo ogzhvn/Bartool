@@ -20,7 +20,7 @@
 <body>
   <header class="app-header">
     <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar" hidden data-i18n-aria-label="ui.menue_oeffnen"><i class="ph ph-list" aria-hidden="true"></i></button>
-    <h1 id="app-title" class="app-title"><i class="ph ph-martini brand-mark" aria-hidden="true"></i>Bar<em>tool</em></h1>
+    <h1 id="app-title" class="app-title"><i class="ph ph-martini brand-mark" aria-hidden="true"></i><span class="app-title-brand">Bar<em>tool</em></span><span id="app-title-tab" class="app-title-tab"></span></h1>
     <p class="subtitle" data-i18n="ui.rechner_fuer_die_bar">Rechner für die Bar</p>
     <div id="language-switcher" class="language-switcher" role="group" data-i18n-aria-label="ui.sprache_waehlen"></div>
     <div id="header-user" class="header-user" hidden>
@@ -113,6 +113,10 @@
   <div class="app-layout">
     <div id="nav-backdrop" class="nav-backdrop" hidden></div>
     <nav class="sidebar" id="sidebar" role="tablist">
+      <div class="sidebar-filter">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        <input type="search" id="nav-filter-input" class="sidebar-filter-input" autocomplete="off" data-i18n-placeholder="ui.navigation_filtern" data-i18n-aria-label="ui.navigation_filtern" />
+      </div>
       <div class="sidebar-group" role="presentation">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true" data-i18n="ui.start"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
       </div>

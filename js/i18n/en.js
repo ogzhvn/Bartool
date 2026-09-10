@@ -577,6 +577,7 @@ export const en = {
   "ui.nachher": "After",
   "ui.nachtschicht": "Night shift",
   "ui.nachweis_vom": "Record from",
+  "ui.navigation_filtern": "Search navigation…",
   "ui.name": "Name",
   "ui.name_deutsch": "Name (German)",
   "ui.name_englisch": "Name (English)",

@@ -578,6 +578,7 @@ export const de = {
   "ui.nachher": "Nachher",
   "ui.nachtschicht": "Nachtschicht",
   "ui.nachweis_vom": "Nachweis vom",
+  "ui.navigation_filtern": "Navigation durchsuchen…",
   "ui.name": "Name",
   "ui.name_deutsch": "Name (Deutsch)",
   "ui.name_englisch": "Name (Englisch)",
