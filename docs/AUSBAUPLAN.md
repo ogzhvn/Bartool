@@ -179,7 +179,7 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 | 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5, mittlerer Denkaufwand |
 | 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5, hoher Denkaufwand |
 | 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5, hoher Denkaufwand |
-| 37 | Reporting unter Admin + Betrieb & Team | offen | Sonnet 5, mittlerer Denkaufwand |
+| 37 | Reporting unter Admin + Betrieb & Team | erledigt | Sonnet 5, mittlerer Denkaufwand |
 | 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
 
 ---
@@ -1944,16 +1944,26 @@ geändert `js/main.js`, `index.html`, `css/styles.css`, `js/i18n/de.js`, `js/i18
    Precache-Liste auf den neuen Dateinamen ziehen.
 
 **Abnahme**
-- [ ] Alle Kacheln aus Paket 29 funktionieren nach dem Umzug unverändert.
-- [ ] `#reporting` landet auf `admin-reports` statt auf einer leeren Seite.
-- [ ] Ein Konto mit `reports.view`, aber ohne `users.manage`, sieht unter Admin ausschließlich
-      `admin-reports`.
-- [ ] Ein Konto ohne `reports.view` sieht das Reporting gar nicht.
-- [ ] Jede Kennzahl ist auf eine vorhandene Tabelle zurückführbar, nichts geschätzt.
-- [ ] Bei leerer Datenlage steht überall ein erklärender Text, kein 0-Wert und kein Fehler.
-- [ ] Der Zeitraumfilter wirkt auf alte und neue Kacheln gleichzeitig.
-- [ ] Einzelne Quiz-Antworten sind auch als Administrator nicht einsehbar.
-- [ ] Ladezeit auf dem Handy unter zwei Sekunden.
+- [x] Alle Kacheln aus Paket 29 funktionieren nach dem Umzug unverändert (Code 1:1 übernommen, nur Datei/IDs umbenannt).
+- [x] `#reporting` landet auf `admin-reports` statt auf einer leeren Seite (Alias in `js/tabs.js`, per Code-Review geprüft).
+- [x] Ein Konto ohne `reports.view` sieht das Reporting gar nicht (`data-perm="reports.view"` auf `#admin-reports`, greift über `applyRoleVisibility()`/Registrar wie bei den übrigen Admin-Unterpunkten).
+- [x] Jede Kennzahl ist auf eine vorhandene Tabelle zurückführbar, nichts geschätzt (Checklisten/Übergaben aus `checklist_runs`/`shift_logs`, Vorschläge/Verlauf aus `change_requests`/`audit_log`).
+- [x] Bei leerer Datenlage steht überall ein erklärender Text (jede neue Kachel hat einen eigenen Leerzustand, wie die bestehenden).
+- [x] Der Zeitraumfilter wirkt auf alte und neue Kacheln gleichzeitig (alle drei Grids hängen an `renderAll()`/`periodDays`).
+- [x] Einzelne Quiz-Antworten sind auch als Administrator nicht einsehbar (Team-Block unverändert übernommen, weiterhin nur die zwei SECURITY-DEFINER-RPCs).
+- [ ] Ein Konto mit `reports.view`, aber ohne `users.manage`, sieht unter Admin ausschließlich `admin-reports` – **nicht per Klick geprüft.**
+- [ ] Ladezeit auf dem Handy unter zwei Sekunden – **nicht gemessen.**
+
+**Hinweis:** Kein Login-Klicktest möglich in dieser Session – das Sandbox-Netzwerk blockiert
+den jsdelivr-CDN-Request für `@supabase/supabase-js`, ohne den kommt man nicht über den
+Login-Screen hinaus (bestätigt per Playwright: `ERR_TUNNEL_CONNECTION_FAILED` auf
+`cdn.jsdelivr.net`, danach „Supabase-JS wurde nicht geladen"). Verifiziert wurde stattdessen:
+Syntax-Check aller geänderten/neuen JS-Dateien, i18n-Schlüsselabgleich de/en (keine Lücken,
+keine Duplikate), `index.html` auf doppelte IDs und ausgeglichene `<section>`-Tags, sowie
+Code-Review von RLS-Konsequenzen (`change_requests`/`audit_log`-Policies hängen an
+`requests.review`/`audit.view`, nicht an `reports.view` – deshalb eigene Rechteprüfung in den
+beiden Datenpflege-Kacheln statt einer möglicherweise unvollständigen Zahl). Die beiden offenen
+Punkte oben bitte einmal im Browser mit einem eingeschränkten Testkonto nachprüfen.
 
 **Commit:** `Reporting in den Adminbereich verschoben, Betrieb und Team ergänzt`
 
