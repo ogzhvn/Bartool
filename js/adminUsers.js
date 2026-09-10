@@ -1,7 +1,7 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser, myRank } from "./auth.js";
 import { escapeHtml, functionErrorMessage } from "./utils.js";
-import { onLanguageChanged, t } from "./i18n.js";
+import { formatDateTime, onLanguageChanged, t } from "./i18n.js";
 import { loadRoles, getRolesSync, roleRank } from "./roles.js";
 
 // Kontenverwaltung im Adminbereich (Sub-Tab "admin-users").
@@ -11,6 +11,13 @@ const createForm = document.getElementById("admin-create-form");
 const createError = document.getElementById("admin-create-error");
 const employeeListEl = document.getElementById("admin-employee-list");
 const newRoleSelect = document.getElementById("admin-new-role");
+const roleFilterSelect = document.getElementById("admin-users-role-filter");
+const statusFilterSelect = document.getElementById("admin-users-status-filter");
+
+// Zuletzt geladene Konten – Filter rendern daraus neu, ohne jedes Mal neu zu
+// laden. Sortiert wird schon in der Abfrage (nach letzter Anmeldung), Filter
+// ändern daran nichts.
+let employeesCache = [];
 
 // Rollen kommen seit Paket 35 aus der DB-Tabelle "roles" (mit Rangfolge),
 // nicht mehr aus einem festen Enum. Die Labels sind bewusst nicht übersetzt.
@@ -37,16 +44,47 @@ function fillCreateRoleSelect() {
   newRoleSelect.innerHTML = roleOptions(previous || "barkeeper");
 }
 
+// Rollen-Filter zeigt alle Rollen, nicht nur die unterhalb des eigenen
+// Rangs – filtern darf man auch nach Rollen, die man selbst nicht vergeben
+// könnte.
+function fillRoleFilterSelect() {
+  if (!roleFilterSelect) return;
+  const previous = roleFilterSelect.value;
+  const optionen = getRolesSync()
+    .map((r) => `<option value="${escapeHtml(r.key)}">${escapeHtml(r.label)}</option>`)
+    .join("");
+  roleFilterSelect.innerHTML = `<option value="">${t("ui.alle_rollen")}</option>${optionen}`;
+  roleFilterSelect.value = previous;
+}
+
+function applyFilters(profiles) {
+  const rolle = roleFilterSelect?.value ?? "";
+  const status = statusFilterSelect?.value ?? "";
+  return profiles.filter((p) => {
+    if (rolle && p.role !== rolle) return false;
+    if (status === "active" && p.is_active === false) return false;
+    if (status === "inactive" && p.is_active !== false) return false;
+    return true;
+  });
+}
+
 async function loadEmployees() {
   await loadRoles();
   fillCreateRoleSelect();
+  fillRoleFilterSelect();
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from("profiles").select("*").order("email");
+  // Sortiert nach letzter Anmeldung, nie angemeldete Konten zuerst – so
+  // fällt sofort auf, wer das Tool gar nicht nutzt (Paket 38).
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("last_login_at", { ascending: true, nullsFirst: true });
   if (error) {
     employeeListEl.innerHTML = `<p class="empty-note">${t("ui.konten_konnten_nicht_geladen_werden")} ${escapeHtml(error.message)}</p>`;
     return;
   }
-  renderEmployees(data ?? []);
+  employeesCache = data ?? [];
+  renderEmployees(applyFilters(employeesCache));
 }
 
 function renderEmployees(profiles) {
@@ -57,7 +95,7 @@ function renderEmployees(profiles) {
 
   employeeListEl.innerHTML = `
     <table>
-      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th></th></tr></thead>
+      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th>${t("ui.status")}</th><th>${t("ui.letzte_anmeldung")}</th><th></th></tr></thead>
       <tbody>
         ${profiles
           .map((p) => {
@@ -66,6 +104,7 @@ function renderEmployees(profiles) {
             // ohnehin ab, hier bleiben die Felder nur konsequent grau.
             const gesperrt = p.id === getCurrentUser()?.id || roleRank(p.role) >= myRank();
             const disabled = gesperrt ? "disabled" : "";
+            const aktiv = p.is_active !== false;
             return `
           <tr data-id="${p.id}">
             <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._-]{3,32}" ${disabled} /></td>
@@ -76,8 +115,11 @@ function renderEmployees(profiles) {
                 ${roleOptions(p.role)}
               </select>
             </td>
+            <td>${aktiv ? t("ui.aktiv") : t("ui.inaktiv")}</td>
+            <td>${p.last_login_at ? escapeHtml(formatDateTime(p.last_login_at)) : t("ui.noch_nie_angemeldet")}</td>
             <td>
               <button type="button" class="btn-secondary reset-password-btn" ${disabled}>${t("ui.passwort_zuruecksetzen")}</button>
+              <button type="button" class="btn-secondary toggle-active-btn" data-active="${aktiv}" ${disabled}>${aktiv ? t("ui.deaktivieren") : t("ui.aktivieren")}</button>
               <button type="button" class="btn-secondary delete-employee-btn" ${disabled}>${t("ui.loeschen")}</button>
             </td>
           </tr>`;
@@ -141,6 +183,20 @@ function renderEmployees(profiles) {
     });
   });
 
+  employeeListEl.querySelectorAll(".toggle-active-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.closest("tr").dataset.id;
+      const wirdAktiv = e.target.dataset.active !== "true";
+      if (!wirdAktiv && !confirm(t("ui.konto_wirklich_deaktivieren_ffa2"))) return;
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.from("profiles").update({ is_active: wirdAktiv }).eq("id", id);
+      if (error) {
+        alert(t("ui.status_konnte_nicht_geaendert_werden") + error.message);
+      }
+      loadEmployees();
+    });
+  });
+
   employeeListEl.querySelectorAll(".delete-employee-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.closest("tr").dataset.id;
@@ -188,5 +244,8 @@ export function initAdminUsers() {
   onLanguageChanged(loadEmployees);
 
   createForm.addEventListener("submit", handleCreate);
+  // Filter ändern nur die Anzeige, kein erneutes Laden nötig.
+  roleFilterSelect?.addEventListener("change", () => renderEmployees(applyFilters(employeesCache)));
+  statusFilterSelect?.addEventListener("change", () => renderEmployees(applyFilters(employeesCache)));
   loadEmployees();
 }

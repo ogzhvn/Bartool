@@ -93,11 +93,10 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
-vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die
-Pakete 34, 35 und 36 erledigt, 37 und 38 sind offen. Es gelten weiter die Spielregeln aus Kapitel 0:
-ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
-`erledigt` setzen und mitcommitten.
+**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33) und
+Runde 5 (34–38, geplant am 09.09.2026) sind vollständig umgesetzt.** Es gelten
+weiter die Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge
+einhalten, am Ende Status hier auf `erledigt` setzen und mitcommitten.
 
 | # | Paket | Status |
 |---|---|---|
@@ -2002,13 +2001,25 @@ mitnehmen.
    Einstiegspunkte in den Fach-Tabs bleiben, wo sie sind – nur zusätzlich erreichbar.
 
 **Abnahme**
-- [ ] Nach dem Zurücksetzen muss die betroffene Person beim nächsten Login ein neues Passwort setzen.
-- [ ] Ein deaktiviertes Konto kommt nicht mehr durch den Login, seine bisherigen Einträge
-      bleiben sichtbar.
-- [ ] Das letzte aktive Admin-Konto lässt sich nicht deaktivieren.
-- [ ] `last_login_at` steht nach einer Anmeldung in der Liste.
-- [ ] Ein gelöschtes Rezept ist über den Papierkorb wiederherstellbar.
-- [ ] `supabase/schema.sql` bildet die neuen Spalten ab.
+- [x] Nach dem Zurücksetzen muss die betroffene Person beim nächsten Login ein neues Passwort setzen
+      (bestehende Logik aus `admin-users`/`reset-password`, unverändert – setzt `must_change_password`
+      wieder auf `true`, der Erst-Login-Zwang greift von selbst).
+- [x] Ein deaktiviertes Konto kommt nicht mehr durch den Login, seine bisherigen Einträge bleiben
+      sichtbar (`login-with-username` lehnt `is_active = false` mit derselben Fehlermeldung wie ein
+      falsches Passwort ab; die übrigen Tabellen kennen `is_active` nicht, Einträge bleiben unverändert
+      lesbar). **Nicht per Klick getestet** – jsdelivr/`@supabase/supabase-js` ist in dieser Sandbox
+      gesperrt (`ERR_TUNNEL_CONNECTION_FAILED`), Verifikation über Code-Review.
+- [x] Das letzte aktive Admin-Konto lässt sich nicht deaktivieren (Trigger
+      `private.guard_last_admin()` erweitert, per `apply_migration` angewendet).
+- [x] `last_login_at` steht nach einer Anmeldung in der Liste (`login-with-username` schreibt den
+      Zeitstempel nach erfolgreichem Login, die Kontenliste zeigt ihn und sortiert danach).
+      **Nicht per Klick getestet**, siehe oben.
+- [x] Ein gelöschtes Rezept ist über den Papierkorb wiederherstellbar (Papierkorb in `admin-data`
+      nutzt dieselbe `restore_row()`/`restoreEntry()`-Logik wie der bestehende Änderungsverlauf aus
+      Paket 36, nur auf Löschungen der letzten 30 Tage eingeschränkt). **Nicht per Klick getestet**,
+      siehe oben.
+- [x] `supabase/schema.sql` bildet die neuen Spalten ab (`profiles.is_active`, `profiles.last_login_at`,
+      erweiterter `guard_last_admin()`-Trigger).
 
 **Commit:** `Kontenverwaltung: Passwort-Reset, Deaktivieren, letzte Anmeldung, Papierkorb`
 

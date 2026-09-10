@@ -306,6 +306,14 @@ begin
         raise exception 'Das letzte Administrator-Konto kann nicht herabgestuft werden.';
       end if;
     end if;
+    -- Paket 38: das letzte AKTIVE Admin-Konto lässt sich nicht deaktivieren,
+    -- sonst könnte sich die Barleitung versehentlich aussperren.
+    if old.role = 'admin' and old.is_active and new.is_active = false then
+      select count(*) into admin_count from public.profiles where role = 'admin' and is_active;
+      if admin_count <= 1 then
+        raise exception 'Das letzte aktive Administrator-Konto kann nicht deaktiviert werden.';
+      end if;
+    end if;
     return new;
   end if;
 
@@ -413,6 +421,20 @@ alter table public.profiles add column if not exists language text not null defa
 alter table public.profiles drop constraint if exists profiles_language_check;
 alter table public.profiles add constraint profiles_language_check
   check (language in ('de', 'en'));
+
+-- ---------------------------------------------------------------------
+-- Konto deaktivieren, letzte Anmeldung (Paket 38)
+-- ---------------------------------------------------------------------
+-- Deaktivierte Konten kommen durch den Login nicht mehr durch (siehe Edge
+-- Function "login-with-username"), ihre bisherigen Einträge (Übergaben,
+-- Inventuren, Vorschläge) bleiben aber erhalten und lesbar. Schreibbar ist
+-- die Spalte über dieselbe Policy wie Rolle/Benutzername (users.manage,
+-- Rangfolge), das letzte aktive Admin-Konto schützt der Trigger oben.
+alter table public.profiles add column if not exists is_active boolean not null default true;
+
+-- Wird von "login-with-username" nach erfolgreicher Anmeldung gesetzt –
+-- sichtbar machen, wer das Tool gar nicht nutzt.
+alter table public.profiles add column if not exists last_login_at timestamptz;
 
 -- Eng begrenzter RPC: setzt ausschließlich die Sprache des eigenen Profils.
 -- Ein generelles Self-Update auf profiles gibt es bewusst nicht (Rolle,

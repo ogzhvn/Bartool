@@ -50,13 +50,14 @@ Deno.serve(async (req) => {
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
   const { data: profile } = await adminClient
     .from("profiles")
-    .select("email")
+    .select("id, email, is_active")
     .eq("username", username)
     .maybeSingle();
 
   // Bewusst dieselbe Fehlermeldung wie bei falschem Passwort – kein
-  // Aufschluss darüber geben, ob der Benutzername überhaupt existiert.
-  if (!profile) {
+  // Aufschluss darüber geben, ob der Benutzername überhaupt existiert oder
+  // nur deaktiviert ist (Paket 38).
+  if (!profile || profile.is_active === false) {
     return jsonResponse({ error: "Benutzername oder Passwort ist falsch." }, 400);
   }
 
@@ -69,6 +70,10 @@ Deno.serve(async (req) => {
   if (error || !data.session) {
     return jsonResponse({ error: "Benutzername oder Passwort ist falsch." }, 400);
   }
+
+  // Sichtbar machen, wer das Tool gar nicht nutzt (Paket 38). Fehlschlag
+  // hier bricht den Login nicht ab, die Anmeldung selbst war erfolgreich.
+  await adminClient.from("profiles").update({ last_login_at: new Date().toISOString() }).eq("id", profile.id);
 
   return jsonResponse({
     access_token: data.session.access_token,
