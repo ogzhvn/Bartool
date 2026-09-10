@@ -24,8 +24,18 @@
     <p class="subtitle" data-i18n="ui.rechner_fuer_die_bar">Rechner für die Bar</p>
     <div id="language-switcher" class="language-switcher" role="group" data-i18n-aria-label="ui.sprache_waehlen"></div>
     <div id="header-user" class="header-user" hidden>
-      <span id="current-user-info"></span>
       <button type="button" id="quick-search-open" class="btn-secondary quick-search-btn" title="Suchen (Strg+K)" aria-label="Rezepte und Produkte durchsuchen" data-i18n-title="ui.suchen_strg_k" data-i18n-aria-label="ui.rezepte_und_produkte_durchsuchen"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></button>
+      <div class="user-menu">
+        <button type="button" id="user-menu-toggle" class="user-menu-toggle" aria-expanded="false" aria-haspopup="true" aria-controls="user-menu-popover" aria-label="Konto" data-i18n-aria-label="ui.konto">
+          <i class="ph ph-user-circle" aria-hidden="true"></i>
+          <span id="current-user-info"></span>
+          <i class="ph ph-caret-down user-menu-caret" aria-hidden="true"></i>
+        </button>
+        <div id="user-menu-popover" class="user-menu-popover" hidden>
+          <button type="button" id="change-password-nav-btn" class="user-menu-item" data-i18n="ui.passwort_aendern"><i class="ph ph-lock-key" aria-hidden="true"></i>Passwort ändern</button>
+          <button type="button" id="logout-btn" class="user-menu-item" data-i18n="ui.abmelden"><i class="ph ph-sign-out" aria-hidden="true"></i>Abmelden</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -103,51 +113,65 @@
   <div class="app-layout">
     <div id="nav-backdrop" class="nav-backdrop" hidden></div>
     <nav class="sidebar" id="sidebar" role="tablist">
-      <div class="sidebar-group">
+      <div class="sidebar-group" role="presentation">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true" data-i18n="ui.start"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
       </div>
-      <div class="sidebar-group">
-        <h3 class="sidebar-group-title" data-i18n="ui.rechner">Rechner</h3>
-        <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false" data-i18n="ui.batching"><i class="ph ph-flask" aria-hidden="true"></i>Batching</button>
-        <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false" data-i18n="ui.superjuice"><i class="ph ph-orange-slice" aria-hidden="true"></i>Superjuice</button>
-        <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false" data-i18n="ui.zuckersirup"><i class="ph ph-drop-half" aria-hidden="true"></i>Zuckersirup</button>
-        <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false" data-i18n="ui.verduennung_und_abv"><i class="ph ph-drop" aria-hidden="true"></i>Verdünnung &amp; ABV</button>
-        <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false" data-i18n="ui.kalkulation"><i class="ph ph-currency-eur" aria-hidden="true"></i>Kalkulation</button>
-        <button class="tab-btn" data-tab="menu-costing" role="tab" aria-selected="false" data-i18n="ui.karte"><i class="ph ph-list-checks" aria-hidden="true"></i>Karte</button>
-      </div>
-      <div class="sidebar-group">
-        <h3 class="sidebar-group-title" data-i18n="ui.betrieb">Betrieb</h3>
-        <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false" data-i18n="ui.mise_en_place"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
-        <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" data-i18n="ui.events"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>
-        <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false" data-i18n="ui.uebergabe"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
-        <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false" data-i18n="ui.checklisten"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
-        <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false" data-i18n="ui.inventur"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
-        <button class="tab-btn" data-tab="losses" role="tab" aria-selected="false" data-i18n="ui.schwund_und_bruch"><i class="ph ph-warning" aria-hidden="true"></i>Schwund &amp; Bruch</button>
-        <button class="tab-btn" data-tab="buildable" role="tab" aria-selected="false" data-i18n="ui.was_kann_ich_bauen"><i class="ph ph-martini" aria-hidden="true"></i>Was kann ich bauen?</button>
-      </div>
-      <div class="sidebar-group">
-        <h3 class="sidebar-group-title" data-i18n="ui.bibliothek">Bibliothek</h3>
-        <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false" data-i18n="ui.rezepte"><i class="ph ph-book-open" aria-hidden="true"></i>Rezepte</button>
-        <div id="recipe-category-tree" class="sidebar-subnav"></div>
-        <button class="tab-btn" data-tab="products" role="tab" aria-selected="false" data-i18n="ui.produkte"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
-        <div id="product-category-tree" class="sidebar-subnav"></div>
-        <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false" data-i18n="ui.quiz"><i class="ph ph-brain" aria-hidden="true"></i>Quiz</button>
-      </div>
-      <div class="sidebar-group">
-        <h3 class="sidebar-group-title" data-i18n="ui.verwaltung">Verwaltung</h3>
-        <button class="tab-btn" data-tab="admin" data-perm-any="" role="tab" aria-selected="false" data-i18n="ui.admin"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
-        <div class="sidebar-subnav" id="admin-subnav" data-perm-any="">
-          <button class="tab-btn subnav-btn" data-tab="admin" role="tab" aria-selected="false" data-i18n="ui.uebersicht">Übersicht</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-reports" data-perm="reports.view" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-users" data-perm="users.manage" role="tab" aria-selected="false" data-i18n="ui.konten">Konten</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-quiz" data-perm="quiz.manage" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-data" data-perm="data.manage" role="tab" aria-selected="false" data-i18n="ui.datenqualitaet">Datenqualität</button>
-          <button class="tab-btn subnav-btn" data-tab="admin-audit" data-perm="audit.view" role="tab" aria-selected="false" data-i18n="ui.aenderungsverlauf">Änderungsverlauf</button>
+      <div class="sidebar-group" role="presentation">
+        <h3 class="sidebar-group-title">
+          <button type="button" class="sidebar-group-toggle" aria-expanded="true" aria-controls="nav-group-rechner" data-i18n="ui.rechner">Rechner<i class="ph ph-caret-down sidebar-group-caret" aria-hidden="true"></i></button>
+        </h3>
+        <div class="sidebar-group-items" id="nav-group-rechner" role="presentation">
+          <button class="tab-btn" data-tab="batching" role="tab" aria-selected="false" data-i18n="ui.batching"><i class="ph ph-flask" aria-hidden="true"></i>Batching</button>
+          <button class="tab-btn" data-tab="superjuice" role="tab" aria-selected="false" data-i18n="ui.superjuice"><i class="ph ph-orange-slice" aria-hidden="true"></i>Superjuice</button>
+          <button class="tab-btn" data-tab="syrup" role="tab" aria-selected="false" data-i18n="ui.zuckersirup"><i class="ph ph-drop-half" aria-hidden="true"></i>Zuckersirup</button>
+          <button class="tab-btn" data-tab="dilution" role="tab" aria-selected="false" data-i18n="ui.verduennung_und_abv"><i class="ph ph-drop" aria-hidden="true"></i>Verdünnung &amp; ABV</button>
+          <button class="tab-btn" data-tab="calculation" role="tab" aria-selected="false" data-i18n="ui.kalkulation"><i class="ph ph-currency-eur" aria-hidden="true"></i>Kalkulation</button>
+          <button class="tab-btn" data-tab="menu-costing" role="tab" aria-selected="false" data-i18n="ui.karte"><i class="ph ph-list-checks" aria-hidden="true"></i>Karte</button>
         </div>
-        <button type="button" class="tab-btn" id="change-password-nav-btn" data-i18n="ui.passwort_aendern"><i class="ph ph-lock-key" aria-hidden="true"></i>Passwort ändern</button>
-        <button type="button" class="tab-btn" id="logout-btn" data-i18n="ui.abmelden"><i class="ph ph-sign-out" aria-hidden="true"></i>Abmelden</button>
+      </div>
+      <div class="sidebar-group collapsed" role="presentation">
+        <h3 class="sidebar-group-title">
+          <button type="button" class="sidebar-group-toggle" aria-expanded="false" aria-controls="nav-group-betrieb" data-i18n="ui.betrieb">Betrieb<i class="ph ph-caret-down sidebar-group-caret" aria-hidden="true"></i></button>
+        </h3>
+        <div class="sidebar-group-items" id="nav-group-betrieb" role="presentation">
+          <button class="tab-btn" data-tab="preparations" role="tab" aria-selected="false" data-i18n="ui.mise_en_place"><i class="ph ph-timer" aria-hidden="true"></i>Mise en Place</button>
+          <button class="tab-btn" data-tab="events" role="tab" aria-selected="false" data-i18n="ui.events"><i class="ph ph-calendar-star" aria-hidden="true"></i>Events</button>
+          <button class="tab-btn" data-tab="shift-log" role="tab" aria-selected="false" data-i18n="ui.uebergabe"><i class="ph ph-notebook" aria-hidden="true"></i>Übergabe</button>
+          <button class="tab-btn" data-tab="checklists" role="tab" aria-selected="false" data-i18n="ui.checklisten"><i class="ph ph-check-square-offset" aria-hidden="true"></i>Checklisten</button>
+          <button class="tab-btn" data-tab="inventory" role="tab" aria-selected="false" data-i18n="ui.inventur"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inventur</button>
+          <button class="tab-btn" data-tab="losses" role="tab" aria-selected="false" data-i18n="ui.schwund_und_bruch"><i class="ph ph-warning" aria-hidden="true"></i>Schwund &amp; Bruch</button>
+          <button class="tab-btn" data-tab="buildable" role="tab" aria-selected="false" data-i18n="ui.was_kann_ich_bauen"><i class="ph ph-martini" aria-hidden="true"></i>Was kann ich bauen?</button>
+        </div>
+      </div>
+      <div class="sidebar-group collapsed" role="presentation">
+        <h3 class="sidebar-group-title">
+          <button type="button" class="sidebar-group-toggle" aria-expanded="false" aria-controls="nav-group-bibliothek" data-i18n="ui.bibliothek">Bibliothek<i class="ph ph-caret-down sidebar-group-caret" aria-hidden="true"></i></button>
+        </h3>
+        <div class="sidebar-group-items" id="nav-group-bibliothek" role="presentation">
+          <button class="tab-btn" data-tab="recipes" role="tab" aria-selected="false" data-i18n="ui.rezepte"><i class="ph ph-book-open" aria-hidden="true"></i>Rezepte</button>
+          <div id="recipe-category-tree" class="sidebar-subnav"></div>
+          <button class="tab-btn" data-tab="products" role="tab" aria-selected="false" data-i18n="ui.produkte"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
+          <div id="product-category-tree" class="sidebar-subnav"></div>
+          <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false" data-i18n="ui.quiz"><i class="ph ph-brain" aria-hidden="true"></i>Quiz</button>
+        </div>
+      </div>
+      <div class="sidebar-group collapsed" data-perm-any="" role="presentation">
+        <h3 class="sidebar-group-title">
+          <button type="button" class="sidebar-group-toggle" aria-expanded="false" aria-controls="nav-group-verwaltung" data-i18n="ui.verwaltung">Verwaltung<i class="ph ph-caret-down sidebar-group-caret" aria-hidden="true"></i></button>
+        </h3>
+        <div class="sidebar-group-items" id="nav-group-verwaltung" role="presentation">
+          <button class="tab-btn" data-tab="admin" data-perm-any="" role="tab" aria-selected="false" data-i18n="ui.admin"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
+          <div class="sidebar-subnav" id="admin-subnav" data-perm-any="">
+            <button class="tab-btn subnav-btn" data-tab="admin" role="tab" aria-selected="false" data-i18n="ui.uebersicht">Übersicht</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-reports" data-perm="reports.view" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-users" data-perm="users.manage" role="tab" aria-selected="false" data-i18n="ui.konten">Konten</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-quiz" data-perm="quiz.manage" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-data" data-perm="data.manage" role="tab" aria-selected="false" data-i18n="ui.datenqualitaet">Datenqualität</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-audit" data-perm="audit.view" role="tab" aria-selected="false" data-i18n="ui.aenderungsverlauf">Änderungsverlauf</button>
+          </div>
+        </div>
       </div>
     </nav>
 

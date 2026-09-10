@@ -29,6 +29,25 @@ function currentTabId() {
   return document.querySelector(".tab-btn.active")?.dataset.tab ?? null;
 }
 
+function setGroupExpanded(group, expanded) {
+  group.classList.toggle("collapsed", !expanded);
+  group.querySelector(".sidebar-group-toggle")?.setAttribute("aria-expanded", String(expanded));
+}
+
+// Immer nur die Gruppe des aktiven Tabs offen halten. Komplett ausgeklappt ist
+// die Navigation hoeher als der Bildschirm - auf dem Handy im Drawer genauso
+// wie auf einem kleinen Laptop.
+// Start haengt in keiner Gruppe: dort bleibt offen, was offen war, statt die
+// Navigation komplett zuzuklappen.
+function syncGroupsToTab(tabId) {
+  const groups = [...document.querySelectorAll(".sidebar-group")].filter((group) =>
+    group.querySelector(".sidebar-group-toggle")
+  );
+  const target = groups.find((group) => group.querySelector(`.tab-btn[data-tab="${tabId}"]`));
+  if (!target) return;
+  groups.forEach((group) => setGroupExpanded(group, group === target));
+}
+
 // Wird gesetzt, bevor man aus einer Liste (z.B. Datenqualität im Admin-Tab)
 // direkt ins Bearbeiten-Formular eines anderen Tabs springt, damit man nach
 // dem Bearbeiten (Zurück/Speichern/Löschen) wieder auf der Ausgangsseite mit
@@ -65,6 +84,13 @@ export function initTabs() {
       }
       switchTab(btn.dataset.tab);
       closeMobileNav();
+    });
+  });
+
+  document.querySelectorAll(".sidebar-group-toggle").forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const group = toggle.closest(".sidebar-group");
+      if (group) setGroupExpanded(group, group.classList.contains("collapsed"));
     });
   });
 
@@ -106,6 +132,7 @@ export function switchTab(tabId, { updateHash = true, replace = false, keepEditR
   document.querySelectorAll(".tab-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
   });
+  syncGroupsToTab(tabId);
   document.querySelectorAll(".sidebar-subnav").forEach((subnav) => {
     // Offen bleibt eine Untergruppe, solange ihr eigener Punkt aktiv ist
     // (Kategoriebaum bei Rezepten/Produkten) oder der aktive Tab selbst in

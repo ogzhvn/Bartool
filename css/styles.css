@@ -154,6 +154,81 @@ a:hover {
   font-size: 0.8rem;
 }
 
+.user-menu {
+  position: relative;
+}
+
+.user-menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.user-menu-toggle:hover,
+.user-menu-toggle[aria-expanded="true"] {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.user-menu-toggle > .ph-user-circle {
+  font-size: 1.2rem;
+}
+
+.user-menu-caret {
+  font-size: 0.8rem;
+  transition: transform 0.15s ease;
+}
+
+.user-menu-toggle[aria-expanded="true"] .user-menu-caret {
+  transform: rotate(180deg);
+}
+
+.user-menu-popover {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 60;
+  min-width: 190px;
+  padding: 0.3rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background: var(--accent-900);
+  color: var(--text);
+}
+
+.user-menu-item i {
+  font-size: 1.05rem;
+}
+
 /* Sprachumschalter DE/EN im Header. Steht vor .header-user und schiebt sich
    selbst nach rechts, damit er auch auf der Login-Maske (wo .header-user
    ausgeblendet ist) am rechten Rand sitzt. */
@@ -216,13 +291,46 @@ a:hover {
 }
 
 .sidebar-group-title {
-  margin: 0 0 0.4rem;
-  padding: 0 0.75rem;
+  margin: 0 0 0.2rem;
   font-size: 0.7rem;
   font-weight: 500;
+}
+
+.sidebar-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.sidebar-group-toggle:hover {
+  color: var(--text);
+}
+
+.sidebar-group-caret {
+  font-size: 0.9rem;
+  transition: transform 0.15s ease;
+}
+
+.sidebar-group.collapsed .sidebar-group-caret {
+  transform: rotate(-90deg);
+}
+
+.sidebar-group.collapsed .sidebar-group-items {
+  display: none;
 }
 
 .tab-btn {
@@ -362,6 +470,30 @@ main:has(#products-edit-view.active) {
     inset: 0;
     z-index: 104;
     background: rgba(8, 8, 10, 0.66);
+  }
+
+  /* Im Drawer zaehlt Treffsicherheit mit dem Daumen mehr als Kompaktheit */
+  .tab-btn {
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+
+  .sidebar-group-toggle {
+    padding: 0.6rem 0.75rem;
+    min-height: 44px;
+  }
+
+  .subnav-btn {
+    display: flex;
+    align-items: center;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    min-height: 44px;
+  }
+
+  /* Name und Rolle passen neben dem Titel nicht mehr in die Kopfzeile */
+  #current-user-info {
+    display: none;
   }
 
   main,

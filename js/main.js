@@ -19,6 +19,7 @@ import { initChecklists } from "./checklists.js";
 import { initProductImport } from "./productImport.js";
 import { initAdminSections, ADMIN_AREA_PERMISSIONS } from "./adminSections.js";
 import { initQuickSearch } from "./quickSearch.js";
+import { initHeaderMenu } from "./headerMenu.js";
 import { initMyChangeRequests } from "./changeRequests.js";
 import {
   initRecipeSync,
@@ -154,6 +155,7 @@ async function bootstrapAppOnce() {
   initChecklists();
   initProductImport();
   initQuickSearch();
+  initHeaderMenu();
   initMyChangeRequests();
   startSessionTimeoutWatch();
 }
