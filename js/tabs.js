@@ -12,6 +12,15 @@ export function closeMobileNav() {
 
 const LAST_TAB_KEY = "bartool-last-tab";
 
+// "reporting" war bis Paket 37 ein eigener Hauptpunkt und ist jetzt der
+// Sub-Tab "admin-reports". Alte Lesezeichen und der gemerkte letzte Tab
+// (localStorage) sollen nicht ins Leere laufen.
+const TAB_ALIASES = { reporting: "admin-reports" };
+
+function resolveTab(tabId) {
+  return TAB_ALIASES[tabId] ?? tabId;
+}
+
 function tabExists(tabId) {
   return !!tabId && !!document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
 }
@@ -73,12 +82,12 @@ export function initTabs() {
   });
 
   window.addEventListener("hashchange", () => {
-    const tabId = location.hash.slice(1);
+    const tabId = resolveTab(location.hash.slice(1));
     if (tabExists(tabId)) switchTab(tabId, { updateHash: false });
   });
 
-  const hashTab = location.hash.slice(1);
-  const lastTab = localStorage.getItem(LAST_TAB_KEY);
+  const hashTab = resolveTab(location.hash.slice(1));
+  const lastTab = resolveTab(localStorage.getItem(LAST_TAB_KEY));
   const defaultTab = document.querySelector(".tab-btn.active")?.dataset.tab;
   const initialTab = [hashTab, lastTab, defaultTab].find(tabExists);
   if (initialTab) {
@@ -87,6 +96,7 @@ export function initTabs() {
 }
 
 export function switchTab(tabId, { updateHash = true, replace = false, keepEditReturn = false } = {}) {
+  tabId = resolveTab(tabId);
   if (!keepEditReturn) pendingEditReturn = null;
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.dataset.tab === tabId;

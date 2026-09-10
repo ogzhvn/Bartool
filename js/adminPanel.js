@@ -19,6 +19,7 @@ const cardsEl = document.getElementById("admin-overview-cards");
 // hat, bekommt die Kachel nicht zu sehen – sonst führt sie in ein Panel, das
 // die Rechteprüfung ohnehin leer lässt.
 const CARDS = [
+  { tab: "admin-reports", perm: "reports.view", icon: "ph-chart-line", titleKey: "ui.reporting", descKey: "ui.wareneinsatz_betrieb_und_team_auf_einen_blick" },
   { tab: "admin-users", perm: "users.manage", icon: "ph-users", titleKey: "ui.konten", descKey: "ui.konten_anlegen_rollen_setzen_passwoerter_b71a" },
   { tab: "admin-roles", perm: "roles.manage", icon: "ph-shield-check", titleKey: "ui.rollen_und_rechte", descKey: "ui.je_rolle_festlegen_welche_rechte_gelten_f7a2" },
   { tab: "admin-requests", perm: "requests.review", icon: "ph-git-pull-request", titleKey: "ui.offene_vorschlaege", descKey: "ui.aenderungsvorschlaege_aus_dem_team_6ab3" },

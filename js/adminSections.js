@@ -1,5 +1,6 @@
 import { can, canAny } from "./auth.js";
 import { initAdminPanel } from "./adminPanel.js";
+import { initAdminReports } from "./adminReports.js";
 import { initAdminUsers } from "./adminUsers.js";
 import { initAdminRoles } from "./adminRoles.js";
 import { initAdminQuiz } from "./adminQuiz.js";
@@ -24,6 +25,7 @@ import { initAuditLog } from "./auditLog.js";
 // ändern, und umgekehrt.
 const SECTIONS = {
   admin: { init: initAdminPanel, perm: null },
+  "admin-reports": { init: initAdminReports, perm: "reports.view" },
   "admin-users": { init: initAdminUsers, perm: "users.manage" },
   "admin-roles": { init: initAdminRoles, perm: "roles.manage" },
   "admin-requests": { init: initChangeRequestsAdmin, perm: "requests.review" },

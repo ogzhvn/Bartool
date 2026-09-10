@@ -105,7 +105,6 @@
     <nav class="sidebar" id="sidebar" role="tablist">
       <div class="sidebar-group">
         <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true" data-i18n="ui.start"><i class="ph ph-house" aria-hidden="true"></i>Start</button>
-        <button class="tab-btn" data-tab="reporting" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
       </div>
       <div class="sidebar-group">
         <h3 class="sidebar-group-title" data-i18n="ui.rechner">Rechner</h3>
@@ -139,6 +138,7 @@
         <button class="tab-btn" data-tab="admin" data-perm-any="" role="tab" aria-selected="false" data-i18n="ui.admin"><i class="ph ph-key" aria-hidden="true"></i>Admin</button>
         <div class="sidebar-subnav" id="admin-subnav" data-perm-any="">
           <button class="tab-btn subnav-btn" data-tab="admin" role="tab" aria-selected="false" data-i18n="ui.uebersicht">Übersicht</button>
+          <button class="tab-btn subnav-btn" data-tab="admin-reports" data-perm="reports.view" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
           <button class="tab-btn subnav-btn" data-tab="admin-users" data-perm="users.manage" role="tab" aria-selected="false" data-i18n="ui.konten">Konten</button>
           <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
           <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
@@ -219,19 +219,6 @@
           <span class="tool-card-desc" data-i18n="ui.mitarbeiterkonten_anlegen_und_rollen_2ea8">Mitarbeiterkonten anlegen und Rollen verwalten</span>
         </button>
       </div>
-    </section>
-
-    <section id="reporting" class="tab-panel">
-      <h2 data-i18n="ui.reporting">Reporting</h2>
-      <p class="hint" data-i18n="ui.vor_der_schicht_auf_einen_blick_laeuft_der_a8a2">Vor der Schicht auf einen Blick: läuft der Wareneinsatz weg, was läuft ab, was hat die letzte Inventur ergeben. Nur vorhandene Daten – keine Kachel schätzt.</p>
-
-      <div class="report-period-filter no-print" role="group" aria-label="Zeitraum" data-i18n-aria-label="ui.zeitraum">
-        <button type="button" class="report-period-btn" data-days="30" data-i18n="ui.30_tage">30 Tage</button>
-        <button type="button" class="report-period-btn" data-days="90" data-i18n="ui.90_tage">90 Tage</button>
-        <button type="button" class="report-period-btn" data-days="365" data-i18n="ui.365_tage">365 Tage</button>
-      </div>
-
-      <div class="report-grid" id="report-grid"></div>
     </section>
 
     <!-- BATCHING -->
@@ -1561,6 +1548,42 @@
       <div id="admin-overview-cards" class="tool-grid"></div>
     </section>
 
+    <!-- ADMIN – Reporting: Betrieb & Team (js/adminReports.js) -->
+    <section id="admin-reports" class="tab-panel" data-perm="reports.view">
+      <h2 data-i18n="ui.reporting">Reporting</h2>
+      <p class="hint" data-i18n="ui.vor_der_schicht_auf_einen_blick_laeuft_der_a8a2">Vor der Schicht auf einen Blick: läuft der Wareneinsatz weg, was läuft ab, was hat die letzte Inventur ergeben. Nur vorhandene Daten – keine Kachel schätzt.</p>
+
+      <div class="report-period-filter no-print" role="group" aria-label="Zeitraum" data-i18n-aria-label="ui.zeitraum">
+        <button type="button" class="report-period-btn" data-days="30" data-i18n="ui.30_tage">30 Tage</button>
+        <button type="button" class="report-period-btn" data-days="90" data-i18n="ui.90_tage">90 Tage</button>
+        <button type="button" class="report-period-btn" data-days="365" data-i18n="ui.365_tage">365 Tage</button>
+      </div>
+
+      <div class="actions no-print">
+        <button type="button" id="report-export-btn" class="btn-secondary" data-i18n="ui.als_excel_exportieren">Als Excel exportieren</button>
+      </div>
+
+      <div class="report-grid" id="report-grid"></div>
+
+      <h3 data-i18n="ui.betrieb">Betrieb</h3>
+      <div class="report-grid" id="report-grid-betrieb"></div>
+
+      <h3 data-i18n="ui.team">Team</h3>
+      <p class="hint" data-i18n="ui.pro_person_nur_summen_runden_trefferquote_79c7">Pro Person nur Summen: Runden, Trefferquote, schwächste Themen. Einzelne Antworten sind bewusst nicht einsehbar – die Datenbank gibt sie auch der Barleitung nicht heraus.</p>
+      <div class="actions no-print">
+        <button type="button" id="quiz-team-refresh" class="btn-secondary" data-i18n="ui.auswertung_aktualisieren">Auswertung aktualisieren</button>
+      </div>
+      <div id="quiz-team-error" class="error-note" hidden></div>
+      <div id="quiz-team-list"></div>
+
+      <h4 data-i18n="ui.themen_heatmap_ueber_das_ganze_team">Themen-Heatmap über das ganze Team</h4>
+      <p class="hint" data-i18n="ui.wo_hakt_es_bei_allen_die_themen_mit_der_f1f9">Wo hakt es bei allen? Die Themen mit der schlechtesten Quote stehen oben – Vorlage fürs Teammeeting.</p>
+      <div id="quiz-team-heatmap"></div>
+
+      <h3 data-i18n="ui.datenpflege">Datenpflege</h3>
+      <div class="report-grid" id="report-grid-data"></div>
+    </section>
+
     <!-- ADMIN – Konten (js/adminUsers.js) -->
     <section id="admin-users" class="tab-panel" data-perm="users.manage">
       <h2 data-i18n="ui.konten">Konten</h2>
@@ -1702,18 +1725,6 @@
       </form>
       <div id="quiz-admin-preview-box" class="quiz-preview" hidden></div>
       <div id="quiz-admin-list"></div>
-
-      <h3 data-i18n="ui.quiz_team_uebersicht">Quiz – Team-Übersicht</h3>
-      <p class="hint" data-i18n="ui.pro_person_nur_summen_runden_trefferquote_79c7">Pro Person nur Summen: Runden, Trefferquote, schwächste Themen. Einzelne Antworten sind bewusst nicht einsehbar – die Datenbank gibt sie auch der Barleitung nicht heraus.</p>
-      <div class="actions">
-        <button type="button" id="quiz-team-refresh" class="btn-secondary" data-i18n="ui.auswertung_aktualisieren">Auswertung aktualisieren</button>
-      </div>
-      <div id="quiz-team-error" class="error-note" hidden></div>
-      <div id="quiz-team-list"></div>
-
-      <h4 data-i18n="ui.themen_heatmap_ueber_das_ganze_team">Themen-Heatmap über das ganze Team</h4>
-      <p class="hint" data-i18n="ui.wo_hakt_es_bei_allen_die_themen_mit_der_f1f9">Wo hakt es bei allen? Die Themen mit der schlechtesten Quote stehen oben – Vorlage fürs Teammeeting.</p>
-      <div id="quiz-team-heatmap"></div>
     </section>
 
     <!-- ADMIN – Datenqualität (js/dataQuality.js) -->
