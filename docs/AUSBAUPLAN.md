@@ -205,7 +205,7 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | 43 | Schwierigkeitsranking der Fragen | erledigt | Opus 5, hoher Denkaufwand |
 | 44 | Datenpflege: Bier und Mixer & Softdrink | erledigt | Opus 5, mittlerer Denkaufwand |
 | 45 | Datenpflege: Sirup, Saft, Fruchtpüree | erledigt | Opus 5, mittlerer Denkaufwand |
-| 46 | Datenpflege: Tee & Kaffee, Sonstiges | offen | Opus 5, mittlerer Denkaufwand |
+| 46 | Datenpflege: Tee & Kaffee, Sonstiges | erledigt | Opus 5, mittlerer Denkaufwand |
 
 ---
 
