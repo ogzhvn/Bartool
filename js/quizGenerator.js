@@ -44,6 +44,23 @@ const MIN_ABV_ABSTAND = 2;
 // diesem Drink gar nicht gibt.
 const STANDARD_MENGEN_ML = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60];
 
+// Gemessene Schwierigkeit je question_key (Paket 43). Wird einmal beim
+// Öffnen des Quiz-Tabs aus quiz_question_difficulty() gefüllt und ersetzt dann
+// den Vorgabewert, den jeder Fragetyp unten mitgibt. Bleibt die Karte leer –
+// ohne Netz, ohne das Recht reports.view oder unter den Schutzschwellen der
+// Funktion –, gilt weiter der Vorgabewert. Das Quiz läuft in jedem Fall.
+let gemesseneSchwierigkeit = new Map();
+
+export function setMeasuredDifficulty(karte) {
+  gemesseneSchwierigkeit = karte instanceof Map ? karte : new Map();
+}
+
+// Auch kuratierte Fragen (Key "db:<uuid>") werden gemessen; die baut aber
+// js/quiz.js selbst zusammen und fragt deshalb hier nach.
+export function measuredDifficultyFor(key) {
+  return gemesseneSchwierigkeit.get(key) ?? null;
+}
+
 function txt(value) {
   return String(value ?? "").trim();
 }
@@ -96,7 +113,8 @@ function baueFrage({ key, question, correct, candidates, explanation, topic, par
     topic,
     // Oberkategorie des Themas – gruppiert die Themenliste im Quiz-Tab.
     parent: txt(parent) || topic,
-    difficulty: difficulty ?? 2,
+    // Messung schlägt Vorgabewert – siehe setMeasuredDifficulty().
+    difficulty: gemesseneSchwierigkeit.get(key) ?? difficulty ?? 2,
     refProduct: refProduct ?? "",
     refRecipe: refRecipe ?? "",
     source: "generator",

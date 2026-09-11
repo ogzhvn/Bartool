@@ -781,12 +781,23 @@
         <div class="quiz-modes">
           <button type="button" id="quiz-start-quick" class="btn-primary" data-i18n="ui.schnellrunde_10_fragen">Schnellrunde · 10 Fragen</button>
           <button type="button" id="quiz-start-exam" class="btn-secondary" data-i18n="ui.pruefungsmodus_25_fragen">Prüfungsmodus · 25 Fragen</button>
+          <button type="button" id="quiz-start-hard" class="btn-secondary" data-i18n="ui.harte_fragen_10_fragen">Harte Fragen · 10 Fragen</button>
         </div>
+        <p class="hint" data-i18n="ui.harte_fragen_zieht_nur_aus_den_schweren">Harte Fragen zieht nur aus den schweren Fragen – gemessen an dem, woran das Team bisher gescheitert ist.</p>
 
         <div class="field-row">
           <label data-i18n="ui.thema">
             Thema
             <select id="quiz-topic"></select>
+          </label>
+          <label data-i18n="ui.schwierigkeit">
+            Schwierigkeit
+            <select id="quiz-difficulty">
+              <option value="" data-i18n="ui.alle_schwierigkeiten">Alle Schwierigkeiten</option>
+              <option value="1" data-i18n="ui.leicht">leicht</option>
+              <option value="2" data-i18n="ui.mittel">mittel</option>
+              <option value="3" data-i18n="ui.schwer">schwer</option>
+            </select>
           </label>
         </div>
         <div class="actions">
@@ -1617,6 +1628,10 @@
       <h4 data-i18n="ui.themen_heatmap_ueber_das_ganze_team">Themen-Heatmap über das ganze Team</h4>
       <p class="hint" data-i18n="ui.wo_hakt_es_bei_allen_die_themen_mit_der_f1f9">Wo hakt es bei allen? Die Themen mit der schlechtesten Quote stehen oben – Vorlage fürs Teammeeting.</p>
       <div id="quiz-team-heatmap"></div>
+
+      <h4 data-i18n="ui.fragen_an_denen_es_hakt">Fragen, an denen es hakt</h4>
+      <p class="hint" data-i18n="ui.einzelne_fragen_mit_der_schlechtesten_quote">Einzelne Fragen mit der schlechtesten Quote. Aufgenommen wird eine Frage erst ab 10 Versuchen von mindestens 3 verschiedenen Personen – darunter wäre die Zahl eine Aussage über eine einzelne Person.</p>
+      <div id="quiz-hard-questions" class="quiz-quota-list"></div>
 
       <h3 data-i18n="ui.datenpflege">Datenpflege</h3>
       <div class="report-grid" id="report-grid-data"></div>

@@ -202,7 +202,7 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | 40 | Sichtbarkeit in Heatmap und Rangliste | erledigt | Opus 5, hoher Denkaufwand |
 | 41 | Rangliste im Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
 | 42 | Fragen ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
-| 43 | Schwierigkeitsranking der Fragen | offen | Opus 5, hoher Denkaufwand |
+| 43 | Schwierigkeitsranking der Fragen | erledigt | Opus 5, hoher Denkaufwand |
 | 44 | Datenpflege: Bier und Mixer & Softdrink | offen | Opus 5, mittlerer Denkaufwand |
 | 45 | Datenpflege: Sirup, Saft, Fruchtpüree | offen | Opus 5, mittlerer Denkaufwand |
 | 46 | Datenpflege: Tee & Kaffee, Sonstiges | offen | Opus 5, mittlerer Denkaufwand |
@@ -2409,13 +2409,13 @@ danach **nirgends ausgewertet**. Der Wert ist heute reine Dekoration.
 8. `CACHE` in `sw.js` hochzählen.
 
 **Abnahme**
-- [ ] Eine Frage, die im Test dreimal von drei Personen falsch beantwortet wurde, steht oben in der Liste.
-- [ ] Eine Frage mit 10 Versuchen von nur einer Person taucht **nicht** auf.
-- [ ] Der Modus „Harte Fragen" liefert nachweislich nur `difficulty 3`.
-- [ ] Ein Rundenstart macht keinen zusätzlichen Netzaufruf (Netzwerk-Tab).
-- [ ] Ein Key ohne passende Frage im Pool wird angezeigt, nicht verschluckt.
-- [ ] Ohne Netz läuft das Quiz weiter, nur ohne Kalibrierung.
-- [ ] Auf EN umgeschaltet: Modusname und Listenüberschrift stimmen.
+- [x] Eine Frage, die im Test dreimal von drei Personen falsch beantwortet wurde, steht oben in der Liste.
+- [x] Eine Frage mit 10 Versuchen von nur einer Person taucht **nicht** auf.
+- [x] Der Modus „Harte Fragen" liefert nachweislich nur `difficulty 3`.
+- [x] Ein Rundenstart macht keinen zusätzlichen Netzaufruf (Netzwerk-Tab).
+- [x] Ein Key ohne passende Frage im Pool wird angezeigt, nicht verschluckt.
+- [x] Ohne Netz läuft das Quiz weiter, nur ohne Kalibrierung.
+- [x] Auf EN umgeschaltet: Modusname und Listenüberschrift stimmen.
 
 **Commit:** `Quiz: gemessene Schwierigkeit je Frage`
 

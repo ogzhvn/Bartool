@@ -1596,6 +1596,78 @@ revoke all on function public.quiz_leaderboard(text) from anon;
 grant execute on function public.quiz_leaderboard(text) to authenticated;
 
 -- ---------------------------------------------------------------------
+-- Gemessene Schwierigkeit je Frage (Paket 43)
+-- ---------------------------------------------------------------------
+-- Bis hierher war difficulty im Generator geraten: ein fester Wert je
+-- Fragetyp. Diese Funktion misst stattdessen, woran das Team wirklich
+-- scheitert, und zwar ueber dieselbe Sichtbarkeitsregel wie Heatmap und
+-- Rangliste (private.quiz_sichtbar) - ausgeblendete Personen zaehlen nicht mit.
+--
+-- Zwei Schwellen, beide noetig:
+--   * mindestens 10 Versuche  -> unter zehn Antworten ist eine Quote Rauschen,
+--   * mindestens 3 Lernende   -> ein Aggregat aus zehn Versuchen einer
+--     einzigen Person waere faktisch personenbezogen. Genau das gibt die
+--     Auswertung nicht heraus; die select-Policy auf quiz_attempts bleibt
+--     unangetastet.
+--
+-- Der Fragetext steht bewusst nicht in quiz_attempts (dort liegt nur der
+-- question_key). Er wird im Frontend aus dem aktuellen Fragenpool
+-- rekonstruiert; Keys ohne Treffer bleiben sichtbar, statt zu verschwinden.
+
+create or replace function public.quiz_question_difficulty()
+returns table (
+  question_key text,
+  topic text,
+  attempts bigint,
+  correct bigint,
+  accuracy numeric,
+  learners bigint
+)
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $$
+declare
+  -- Beide Schwellen stehen hier und nicht im Frontend: eine Zeile, die die
+  -- Funktion nicht herausgibt, kann auch niemand versehentlich anzeigen.
+  c_min_versuche constant bigint := 10;
+  c_min_lernende constant bigint := 3;
+begin
+  if not private.has_permission('reports.view') then
+    raise exception 'Nur die Barleitung darf die Schwierigkeit je Frage lesen.'
+      using errcode = '42501';
+  end if;
+
+  return query
+  select
+    a.question_key,
+    -- Das Thema wandert mit dem Katalog (ein Produkt wechselt die Gruppe);
+    -- massgeblich ist deshalb das zuletzt gespeicherte.
+    (array_agg(a.topic order by a.answered_at desc))[1] as topic,
+    count(*)::bigint as attempts,
+    count(*) filter (where a.correct)::bigint as correct,
+    round(100.0 * count(*) filter (where a.correct) / count(*)) as accuracy,
+    count(distinct a.user_id)::bigint as learners
+  from public.quiz_attempts a
+  join public.profiles p on p.id = a.user_id
+  where a.question_key <> ''
+    and private.quiz_sichtbar(p.role, p.quiz_visible)
+  group by a.question_key
+  having count(*) >= c_min_versuche
+     and count(distinct a.user_id) >= c_min_lernende
+  -- Aufsteigend nach Quote: oben steht, woran das Team scheitert.
+  order by round(100.0 * count(*) filter (where a.correct) / count(*)) asc,
+           count(*) desc,
+           a.question_key asc;
+end;
+$$;
+
+revoke all on function public.quiz_question_difficulty() from public;
+-- Die Default-Privilegien des Projekts geben neuen Funktionen auch anon mit.
+revoke all on function public.quiz_question_difficulty() from anon;
+grant execute on function public.quiz_question_difficulty() to authenticated;
+
+-- ---------------------------------------------------------------------
 -- Schwund-, Bruch- und Verkostungsbuch (Paket 28)
 --
 -- Jeder Milliliter, der nicht ueber den Tresen verkauft wurde, bekommt hier

@@ -1194,4 +1194,13 @@ export const en = {
   "ui.sichtbar": "visible",
   "ui.ausgeblendet": "hidden",
   "ui.sichtbarkeit_konnte_nicht_geaendert_werden": "Visibility could not be changed: ",
+  "ui.harte_fragen_10_fragen": "Hard questions · 10 questions",
+  "ui.harte_fragen_zieht_nur_aus_den_schweren": "Hard questions draws only from the difficult ones – measured by what the team has failed at so far.",
+  "ui.alle_schwierigkeiten": "All difficulties",
+  "ui.zu_dieser_schwierigkeit_gibt_es_derzeit_keine_fragen": "There are currently no questions at this difficulty.",
+  "ui.fragen_an_denen_es_hakt": "Questions the team struggles with",
+  "ui.einzelne_fragen_mit_der_schlechtesten_quote": "Individual questions with the worst accuracy. A question only enters the list after 10 attempts by at least 3 different people – below that the figure would be a statement about a single person.",
+  "ui.noch_keine_frage_hat_die_schwellen_erreicht": "No question has enough attempts from enough people yet. The list fills up as the team keeps practising.",
+  "ui.frage_nicht_mehr_im_katalog": "question no longer in the catalogue",
+  "ui.gibt_es_in_dieser_schwierigkeit_keine_fragen": "\" there are no questions at this difficulty right now.",
 };

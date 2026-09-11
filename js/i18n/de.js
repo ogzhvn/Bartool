@@ -1195,4 +1195,13 @@ export const de = {
   "ui.sichtbar": "sichtbar",
   "ui.ausgeblendet": "ausgeblendet",
   "ui.sichtbarkeit_konnte_nicht_geaendert_werden": "Sichtbarkeit konnte nicht geändert werden: ",
+  "ui.harte_fragen_10_fragen": "Harte Fragen · 10 Fragen",
+  "ui.harte_fragen_zieht_nur_aus_den_schweren": "Harte Fragen zieht nur aus den schweren Fragen – gemessen an dem, woran das Team bisher gescheitert ist.",
+  "ui.alle_schwierigkeiten": "Alle Schwierigkeiten",
+  "ui.zu_dieser_schwierigkeit_gibt_es_derzeit_keine_fragen": "Zu dieser Schwierigkeit gibt es derzeit keine Fragen.",
+  "ui.fragen_an_denen_es_hakt": "Fragen, an denen es hakt",
+  "ui.einzelne_fragen_mit_der_schlechtesten_quote": "Einzelne Fragen mit der schlechtesten Quote. Aufgenommen wird eine Frage erst ab 10 Versuchen von mindestens 3 verschiedenen Personen – darunter wäre die Zahl eine Aussage über eine einzelne Person.",
+  "ui.noch_keine_frage_hat_die_schwellen_erreicht": "Noch hat keine Frage genug Versuche von genug Personen. Die Liste füllt sich, sobald das Team weiter übt.",
+  "ui.frage_nicht_mehr_im_katalog": "Frage nicht mehr im Katalog",
+  "ui.gibt_es_in_dieser_schwierigkeit_keine_fragen": "\" gibt es in dieser Schwierigkeit derzeit keine Fragen.",
 };

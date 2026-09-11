@@ -2807,6 +2807,18 @@ input[type="datetime-local"] {
   color: var(--accent-300);
 }
 
+/* Ein question_key, zu dem es im aktuellen Pool keine Frage mehr gibt
+   (Produkt umbenannt oder geloescht): statt des Fragetexts steht der Key da.
+   Monospace, damit er als Kennung lesbar bleibt und nicht wie ein
+   verungluecktes Satzfragment wirkt. */
+.quiz-quota-label.is-orphan {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .quiz-quota-bar {
   display: block;
   height: 6px;

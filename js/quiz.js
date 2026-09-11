@@ -1,13 +1,21 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
-import { generateQuestions, listGeneratedTopics } from "./quizGenerator.js";
+import {
+  generateQuestions,
+  listGeneratedTopics,
+  measuredDifficultyFor,
+  setMeasuredDifficulty,
+} from "./quizGenerator.js";
 import { onProductsChanged, onRecipesChanged } from "./storage.js";
 import {
   baueRangliste,
   berechneStatistik,
+  filtereSchwierigkeit,
   letzterStandProFrage,
+  schwierigkeitsKarte,
   themenGruppen,
   waehleFragen,
+  SCHWIERIGKEIT_STUFEN,
   TOPIC_GRUPPIERUNG_AB,
   RANGLISTE_MIN_VERSUCHE,
   RANGLISTE_SORTIERUNGEN,
@@ -30,6 +38,8 @@ import { formatDate, formatDecimal, getLocale, onLanguageChanged, t } from "./i1
 
 const SCHNELLRUNDE = 10;
 const PRUEFUNG = 25;
+// Stufe, aus der der Modus "Harte Fragen" zieht.
+const HART = 3;
 
 const startEl = document.getElementById("quiz-start");
 const startNoteEl = document.getElementById("quiz-start-note");
@@ -37,6 +47,8 @@ const topicSelectEl = document.getElementById("quiz-topic");
 const quickBtn = document.getElementById("quiz-start-quick");
 const examBtn = document.getElementById("quiz-start-exam");
 const topicBtn = document.getElementById("quiz-start-topic");
+const hardBtn = document.getElementById("quiz-start-hard");
+const difficultySelectEl = document.getElementById("quiz-difficulty");
 
 const roundEl = document.getElementById("quiz-round");
 const progressTextEl = document.getElementById("quiz-progress-text");
@@ -97,6 +109,12 @@ function shuffle(list) {
   return arr;
 }
 
+// Wert des Schwierigkeitsfelds der Themenrunde. 0 = keine Einschränkung.
+function gewaehlteSchwierigkeit() {
+  const wert = Number(difficultySelectEl?.value);
+  return SCHWIERIGKEIT_STUFEN.includes(wert) ? wert : 0;
+}
+
 function setNote(text) {
   startNoteEl.hidden = !text;
   startNoteEl.textContent = text ?? "";
@@ -133,7 +151,8 @@ function fromQuestionRow(row) {
     correctIndex: gemischt.indexOf(richtig),
     explanation: txt(row.explanation),
     topic: txt(row.topic) || t("ui.servicewissen"),
-    difficulty: Number(row.difficulty) || 2,
+    // Auch hier schlägt die Messung den gepflegten Vorgabewert (Paket 43).
+    difficulty: measuredDifficultyFor(`db:${row.id}`) ?? (Number(row.difficulty) || 2),
     refProduct: txt(row.ref_product),
     refRecipe: txt(row.ref_recipe),
     source: "kuratiert",
@@ -221,6 +240,36 @@ async function loadMyAttempts() {
     // Offline: die bisher lokal gesammelten Versuche bleiben stehen.
     return err;
   }
+}
+
+// ---------------------------------------------------------------------
+// Gemessene Schwierigkeit (Paket 43)
+// ---------------------------------------------------------------------
+
+// Holt die Messung einmal und schiebt sie in den Generator, der seinen
+// Vorgabewert damit ersetzt. Fehler sind hier kein Fehlerfall der Oberfläche:
+// ohne Netz oder ohne das Recht reports.view bleibt die Karte leer, das Quiz
+// läuft mit den Vorgabewerten weiter. Deshalb kein setNote(), keine Meldung.
+async function loadQuestionDifficulty() {
+  const supabase = getSupabaseClient();
+  try {
+    const { data, error } = await supabase.rpc("quiz_question_difficulty");
+    if (error) {
+      setMeasuredDifficulty(new Map());
+      return error;
+    }
+    setMeasuredDifficulty(schwierigkeitsKarte(data ?? []));
+    return null;
+  } catch (err) {
+    setMeasuredDifficulty(new Map());
+    return err;
+  }
+}
+
+// Für das Reporting (js/adminReports.js): die gemessenen Zeilen bekommt es
+// selbst aus der RPC, den Fragentext aber nur aus dem aktuellen Pool.
+export function getQuestionPool() {
+  return buildPool();
 }
 
 function kachel(wert, beschriftung) {
@@ -655,22 +704,29 @@ function showView(view) {
   statsEl.hidden = view !== "start";
 }
 
-async function startRound({ size, topic = "" }) {
+async function startRound({ size, topic = "", difficulty = 0 }) {
   setNote("");
   await refreshCurated();
   const pool = buildPool();
   renderTopics(pool);
-  const fragen = waehleFragen(pool, size, topic, letzterStandProFrage(meineVersuche));
+  // Der Schwierigkeitsfilter greift vor der Rundenauswahl, damit Wiederholung
+  // und Themengrenze in waehleFragen() unverändert auf dem Rest arbeiten.
+  const gefiltert = filtereSchwierigkeit(pool, difficulty);
+  const fragen = waehleFragen(gefiltert, size, topic, letzterStandProFrage(meineVersuche));
   if (fragen.length === 0) {
     setNote(
-      topic
-        ? `${t("ui.zum_thema")}${topic}${t("ui.gibt_es_derzeit_keine_fragen")}`
-        : t("ui.es_gibt_derzeit_keine_fragen_sobald_08fe")
+      difficulty && topic
+        ? `${t("ui.zum_thema")}${topic}${t("ui.gibt_es_in_dieser_schwierigkeit_keine_fragen")}`
+        : difficulty
+          ? t("ui.zu_dieser_schwierigkeit_gibt_es_derzeit_keine_fragen")
+          : topic
+            ? `${t("ui.zum_thema")}${topic}${t("ui.gibt_es_derzeit_keine_fragen")}`
+            : t("ui.es_gibt_derzeit_keine_fragen_sobald_08fe")
     );
     showView("start");
     return;
   }
-  runde = { fragen, index: 0, antworten: [], gewuenscht: size, topic, id: neueRundenId() };
+  runde = { fragen, index: 0, antworten: [], gewuenscht: size, topic, difficulty, id: neueRundenId() };
   showView("round");
   renderQuestion();
 }
@@ -863,7 +919,12 @@ export function initQuiz() {
 
   quickBtn.addEventListener("click", () => startRound({ size: SCHNELLRUNDE }));
   examBtn.addEventListener("click", () => startRound({ size: PRUEFUNG }));
-  topicBtn.addEventListener("click", () => startRound({ size: SCHNELLRUNDE, topic: topicSelectEl.value }));
+  // "Harte Fragen": nur Stufe 3 – gemessen, wo genug Daten da sind, sonst der
+  // Vorgabewert des Generators.
+  hardBtn?.addEventListener("click", () => startRound({ size: SCHNELLRUNDE, difficulty: HART }));
+  topicBtn.addEventListener("click", () =>
+    startRound({ size: SCHNELLRUNDE, topic: topicSelectEl.value, difficulty: gewaehlteSchwierigkeit() })
+  );
   nextBtn.addEventListener("click", nextQuestion);
   againBtn.addEventListener("click", zurueckZumStart);
   abortBtn.addEventListener("click", zurueckZumStart);
@@ -880,6 +941,11 @@ export function initQuiz() {
   renderTopics(buildPool());
   showView("start");
   refreshStats();
+  // Einmal pro Sitzung: die Messung holen und in den Generator schieben. Ab
+  // dann kommt die Schwierigkeit aus dem Cache, nicht aus dem Netz.
+  loadQuestionDifficulty().then(() => {
+    if (!runde) renderTopics(buildPool());
+  });
   refreshCurated().then(() => {
     if (!runde) renderTopics(buildPool());
   });

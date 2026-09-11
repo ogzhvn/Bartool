@@ -1,5 +1,6 @@
 import { formatDate, getLocale, localizedText, onLanguageChanged, t } from "./i18n.js";
-import { createLeaderboard } from "./quiz.js";
+import { createLeaderboard, getQuestionPool } from "./quiz.js";
+import { haklisteMitText, HAKELIGE_FRAGEN } from "./quizStats.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { ingredientCost, productForIngredient } from "./costing.js";
 import { priceHistoryFor, onPricesChanged } from "./priceHistory.js";
@@ -639,9 +640,14 @@ const teamErrorEl = document.getElementById("quiz-team-error");
 const teamListEl = document.getElementById("quiz-team-list");
 const teamHeatmapEl = document.getElementById("quiz-team-heatmap");
 const teamLeaderboardEl = document.getElementById("report-leaderboard");
+const hardQuestionsEl = document.getElementById("quiz-hard-questions");
 
 // Dieselbe Rangliste wie im Quiz-Tab (Paket 41) – kein zweites Rendering.
 let teamLeaderboard = null;
+
+// Zuletzt geladene Zeilen aus quiz_question_difficulty(). Gecacht, damit ein
+// Sprachwechsel die Liste neu beschriften kann, ohne noch einmal zu laden.
+let schwierigkeitsZeilen = [];
 
 function teamSetError(text) {
   teamErrorEl.hidden = !text;
@@ -770,23 +776,80 @@ function teamRenderHeatmap(rows) {
   });
 }
 
+// "Fragen, an denen es hakt" (Paket 43) – dieselbe Balkenoptik wie die
+// Heatmap darüber, nur eine Ebene tiefer: einzelne Fragen statt Themen.
+//
+// quiz_attempts speichert nur den question_key, nicht den Fragetext. Der Text
+// kommt deshalb aus dem aktuellen Fragenpool. Ein Key ohne Treffer – Produkt
+// umbenannt oder gelöscht – wird mit dem Key als Ersatzbeschriftung und einem
+// Hinweis angezeigt statt weggelassen: sonst wundert sich die Barleitung über
+// fehlende Zeilen.
+function teamRenderHardQuestions(rows) {
+  if (!hardQuestionsEl) return;
+  if (rows) schwierigkeitsZeilen = rows;
+  hardQuestionsEl.textContent = "";
+  const eintraege = haklisteMitText(schwierigkeitsZeilen, getQuestionPool(), HAKELIGE_FRAGEN);
+  if (eintraege.length === 0) {
+    teamEmptyNote(hardQuestionsEl, t("ui.noch_keine_frage_hat_die_schwellen_erreicht"));
+    return;
+  }
+
+  eintraege.forEach((eintrag) => {
+    const zeile = document.createElement("div");
+    zeile.className = "quiz-quota-row";
+
+    const kopf = document.createElement("span");
+    kopf.className = "quiz-quota-head";
+    const label = document.createElement("span");
+    label.className = eintrag.verwaist ? "quiz-quota-label is-orphan" : "quiz-quota-label";
+    label.textContent = eintrag.label;
+    const wert = document.createElement("span");
+    wert.className = "quiz-quota-value";
+    wert.textContent = `${eintrag.quote} %`;
+    kopf.appendChild(label);
+    kopf.appendChild(wert);
+    zeile.appendChild(kopf);
+
+    zeile.appendChild(teamQuoteBar(eintrag.quote));
+
+    const meta = document.createElement("span");
+    meta.className = "quiz-quota-meta";
+    const teile = [
+      `${eintrag.richtig} ${t("ui.von")} ${eintrag.versuche} ${t("ui.fragen_richtig")} ${eintrag.lernende} ${
+        eintrag.lernende === 1 ? t("ui.person") : t("ui.personen")
+      }`,
+    ];
+    if (eintrag.topic) teile.push(eintrag.topic);
+    if (eintrag.verwaist) teile.push(t("ui.frage_nicht_mehr_im_katalog"));
+    meta.textContent = teile.join(" · ");
+    zeile.appendChild(meta);
+
+    hardQuestionsEl.appendChild(zeile);
+  });
+}
+
 async function teamLoad() {
   teamSetError("");
   const supabase = getSupabaseClient();
   try {
-    const [uebersicht, heatmap] = await Promise.all([
+    const [uebersicht, heatmap, schwierigkeit] = await Promise.all([
       supabase.rpc("quiz_team_overview"),
       supabase.rpc("quiz_topic_heatmap"),
+      supabase.rpc("quiz_question_difficulty"),
     ]);
     if (uebersicht.error) throw uebersicht.error;
     if (heatmap.error) throw heatmap.error;
+    if (schwierigkeit.error) throw schwierigkeit.error;
     teamRenderOverview(uebersicht.data ?? []);
     teamRenderHeatmap(heatmap.data ?? []);
+    teamRenderHardQuestions(schwierigkeit.data ?? []);
     teamLeaderboard?.refresh();
   } catch (error) {
     teamSetError(t("ui.die_team_auswertung_konnte_nicht_geladen_34c6") + error.message);
     teamEmptyNote(teamListEl, t("ui.keine_daten_geladen"));
     teamEmptyNote(teamHeatmapEl, t("ui.keine_daten_geladen"));
+    schwierigkeitsZeilen = [];
+    if (hardQuestionsEl) teamEmptyNote(hardQuestionsEl, t("ui.keine_daten_geladen"));
   }
 }
 
@@ -862,6 +925,11 @@ function anKlickWeiterleiten(grid) {
 export function initAdminReports() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(renderAll);
+  // Die Hakeliste baut ihr Markup selbst und muss deshalb mit (Regel 11).
+  // Ohne geladene Zeilen bleibt sie unangetastet.
+  onLanguageChanged(() => {
+    if (schwierigkeitsZeilen.length > 0) teamRenderHardQuestions(null);
+  });
 
   if (teamLeaderboardEl) teamLeaderboard = createLeaderboard(teamLeaderboardEl);
 

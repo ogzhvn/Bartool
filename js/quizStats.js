@@ -266,3 +266,102 @@ export function baueRangliste(zeilen, sortierung = "correct") {
     return { ...eintrag, rang: letzterRang };
   });
 }
+
+// ── Gemessene Schwierigkeit (Paket 43) ───────────────────────────────────
+//
+// Bis hierher war `difficulty` ein Vorgabewert je Fragetyp aus dem Generator –
+// geraten und nirgends ausgewertet. Ab jetzt misst quiz_question_difficulty()
+// je question_key, wie das Team wirklich abschneidet, und dieser Rechenteil
+// macht daraus die Stufe 1–3.
+//
+// Die beiden Schutzschwellen stehen zusätzlich in der RPC. Hier stehen sie,
+// damit die Anzeige dieselbe Grenze nennen kann, ohne sie zu erfinden.
+export const SCHWIERIGKEIT_MIN_VERSUCHE = 10;
+export const SCHWIERIGKEIT_MIN_LERNENDE = 3;
+
+// Stufen. Die Grenzen sind bewusst grob: ab drei Viertel richtig sitzt eine
+// Frage, unter der Hälfte ist sie ein Stolperstein.
+export const SCHWIERIGKEIT_LEICHT_AB = 75;
+export const SCHWIERIGKEIT_MITTEL_AB = 45;
+export const SCHWIERIGKEIT_STUFEN = [1, 2, 3];
+// So viele Fragen stehen in der Liste "Fragen, an denen es hakt". Mehr ist
+// fuer ein Teammeeting keine Vorlage mehr, sondern eine Tabelle.
+export const HAKELIGE_FRAGEN = 10;
+
+export function schwierigkeitAusQuote(prozent) {
+  // null/undefined/"" heisst "nicht gemessen" – Number() macht daraus sonst
+  // klaglos eine 0 und damit die schwerste Stufe.
+  if (prozent === null || prozent === undefined || prozent === "") return null;
+  const wert = Number(prozent);
+  if (!Number.isFinite(wert)) return null;
+  if (wert >= SCHWIERIGKEIT_LEICHT_AB) return 1;
+  if (wert >= SCHWIERIGKEIT_MITTEL_AB) return 2;
+  return 3;
+}
+
+// Eine Zeile aus quiz_question_difficulty() in die Form der Anzeige bringen.
+// numeric kommt je nach Treiber als Text zurück – deshalb durchgehend Number().
+export function schwierigkeitEintrag(zeile) {
+  const versuche = Number(zeile?.attempts ?? 0);
+  const richtig = Number(zeile?.correct ?? 0);
+  const gemeldet = Number(zeile?.accuracy);
+  const prozent = Number.isFinite(gemeldet) ? gemeldet : quote(richtig, versuche);
+  return {
+    key: String(zeile?.question_key ?? ""),
+    topic: String(zeile?.topic ?? "").trim(),
+    versuche,
+    richtig,
+    quote: prozent,
+    lernende: Number(zeile?.learners ?? 0),
+    difficulty: schwierigkeitAusQuote(prozent) ?? 2,
+  };
+}
+
+// question_key -> gemessene Stufe. Zeilen unter den Schwellen kommen gar nicht
+// erst aus der Datenbank; die Prüfung hier ist die zweite Sicherung, falls die
+// Funktion einmal großzügiger wird.
+export function schwierigkeitsKarte(zeilen) {
+  const karte = new Map();
+  (Array.isArray(zeilen) ? zeilen : []).forEach((zeile) => {
+    const eintrag = schwierigkeitEintrag(zeile);
+    if (!eintrag.key) return;
+    if (eintrag.versuche < SCHWIERIGKEIT_MIN_VERSUCHE) return;
+    if (eintrag.lernende < SCHWIERIGKEIT_MIN_LERNENDE) return;
+    karte.set(eintrag.key, eintrag.difficulty);
+  });
+  return karte;
+}
+
+// Filter für "Harte Fragen" und die Themenrunde. Ohne Stufe bleibt der Pool
+// unverändert – der Aufrufer muss nicht selbst unterscheiden.
+export function filtereSchwierigkeit(pool, stufe) {
+  const wert = Number(stufe);
+  if (!SCHWIERIGKEIT_STUFEN.includes(wert)) return pool;
+  return pool.filter((frage) => (Number(frage.difficulty) || 2) === wert);
+}
+
+// Für die Liste "Fragen, an denen es hakt": zu jedem gemessenen Key den Text
+// aus dem aktuellen Pool. quiz_attempts speichert nur den Key, nicht die Frage.
+// Ein Key ohne Treffer (Produkt umbenannt oder gelöscht) behält den Key als
+// Ersatzbeschriftung und wird als solcher gekennzeichnet – weglassen würde
+// stillschweigend Zeilen unterschlagen.
+export function haklisteMitText(zeilen, pool, anzahl = Infinity) {
+  const texte = new Map();
+  (Array.isArray(pool) ? pool : []).forEach((frage) => {
+    if (frage?.key && !texte.has(frage.key)) texte.set(frage.key, frage);
+  });
+  return (Array.isArray(zeilen) ? zeilen : [])
+    .map(schwierigkeitEintrag)
+    .filter((eintrag) => eintrag.key)
+    .slice(0, anzahl)
+    .map((eintrag) => {
+      const frage = texte.get(eintrag.key);
+      return {
+        ...eintrag,
+        label: frage?.question || eintrag.key,
+        topic: eintrag.topic || String(frage?.topic ?? ""),
+        // true = im aktuellen Pool nicht mehr auffindbar.
+        verwaist: !frage,
+      };
+    });
+}
