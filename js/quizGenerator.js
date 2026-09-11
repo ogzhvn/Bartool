@@ -35,6 +35,14 @@ const HINWEIS_MUSTER = /pr\u00fcf|etikett|nicht dokumentiert|erg\u00e4nzen/i;
 // Unter so vielen verschiedenen Jahrgängen in der Themen-Einheit rät sich
 // eine Jahrgangsfrage von selbst (Ablenker wären Nachbarjahre).
 const MIN_JAHRGAENGE = 4;
+// Mindestabstand zwischen Platz 1 und Platz 2 bei der Alkohol-Vergleichsfrage.
+// Liegen zwei Flaschen dichter beieinander, ist die Frage Glückssache.
+const MIN_ABV_ABSTAND = 2;
+// Geschlossenes Vokabular für die Mengenfrage: die Standardmengen hinterm
+// Tresen in ml. Ablenker kommen ausschließlich aus dieser Liste, nie aus
+// anderen Rezepten – sonst stünde im Zweifel eine Menge zur Wahl, die es in
+// diesem Drink gar nicht gibt.
+const STANDARD_MENGEN_ML = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60];
 
 function txt(value) {
   return String(value ?? "").trim();
@@ -160,10 +168,14 @@ function gepruefteProdukte() {
   return basis.map((p) => ({ ...p, quizTopic: quizThema(p, zerlegt), quizParent: txt(p.group) }));
 }
 
-function formatAbv(value) {
+function abvZahl(value) {
   const zahl = Number(String(value ?? "").replace(",", "."));
-  if (!Number.isFinite(zahl) || zahl <= 0) return "";
-  return `${formatNumberLocal(zahl)} % vol`;
+  return Number.isFinite(zahl) && zahl > 0 ? zahl : null;
+}
+
+function formatAbv(value) {
+  const zahl = abvZahl(value);
+  return zahl === null ? "" : `${formatNumberLocal(zahl)} % vol`;
 }
 
 // Erklärung nach der Antwort: der Fakt selbst, ergänzt um den Quick Pitch,
@@ -349,6 +361,182 @@ function koerperFragen(produkte) {
   });
 }
 
+// 10. Weitere gepflegte Produktfelder (Paket 42)
+//
+// Dieselbe Mechanik wie oben, nur andere Felder. Alle laufen durch
+// `kurzOption`: `service` und `ageStatement` sind oft ganze Sätze, die als
+// Antwortoption nicht taugen – dann entsteht schlicht keine Frage.
+function serviceFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "service",
+    keyPrefix: "service",
+    frage: (p) => t("ui.quiz_frage_service", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_service", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+function allergenFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "allergens",
+    keyPrefix: "allergen",
+    frage: (p) => t("ui.quiz_frage_allergene", { name: p.name }),
+    erklaerung: (p, wert) => t("ui.quiz_erklaerung_allergene", { name: p.name, wert }),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+function altersangabeFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "ageStatement",
+    keyPrefix: "age",
+    frage: (p) => t("ui.quiz_frage_alter", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_alter", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function herkunftsregionFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "originRegion",
+    keyPrefix: "originregion",
+    frage: (p) => t("ui.quiz_frage_herkunftsregion", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_herkunftsregion", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+// 11. Einsatz im Drink (`pairsWith`)
+//
+// `pairsWith` ist eine Liste von Drinknamen, kein Textfeld – also kein
+// `feldFragen()`. Der heikle Punkt ist die zweite richtige Antwort: ein
+// Ablenker-Drink, der das Produkt in Wahrheit auch enthält. Deshalb fliegt
+// jeder Drink raus, der entweder in der eigenen `pairsWith`-Liste steht oder
+// laut Rezeptbuch das Produkt als Zutat führt (derselbe Teilstring-Vergleich
+// wie im Rest des Tools).
+function einsatzFragen(produkte, rezepte) {
+  const nachThema = gruppiere(produkte, "quizTopic");
+  const fragen = [];
+
+  const drinkNamen = (product) => {
+    const nadel = normKey(product.name);
+    if (!nadel) return new Set();
+    const treffer = rezepte.filter((r) =>
+      (r.ingredients ?? []).some((i) => normKey(i?.name).includes(nadel))
+    );
+    return new Set(treffer.map((r) => normKey(r.name)));
+  };
+
+  const liste = (product) =>
+    (Array.isArray(product.pairsWith) ? product.pairsWith : []).map((wert) => kurzOption(wert)).filter(Boolean);
+
+  produkte.forEach((product) => {
+    const eigene = liste(product);
+    if (eigene.length === 0) return;
+    const sortiert = [...eigene].sort((a, b) => a.localeCompare(b, getLocale()));
+    const richtig = sortiert[streuIndex(product.name, sortiert.length)];
+    const tabu = new Set([...eigene.map(normKey), ...drinkNamen(product)]);
+    const kandidaten = (nachThema.get(txt(product.quizTopic)) ?? [])
+      .filter((p) => p.name !== product.name)
+      .flatMap((p) => liste(p))
+      .filter((name) => !tabu.has(normKey(name)));
+    const frage = baueFrage({
+      key: `gen:pairs:${product.name}`,
+      question: t("ui.quiz_frage_einsatz", { name: product.name }),
+      correct: richtig,
+      candidates: kandidaten,
+      explanation: mitPitch(product, t("ui.quiz_erklaerung_einsatz", { name: product.name, wert: eigene.join(", ") })),
+      topic: txt(product.quizTopic),
+      parent: product.quizParent,
+      difficulty: 2,
+      refProduct: product.name,
+    });
+    if (frage) fragen.push(frage);
+  });
+  return fragen;
+}
+
+// 12. Vergleichsfrage: wer hat den höchsten Alkoholgehalt?
+//
+// Innerhalb einer Themen-Einheit nach `abvValue` sortiert, dann in Vierer-
+// fenstern durchgegangen. Gefragt wird nur, wenn Platz 1 mindestens
+// MIN_ABV_ABSTAND % vol vor Platz 2 liegt – sonst ist die Frage unfair.
+function abvVergleichFragen(produkte) {
+  const fragen = [];
+  gruppiere(produkte, "quizTopic").forEach((liste, thema) => {
+    const sortiert = liste
+      .map((p) => ({ p, abv: abvZahl(p.abvValue) }))
+      .filter((e) => e.abv !== null)
+      .sort((a, b) => b.abv - a.abv || a.p.name.localeCompare(b.p.name, getLocale()));
+    for (let i = 0; i + 4 <= sortiert.length; i += 1) {
+      const fenster = sortiert.slice(i, i + 4);
+      if (fenster[0].abv - fenster[1].abv < MIN_ABV_ABSTAND) continue;
+      const sieger = fenster[0];
+      const frage = baueFrage({
+        key: `gen:abvtop:${sieger.p.name}`,
+        question: t("ui.quiz_frage_abv_hoechste", { gruppe: thema }),
+        correct: sieger.p.name,
+        candidates: fenster.slice(1).map((e) => e.p.name),
+        explanation: t("ui.quiz_erklaerung_abv_hoechste", {
+          name: sieger.p.name,
+          wert: formatAbv(sieger.abv),
+          zweiter: fenster[1].p.name,
+          wert2: formatAbv(fenster[1].abv),
+        }),
+        topic: thema,
+        parent: sieger.p.quizParent,
+        difficulty: 2,
+        refProduct: sieger.p.name,
+      });
+      if (frage) fragen.push(frage);
+    }
+  });
+  return fragen;
+}
+
+// 13. Zuordnung: in welche Gruppe gehört das Produkt?
+//
+// Einzige Frage, deren Ablenker bewusst **nicht** aus der eigenen Themen-
+// Einheit kommen – gefragt ist ja gerade die Einheit. Die Ablenker sind echte
+// Gruppennamen aus dem Katalog, bevorzugt aus derselben Oberkategorie
+// (Rotwein/Weißwein/Roséwein), damit die Frage nicht durch Ausschluss fällt.
+function gruppenFragen(produkte) {
+  const themen = new Map();
+  produkte.forEach((p) => {
+    const thema = txt(p.quizTopic);
+    if (thema && !themen.has(thema)) themen.set(thema, txt(p.quizParent));
+  });
+  const alle = [...themen.keys()];
+  const fragen = [];
+  produkte.forEach((product) => {
+    const eigenes = txt(product.quizTopic);
+    if (!eigenes) return;
+    const andere = alle.filter((thema) => thema !== eigenes);
+    const nah = andere.filter((thema) => themen.get(thema) === txt(product.quizParent));
+    const frage = baueFrage({
+      key: `gen:group:${product.name}`,
+      question: t("ui.quiz_frage_gruppe", { name: product.name }),
+      correct: eigenes,
+      candidates: [...shuffle(nah), ...shuffle(andere)],
+      explanation: mitPitch(product, t("ui.quiz_erklaerung_gruppe", { name: product.name, wert: eigenes })),
+      topic: eigenes,
+      parent: product.quizParent,
+      difficulty: 1,
+      refProduct: product.name,
+    });
+    if (frage) fragen.push(frage);
+  });
+  return fragen;
+}
+
 // 9. Jahrgang – nur mit Bremse
 //
 // Ablenker sind hier zwangsläufig andere Jahreszahlen. Stehen in der
@@ -471,41 +659,217 @@ function rezeptFeldFragen({ rezepte, feld, keyPrefix, frage, erklaerung, difficu
   return fragen;
 }
 
+// Zutatennamen eines Rezepts, ohne Dubletten. Kommt ein Name doppelt vor
+// (zwei Zeilen "Limettensaft" mit verschiedenen Mengen), fällt er ganz raus:
+// sonst hätte die Mengenfrage zwei richtige Antworten.
+function zutatenNamen(recipe) {
+  const zaehler = new Map();
+  (recipe.ingredients ?? []).forEach((i) => {
+    const name = txt(i?.name);
+    if (!name) return;
+    zaehler.set(normKey(name), (zaehler.get(normKey(name)) ?? 0) + 1);
+  });
+  const gesehen = new Set();
+  const namen = [];
+  (recipe.ingredients ?? []).forEach((i) => {
+    const name = txt(i?.name);
+    if (!name || zaehler.get(normKey(name)) !== 1 || gesehen.has(normKey(name))) return;
+    gesehen.add(normKey(name));
+    namen.push(name);
+  });
+  return namen;
+}
+
+// Stabile Streuung: aus einem Text immer dieselbe Zahl. Wird gebraucht, wo
+// aus mehreren gleichwertigen Möglichkeiten eine gewählt werden muss und die
+// Wahl über Sessions hinweg gleich bleiben soll (der question_key bezeichnet
+// sonst mal diese, mal jene Frage). Alphabetisch zu wählen wäre auch stabil,
+// träfe aber überall dieselbe Zutat – nach zwei Runden wüsste das Team, dass
+// die Antwort "Absinth" lautet.
+function streuIndex(text, laenge) {
+  if (laenge <= 0) return 0;
+  let hash = 5381;
+  const wert = txt(text);
+  for (let i = 0; i < wert.length; i += 1) hash = ((hash * 33) ^ wert.charCodeAt(i)) >>> 0;
+  return hash % laenge;
+}
+
+// Zwei Zutatennamen, die sich überschneiden ("Limette" / "Limettensaft"),
+// dürfen nie als richtige Antwort und Ablenker nebeneinander stehen.
+function ueberschneidet(a, b) {
+  const x = normKey(a);
+  const y = normKey(b);
+  return Boolean(x) && Boolean(y) && (x.includes(y) || y.includes(x));
+}
+
 // 5. Rezept → Zutat
 //
 // Gefragt wird eine Zutat des Drinks, die Ablenker sind Zutaten anderer
 // Drinks derselben Kategorie, die in diesem Rezept nicht vorkommen.
+//
+// Seit Paket 42 wird jede Zutat einzeln gefragt, nicht mehr nur die erste.
+// Der question_key heißt deshalb `gen:ingredient:<Rezept>:<Zutat>`; die alten
+// Keys `gen:ingredient:<Rezept>` gibt es nicht mehr.
 function zutatenFragen(rezepte) {
   const nachKategorie = gruppiere(rezepte, "category");
   const fragen = [];
   rezepte.forEach((recipe) => {
-    const zutaten = (recipe.ingredients ?? []).map((i) => txt(i?.name)).filter(Boolean);
+    const zutaten = zutatenNamen(recipe);
     if (zutaten.length === 0) return;
-    const eigene = new Set(zutaten.map(normKey));
-    // Immer dieselbe Zutat pro Rezept fragen (die erste, meist die Basis-
-    // spirituose), damit der question_key eine feste Bedeutung behält.
-    const richtig = zutaten[0];
     const kandidaten = [];
     (nachKategorie.get(txt(recipe.category)) ?? [])
       .filter((r) => r.name !== recipe.name)
       .forEach((r) => {
-        (r.ingredients ?? []).forEach((i) => {
-          const name = txt(i?.name);
-          if (name && !eigene.has(normKey(name))) kandidaten.push(name);
+        zutatenNamen(r).forEach((name) => {
+          if (!zutaten.some((eigen) => ueberschneidet(eigen, name))) kandidaten.push(name);
         });
       });
+    zutaten.forEach((richtig) => {
+      const frage = baueFrage({
+        key: `gen:ingredient:${recipe.name}:${richtig}`,
+        question: t("ui.quiz_frage_zutaten", { name: recipe.name }),
+        correct: richtig,
+        candidates: kandidaten,
+        explanation: `${recipe.name}: ${zutaten.join(", ")}.`,
+        topic: txt(recipe.category),
+        parent: REZEPT_OBERTHEMA(),
+        difficulty: 1,
+        refRecipe: recipe.name,
+      });
+      if (frage) fragen.push(frage);
+    });
+  });
+  return fragen;
+}
+
+// 14. Negativfrage: welche Zutat gehört **nicht** rein?
+//
+// Hier sind die Rollen vertauscht: die gesuchte Antwort ist die fremde Zutat,
+// die drei Ablenker sind echte Zutaten des Drinks. Die fremde Zutat kommt aus
+// einem anderen Drink derselben Kategorie und darf sich mit keiner eigenen
+// Zutat überschneiden. Sie wird alphabetisch gewählt, damit der question_key
+// über Sessions hinweg dieselbe Frage bezeichnet.
+function negativFragen(rezepte) {
+  const nachKategorie = gruppiere(rezepte, "category");
+  const fragen = [];
+  rezepte.forEach((recipe) => {
+    const zutaten = zutatenNamen(recipe);
+    if (zutaten.length < MIN_ABLENKER) return;
+    const fremde = new Set();
+    (nachKategorie.get(txt(recipe.category)) ?? [])
+      .filter((r) => r.name !== recipe.name)
+      .forEach((r) => {
+        zutatenNamen(r).forEach((name) => {
+          if (!zutaten.some((eigen) => ueberschneidet(eigen, name))) fremde.add(name);
+        });
+      });
+    const sortiert = [...fremde].sort((a, b) => a.localeCompare(b, getLocale()));
+    const richtig = sortiert[streuIndex(recipe.name, sortiert.length)];
+    if (!richtig) return;
     const frage = baueFrage({
-      key: `gen:ingredient:${recipe.name}`,
-      question: t("ui.quiz_frage_zutaten", { name: recipe.name }),
+      key: `gen:notin:${recipe.name}`,
+      question: t("ui.quiz_frage_negativ", { name: recipe.name }),
       correct: richtig,
-      candidates: kandidaten,
-      explanation: `${recipe.name}: ${zutaten.join(", ")}.`,
+      candidates: zutaten,
+      explanation: t("ui.quiz_erklaerung_negativ", {
+        name: recipe.name,
+        zutaten: zutaten.join(", "),
+        wert: richtig,
+      }),
       topic: txt(recipe.category),
       parent: REZEPT_OBERTHEMA(),
-      difficulty: 1,
+      difficulty: 2,
       refRecipe: recipe.name,
     });
     if (frage) fragen.push(frage);
+  });
+  return fragen;
+}
+
+// 15. Umkehrfrage: in welchem Drink steckt diese Zutat?
+//
+// Nur mit Zutaten, die in genau einem Rezept der Kategorie vorkommen – sonst
+// gäbe es zwei richtige Antworten. Zusätzlich fliegt jeder Ablenker-Drink
+// raus, der eine Zutat mit überschneidendem Namen führt ("Limette" gegen
+// "Limettensaft").
+function umkehrFragen(rezepte) {
+  const fragen = [];
+  gruppiere(rezepte, "category").forEach((liste, kategorie) => {
+    const vorkommen = new Map();
+    liste.forEach((recipe) => {
+      zutatenNamen(recipe).forEach((name) => {
+        if (!vorkommen.has(normKey(name))) vorkommen.set(normKey(name), { name, rezepte: [] });
+        vorkommen.get(normKey(name)).rezepte.push(recipe);
+      });
+    });
+    vorkommen.forEach((eintrag) => {
+      if (eintrag.rezepte.length !== 1) return;
+      const recipe = eintrag.rezepte[0];
+      const kandidaten = liste
+        .filter((r) => r.name !== recipe.name)
+        .filter((r) => !zutatenNamen(r).some((name) => ueberschneidet(name, eintrag.name)))
+        .map((r) => r.name);
+      const frage = baueFrage({
+        key: `gen:drinkfor:${kategorie}:${eintrag.name}`,
+        question: t("ui.quiz_frage_umkehr", { kategorie, zutat: eintrag.name }),
+        correct: recipe.name,
+        candidates: kandidaten,
+        explanation: `${recipe.name}: ${zutatenNamen(recipe).join(", ")}.`,
+        topic: kategorie,
+        parent: REZEPT_OBERTHEMA(),
+        difficulty: 2,
+        refRecipe: recipe.name,
+      });
+      if (frage) fragen.push(frage);
+    });
+  });
+  return fragen;
+}
+
+// 16. Mengenfrage
+//
+// Nur für Zutaten in ml, deren Menge im Standardvokabular steht. Die Ablenker
+// sind die drei nächstgelegenen Standardmengen – nie Werte aus anderen
+// Rezepten, damit keine erfundene Menge auf der Karte steht.
+//
+// Höchstens MENGEN_PRO_REZEPT Zutaten je Drink: fragt man jede ml-Zutat ab,
+// besteht eine Zehnerrunde schnell zur Hälfte aus "Wie viel … kommt in …?".
+// Welche Zutaten es werden, entscheidet `streuIndex` – stabil, aber nicht
+// überall die Basisspirituose.
+const MENGEN_PRO_REZEPT = 2;
+
+function mengenFragen(rezepte) {
+  const fragen = [];
+  const alsText = (wert) => `${formatNumberLocal(wert)} ml`;
+  rezepte.forEach((recipe) => {
+    const erlaubt = new Set(zutatenNamen(recipe).map(normKey));
+    const geeignet = (recipe.ingredients ?? [])
+      .map((zutat) => ({ name: txt(zutat?.name), unit: normKey(zutat?.unit), menge: Number(String(zutat?.amount ?? "").replace(",", ".")) }))
+      .filter((e) => e.name && erlaubt.has(normKey(e.name)) && e.unit === "ml" && STANDARD_MENGEN_ML.includes(e.menge))
+      .sort((a, b) => a.name.localeCompare(b.name, getLocale()));
+    if (geeignet.length === 0) return;
+    const start = streuIndex(recipe.name, geeignet.length);
+    const auswahl = [];
+    for (let i = 0; i < Math.min(MENGEN_PRO_REZEPT, geeignet.length); i += 1) {
+      auswahl.push(geeignet[(start + i) % geeignet.length]);
+    }
+    auswahl.forEach(({ name, menge }) => {
+      const nachbarn = STANDARD_MENGEN_ML.filter((m) => m !== menge)
+        .sort((a, b) => Math.abs(a - menge) - Math.abs(b - menge))
+        .slice(0, MIN_ABLENKER);
+      const frage = baueFrage({
+        key: `gen:amount:${recipe.name}:${name}`,
+        question: t("ui.quiz_frage_menge", { zutat: name, name: recipe.name }),
+        correct: alsText(menge),
+        candidates: nachbarn.map(alsText),
+        explanation: t("ui.quiz_erklaerung_menge", { name: recipe.name, wert: alsText(menge), zutat: name }),
+        topic: txt(recipe.category),
+        parent: REZEPT_OBERTHEMA(),
+        difficulty: 2,
+        refRecipe: recipe.name,
+      });
+      if (frage) fragen.push(frage);
+    });
   });
   return fragen;
 }
@@ -530,6 +894,18 @@ function garniturFragen(rezepte) {
     keyPrefix: "garnish",
     frage: (r) => t("ui.quiz_frage_garnitur", { name: r.name }),
     erklaerung: (r, wert) => t("ui.quiz_erklaerung_garnitur", { name: r.name, wert }),
+    difficulty: 2,
+  });
+}
+
+// 6d. Rezept → Eis
+function eisFragen(rezepte) {
+  return rezeptFeldFragen({
+    rezepte,
+    feld: "ice",
+    keyPrefix: "ice",
+    frage: (r) => t("ui.quiz_frage_eis", { name: r.name }),
+    erklaerung: (r, wert) => t("ui.quiz_erklaerung_eis", { name: r.name, wert }),
     difficulty: 2,
   });
 }
@@ -590,10 +966,21 @@ export function generateQuestions() {
     ...klassifikationFragen(produkte),
     ...koerperFragen(produkte),
     ...jahrgangFragen(produkte),
+    ...serviceFragen(produkte),
+    ...allergenFragen(produkte),
+    ...altersangabeFragen(produkte),
+    ...herkunftsregionFragen(produkte),
+    ...einsatzFragen(produkte, rezepte),
+    ...abvVergleichFragen(produkte),
+    ...gruppenFragen(produkte),
     ...zutatenFragen(rezepte),
     ...glasFragen(rezepte),
     ...garniturFragen(rezepte),
+    ...eisFragen(rezepte),
     ...methodenFragen(rezepte),
+    ...negativFragen(rezepte),
+    ...umkehrFragen(rezepte),
+    ...mengenFragen(rezepte),
   ];
 }
 

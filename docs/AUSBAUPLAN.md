@@ -201,7 +201,7 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | 39 | Wein und Direktprodukte ins Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
 | 40 | Sichtbarkeit in Heatmap und Rangliste | erledigt | Opus 5, hoher Denkaufwand |
 | 41 | Rangliste im Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
-| 42 | Fragen ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
+| 42 | Fragen ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
 | 43 | Schwierigkeitsranking der Fragen | offen | Opus 5, hoher Denkaufwand |
 | 44 | Datenpflege: Bier und Mixer & Softdrink | offen | Opus 5, mittlerer Denkaufwand |
 | 45 | Datenpflege: Sirup, Saft, Fruchtpüree | offen | Opus 5, mittlerer Denkaufwand |
