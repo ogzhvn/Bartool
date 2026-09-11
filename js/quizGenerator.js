@@ -22,6 +22,19 @@ import { getLocale, t } from "./i18n.js";
 // damit Wiederholung und Schwächenanalyse (Paket 27) daran andocken können.
 
 const MIN_ABLENKER = 3;
+// Eine Themen-Einheit muss genug Produkte haben, um Ablenker zu liefern:
+// richtige Antwort + MIN_ABLENKER.
+const MIN_THEMA_PRODUKTE = MIN_ABLENKER + 1;
+// Längste Antwortoption. Die Wein-Felder enthalten teils ganze Sätze
+// ("Ausbau im Tank und im Eichenfass, teils gebrauchte Barriques ..."); als
+// Antwortoption hinterm Tresen ist das unlesbar, also fällt es weg.
+const MAX_OPTION_LEN = 60;
+// Datenpflege-Hinweise im Feld sind keine Antwort, sondern eine Aufgabe für
+// den Wareneingang ("genaue DOC-Angabe vom Etikett übernehmen").
+const HINWEIS_MUSTER = /pr\u00fcf|etikett|nicht dokumentiert|erg\u00e4nzen/i;
+// Unter so vielen verschiedenen Jahrgängen in der Themen-Einheit rät sich
+// eine Jahrgangsfrage von selbst (Ablenker wären Nachbarjahre).
+const MIN_JAHRGAENGE = 4;
 
 function txt(value) {
   return String(value ?? "").trim();
@@ -29,6 +42,14 @@ function txt(value) {
 
 function normKey(value) {
   return txt(value).toLowerCase();
+}
+
+// Wert, der als Antwortoption taugt: kurz genug für eine Zeile und ohne
+// Datenpflege-Hinweis. Alles andere ergibt keine Frage statt einer schlechten.
+function kurzOption(value) {
+  const wert = txt(value);
+  if (!wert || wert.length > MAX_OPTION_LEN) return "";
+  return HINWEIS_MUSTER.test(wert) ? "" : wert;
 }
 
 function shuffle(list) {
@@ -43,7 +64,7 @@ function shuffle(list) {
 // Baut aus richtiger Antwort + Kandidaten eine fertige Frage. Gibt null
 // zurück, wenn zu wenige unterschiedliche Ablenker übrig bleiben – so kann
 // jeder Fragetyp einfach `.filter(Boolean)` anhängen.
-function baueFrage({ key, question, correct, candidates, explanation, topic, difficulty, refProduct, refRecipe }) {
+function baueFrage({ key, question, correct, candidates, explanation, topic, parent, difficulty, refProduct, refRecipe }) {
   const richtig = txt(correct);
   if (!richtig) return null;
 
@@ -65,6 +86,8 @@ function baueFrage({ key, question, correct, candidates, explanation, topic, dif
     correctIndex: options.indexOf(richtig),
     explanation: txt(explanation),
     topic,
+    // Oberkategorie des Themas – gruppiert die Themenliste im Quiz-Tab.
+    parent: txt(parent) || topic,
     difficulty: difficulty ?? 2,
     refProduct: refProduct ?? "",
     refRecipe: refRecipe ?? "",
@@ -87,10 +110,54 @@ function gruppiere(items, feld) {
 // Produktfragen
 // ---------------------------------------------------------------------
 
+// Welche Produktgruppen werden für das Quiz in ihre Untergruppen zerlegt?
+//
+// Hintergrund: `sub_group` ist fast überall gesetzt, aber sehr unterschiedlich
+// gemeint. Bei Wein sind es echte Kategorien (Rotwein, Weißwein, Roséwein) mit
+// je genug Flaschen. Bei Whisky oder Rum sind es Herkunftsschubladen, in denen
+// teils nur eine einzige Flasche steht – zerlegt man die, bleiben keine
+// Ablenker übrig und die Fragen verschwinden ersatzlos.
+//
+// Deshalb gilt: eine Gruppe wird nur dann ganz nach Untergruppen zerlegt, wenn
+// es mindestens zwei Untergruppen gibt, jede davon genug Produkte hat und kein
+// Produkt der Gruppe ohne Untergruppe dasteht. Sonst bleibt die Gruppe selbst
+// das Thema. Heute trifft das genau auf Wein zu.
+export function themenSchnitt(produkte) {
+  const proGruppe = new Map();
+  produkte.forEach((p) => {
+    const gruppe = txt(p.group);
+    if (!gruppe) return;
+    if (!proGruppe.has(gruppe)) proGruppe.set(gruppe, new Map());
+    const unter = proGruppe.get(gruppe);
+    const schluessel = txt(p.subGroup);
+    unter.set(schluessel, (unter.get(schluessel) ?? 0) + 1);
+  });
+
+  const zerlegt = new Set();
+  proGruppe.forEach((unter, gruppe) => {
+    if (unter.has("")) return;
+    if (unter.size < 2) return;
+    const tragfaehig = [...unter.values()].every((anzahl) => anzahl >= MIN_THEMA_PRODUKTE);
+    if (tragfaehig) zerlegt.add(gruppe);
+  });
+  return zerlegt;
+}
+
+// Thema eines Produkts: die Untergruppe, wenn die Gruppe zerlegt wird, sonst
+// die Gruppe. Ohne `zerlegt` (z. B. im Einzeltest) immer die Gruppe.
+export function quizThema(product, zerlegt) {
+  const gruppe = txt(product?.group);
+  const unter = txt(product?.subGroup);
+  return unter && zerlegt?.has(gruppe) ? unter : gruppe;
+}
+
 // Nur geprüfte Produkte mit Gruppenzuordnung: ohne Gruppe gibt es keine
-// saubere Ablenkerauswahl.
+// saubere Ablenkerauswahl. `quizTopic` ist das Thema der Frage und zugleich
+// die Einheit, aus der die Ablenker kommen; `quizParent` bleibt die Gruppe.
 function gepruefteProdukte() {
-  return getAllProducts().filter((p) => p?.verified === true && txt(p.group));
+  const basis = getAllProducts().filter((p) => p?.verified === true && txt(p.group));
+  const zerlegt = themenSchnitt(basis);
+  return basis.map((p) => ({ ...p, quizTopic: quizThema(p, zerlegt), quizParent: txt(p.group) }));
 }
 
 function formatAbv(value) {
@@ -108,12 +175,12 @@ function mitPitch(product, satz) {
 
 // Gemeinsames Gerüst für alle Fragen "ein Feld eines Produkts erraten".
 function feldFragen({ produkte, feld, keyPrefix, frage, erklaerung, formatiere, difficulty }) {
-  const nachGruppe = gruppiere(produkte, "group");
+  const nachThema = gruppiere(produkte, "quizTopic");
   const fragen = [];
   produkte.forEach((product) => {
     const richtig = formatiere ? formatiere(product[feld]) : txt(product[feld]);
     if (!richtig) return;
-    const kandidaten = (nachGruppe.get(txt(product.group)) ?? [])
+    const kandidaten = (nachThema.get(txt(product.quizTopic)) ?? [])
       .filter((p) => p.name !== product.name)
       .map((p) => (formatiere ? formatiere(p[feld]) : txt(p[feld])));
     const frageObjekt = baueFrage({
@@ -122,7 +189,8 @@ function feldFragen({ produkte, feld, keyPrefix, frage, erklaerung, formatiere, 
       correct: richtig,
       candidates: kandidaten,
       explanation: erklaerung(product, richtig),
-      topic: txt(product.group),
+      topic: txt(product.quizTopic),
+      parent: product.quizParent,
       difficulty,
       refProduct: product.name,
     });
@@ -180,13 +248,145 @@ function verfahrenFragen(produkte) {
   });
 }
 
+// 8. Wein- und Schaumweinwissen
+//
+// Alle diese Felder sind seit Paket 25 gepflegt, stehen aber nicht überall und
+// enthalten teils ganze Sätze. `kurzOption` sortiert aus, was als Antwort nicht
+// taugt; bleiben zu wenige Ablenker übrig, entsteht einfach keine Frage.
+function rebsorteFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "grapeVariety",
+    keyPrefix: "grape",
+    frage: (p) => t("ui.quiz_frage_rebsorte", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_rebsorte", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+function regionFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "region",
+    keyPrefix: "region",
+    frage: (p) => t("ui.quiz_frage_region", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_region", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+function erzeugerFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "producer",
+    keyPrefix: "producer",
+    frage: (p) => t("ui.quiz_frage_erzeuger", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_erzeuger", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function suesseFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "sweetness",
+    keyPrefix: "sweet",
+    frage: (p) => t("ui.quiz_frage_suesse", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_suesse", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 1,
+  });
+}
+
+function ausbauFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "aging",
+    keyPrefix: "aging",
+    frage: (p) => t("ui.quiz_frage_ausbau", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_ausbau", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function temperaturFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "servingTemp",
+    keyPrefix: "temp",
+    frage: (p) => t("ui.quiz_frage_temperatur", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_temperatur", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+function klassifikationFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "classification",
+    keyPrefix: "class",
+    frage: (p) => t("ui.quiz_frage_klassifikation", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_klassifikation", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function koerperFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "body",
+    keyPrefix: "body",
+    frage: (p) => t("ui.quiz_frage_koerper", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_koerper", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 2,
+  });
+}
+
+// 9. Jahrgang – nur mit Bremse
+//
+// Ablenker sind hier zwangsläufig andere Jahreszahlen. Stehen in der
+// Themen-Einheit nur zwei oder drei verschiedene Jahrgänge, ist die Frage durch
+// Ausschluss lösbar und damit wertlos. Deshalb erst ab MIN_JAHRGAENGE und
+// grundsätzlich als schwere Frage.
+function jahrgangFragen(produkte) {
+  const nachThema = gruppiere(produkte, "quizTopic");
+  const fragen = [];
+  produkte.forEach((product) => {
+    const richtig = kurzOption(product.vintage);
+    if (!richtig) return;
+    const geschwister = (nachThema.get(txt(product.quizTopic)) ?? []).filter((p) => p.name !== product.name);
+    const jahrgaenge = [...new Set([product, ...geschwister].map((p) => kurzOption(p.vintage)).filter(Boolean))];
+    if (jahrgaenge.length < MIN_JAHRGAENGE) return;
+    const frage = baueFrage({
+      key: `gen:vintage:${product.name}`,
+      question: t("ui.quiz_frage_jahrgang", { name: product.name }),
+      correct: richtig,
+      candidates: geschwister.map((p) => kurzOption(p.vintage)),
+      explanation: mitPitch(product, t("ui.quiz_erklaerung_jahrgang", { name: product.name, wert: richtig })),
+      topic: txt(product.quizTopic),
+      parent: product.quizParent,
+      difficulty: 3,
+      refProduct: product.name,
+    });
+    if (frage) fragen.push(frage);
+  });
+  return fragen;
+}
+
 // 4. Tasting Notes → welches Produkt passt
 //
 // Umgekehrte Richtung: die Aromen sind die Frage, gesucht ist das Produkt.
 // Ablenker sind Produkte derselben Gruppe, deren Aromen sich nicht mit den
 // genannten überschneiden – sonst gäbe es zwei richtige Antworten.
 function aromaFragen(produkte) {
-  const nachGruppe = gruppiere(produkte, "group");
+  const nachThema = gruppiere(produkte, "quizTopic");
   const fragen = [];
   produkte.forEach((product) => {
     const tags = (Array.isArray(product.flavorTags) ? product.flavorTags : [])
@@ -194,7 +394,7 @@ function aromaFragen(produkte) {
       .filter(Boolean);
     if (tags.length < 2) return;
     const eigene = new Set(tags.map(normKey));
-    const kandidaten = (nachGruppe.get(txt(product.group)) ?? [])
+    const kandidaten = (nachThema.get(txt(product.quizTopic)) ?? [])
       .filter((p) => p.name !== product.name)
       .filter((p) => {
         const fremde = Array.isArray(p.flavorTags) ? p.flavorTags : [];
@@ -203,11 +403,12 @@ function aromaFragen(produkte) {
       .map((p) => p.name);
     const frage = baueFrage({
       key: `gen:notes:${product.name}`,
-      question: t("ui.quiz_frage_aroma", { gruppe: txt(product.group), tags: tags.join(", ") }),
+      question: t("ui.quiz_frage_aroma", { gruppe: txt(product.quizTopic), tags: tags.join(", ") }),
       correct: product.name,
       candidates: kandidaten,
       explanation: mitPitch(product, `${product.name}: ${tags.join(", ")}.`),
-      topic: txt(product.group),
+      topic: txt(product.quizTopic),
+      parent: product.quizParent,
       difficulty: 3,
       refProduct: product.name,
     });
@@ -219,6 +420,12 @@ function aromaFragen(produkte) {
 // ---------------------------------------------------------------------
 // Rezeptfragen
 // ---------------------------------------------------------------------
+
+// Oberkategorie aller Rezeptfragen. Als Funktion, weil die Sprache zur
+// Laufzeit umgeschaltet werden kann.
+function REZEPT_OBERTHEMA() {
+  return t("ui.rezepte");
+}
 
 function rezepteMitKategorie() {
   return getAllRecipes().filter((r) => txt(r?.name) && txt(r?.category));
@@ -255,6 +462,7 @@ function rezeptFeldFragen({ rezepte, feld, keyPrefix, frage, erklaerung, difficu
       candidates: kandidaten,
       explanation: erklaerung(recipe, richtig),
       topic: txt(recipe.category),
+      parent: REZEPT_OBERTHEMA(),
       difficulty,
       refRecipe: recipe.name,
     });
@@ -293,6 +501,7 @@ function zutatenFragen(rezepte) {
       candidates: kandidaten,
       explanation: `${recipe.name}: ${zutaten.join(", ")}.`,
       topic: txt(recipe.category),
+      parent: REZEPT_OBERTHEMA(),
       difficulty: 1,
       refRecipe: recipe.name,
     });
@@ -348,6 +557,7 @@ function methodenFragen(rezepte) {
       candidates: [...ausKategorie, ...alleTechniken],
       explanation: txt(recipe.method) || `${recipe.name}: ${richtig}.`,
       topic: txt(recipe.category),
+      parent: REZEPT_OBERTHEMA(),
       difficulty: 1,
       refRecipe: recipe.name,
     });
@@ -371,6 +581,15 @@ export function generateQuestions() {
     ...rohstoffFragen(produkte),
     ...verfahrenFragen(produkte),
     ...aromaFragen(produkte),
+    ...rebsorteFragen(produkte),
+    ...regionFragen(produkte),
+    ...erzeugerFragen(produkte),
+    ...suesseFragen(produkte),
+    ...ausbauFragen(produkte),
+    ...temperaturFragen(produkte),
+    ...klassifikationFragen(produkte),
+    ...koerperFragen(produkte),
+    ...jahrgangFragen(produkte),
     ...zutatenFragen(rezepte),
     ...glasFragen(rezepte),
     ...garniturFragen(rezepte),
@@ -385,11 +604,10 @@ export function listGeneratedTopics(pool) {
   const zaehler = new Map();
   fragen.forEach((f) => {
     if (!f.topic) return;
-    zaehler.set(f.topic, (zaehler.get(f.topic) ?? 0) + 1);
+    if (!zaehler.has(f.topic)) zaehler.set(f.topic, { topic: f.topic, count: 0, parent: txt(f.parent) || f.topic });
+    zaehler.get(f.topic).count += 1;
   });
-  return [...zaehler.entries()]
-    .map(([topic, count]) => ({ topic, count }))
-    .sort((a, b) => a.topic.localeCompare(b.topic, getLocale()));
+  return [...zaehler.values()].sort((a, b) => a.topic.localeCompare(b.topic, getLocale()));
 }
 
 // Zieht `anzahl` Fragen aus einem Pool, ohne Dubletten (question_key ist

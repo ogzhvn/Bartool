@@ -1,4 +1,4 @@
-import { getLocale } from "./i18n.js";
+import { getLocale, t } from "./i18n.js";
 // Rechenteil der Quiz-Auswertung (Paket 27).
 //
 // Bewusst ohne DOM- und Supabase-Zugriff: hier stecken nur Funktionen, die
@@ -45,11 +45,24 @@ export function letzterStandProFrage(versuche) {
   return stand;
 }
 
+// Höchstzahl Fragen aus einem Thema in einer gemischten Runde. Der Fragenpool
+// ist sehr ungleich verteilt – allein Wein stellt ein Mehrfaches der übrigen
+// Gruppen –, ohne Grenze wäre eine Schnellrunde fast nur Wein.
+export function maxProThema(anzahl) {
+  return Math.max(2, Math.ceil(anzahl / 4));
+}
+
 // Wiederholungslogik: zuletzt falsch beantwortete Fragen kommen bevorzugt
 // wieder, aber nie mehr als die halbe Runde. Danach Fragen, die noch nie
 // dran waren, dann die sitzenden, zum Schluss der Rest der alten Fehler.
-export function waehleFragen(pool, anzahl, topic, stand) {
+//
+// Quer dazu liegt die Themengrenze: in einer gemischten Runde stellt kein
+// Thema mehr als `grenze` Fragen. Reicht die Runde damit nicht voll (kleiner
+// Pool, wenige Themen), wird die Grenze am Ende aufgehoben – eine kurze Runde
+// ist schlechter als eine einseitige. In einer Themenrunde gilt sie nie.
+export function waehleFragen(pool, anzahl, topic, stand, grenze) {
   const gefiltert = topic ? pool.filter((f) => f.topic === topic) : pool;
+  const obergrenze = topic ? Infinity : (grenze ?? maxProThema(anzahl));
 
   const falsch = [];
   const neu = [];
@@ -64,9 +77,20 @@ export function waehleFragen(pool, anzahl, topic, stand) {
   });
 
   const auswahl = [];
-  const nimm = (bucket, wieviele) => {
+  const proThema = new Map();
+  // Wegen der Themengrenze übersprungene Fragen – Reserve für den Fall, dass
+  // die Runde sonst zu kurz bleibt.
+  const reserve = [];
+  const nimm = (bucket, wieviele, achteAufThema = true) => {
     while (bucket.length > 0 && auswahl.length < anzahl && wieviele > 0) {
-      auswahl.push(bucket.shift());
+      const frage = bucket.shift();
+      const thema = String(frage.topic ?? "");
+      if (achteAufThema && (proThema.get(thema) ?? 0) >= obergrenze) {
+        reserve.push(frage);
+        continue;
+      }
+      proThema.set(thema, (proThema.get(thema) ?? 0) + 1);
+      auswahl.push(frage);
       wieviele -= 1;
     }
   };
@@ -75,7 +99,48 @@ export function waehleFragen(pool, anzahl, topic, stand) {
   nimm(neu, anzahl - auswahl.length);
   nimm(sitzt, anzahl - auswahl.length);
   nimm(falsch, anzahl - auswahl.length);
+  // Zum Schluss ohne Themengrenze: erst die zurückgestellten Fragen, dann der
+  // noch nicht angefasste Rest der Körbe.
+  nimm(reserve, anzahl - auswahl.length, false);
+  [neu, sitzt, falsch].forEach((bucket) => nimm(bucket, anzahl - auswahl.length, false));
   return auswahl;
+}
+
+// Ab so vielen Themen wird die Auswahlliste im Quiz nach Oberkategorie
+// gruppiert – darunter ist eine flache Liste übersichtlicher.
+export const TOPIC_GRUPPIERUNG_AB = 12;
+
+// Bringt die Themenliste aus listGeneratedTopics() in Gruppen für das
+// Auswahlfeld. Oberkategorien mit mehr als einem Thema (heute Wein mit Rot-,
+// Weiß- und Roséwein) bekommen eine eigene Überschrift, alles andere landet
+// gesammelt unter Produkte bzw. Rezepte – eine Überschrift über einem einzigen
+// Eintrag desselben Namens hilft hinterm Tresen nicht.
+export function themenGruppen(themen) {
+  const proParent = new Map();
+  themen.forEach((thema) => {
+    const parent = thema.parent || thema.topic;
+    if (!proParent.has(parent)) proParent.set(parent, []);
+    proParent.get(parent).push(thema);
+  });
+
+  const nachName = (a, b) => a.topic.localeCompare(b.topic, getLocale());
+  const rezepte = t("ui.rezepte");
+  const eigene = [];
+  const sammelProdukte = [];
+  const sammelRezepte = [];
+  proParent.forEach((liste, parent) => {
+    if (parent === rezepte) sammelRezepte.push(...liste);
+    else if (liste.length > 1) eigene.push({ label: parent, themen: liste.sort(nachName) });
+    else sammelProdukte.push(...liste);
+  });
+
+  const gruppen = [];
+  if (sammelProdukte.length > 0) {
+    gruppen.push({ label: t("ui.produkte"), themen: sammelProdukte.sort(nachName) });
+  }
+  gruppen.push(...eigene.sort((a, b) => a.label.localeCompare(b.label, getLocale())));
+  if (sammelRezepte.length > 0) gruppen.push({ label: rezepte, themen: sammelRezepte.sort(nachName) });
+  return gruppen;
 }
 
 // Rechnet die eigenen Versuche in die Zahlen um, die im Quiz-Tab stehen.

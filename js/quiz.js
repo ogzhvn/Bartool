@@ -6,7 +6,9 @@ import {
   baueRangliste,
   berechneStatistik,
   letzterStandProFrage,
+  themenGruppen,
   waehleFragen,
+  TOPIC_GRUPPIERUNG_AB,
   RANGLISTE_MIN_VERSUCHE,
   RANGLISTE_SORTIERUNGEN,
   RANGLISTE_ZEITRAEUME,
@@ -617,12 +619,25 @@ function renderTopics(pool) {
   const themen = listGeneratedTopics(pool);
   const vorher = topicSelectEl.value;
   topicSelectEl.textContent = "";
-  themen.forEach(({ topic, count }) => {
+
+  const anhaengen = (ziel, thema) => {
     const option = document.createElement("option");
-    option.value = topic;
-    option.textContent = `${topic} (${count} ${t("ui.fragen")}`;
-    topicSelectEl.appendChild(option);
-  });
+    option.value = thema.topic;
+    option.textContent = `${thema.topic} (${thema.count} ${t("ui.fragen")})`;
+    ziel.appendChild(option);
+  };
+
+  if (themen.length > TOPIC_GRUPPIERUNG_AB) {
+    themenGruppen(themen).forEach((gruppe) => {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = gruppe.label;
+      gruppe.themen.forEach((thema) => anhaengen(optgroup, thema));
+      topicSelectEl.appendChild(optgroup);
+    });
+  } else {
+    themen.forEach((thema) => anhaengen(topicSelectEl, thema));
+  }
+
   if (vorher && themen.some((thema) => thema.topic === vorher)) topicSelectEl.value = vorher;
   topicBtn.disabled = themen.length === 0;
 }
