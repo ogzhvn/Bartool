@@ -93,12 +93,13 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27) und Runde 4 (28–33) sind
-vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026) sind die Pakete 34–37
-erledigt, 38 ist offen. Runde 6 (39–46, geplant am 10.09.2026) ist komplett offen und hängt
-nicht an Paket 38 – wer hier neu anfängt, kann direkt mit **Paket 39** beginnen. Es gelten weiter die Spielregeln aus Kapitel 0:
-ein Paket pro Session, Reihenfolge einhalten, am Ende Status hier auf
-`erledigt` setzen und mitcommitten.
+**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33) und
+Runde 6 (39–46) sind vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026)
+sind die Pakete 34–37 erledigt. **Offen ist nur noch Paket 38** (Kontenverwaltung);
+es hängt an keinem anderen Paket – wer hier neu anfängt, kann direkt damit beginnen.
+Maßgeblich ist immer die Tabelle unten, nicht dieser Absatz. Es gelten weiter die
+Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge einhalten, am Ende Status
+hier **und** in der Tabelle auf `erledigt` setzen und mitcommitten.
 
 | # | Paket | Status |
 |---|---|---|
