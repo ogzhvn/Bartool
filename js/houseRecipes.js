@@ -433,7 +433,7 @@ export const HOUSE_RECIPES = [
     ingredients: [
       { name: "San Cosme Mezcal", amount: 50, unit: "ml" },
       { name: "Limette", amount: 25, unit: "ml" },
-      { name: "Agavensirup", amount: 20, unit: "ml" },
+      { name: "Agavendicksaft", amount: 20, unit: "ml" },
       { name: "Kardamomkapseln", amount: 3, unit: "stk" },
     ],
     method: "Shake & Fine Strain",
