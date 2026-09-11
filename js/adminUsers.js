@@ -31,6 +31,22 @@ function roleOptions(selectedKey) {
     .join("");
 }
 
+// Sichtbarkeit in Quiz-Heatmap und Rangliste (Paket 40). Drei Zustaende:
+// "" = NULL in der Datenbank, also "richte dich nach der Rolle" (ab Rang 60
+// ausgeblendet), true/false ist die Uebersteuerung von Hand. NULL ist der
+// Normalfall: wer befoerdert wird, verschwindet dadurch automatisch aus der
+// Auswertung, ohne dass jemand einen Schalter umlegen muss.
+function quizVisibleOptions(flag) {
+  const wert = flag === true ? "true" : flag === false ? "false" : "";
+  return [
+    ["", t("ui.sichtbarkeit_rolle_standard")],
+    ["true", t("ui.sichtbarkeit_sichtbar")],
+    ["false", t("ui.sichtbarkeit_ausgeblendet")],
+  ]
+    .map(([key, label]) => `<option value="${key}"${key === wert ? " selected" : ""}>${escapeHtml(label)}</option>`)
+    .join("");
+}
+
 function fillCreateRoleSelect() {
   if (!newRoleSelect) return;
   const previous = newRoleSelect.value;
@@ -57,7 +73,7 @@ function renderEmployees(profiles) {
 
   employeeListEl.innerHTML = `
     <table>
-      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th></th></tr></thead>
+      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th>${t("ui.quiz_auswertung")}</th><th></th></tr></thead>
       <tbody>
         ${profiles
           .map((p) => {
@@ -74,6 +90,11 @@ function renderEmployees(profiles) {
             <td>
               <select class="role-select" ${disabled}>
                 ${roleOptions(p.role)}
+              </select>
+            </td>
+            <td>
+              <select class="quiz-visible-select" ${disabled}>
+                ${quizVisibleOptions(p.quiz_visible)}
               </select>
             </td>
             <td>
@@ -115,6 +136,20 @@ function renderEmployees(profiles) {
       const { error } = await supabase.from("profiles").update({ role: e.target.value }).eq("id", id);
       if (error) {
         alert(t("ui.rolle_konnte_nicht_geaendert_werden") + error.message);
+        loadEmployees();
+      }
+    });
+  });
+
+  employeeListEl.querySelectorAll(".quiz-visible-select").forEach((select) => {
+    select.addEventListener("change", async (e) => {
+      const id = e.target.closest("tr").dataset.id;
+      const wert = e.target.value;
+      const quiz_visible = wert === "" ? null : wert === "true";
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.from("profiles").update({ quiz_visible }).eq("id", id);
+      if (error) {
+        alert(t("ui.sichtbarkeit_konnte_nicht_geaendert_werden") + error.message);
         loadEmployees();
       }
     });

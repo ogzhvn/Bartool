@@ -199,7 +199,7 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 39 | Wein und Direktprodukte ins Quiz | offen | Opus 5, mittlerer Denkaufwand |
-| 40 | Sichtbarkeit in Heatmap und Rangliste | offen | Opus 5, hoher Denkaufwand |
+| 40 | Sichtbarkeit in Heatmap und Rangliste | erledigt | Opus 5, hoher Denkaufwand |
 | 41 | Rangliste im Quiz | offen | Opus 5, mittlerer Denkaufwand |
 | 42 | Fragen ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
 | 43 | Schwierigkeitsranking der Fragen | offen | Opus 5, hoher Denkaufwand |

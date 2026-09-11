@@ -1135,4 +1135,11 @@ export const en = {
   "ui.nach_person": "By person",
   "ui.nach_tabelle": "By table",
   "ui.wareneinsatz_betrieb_und_team_auf_einen_blick": "Cost of goods, operations and team at a glance",
+  "ui.quiz_auswertung": "Quiz reporting",
+  "ui.sichtbarkeit_rolle_standard": "Role (default)",
+  "ui.sichtbarkeit_sichtbar": "visible",
+  "ui.sichtbarkeit_ausgeblendet": "hidden",
+  "ui.sichtbarkeit_konnte_nicht_geaendert_werden": "Could not change visibility: ",
+  "ui.nicht_in_der_auswertung": "not in reporting",
+  "ui.die_spalte_quiz_auswertung_steuert_wer_a1f2": "The “Quiz reporting” column controls who appears in the heatmap and the ranking. “Role (default)” automatically hides bar management from deputy level upwards.",
 };

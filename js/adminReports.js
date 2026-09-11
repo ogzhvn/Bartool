@@ -689,6 +689,16 @@ function teamRenderOverview(rows) {
     name.textContent = teamPersonName(row);
     kopf.appendChild(name);
 
+    // Paket 40: Die Verwaltungssicht bleibt vollstaendig, auch wenn jemand
+    // nicht in Heatmap und Rangliste auftaucht - hier steht dann nur dabei,
+    // dass die Zahlen dieser Person nirgends sonst einfliessen.
+    if (row.hidden) {
+      const kennzeichen = document.createElement("span");
+      kennzeichen.className = "quiz-team-hidden";
+      kennzeichen.textContent = t("ui.nicht_in_der_auswertung");
+      kopf.appendChild(kennzeichen);
+    }
+
     const quote = Number(row.accuracy ?? 0);
     const quoteEl = document.createElement("span");
     quoteEl.className = "quiz-quota-value";

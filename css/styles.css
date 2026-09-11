@@ -2864,6 +2864,19 @@ input[type="datetime-local"] {
   font-weight: 600;
 }
 
+/* Kennzeichen fuer Personen, die nicht in Heatmap und Rangliste zaehlen
+   (Paket 40). margin-right: auto haelt es direkt am Namen, sonst schiebt
+   space-between es in die Mitte der Zeile. */
+.quiz-team-hidden {
+  margin-right: auto;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .quiz-team-meta {
   margin: 0.4rem 0 0.2rem;
   font-size: 0.85rem;

@@ -1324,6 +1324,40 @@ create policy "quiz_attempts: quiz.manage loescht"
 -- der Grund, warum die select-Policy oben Admins nicht mehr einschliesst.
 -- ---------------------------------------------------------------------
 
+-- Sichtbarkeit in Heatmap und Rangliste (Paket 40)
+--
+-- quiz_visible ist bewusst nullable: NULL heisst "richte dich nach der
+-- Rolle", true/false ist die Uebersteuerung von Hand. Wer befoerdert wird,
+-- verschwindet damit automatisch aus der Auswertung, ohne dass jemand daran
+-- denken muss.
+--
+-- Geschrieben werden darf die Spalte nur mit dem Recht users.manage: dafuer
+-- braucht es keine eigene Policy, die Update-Policy auf profiles weiter oben
+-- ("users.manage verwaltet niedrigere Raenge") ist die einzige Schreibregel
+-- auf der Tabelle. Ein Self-Update auf profiles gibt es bewusst nicht, sonst
+-- blendet sich jeder selbst aus, sobald die Quote unangenehm wird.
+alter table public.profiles add column if not exists quiz_visible boolean;
+
+comment on column public.profiles.quiz_visible is
+  'Sichtbarkeit in Quiz-Heatmap und Rangliste: NULL = Rollen-Default (Rang < 60 sichtbar), true/false = Uebersteuerung von Hand.';
+
+-- Die Standardregel haengt am Rang (>= 60 wird ausgeblendet), nicht am Recht
+-- reports.view: ein Recht kann in der Rechte-Matrix einzeln vergeben werden,
+-- ohne dass jemand damit die Rangfolge verschieben will. Ein Barkeeper, der
+-- Auswertungen sehen darf, soll trotzdem in der Rangliste stehen.
+create or replace function private.quiz_sichtbar(p_role text, p_flag boolean)
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce(p_flag, private.role_rank(p_role) < 60);
+$$;
+
+revoke all on function private.quiz_sichtbar(text, boolean) from public;
+grant execute on function private.quiz_sichtbar(text, boolean) to authenticated;
+
 create or replace function public.quiz_team_overview()
 returns table (
   user_id uuid,
@@ -1334,7 +1368,8 @@ returns table (
   correct bigint,
   accuracy numeric,
   last_answered_at timestamptz,
-  weakest_topics jsonb
+  weakest_topics jsonb,
+  hidden boolean
 )
 language plpgsql
 security definer
@@ -1415,7 +1450,10 @@ begin
     case when coalesce(jp.attempts, 0) = 0 then null
          else round(100.0 * jp.correct / jp.attempts) end,
     jp.last_answered_at,
-    coalesce(s.weakest_topics, '[]'::jsonb)
+    coalesce(s.weakest_topics, '[]'::jsonb),
+    -- Die Verwaltungssicht bleibt vollstaendig (Paket 40): ausgeblendete
+    -- Personen stehen weiter in der Liste, nur mit Kennzeichen.
+    not private.quiz_sichtbar(p.role, p.quiz_visible)
   from public.profiles p
   left join je_person jp on jp.uid = p.id
   left join schwach s on s.uid = p.id
@@ -1456,7 +1494,12 @@ begin
     round(100.0 * count(*) filter (where a.correct) / count(*)) as accuracy,
     count(distinct a.user_id) as learners
   from public.quiz_attempts a
+  -- Paket 40: ausgeblendete Personen fliessen gar nicht erst in die
+  -- Themenzahlen ein - die Barleitung uebt am selben Fragenpool und wuerde
+  -- die Quoten sonst schoenrechnen.
+  join public.profiles p on p.id = a.user_id
   where a.topic <> ''
+    and private.quiz_sichtbar(p.role, p.quiz_visible)
   group by a.topic
   order by round(100.0 * count(*) filter (where a.correct) / count(*)) asc, count(*) desc, a.topic asc;
 end;

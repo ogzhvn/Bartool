@@ -1136,4 +1136,11 @@ export const de = {
   "ui.nach_person": "Nach Person",
   "ui.nach_tabelle": "Nach Tabelle",
   "ui.wareneinsatz_betrieb_und_team_auf_einen_blick": "Wareneinsatz, Betrieb und Team auf einen Blick",
+  "ui.quiz_auswertung": "Quiz-Auswertung",
+  "ui.sichtbarkeit_rolle_standard": "Rolle (Standard)",
+  "ui.sichtbarkeit_sichtbar": "sichtbar",
+  "ui.sichtbarkeit_ausgeblendet": "ausgeblendet",
+  "ui.sichtbarkeit_konnte_nicht_geaendert_werden": "Sichtbarkeit konnte nicht geändert werden: ",
+  "ui.nicht_in_der_auswertung": "nicht in der Auswertung",
+  "ui.die_spalte_quiz_auswertung_steuert_wer_a1f2": "Die Spalte „Quiz-Auswertung“ steuert, wer in Heatmap und Rangliste auftaucht. „Rolle (Standard)“ blendet die Barleitung ab der Stellvertretung aufwärts automatisch aus.",
 };
