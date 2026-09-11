@@ -203,7 +203,7 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | 41 | Rangliste im Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
 | 42 | Fragen ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
 | 43 | Schwierigkeitsranking der Fragen | erledigt | Opus 5, hoher Denkaufwand |
-| 44 | Datenpflege: Bier und Mixer & Softdrink | offen | Opus 5, mittlerer Denkaufwand |
+| 44 | Datenpflege: Bier und Mixer & Softdrink | erledigt | Opus 5, mittlerer Denkaufwand |
 | 45 | Datenpflege: Sirup, Saft, Fruchtpüree | offen | Opus 5, mittlerer Denkaufwand |
 | 46 | Datenpflege: Tee & Kaffee, Sonstiges | offen | Opus 5, mittlerer Denkaufwand |
 
