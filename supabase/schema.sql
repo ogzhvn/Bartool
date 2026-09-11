@@ -1317,6 +1317,38 @@ create policy "quiz_attempts: quiz.manage loescht"
   using (private.has_permission('quiz.manage'));
 
 -- ---------------------------------------------------------------------
+-- ---------------------------------------------------------------------
+-- Sichtbarkeit in der Quiz-Auswertung (Paket 40)
+-- ---------------------------------------------------------------------
+-- Die Barleitung taucht in den Team-Auswertungen standardmaessig nicht auf.
+-- quiz_visible ist bewusst nullable: NULL heisst "richte dich nach der Rolle",
+-- true/false ist die Uebersteuerung von Hand. Wer befoerdert wird,
+-- verschwindet damit von selbst aus der Auswertung.
+--
+-- Geschrieben werden darf die Spalte nur ueber die vorhandene Policy
+-- "profiles: users.manage verwaltet niedrigere Raenge", also mit dem Recht
+-- users.manage. Die Sichtbarkeit ist eine Entscheidung der Barleitung, kein
+-- Selbstbedienungsschalter.
+
+alter table public.profiles add column if not exists quiz_visible boolean;
+
+-- Ausgeblendet wird nach Rang >= 60, nicht nach dem Recht reports.view: ein
+-- Barkeeper, der Auswertungen sehen darf, soll trotzdem in der Rangliste
+-- stehen.
+create or replace function private.quiz_sichtbar(p_role text, p_flag boolean)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(p_flag, private.role_rank(p_role) < 60);
+$$;
+
+revoke all on function private.quiz_sichtbar(text, boolean) from public;
+grant execute on function private.quiz_sichtbar(text, boolean) to authenticated;
+
+-- ---------------------------------------------------------------------
 -- Quiz-Auswertung fuer die Barleitung (Paket 27)
 --
 -- Beide Funktionen laufen als security definer und pruefen selbst auf Admin.
@@ -1334,7 +1366,10 @@ returns table (
   correct bigint,
   accuracy numeric,
   last_answered_at timestamptz,
-  weakest_topics jsonb
+  weakest_topics jsonb,
+  -- Paket 40: die Verwaltungssicht bleibt vollstaendig, kennzeichnet aber,
+  -- wer in Heatmap und Rangliste nicht auftaucht.
+  hidden boolean
 )
 language plpgsql
 security definer
@@ -1415,7 +1450,8 @@ begin
     case when coalesce(jp.attempts, 0) = 0 then null
          else round(100.0 * jp.correct / jp.attempts) end,
     jp.last_answered_at,
-    coalesce(s.weakest_topics, '[]'::jsonb)
+    coalesce(s.weakest_topics, '[]'::jsonb),
+    not private.quiz_sichtbar(p.role, p.quiz_visible)
   from public.profiles p
   left join je_person jp on jp.uid = p.id
   left join schwach s on s.uid = p.id
@@ -1456,7 +1492,10 @@ begin
     round(100.0 * count(*) filter (where a.correct) / count(*)) as accuracy,
     count(distinct a.user_id) as learners
   from public.quiz_attempts a
+  join public.profiles p on p.id = a.user_id
   where a.topic <> ''
+    -- Ausgeblendete Personen fliessen gar nicht erst in die Themenzahlen ein.
+    and private.quiz_sichtbar(p.role, p.quiz_visible)
   group by a.topic
   order by round(100.0 * count(*) filter (where a.correct) / count(*)) asc, count(*) desc, a.topic asc;
 end;
@@ -1464,6 +1503,97 @@ $$;
 
 revoke all on function public.quiz_topic_heatmap() from public;
 grant execute on function public.quiz_topic_heatmap() to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Rangliste im Quiz (Paket 41)
+-- ---------------------------------------------------------------------
+-- Steht im Quiz-Tab fuer jeden angemeldeten Nutzer und ist damit die erste
+-- Team-Auswertung ohne das Recht reports.view. Genau deshalb gibt sie nur
+-- Summen je Person heraus: keine einzelnen Antworten, keine Themen, keine
+-- E-Mail-Adresse. Die select-Policy auf quiz_attempts bleibt unangetastet.
+--
+-- Gefiltert wird ueber dieselbe Regel wie Heatmap und Team-Uebersicht; die
+-- eigene Zeile kommt immer mit, sonst saehe eine ausgeblendete Barleitung
+-- ihren eigenen Stand nirgends. Die Mindestzahl an Versuchen fuer einen
+-- Quotenplatz steckt in der Anzeige (js/quizStats.js), nicht hier.
+
+create or replace function public.quiz_leaderboard(p_zeitraum text default 'gesamt')
+returns table (
+  user_id uuid,
+  display_name text,
+  attempts bigint,
+  correct bigint,
+  accuracy numeric,
+  rounds bigint,
+  last_answered_at timestamptz,
+  ist_selbst boolean
+)
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $$
+declare
+  v_zeitraum text := lower(coalesce(p_zeitraum, 'gesamt'));
+  v_von timestamptz;
+begin
+  if auth.uid() is null then
+    raise exception 'Nur angemeldete Nutzer sehen die Rangliste.'
+      using errcode = '42501';
+  end if;
+
+  if v_zeitraum not in ('gesamt', '30tage', 'monat') then
+    raise exception 'Unbekannter Zeitraum: %', p_zeitraum
+      using errcode = '22023';
+  end if;
+
+  v_von := case v_zeitraum
+    when '30tage' then now() - interval '30 days'
+    when 'monat' then date_trunc('month', now())
+    else null
+  end;
+
+  return query
+  with basis as (
+    select
+      a.user_id as uid,
+      a.correct as correct,
+      a.answered_at as answered_at,
+      coalesce(a.round_id::text, 'h:' || date_trunc('hour', a.answered_at)::text) as rundenschluessel
+    from public.quiz_attempts a
+    where v_von is null or a.answered_at >= v_von
+  ),
+  je_person as (
+    select
+      b.uid,
+      count(distinct b.rundenschluessel) as rounds,
+      count(*) as attempts,
+      count(*) filter (where b.correct) as correct,
+      max(b.answered_at) as last_answered_at
+    from basis b
+    group by b.uid
+  )
+  select
+    p.id,
+    -- Anzeigename, ersatzweise Benutzername. Nie die E-Mail: die Liste sehen alle.
+    coalesce(nullif(btrim(p.display_name), ''), nullif(btrim(p.username), '')),
+    jp.attempts,
+    jp.correct,
+    round(100.0 * jp.correct / jp.attempts),
+    jp.rounds,
+    jp.last_answered_at,
+    p.id = auth.uid()
+  from je_person jp
+  join public.profiles p on p.id = jp.uid
+  where private.quiz_sichtbar(p.role, p.quiz_visible) or p.id = auth.uid()
+  order by jp.correct desc, jp.attempts desc, jp.last_answered_at desc nulls last;
+end;
+$$;
+
+revoke all on function public.quiz_leaderboard(text) from public;
+-- Die Default-Privilegien des Projekts geben neuen Funktionen auch anon mit;
+-- die Rangliste ist ausschliesslich fuer angemeldete Nutzer.
+revoke all on function public.quiz_leaderboard(text) from anon;
+grant execute on function public.quiz_leaderboard(text) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- Schwund-, Bruch- und Verkostungsbuch (Paket 28)

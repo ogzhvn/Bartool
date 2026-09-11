@@ -1,4 +1,5 @@
 import { formatDate, getLocale, localizedText, onLanguageChanged, t } from "./i18n.js";
+import { createLeaderboard } from "./quiz.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { ingredientCost, productForIngredient } from "./costing.js";
 import { priceHistoryFor, onPricesChanged } from "./priceHistory.js";
@@ -637,6 +638,10 @@ const teamRefreshBtn = document.getElementById("quiz-team-refresh");
 const teamErrorEl = document.getElementById("quiz-team-error");
 const teamListEl = document.getElementById("quiz-team-list");
 const teamHeatmapEl = document.getElementById("quiz-team-heatmap");
+const teamLeaderboardEl = document.getElementById("report-leaderboard");
+
+// Dieselbe Rangliste wie im Quiz-Tab (Paket 41) – kein zweites Rendering.
+let teamLeaderboard = null;
 
 function teamSetError(text) {
   teamErrorEl.hidden = !text;
@@ -688,6 +693,15 @@ function teamRenderOverview(rows) {
     name.className = "quiz-team-name";
     name.textContent = teamPersonName(row);
     kopf.appendChild(name);
+
+    // Wer in Heatmap und Rangliste ausgeblendet ist, steht hier trotzdem –
+    // die Verwaltungssicht bleibt vollständig, bekommt aber ein Kennzeichen.
+    if (row.hidden === true) {
+      const kennzeichen = document.createElement("span");
+      kennzeichen.className = "quiz-team-hidden";
+      kennzeichen.textContent = t("ui.nicht_in_der_teamauswertung");
+      kopf.appendChild(kennzeichen);
+    }
 
     const quote = Number(row.accuracy ?? 0);
     const quoteEl = document.createElement("span");
@@ -768,6 +782,7 @@ async function teamLoad() {
     if (heatmap.error) throw heatmap.error;
     teamRenderOverview(uebersicht.data ?? []);
     teamRenderHeatmap(heatmap.data ?? []);
+    teamLeaderboard?.refresh();
   } catch (error) {
     teamSetError(t("ui.die_team_auswertung_konnte_nicht_geladen_34c6") + error.message);
     teamEmptyNote(teamListEl, t("ui.keine_daten_geladen"));
@@ -847,6 +862,8 @@ function anKlickWeiterleiten(grid) {
 export function initAdminReports() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(renderAll);
+
+  if (teamLeaderboardEl) teamLeaderboard = createLeaderboard(teamLeaderboardEl);
 
   setzeAktivenPeriodenButton();
   renderAll();

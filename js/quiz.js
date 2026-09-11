@@ -2,11 +2,19 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
 import { generateQuestions, listGeneratedTopics } from "./quizGenerator.js";
 import { onProductsChanged, onRecipesChanged } from "./storage.js";
-import { berechneStatistik, letzterStandProFrage, waehleFragen } from "./quizStats.js";
+import {
+  baueRangliste,
+  berechneStatistik,
+  letzterStandProFrage,
+  waehleFragen,
+  RANGLISTE_MIN_VERSUCHE,
+  RANGLISTE_SORTIERUNGEN,
+  RANGLISTE_ZEITRAEUME,
+} from "./quizStats.js";
 import { switchTab } from "./tabs.js";
 import { focusProduct } from "./products.js";
 import { focusRecipe } from "./recipes.js";
-import { getLocale, onLanguageChanged, t } from "./i18n.js";
+import { formatDate, formatDecimal, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Quiz – Schulungswerkzeug fürs Barteam (Paket 26).
 //
@@ -50,6 +58,8 @@ const statsHistoryEl = document.getElementById("quiz-stats-history");
 const statsWeakEl = document.getElementById("quiz-stats-weak");
 const statsTopicsEl = document.getElementById("quiz-stats-topics");
 
+const leaderboardEl = document.getElementById("quiz-leaderboard");
+
 const resultEl = document.getElementById("quiz-result");
 const resultTitleEl = document.getElementById("quiz-result-title");
 const resultSummaryEl = document.getElementById("quiz-result-summary");
@@ -64,6 +74,8 @@ let runde = null;
 let meineVersuche = [];
 // Noch laufende Inserts – die Auswertung wartet darauf, bevor sie neu lädt.
 let offeneInserts = [];
+// Rangliste im Quiz-Tab, gebaut in initQuiz().
+let rangliste = null;
 
 // Wie viele eigene Versuche für die Auswertung geladen werden. Bei 25 Fragen
 // pro Prüfungsrunde deckt das rund 160 Runden ab; alles darüber ist für die
@@ -344,6 +356,248 @@ async function refreshStats() {
   }
   const fehler = await loadMyAttempts();
   renderStats(fehler);
+  // Eigene Versuche haben sich geändert – die Rangliste zieht mit.
+  rangliste?.refresh();
+}
+
+// ---------------------------------------------------------------------
+// Rangliste (Paket 41)
+// ---------------------------------------------------------------------
+//
+// Die Rangliste steht im Quiz-Tab für jeden angemeldeten Nutzer – sie ist die
+// erste Team-Auswertung ohne das Recht reports.view. Die RPC gibt deshalb nur
+// Summen je Person heraus; einzelne Antworten bleiben privat. Ausgeblendete
+// Personen (Sichtbarkeitsregel aus Paket 40) fehlen in der Liste, sehen sich
+// selbst aber immer.
+//
+// createLeaderboard() baut die komplette Ansicht in einen beliebigen
+// Container. Das Reporting benutzt dieselbe Funktion (js/adminReports.js),
+// damit es die Liste nicht ein zweites Mal gibt.
+
+const ZEITRAUM_LABEL = {
+  gesamt: "ui.zeitraum_gesamt",
+  "30tage": "ui.zeitraum_30_tage",
+  monat: "ui.zeitraum_dieser_monat",
+};
+
+const SORTIER_LABEL = {
+  correct: "ui.richtig_spalte",
+  attempts: "ui.beantwortet_spalte",
+  accuracy: "ui.quote",
+};
+
+export function createLeaderboard(container, { limit = 10 } = {}) {
+  let zeitraum = RANGLISTE_ZEITRAEUME[0];
+  let sortierung = "correct";
+  let zeilen = [];
+  let fehler = null;
+  let laeuft = false;
+
+  const wurzel = document.createElement("div");
+  wurzel.className = "quiz-leaderboard";
+
+  const chipsEl = document.createElement("div");
+  chipsEl.className = "quiz-lb-chips";
+  wurzel.appendChild(chipsEl);
+
+  const noteEl = document.createElement("p");
+  noteEl.className = "empty-note";
+  noteEl.hidden = true;
+  wurzel.appendChild(noteEl);
+
+  const tabelleEl = document.createElement("table");
+  tabelleEl.className = "quiz-lb-table";
+  const kopfEl = document.createElement("thead");
+  const koerperEl = document.createElement("tbody");
+  tabelleEl.appendChild(kopfEl);
+  tabelleEl.appendChild(koerperEl);
+  wurzel.appendChild(tabelleEl);
+
+  const hinweisEl = document.createElement("p");
+  hinweisEl.className = "hint";
+  wurzel.appendChild(hinweisEl);
+
+  container.textContent = "";
+  container.appendChild(wurzel);
+
+  function renderChips() {
+    chipsEl.textContent = "";
+    RANGLISTE_ZEITRAEUME.forEach((wert) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = wert === zeitraum ? "quiz-lb-chip active" : "quiz-lb-chip";
+      btn.textContent = t(ZEITRAUM_LABEL[wert]);
+      btn.addEventListener("click", () => {
+        if (wert === zeitraum) return;
+        zeitraum = wert;
+        refresh();
+      });
+      chipsEl.appendChild(btn);
+    });
+  }
+
+  function kopfZelle(key, scope = "col") {
+    const th = document.createElement("th");
+    th.scope = scope;
+    if (!RANGLISTE_SORTIERUNGEN.includes(key)) {
+      th.textContent = t(SORTIER_LABEL[key] ?? key);
+      return th;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = key === sortierung ? "quiz-lb-sort is-active" : "quiz-lb-sort";
+    btn.textContent = t(SORTIER_LABEL[key]);
+    btn.title = t("ui.nach_dieser_spalte_sortieren");
+    btn.addEventListener("click", () => {
+      if (key === sortierung) return;
+      sortierung = key;
+      render();
+    });
+    th.appendChild(btn);
+    th.setAttribute("aria-sort", key === sortierung ? "descending" : "none");
+    return th;
+  }
+
+  function renderKopf() {
+    kopfEl.textContent = "";
+    const zeile = document.createElement("tr");
+    const platz = document.createElement("th");
+    platz.scope = "col";
+    platz.className = "quiz-lb-rank";
+    platz.textContent = "#";
+    platz.title = t("ui.platz");
+    zeile.appendChild(platz);
+
+    const name = document.createElement("th");
+    name.scope = "col";
+    name.textContent = t("ui.name");
+    zeile.appendChild(name);
+
+    zeile.appendChild(kopfZelle("attempts"));
+    zeile.appendChild(kopfZelle("correct"));
+    zeile.appendChild(kopfZelle("accuracy"));
+    kopfEl.appendChild(zeile);
+  }
+
+  function zahlZelle(text, klasse) {
+    const td = document.createElement("td");
+    td.className = klasse ? `quiz-lb-num ${klasse}` : "quiz-lb-num";
+    td.textContent = text;
+    return td;
+  }
+
+  function datenZeile(eintrag) {
+    const tr = document.createElement("tr");
+    if (eintrag.istSelbst) tr.className = "is-self";
+
+    const platz = document.createElement("td");
+    platz.className = "quiz-lb-rank";
+    platz.textContent = eintrag.rang === null ? "–" : formatDecimal(eintrag.rang, 0);
+    tr.appendChild(platz);
+
+    const name = document.createElement("td");
+    name.className = "quiz-lb-name";
+    // Name und Datum ausschließlich per textContent – der Anzeigename ist
+    // eine Nutzereingabe.
+    const nameText = document.createElement("span");
+    nameText.textContent = eintrag.name || t("ui.unbekannt");
+    name.appendChild(nameText);
+    if (eintrag.istSelbst) {
+      const du = document.createElement("span");
+      du.className = "quiz-lb-self";
+      du.textContent = t("ui.du");
+      name.appendChild(du);
+    }
+    if (eintrag.zuletzt) {
+      const meta = document.createElement("span");
+      meta.className = "quiz-lb-meta";
+      // Kurzes Datum ohne Jahr: in der schmalen Namensspalte ist kein Platz
+      // für mehr, und für "wann zuletzt" reicht Tag und Monat.
+      meta.textContent = `${t("ui.zuletzt")} ${formatDate(eintrag.zuletzt, { day: "2-digit", month: "2-digit" })}`;
+      name.appendChild(meta);
+    }
+    tr.appendChild(name);
+
+    tr.appendChild(zahlZelle(formatDecimal(eintrag.versuche, 0)));
+    tr.appendChild(zahlZelle(formatDecimal(eintrag.richtig, 0)));
+    tr.appendChild(
+      zahlZelle(
+        `${formatDecimal(eintrag.quote, 0)} %`,
+        sortierung === "accuracy" && !eintrag.quotenfaehig ? "is-muted" : ""
+      )
+    );
+    return tr;
+  }
+
+  function trennZeile() {
+    const tr = document.createElement("tr");
+    tr.className = "quiz-lb-gap";
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.textContent = "…";
+    tr.appendChild(td);
+    return tr;
+  }
+
+  function render() {
+    renderChips();
+    renderKopf();
+    koerperEl.textContent = "";
+
+    if (fehler) {
+      noteEl.hidden = false;
+      noteEl.textContent = t("ui.die_rangliste_konnte_nicht_geladen_werden");
+      tabelleEl.hidden = true;
+      hinweisEl.hidden = true;
+      return;
+    }
+
+    const rangliste = baueRangliste(zeilen, sortierung);
+    if (rangliste.length === 0) {
+      noteEl.hidden = false;
+      noteEl.textContent = laeuft ? t("ui.laedt") : t("ui.noch_hat_niemand_fragen_beantwortet_spiel");
+      tabelleEl.hidden = true;
+      hinweisEl.hidden = true;
+      return;
+    }
+
+    noteEl.hidden = true;
+    tabelleEl.hidden = false;
+    hinweisEl.hidden = false;
+    hinweisEl.textContent = t("ui.quotenplatz_erst_ab_versuchen", { anzahl: RANGLISTE_MIN_VERSUCHE });
+
+    const oben = rangliste.slice(0, limit);
+    oben.forEach((eintrag) => koerperEl.appendChild(datenZeile(eintrag)));
+
+    // Die eigene Zeile ist immer zu sehen – liegt sie hinter den ersten
+    // Plätzen, wird sie unten angehängt.
+    const selbst = rangliste.find((eintrag) => eintrag.istSelbst);
+    if (selbst && !oben.includes(selbst)) {
+      koerperEl.appendChild(trennZeile());
+      koerperEl.appendChild(datenZeile(selbst));
+    }
+  }
+
+  async function refresh() {
+    laeuft = true;
+    render();
+    const supabase = getSupabaseClient();
+    try {
+      const { data, error } = await supabase.rpc("quiz_leaderboard", { p_zeitraum: zeitraum });
+      if (error) throw error;
+      zeilen = data ?? [];
+      fehler = null;
+    } catch (err) {
+      zeilen = [];
+      fehler = err;
+    }
+    laeuft = false;
+    render();
+  }
+
+  onLanguageChanged(render);
+  render();
+  return { refresh, render };
 }
 
 // ---------------------------------------------------------------------
@@ -584,6 +838,8 @@ async function zurueckZumStart() {
 }
 
 export function initQuiz() {
+  if (leaderboardEl) rangliste = createLeaderboard(leaderboardEl);
+
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
     renderTopics(buildPool());

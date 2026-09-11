@@ -128,3 +128,76 @@ export function berechneStatistik(versuche) {
     rundenGesamt: proRunde.size,
   };
 }
+
+// ── Rangliste (Paket 41) ─────────────────────────────────────────────────
+//
+// Rechenteil der Team-Rangliste: aus den Summen je Person, die
+// quiz_leaderboard() liefert, werden Reihenfolge und Plätze. Die Anzeige
+// steckt in js/quiz.js, damit diese Regeln einzeln prüfbar bleiben.
+
+// Zeiträume, die die RPC kennt. Erster Eintrag ist die Vorgabe.
+export const RANGLISTE_ZEITRAEUME = ["gesamt", "30tage", "monat"];
+// Sortierschlüssel der Rangliste. Vorgabe ist "correct" (richtig beantwortet).
+export const RANGLISTE_SORTIERUNGEN = ["correct", "attempts", "accuracy"];
+// Unter so vielen Versuchen im Zeitraum gibt es keinen Quotenplatz – sonst
+// gewinnt, wer drei Fragen richtig hatte. In den absoluten Zahlen läuft die
+// Person trotzdem mit.
+export const RANGLISTE_MIN_VERSUCHE = 20;
+
+function ranglisteWert(eintrag, sortierung) {
+  if (sortierung === "attempts") return eintrag.versuche;
+  if (sortierung === "accuracy") return eintrag.quote;
+  return eintrag.richtig;
+}
+
+// Wandelt eine Zeile aus quiz_leaderboard() in die Form, mit der die Anzeige
+// arbeitet. Zahlen kommen als numeric zurück und damit je nach Treiber auch
+// mal als Text – deshalb durchgehend Number().
+function ranglisteEintrag(zeile) {
+  const versuche = Number(zeile?.attempts ?? 0);
+  const richtig = Number(zeile?.correct ?? 0);
+  const gemeldeteQuote = Number(zeile?.accuracy);
+  return {
+    userId: String(zeile?.user_id ?? ""),
+    // Anzeigename oder Benutzername; die RPC gibt nie eine E-Mail heraus.
+    name: String(zeile?.display_name ?? "").trim(),
+    versuche,
+    richtig,
+    quote: Number.isFinite(gemeldeteQuote) ? gemeldeteQuote : quote(richtig, versuche),
+    runden: Number(zeile?.rounds ?? 0),
+    zuletzt: zeile?.last_answered_at ?? null,
+    istSelbst: zeile?.ist_selbst === true,
+    quotenfaehig: versuche >= RANGLISTE_MIN_VERSUCHE,
+  };
+}
+
+// Reihenfolge und Platzvergabe. Gleichstände teilen sich den Platz, danach
+// entsteht eine Lücke (1, 2, 2, 4). Bei der Quote bekommen Personen unter der
+// Mindestzahl an Versuchen keinen Platz (rang === null) und stehen am Ende.
+export function baueRangliste(zeilen, sortierung = "correct") {
+  const art = RANGLISTE_SORTIERUNGEN.includes(sortierung) ? sortierung : "correct";
+  const eintraege = (Array.isArray(zeilen) ? zeilen : []).map(ranglisteEintrag);
+
+  const gereiht = eintraege.sort((a, b) => {
+    if (art === "accuracy" && a.quotenfaehig !== b.quotenfaehig) return a.quotenfaehig ? -1 : 1;
+    return (
+      ranglisteWert(b, art) - ranglisteWert(a, art) ||
+      b.versuche - a.versuche ||
+      a.name.localeCompare(b.name, getLocale())
+    );
+  });
+
+  let letzterWert = null;
+  let letzterRang = 0;
+  let gezaehlt = 0;
+  return gereiht.map((eintrag) => {
+    if (art === "accuracy" && !eintrag.quotenfaehig) return { ...eintrag, rang: null };
+    gezaehlt += 1;
+    const wert = ranglisteWert(eintrag, art);
+    if (letzterWert === null || wert !== letzterWert) {
+      letzterRang = gezaehlt;
+      letzterWert = wert;
+    }
+    return { ...eintrag, rang: letzterRang };
+  });
+}
