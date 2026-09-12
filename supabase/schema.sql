@@ -1089,6 +1089,9 @@ end;
 $$;
 
 revoke all on function public.log_audit() from public;
+-- Reine Trigger-Funktion: das EXECUTE-Recht wird beim CREATE TRIGGER geprueft,
+-- nicht beim Ausloesen. Ueber die REST-API soll sie gar nicht erreichbar sein.
+revoke all on function public.log_audit() from anon, authenticated;
 
 drop trigger if exists recipes_audit on public.recipes;
 create trigger recipes_audit
@@ -1165,6 +1168,9 @@ end;
 $$;
 
 revoke all on function public.restore_row(text, jsonb) from public;
+-- Die Default-Privilegien des Projekts geben neuen Funktionen auch anon mit;
+-- "revoke ... from public" entfernt dieses Grant nicht.
+revoke all on function public.restore_row(text, jsonb) from anon;
 grant execute on function public.restore_row(text, jsonb) to authenticated;
 
 -- ---------------------------------------------------------------------
@@ -1460,6 +1466,9 @@ end;
 $$;
 
 revoke all on function public.quiz_team_overview() from public;
+-- Die Default-Privilegien des Projekts geben neuen Funktionen auch anon mit;
+-- "revoke ... from public" entfernt dieses Grant nicht.
+revoke all on function public.quiz_team_overview() from anon;
 grant execute on function public.quiz_team_overview() to authenticated;
 
 -- Themen-Heatmap ueber das ganze Team: wo hakt es bei allen?
@@ -1502,6 +1511,9 @@ end;
 $$;
 
 revoke all on function public.quiz_topic_heatmap() from public;
+-- Die Default-Privilegien des Projekts geben neuen Funktionen auch anon mit;
+-- "revoke ... from public" entfernt dieses Grant nicht.
+revoke all on function public.quiz_topic_heatmap() from anon;
 grant execute on function public.quiz_topic_heatmap() to authenticated;
 
 -- ---------------------------------------------------------------------
