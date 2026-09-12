@@ -4,6 +4,7 @@ import { initAdminReports } from "./adminReports.js";
 import { initAdminUsers } from "./adminUsers.js";
 import { initAdminRoles } from "./adminRoles.js";
 import { initAdminQuiz } from "./adminQuiz.js";
+import { initAdminTable } from "./adminTable.js";
 import { initChangeRequestsAdmin } from "./changeRequests.js";
 import { initDataQuality } from "./dataQuality.js";
 import { initAuditLog } from "./auditLog.js";
@@ -30,6 +31,9 @@ const SECTIONS = {
   "admin-roles": { init: initAdminRoles, perm: "roles.manage" },
   "admin-requests": { init: initChangeRequestsAdmin, perm: "requests.review" },
   "admin-quiz": { init: initAdminQuiz, perm: "quiz.manage" },
+  // Zwei Rechte, weil die Tabelle beide Kataloge zeigt: wer nur Produkte
+  // pflegen darf, soll trotzdem hinein und die Rezepte lesen können.
+  "admin-catalog": { init: initAdminTable, perm: ["products.write", "recipes.write"] },
   "admin-data": { init: initDataQuality, perm: "data.manage" },
   "admin-audit": { init: initAuditLog, perm: "audit.view" },
 };
@@ -37,16 +41,20 @@ const SECTIONS = {
 // Wer mindestens eines dieser Rechte hat, sieht die Gruppe "Admin" in der
 // Seitenleiste und die Übersichtsseite dahinter. Wird auch von
 // js/main.js (data-perm-any ohne Wert) und js/adminPanel.js gebraucht.
-export const ADMIN_AREA_PERMISSIONS = Object.values(SECTIONS)
-  .map((eintrag) => eintrag.perm)
-  .filter(Boolean);
+export const ADMIN_AREA_PERMISSIONS = [
+  ...new Set(
+    Object.values(SECTIONS).flatMap((eintrag) =>
+      Array.isArray(eintrag.perm) ? eintrag.perm : [eintrag.perm]
+    )
+  ),
+].filter(Boolean);
 
 const gestartet = new Set();
 
 function darfSehen(id) {
   const perm = SECTIONS[id]?.perm;
   if (!perm) return canAny(ADMIN_AREA_PERMISSIONS);
-  return can(perm);
+  return Array.isArray(perm) ? canAny(perm) : can(perm);
 }
 
 function starteWennNoetig(panel) {

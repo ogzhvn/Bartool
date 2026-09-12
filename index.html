@@ -172,6 +172,7 @@
             <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
             <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
             <button class="tab-btn subnav-btn" data-tab="admin-quiz" data-perm="quiz.manage" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-catalog" data-perm-any="products.write,recipes.write" role="tab" aria-selected="false" data-i18n="ui.katalogtabelle">Katalogtabelle</button>
             <button class="tab-btn subnav-btn" data-tab="admin-data" data-perm="data.manage" role="tab" aria-selected="false" data-i18n="ui.datenqualitaet">Datenqualität</button>
             <button class="tab-btn subnav-btn" data-tab="admin-audit" data-perm="audit.view" role="tab" aria-selected="false" data-i18n="ui.aenderungsverlauf">Änderungsverlauf</button>
           </div>
@@ -1797,6 +1798,37 @@
     </section>
 
     <!-- ADMIN – Datenqualität (js/dataQuality.js) -->
+    <!-- ADMIN – Katalogtabelle (js/adminTable.js) -->
+    <section id="admin-catalog" class="tab-panel" data-perm-any="products.write,recipes.write">
+      <h2 data-i18n="ui.katalogtabelle">Katalogtabelle</h2>
+      <p class="hint" data-i18n="ui.alle_rezepte_und_produkte_untereinander_a1c7">Alle Rezepte und Produkte untereinander wie in einer Tabelle – Spalten nach Arbeitszweck umschalten, Klick auf den Namen öffnet das Formular.</p>
+
+      <div class="catalog-toolbar">
+        <div class="catalog-kind-switch" id="catalog-kind-switch" role="group" data-i18n-aria-label="ui.was_anzeigen">
+          <button type="button" class="catalog-kind-btn active" data-kind="products" aria-pressed="true" data-i18n="ui.produkte">Produkte</button>
+          <button type="button" class="catalog-kind-btn" data-kind="recipes" aria-pressed="false" data-i18n="ui.rezepte">Rezepte</button>
+        </div>
+
+        <input type="search" id="catalog-search" class="catalog-search" autocomplete="off" data-i18n-placeholder="ui.in_sichtbaren_spalten_suchen" data-i18n-aria-label="ui.in_sichtbaren_spalten_suchen" />
+
+        <select id="catalog-filter" data-i18n-aria-label="ui.filter"></select>
+        <select id="catalog-set" data-i18n-aria-label="ui.spaltenset"></select>
+
+        <div class="catalog-columns-wrap">
+          <button type="button" id="catalog-columns-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-columns-pop" data-i18n="ui.spalten">Spalten</button>
+          <div id="catalog-columns-pop" class="catalog-columns-pop" hidden></div>
+        </div>
+
+        <span id="catalog-count" class="hint catalog-count"></span>
+      </div>
+
+      <p id="catalog-note" class="hint catalog-note" hidden></p>
+
+      <div class="catalog-scroll">
+        <table id="catalog-table" class="catalog-table"></table>
+      </div>
+    </section>
+
     <section id="admin-data" class="tab-panel" data-perm="data.manage">
       <h2 data-i18n="ui.datenqualitaet">Datenqualität</h2>
       <p class="hint" data-i18n="ui.welche_produkte_rezepte_fehlen_noch_9ef7">Welche Produkte/Rezepte fehlen noch Angaben – Klick auf einen Namen springt direkt ins Bearbeiten-Formular.</p>

@@ -3,7 +3,7 @@ import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { switchTab } from "./tabs.js";
 import { onLanguageChanged, t } from "./i18n.js";
-import { can } from "./auth.js";
+import { can, canAny } from "./auth.js";
 
 // Übersicht des Adminbereichs (Sub-Tab "admin", Paket 34).
 //
@@ -24,6 +24,7 @@ const CARDS = [
   { tab: "admin-roles", perm: "roles.manage", icon: "ph-shield-check", titleKey: "ui.rollen_und_rechte", descKey: "ui.je_rolle_festlegen_welche_rechte_gelten_f7a2" },
   { tab: "admin-requests", perm: "requests.review", icon: "ph-git-pull-request", titleKey: "ui.offene_vorschlaege", descKey: "ui.aenderungsvorschlaege_aus_dem_team_6ab3" },
   { tab: "admin-quiz", perm: "quiz.manage", icon: "ph-brain", titleKey: "ui.quiz_fragen", descKey: "ui.eigene_fragen_pflegen_und_das_team_4d19" },
+  { tab: "admin-catalog", perm: ["products.write", "recipes.write"], icon: "ph-table", titleKey: "ui.katalogtabelle", descKey: "ui.alle_eintraege_als_tabelle_pflegen_5f2b" },
   { tab: "admin-data", perm: "data.manage", icon: "ph-list-magnifying-glass", titleKey: "ui.datenqualitaet", descKey: "ui.welche_angaben_fehlen_noch_im_katalog_c0f5" },
   { tab: "admin-audit", perm: "audit.view", icon: "ph-clock-counter-clockwise", titleKey: "ui.aenderungsverlauf", descKey: "ui.wer_hat_wann_was_geaendert_d3b8" },
 ];
@@ -51,6 +52,7 @@ async function ladeKennzahlen() {
       : Promise.resolve({ error: true }),
   ]);
   return {
+    "admin-catalog": getAllProducts().length + getAllRecipes().length,
     "admin-users": konten.error ? null : konten.count,
     "admin-requests": vorschlaege.error ? null : vorschlaege.count,
     "admin-data": can("data.manage") ? katalogLuecken() : null,
@@ -59,6 +61,7 @@ async function ladeKennzahlen() {
 
 function kennzahlText(tab, wert) {
   if (wert == null) return "";
+  if (tab === "admin-catalog") return `${wert} ${t("ui.eintraege")}`;
   if (tab === "admin-users") return `${wert} ${t("ui.konten")}`;
   if (tab === "admin-requests") return `${wert} ${t("ui.offen")}`;
   if (tab === "admin-data") return `${wert} ${t("ui.luecken")}`;
@@ -68,7 +71,7 @@ function kennzahlText(tab, wert) {
 function render(kennzahlen = {}) {
   if (!cardsEl) return;
   cardsEl.innerHTML = "";
-  CARDS.filter((card) => can(card.perm)).forEach((card) => {
+  CARDS.filter((card) => (Array.isArray(card.perm) ? canAny(card.perm) : can(card.perm))).forEach((card) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "tool-card";
