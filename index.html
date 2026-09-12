@@ -1819,14 +1819,76 @@
           <div id="catalog-columns-pop" class="catalog-columns-pop" hidden></div>
         </div>
 
+        <button type="button" id="catalog-replace-btn" class="btn-secondary" data-i18n="ui.suchen_und_ersetzen">Suchen &amp; Ersetzen</button>
+
         <span id="catalog-count" class="hint catalog-count"></span>
       </div>
 
+      <p class="hint" data-i18n="ui.zelle_anklicken_oder_lostippen_c3f1">Zelle anklicken oder lostippen zum Bearbeiten · Pfeiltasten bewegen, Enter bestätigt, Esc verwirft, Entf leert · gespeichert wird gesammelt über die Leiste unten.</p>
+      <p class="hint" data-i18n="ui.bereich_shift_klick_strg_c_v_4b7e">Bereich: Shift+Klick oder Shift+Pfeiltasten, Strg+A nimmt die Spalte · Strg+C kopiert nach Excel, Strg+V fügt einen Block wieder ein (legt nie neue Zeilen an).</p>
+      <p id="catalog-selection" class="hint catalog-selection" hidden></p>
+
       <p id="catalog-note" class="hint catalog-note" hidden></p>
+      <p id="catalog-stale" class="hint catalog-stale" hidden data-i18n="ui.katalog_extern_geaendert_9a2c">Die Daten wurden anderswo geändert. Deine offenen Änderungen bleiben stehen – nach dem Speichern oder Verwerfen zeigt die Tabelle wieder den aktuellen Stand.</p>
 
       <div class="catalog-scroll">
         <table id="catalog-table" class="catalog-table"></table>
       </div>
+
+      <div id="catalog-savebar" class="catalog-savebar" hidden>
+        <span id="catalog-dirty-count" class="catalog-savebar-count"></span>
+        <span id="catalog-progress" class="catalog-savebar-progress" hidden></span>
+        <span class="catalog-savebar-spacer"></span>
+        <button type="button" id="catalog-discard-btn" class="btn-secondary" data-i18n="ui.verwerfen">Verwerfen</button>
+        <button type="button" id="catalog-save-btn" class="btn-primary" data-i18n="ui.speichern">Speichern</button>
+      </div>
+
+      <!-- Vorschau vor dem Einfügen aus Excel: erst zeigen, was ankommt,
+           dann in den Puffer schreiben (js/adminTable.js). -->
+      <div id="catalog-paste-overlay" class="modal-overlay" hidden>
+        <div class="card modal-box catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="catalog-paste-title">
+          <h3 id="catalog-paste-title" data-i18n="ui.aus_zwischenablage_einfuegen">Aus Zwischenablage einfügen</h3>
+          <p id="catalog-paste-summary" class="catalog-dialog-summary"></p>
+          <p id="catalog-paste-skipped" class="hint" hidden></p>
+          <p class="hint" data-i18n="ui.einfuegen_landet_im_puffer_7d31">Die Werte landen im Puffer – gespeichert wird erst über die Leiste unten.</p>
+          <div class="actions">
+            <button type="button" id="catalog-paste-cancel" class="btn-secondary" data-i18n="ui.abbrechen">Abbrechen</button>
+            <button type="button" id="catalog-paste-apply" class="btn-primary" data-i18n="ui.uebernehmen">Übernehmen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suchen & Ersetzen über die sichtbaren Spalten (js/adminTable.js). -->
+      <div id="catalog-replace-overlay" class="modal-overlay" hidden>
+        <div class="card modal-box catalog-dialog catalog-dialog-wide" role="dialog" aria-modal="true" aria-labelledby="catalog-replace-title">
+          <h3 id="catalog-replace-title" data-i18n="ui.suchen_und_ersetzen">Suchen &amp; Ersetzen</h3>
+          <p class="hint" data-i18n="ui.ersetzen_umfang_e5a2">Ersetzt in den Text-, Langtext- und Schlagwortspalten der gerade angezeigten Zeilen. Die Änderungen landen im Puffer – gespeichert wird erst über die Leiste unten.</p>
+
+          <label for="catalog-replace-find" data-i18n="ui.suchen_nach">Suchen nach</label>
+          <input type="text" id="catalog-replace-find" autocomplete="off" />
+
+          <label for="catalog-replace-with" data-i18n="ui.ersetzen_durch">Ersetzen durch</label>
+          <input type="text" id="catalog-replace-with" autocomplete="off" />
+
+          <label class="catalog-dialog-check">
+            <input type="checkbox" id="catalog-replace-case" />
+            <span data-i18n="ui.gross_kleinschreibung_beachten">Groß-/Kleinschreibung beachten</span>
+          </label>
+
+          <p id="catalog-replace-summary" class="catalog-dialog-summary"></p>
+          <ul id="catalog-replace-preview" class="catalog-replace-preview"></ul>
+
+          <div class="actions">
+            <button type="button" id="catalog-replace-close" class="btn-secondary" data-i18n="ui.schliessen">Schließen</button>
+            <button type="button" id="catalog-replace-all" class="btn-primary" data-i18n="ui.alle_ersetzen">Alle ersetzen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vorschlagslisten der Spalten mit suggest: true (js/adminTable.js).
+           Kein hidden: eine <datalist> wird ohnehin nie gerendert, ein
+           verstecktes Elternelement würde nur den Browser verwirren. -->
+      <div id="catalog-datalists"></div>
     </section>
 
     <section id="admin-data" class="tab-panel" data-perm="data.manage">

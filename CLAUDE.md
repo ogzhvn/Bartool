@@ -34,6 +34,7 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 | Import/Export (xlsx) | `js/productImport.js`, `productExport.js`, `recipeExport.js` |
 | Mehrsprachigkeit DE/EN | `js/i18n.js`, `js/i18n/de.js`, `js/i18n/en.js`, `js/language.js` |
 | Admin (Sub-Tabs), Audit, Änderungsanträge | `js/adminPanel.js`, `adminSections.js`, `adminUsers.js`, `adminRoles.js`, `adminReports.js`, `auditLog.js`, `changeRequests.js`, `dataQuality.js` |
+| Katalogtabelle im Admin (Tabelle + Bearbeiten in der Zelle) | `js/adminTable.js`, `js/catalogColumns.js`, `js/catalogCell.js` |
 | Hilfsfunktionen (`escapeHtml`, Zahlen) | `js/utils.js` |
 | PWA-Shell, Cache-Version | `sw.js`, `manifest.json` |
 | DB-Schema + RLS + Setup | `supabase/schema.sql`, `supabase/README.md` |

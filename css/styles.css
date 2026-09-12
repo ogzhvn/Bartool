@@ -3588,6 +3588,17 @@ input[type="datetime-local"] {
   background: var(--bg-elevated-2);
 }
 
+/* Die Zebrastreifen sind halbtransparent und würden die stehende
+   Namensspalte durchsichtig machen – dann schöbe sich beim Querscrollen der
+   Text der Nachbarspalte darunter durch. */
+.catalog-table tbody tr:nth-child(even) .catalog-sticky-col {
+  background: var(--bg-elevated);
+}
+
+.catalog-table tbody tr:nth-child(even):hover .catalog-sticky-col {
+  background: var(--bg-elevated-2);
+}
+
 .catalog-sort-btn {
   display: inline-flex;
   align-items: center;
@@ -3631,6 +3642,232 @@ input[type="datetime-local"] {
 /* Felder, die nur im Formular gepflegt werden (Zutaten, "passt gut zu"). */
 .catalog-cell-locked {
   color: var(--text-muted);
+}
+
+/* --- Bearbeiten in der Zelle (Etappe 2) --- */
+
+/* Nur die bearbeitbaren Zellen sind Tab-Stopps (tabindex="0"); Name und
+   schreibgeschützte Spalten tragen tabindex="-1", damit sie sich mit den
+   Pfeiltasten erreichen und in einen Bereich aufnehmen lassen. */
+.catalog-table td[tabindex="0"] {
+  cursor: text;
+}
+
+.catalog-table td[tabindex]:focus-visible,
+.catalog-table td[tabindex]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Geändert, aber noch nicht gespeichert. Die Selektoren sind absichtlich
+   eine Stufe genauer als die Zebrastreifen- und hover-Regeln weiter oben –
+   sonst wäre die Markierung unter dem Mauszeiger wieder weg. */
+.catalog-table tbody tr td.catalog-cell-dirty {
+  background: rgba(214, 173, 96, 0.16);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Eingabe, die sich nicht als Wert lesen lässt (Zahl mit Buchstaben o. Ä.).
+   Ungültig schlägt "geändert": wer beides hat, soll das Rot sehen. */
+.catalog-table tbody tr td.catalog-cell-invalid {
+  background: rgba(200, 60, 60, 0.34);
+  color: #ffb4b4;
+  box-shadow: inset 3px 0 0 #dc5050;
+}
+
+/* --- Bereichsauswahl (Etappe 3) ---
+   Als background-image statt background-color: so bleibt die Färbung von
+   "geändert" bzw. "ungültig" darunter sichtbar, und eine ausgewählte Zelle
+   verliert ihren Zustand nicht aus dem Blick. Die Regel steht deshalb hinter
+   den beiden – bei gleicher Genauigkeit gewinnt die spätere. */
+.catalog-table tbody tr td.catalog-cell-selected {
+  background-image: linear-gradient(rgba(214, 173, 96, 0.18), rgba(214, 173, 96, 0.18));
+}
+
+.catalog-selection {
+  color: var(--accent-300);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zeile, die im letzten Speicherlauf einen Fehler geliefert hat. Der Grund
+   steht im title der Zeile. */
+.catalog-table tr.catalog-row-error td {
+  border-bottom-color: #dc5050;
+}
+
+.catalog-table tr.catalog-row-error .catalog-sticky-col {
+  box-shadow: inset 3px 0 0 #dc5050;
+}
+
+/* Die Zelle im Bearbeitungsmodus: der Editor darf über den Zellenrand
+   hinauswachsen, sonst wäre ein längerer Text nicht zu lesen. */
+.catalog-table td.catalog-cell-editing {
+  position: relative;
+  overflow: visible;
+  padding: 0;
+  z-index: 4;
+}
+
+.catalog-editor {
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg-elevated-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.catalog-editor:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(214, 173, 96, 0.35);
+}
+
+.catalog-editor-longtext {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 320px;
+  min-height: 96px;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+.catalog-editor-bool {
+  /* Touch-Ziel: hinterm Tresen wird mit dem Daumen getippt. */
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  margin: 4px auto;
+  display: block;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.catalog-stale {
+  color: var(--accent-300);
+}
+
+/* Speicherleiste: klebt unten am Bereich, damit sie auch bei langer Tabelle
+   erreichbar bleibt, ohne ganz nach unten zu scrollen. */
+.catalog-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elevated-2);
+}
+
+.catalog-savebar-spacer {
+  flex: 1 1 auto;
+}
+
+.catalog-savebar-count {
+  font-weight: 600;
+}
+
+.catalog-savebar-count.catalog-savebar-warn {
+  color: #ff8a8a;
+}
+
+.catalog-savebar-progress {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Vorschau-Dialoge: Einfügen aus Excel, Suchen & Ersetzen --- */
+
+.catalog-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.catalog-dialog-wide {
+  max-width: 620px;
+}
+
+.catalog-dialog h3 {
+  margin: 0;
+}
+
+.catalog-dialog label {
+  margin: 0;
+}
+
+.catalog-dialog-summary {
+  margin: 0;
+  font-weight: 600;
+}
+
+.catalog-dialog-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-dialog .actions {
+  margin-top: 4px;
+}
+
+/* Trefferliste: je Zelle eine Zeile mit Fundstelle, altem und neuem Text.
+   Beides untereinander statt nebeneinander – ein Langtext wäre in zwei
+   Spalten nicht mehr zu lesen. */
+.catalog-replace-preview {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.catalog-replace-preview:empty {
+  display: none;
+}
+
+.catalog-replace-preview li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.catalog-replace-preview li:last-child {
+  border-bottom: none;
+}
+
+.catalog-replace-where {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.catalog-replace-old {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.catalog-replace-new {
+  color: var(--accent-300);
+}
+
+.catalog-replace-more {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 @media (max-width: 700px) {
