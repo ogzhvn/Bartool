@@ -15,7 +15,9 @@ Sie ist so geschrieben, dass sie ohne den Chat funktioniert, in dem sie entstand
 5. Am Ende jedes Pakets in dieser Datei die Fortschrittstabelle auf `erledigt` setzen und mitcommitten.
 
 **Kontext-Budget (hier wird Geld verbrannt)**
-- `js/productsData.js` (~140 KB), `js/classicsData.js` (~130 KB), `index.html` (~38 KB) **niemals ganz lesen.**
+- `index.html` (~105 KB) und `css/styles.css` (~65 KB) **niemals ganz lesen.**
+- Die statischen Datendateien (`productsData.js`, `classicsData.js`, `houseRecipes.js`) gibt es
+  seit 09/2026 nicht mehr; Rezept- und Produktdaten kommen per `execute_sql` aus der Datenbank.
 - Immer: `grep -n "suchbegriff" datei` → Zeilennummer → `sed -n '120,160p' datei`.
 - `js/products.js` (~28 KB) und `js/recipes.js` (~18 KB) nur abschnittsweise.
 - Nach einem Edit **nicht** zur Kontrolle die Datei nochmal lesen.
@@ -2555,7 +2557,8 @@ Schema-Umbau.
 Harte Vorgabe (Regel 6 aus CLAUDE.md): Produktdaten werden nicht erfunden und nicht geschätzt.
 Trag die Werte gegen eine belastbare Quelle zusammen und leg sie mir als Tabelle vor, BEVOR du
 schreibst. Erst nach meiner Freigabe schreiben, per generiertem SQL-Skript
-(UPDATE ... WHERE name = '...'), und js/productsData.js mit demselben Skript nachziehen.
+(UPDATE ... WHERE name = '...'). Ein Nachziehen in einer JS-Datei entfällt seit 09/2026 –
+die Datenbank ist die einzige Quelle.
 verified = true nur für Zeilen mit belegter Quelle.
 
 Bier: producer (Brauerei), classification (Bierstil), origin_country, flavor_tags, serving_temp,

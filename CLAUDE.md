@@ -27,7 +27,6 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 | Kalkulation, Karte, Preise | `js/costing.js`, `menuCosting.js`, `priceHistory.js` |
 | Bibliothek (Merge DB+statisch) | `js/recipeLibrary.js`, `js/productLibrary.js` |
 | Rezept-/Produktpflege, Zutateneditor | `js/recipes.js`, `products.js`, `ingredientEditor.js` |
-| Statische Daten (GROSS, s.u.) | `js/classicsData.js`, `js/houseRecipes.js`, `js/productsData.js` |
 | Betrieb: Ansätze, Events, Übergabe, Checklisten | `js/preparations.js`, `events.js`, `shiftLog.js`, `checklists.js` |
 | Bestand: Inventur, Bestellung, Schwund, „Was kann ich bauen?" | `js/inventory.js`, `ordering.js`, `losses.js`, `buildable.js` |
 | Quiz | `js/quiz.js`, `quizGenerator.js`, `quizStats.js`, `adminQuiz.js` |
@@ -65,33 +64,29 @@ Dieses Muster nie durchbrechen.
    Sortimentslisten steht oder was der Nutzer explizit bestätigt hat. Bei fehlender
    Original-Zutat: sinnvolle Annäherung wählen und im `history`-/Beschreibungsfeld
    transparent vermerken.
-7. **Neue Rezepte und Produkte gehören in die Supabase-Tabellen `recipes` /
-   `products`**, nicht in die statischen JS-Dateien. Die statischen Dateien sind
-   Altbestand; DB-Einträge mit gleichem Namen überschreiben sie
-   (`recipeLibrary.js`: DB > `HOUSE_RECIPES` > `CLASSIC_RECIPES`).
-   **Der komplette Katalog aus `productsData.js`/`classicsData.js`/
-   `houseRecipes.js` liegt inzwischen zusätzlich 1:1 in der DB gespiegelt**
-   (Stand 09/2026: 367 Produkte und 163 Rezepte in der DB, alle Einträge der
-   statischen Dateien haben einen DB-Eintrag
-   mit identischem Namen). Das bedeutet: **eine Änderung nur in der statischen
-   Datei ist im Live-Tool unsichtbar**, weil die DB-Version sie überschreibt.
-   Vor jeder inhaltlichen Änderung an einem bestehenden Rezept/Produkt per
-   `execute_sql` prüfen, ob ein DB-Eintrag mit dem Namen existiert
-   (`select name from products where name = '...'`), und falls ja, die
-   geänderten Felder dort **immer per `UPDATE ... WHERE name = '...'` mitziehen**
-   – nicht nur in der JS-Datei. Bei vielen betroffenen Zeilen ein Skript
-   nutzen, das die SQL-Statements aus den JS-Objekten generiert (siehe
-   Vorgehen bei der Wein-Ausbau-Aktion), statt Statements einzeln zu tippen.
-   Diese Regel gilt für **jede** Session, nicht nur die aktuelle.
+7. **Die Datenbank ist die einzige Quelle für Rezepte und Produkte.**
+   Die früheren statischen Dateien `js/productsData.js`, `js/classicsData.js`
+   und `js/houseRecipes.js` wurden im September 2026 gelöscht, nachdem ihr
+   Inhalt vollständig in `products` / `recipes` übernommen war – sie wurden von
+   den DB-Einträgen ohnehin überschrieben und ließen sich nur doppelt pflegen.
+   Neue oder geänderte Rezepte und Produkte gehen deshalb ausschließlich per
+   `UPDATE`/`INSERT` in die Tabellen, nie in eine JS-Datei. Es gibt **keine**
+   zweite Stelle mehr, die mitgezogen werden muss. Bei vielen betroffenen
+   Zeilen ein Skript nutzen, das die SQL-Statements erzeugt, statt Statements
+   einzeln zu tippen. Offline liefert der localStorage-Cache aus `storage.js`
+   den zuletzt geladenen Stand.
 8. **Zutatennamen müssen exakt zu Produktnamen aus `products` passen.** Das
    Matching ist ein strikter Teilstring-Vergleich
    (`ingredient.name.toLowerCase().includes(product.name.toLowerCase())`).
    Generisch ("Gin") matcht nicht – immer die Hausmarke ("Bombay Sapphire Gin").
-   Produktnamen vor dem Schreiben per `grep -n` in `js/productsData.js` bzw.
-   in der DB verifizieren, nie aus dem Kopf tippen: ein falsch geratener Name
-   bricht das Matching still, ohne Fehlermeldung.
-9. **Features immer über `getAllRecipes()` / `getAllProducts()` lesen**, nie direkt
-   aus den Daten-Dateien.
+   Produktnamen vor dem Schreiben per `execute_sql` in der DB verifizieren
+   (`select name from products where name ilike '%...%'`), nie aus dem Kopf
+   tippen: ein falsch geratener Name bricht das Matching still, ohne
+   Fehlermeldung. So ein Fehler hat schon einmal monatelang unbemerkt im
+   Rezept „Old Cuban" gestanden („Anõs" statt „Años").
+9. **Features immer über `getAllRecipes()` / `getAllProducts()` lesen**
+   (`js/recipeLibrary.js`, `js/productLibrary.js`), nie direkt über
+   `loadRecipes()` / `loadProducts()`.
 10. **Kein Commit auf einem nicht lauffähigen Zwischenstand.** Vor dem Commit:
     App gedanklich durchspielen bzw. `python3 -m http.server 8000` und klicken.
 11. **Oberflächentexte laufen über i18n.** Feste Beschriftungen in `index.html`
@@ -104,17 +99,25 @@ Dieses Muster nie durchbrechen.
 
 ## Kontext-Budget (wichtig – hier wird das meiste Geld verbrannt)
 
-Drei Dateien sind riesig und dürfen **nie komplett gelesen** werden:
-`js/productsData.js` (~340 KB), `js/classicsData.js` (~127 KB),
-`index.html` (~105 KB). Auch `css/styles.css` (~65 KB) nur gezielt. Auch `js/products.js` und `js/recipes.js` nur gezielt.
+Seit dem Wegfall der statischen Datendateien ist nur noch `index.html`
+(~105 KB) wirklich groß; sie darf **nie komplett gelesen** werden. Auch
+`css/styles.css` (~65 KB), `js/products.js` und `js/recipes.js` nur gezielt.
+
+Rezept- und Produktdaten stehen ausschließlich in der Datenbank – dort wird
+per `execute_sql` gezielt abgefragt, nie ein ganzer Katalog ins Fenster
+geladen.
 
 Stattdessen:
 
 ```bash
-grep -n "Bombay Sapphire" js/productsData.js        # Eintrag finden
-sed -n '4200,4260p' js/productsData.js              # nur den Ausschnitt lesen
 grep -n 'data-tab="batching"' index.html            # Markup-Stelle finden
-grep -c "name:" js/productsData.js                  # zählen statt lesen
+sed -n '940,960p' index.html                        # nur den Ausschnitt lesen
+grep -n "getAllProducts" js/*.js                    # Verwendung finden
+```
+
+```sql
+select name, group_name, abv from products where name ilike '%bombay%';
+select count(*) from recipes;                       -- zählen statt laden
 ```
 
 Weitere Regeln für mich (Claude):

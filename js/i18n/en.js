@@ -68,7 +68,7 @@ export const en = {
   "perm.hint.roles.manage": "Change roles and permissions – only below your own level",
 
   "ui.0_ausgewaehlt": "0 selected",
-  "ui.133_cocktail_klassiker_nach_basis_358d": "133 cocktail classics (grouped by base spirit) plus your own recipes. Click a name to see ingredients, method, glass, garnish and history. The search also finds recipes by ingredient (e.g. \"Gin\"); the filter narrows things down by category.",
+  "ui.das_rezeptbuch_der_bar_klassiker_hausrezepte": "The bar's recipe book: classics, house recipes and your own creations, grouped by base spirit. Click a name to see ingredients, method, glass, garnish and history. The search also finds recipes by ingredient (e.g. \"Gin\"); the filter narrows things down by category.",
   "ui.1_1_simple_syrup": "1:1 (simple syrup)",
   "ui.1_2_duenn": "1:2 (thin)",
   "ui.2_1_rich_simple_syrup": "2:1 (rich simple syrup)",
@@ -557,7 +557,7 @@ export const en = {
   "ui.loeschung": "Deletion",
   "ui.loeschung_von": "Propose deletion of \"",
   "ui.loeschung_vorschlagen": "Propose deletion",
-  "ui.loeschvorschlag_wird_bei_annahme_caf2": "Deletion proposal – if accepted, the entry is removed completely (or reset to the version supplied, if there is one).",
+  "ui.loeschvorschlag_wird_bei_annahme_caf2": "Deletion request – the entry is removed completely once accepted.",
   "ui.login_fehlgeschlagen": "Sign-in failed: ",
   "ui.luecken": "gaps",
   "ui.machbar": "Can be made (",

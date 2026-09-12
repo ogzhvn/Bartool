@@ -1,21 +1,25 @@
 import { getLocale } from "./i18n.js";
 import { loadProducts } from "./storage.js";
-import { PRODUCTS } from "./productsData.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 
-// Combines the user's own saved/edited products with the bundled catalog.
-// A custom product overrides a bundled one of the same name.
+// Einziger Lesezugang auf den Produktkatalog. Alle Produkte stehen in der
+// Tabelle `products`; die fruehere statische Datei productsData.js ist
+// entfallen, nachdem ihr Inhalt vollstaendig in die Datenbank uebernommen war
+// – sie wurde von den DB-Eintraegen ohnehin ueberschrieben und liess sich nur
+// doppelt pflegen.
+//
+// Offline liefert loadProducts() den letzten Stand aus dem localStorage-Cache
+// (siehe storage.js).
 export function getAllProducts() {
-  const custom = loadProducts();
-  const customNames = new Set(custom.map((p) => p.name));
-  const bundled = PRODUCTS.filter((p) => !customNames.has(p.name));
-  return [...custom, ...bundled].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
+  return [...loadProducts()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
 export function getProduct(name) {
   return getAllProducts().find((p) => p.name === name) ?? null;
 }
 
+// Heisst seit dem Wegfall der statischen Datei schlicht: der Eintrag liegt in
+// der Datenbank und ist damit aenderbar.
 export function isCustomProduct(name) {
   return loadProducts().some((p) => p.name === name);
 }

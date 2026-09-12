@@ -1,28 +1,25 @@
 import { getLocale } from "./i18n.js";
 import { loadRecipes } from "./storage.js";
-import { CLASSIC_RECIPES } from "./classicsData.js";
-import { HOUSE_RECIPES } from "./houseRecipes.js";
 
-// Combines the user's own saved recipes with the bundled house recipes and
-// the generic classics library. Precedence by name: custom > house > classic
-// (e.g. a house recipe overrides a generic classic of the same name, and
-// editing either creates a custom copy that overrides both).
+// Einziger Lesezugang auf das Rezeptbuch. Alle Rezepte stehen in der Tabelle
+// `recipes`; die frueheren statischen Dateien (classicsData.js,
+// houseRecipes.js) sind entfallen, nachdem ihr Inhalt vollstaendig in die
+// Datenbank uebernommen war – sie wurden von den DB-Eintraegen ohnehin
+// ueberschrieben und liessen sich nur doppelt pflegen.
+//
+// Offline liefert loadRecipes() den letzten Stand aus dem localStorage-Cache
+// (siehe storage.js).
 export function getAllRecipes() {
-  const custom = loadRecipes();
-  const customNames = new Set(custom.map((r) => r.name));
-
-  const house = HOUSE_RECIPES.filter((r) => !customNames.has(r.name));
-  const houseNames = new Set(HOUSE_RECIPES.map((r) => r.name));
-
-  const classics = CLASSIC_RECIPES.filter((r) => !customNames.has(r.name) && !houseNames.has(r.name));
-
-  return [...custom, ...house, ...classics].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
+  return [...loadRecipes()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
 export function getRecipe(name) {
   return getAllRecipes().find((r) => r.name === name) ?? null;
 }
 
+// Heisst seit dem Wegfall der statischen Dateien schlicht: der Eintrag liegt
+// in der Datenbank und ist damit aenderbar. Die Aufrufer nutzen das, um
+// Loeschen bzw. "Loeschung vorschlagen" anzubieten.
 export function isCustomRecipe(name) {
   return loadRecipes().some((r) => r.name === name);
 }

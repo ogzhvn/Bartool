@@ -69,7 +69,7 @@ export const de = {
   "perm.hint.roles.manage": "Rollen und Rechte ändern – nur unterhalb der eigenen Ebene",
 
   "ui.0_ausgewaehlt": "0 ausgewählt",
-  "ui.133_cocktail_klassiker_nach_basis_358d": "133 Cocktail-Klassiker (nach Basis-Spirituose kategorisiert) und deine eigenen Rezepte. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. \"Gin\"), der Filter grenzt nach Kategorie ein.",
+  "ui.das_rezeptbuch_der_bar_klassiker_hausrezepte": "Das Rezeptbuch der Bar: Klassiker, Hausrezepte und eigene Kreationen, nach Basis-Spirituose kategorisiert. Auf einen Namen klicken zeigt Zutaten, Zubereitung, Glas, Garnitur und Geschichte. Die Suche findet auch Rezepte über eine Zutat (z. B. \"Gin\"), der Filter grenzt nach Kategorie ein.",
   "ui.1_1_simple_syrup": "1:1 (Simple Syrup)",
   "ui.1_2_duenn": "1:2 (dünn)",
   "ui.2_1_rich_simple_syrup": "2:1 (Rich Simple Syrup)",
@@ -558,7 +558,7 @@ export const de = {
   "ui.loeschung": "Löschung",
   "ui.loeschung_von": "Löschung von \"",
   "ui.loeschung_vorschlagen": "Löschung vorschlagen",
-  "ui.loeschvorschlag_wird_bei_annahme_caf2": "Löschvorschlag – wird bei Annahme vollständig entfernt (bzw. auf die mitgelieferte Version zurückgesetzt, falls vorhanden).",
+  "ui.loeschvorschlag_wird_bei_annahme_caf2": "Löschvorschlag – wird bei Annahme vollständig entfernt.",
   "ui.login_fehlgeschlagen": "Login fehlgeschlagen: ",
   "ui.luecken": "Lücken",
   "ui.machbar": "Machbar (",

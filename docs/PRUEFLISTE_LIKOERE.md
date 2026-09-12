@@ -199,11 +199,11 @@ Rückenetikett.
   vermerkt. Im Feld `producer` steht deshalb ausdrücklich „Nicht dokumentiert".
   Beim nächsten Wareneingang bitte vom Etikett nachtragen – dann können auch
   Anbaugebiet und Klassifikation präzisiert werden.
-- **Chapeau Secco:** steht nur in der statischen Datei `js/productsData.js`,
-  hat **keinen** Eintrag in der Datenbank und gehörte damit nicht zu den 30
-  Produkten dieses Pakets. Bitte klären, ob der Secco noch im Sortiment ist.
-  Falls ja, gehört er als DB-Eintrag angelegt und mit ausgebaut; falls nein,
-  raus aus der Datei.
+- **Chapeau Secco:** stand nur in der statischen Datei und hatte keinen
+  DB-Eintrag. Beim Abgleich vor dem Löschen der statischen Dateien (09/2026)
+  wurde er mit seinen Feldern in die Datenbank übernommen. Offen bleibt die
+  Sachfrage: Ist der Secco noch im Sortiment? Falls nein, gehört der DB-Eintrag
+  gelöscht; falls ja, fehlen ihm noch die Wissensfelder aus dem Zielraster.
 - **Apfelsinfonie PriSecco (Jörg Geiger):** existiert umgekehrt nur in der
   Datenbank, nicht in der statischen Datei. Das ist so gewollt (neue Produkte
   gehören laut Projektregel in die DB) und kein Fehler.
