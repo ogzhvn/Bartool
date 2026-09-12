@@ -6,6 +6,9 @@ import { onProductsChanged, onRecipesChanged } from "./storage.js";
 import { switchTab, setPendingEditReturn } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
 import { t, onLanguageChanged } from "./i18n.js";
+import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
+import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
+import { initAuditTrash } from "./auditLog.js";
 
 const containerEl = document.getElementById("data-quality-report");
 
@@ -77,6 +80,31 @@ function render() {
   );
 }
 
+// Sammelstelle für Import und Export (Paket 38): die eigentlichen
+// Einstiegspunkte bleiben in den Fach-Tabs (Produkte/Rezepte), hier nur
+// zusätzlich erreichbar. Import öffnet den Produkte-Tab mit der schon
+// vorhandenen Import-Leiste, Export läuft direkt über den kompletten
+// Katalog statt über eine Auswahl.
+function initImportExport() {
+  document.getElementById("admin-data-import-products")?.addEventListener("click", () => switchTab("products"));
+  document.getElementById("admin-data-export-products-excel")?.addEventListener("click", () => {
+    const produkte = getAllProducts();
+    if (produkte.length > 0) exportProductsToExcel(produkte);
+  });
+  document.getElementById("admin-data-export-products-word")?.addEventListener("click", () => {
+    const produkte = getAllProducts();
+    if (produkte.length > 0) exportProductsToWord(produkte);
+  });
+  document.getElementById("admin-data-export-recipes-excel")?.addEventListener("click", () => {
+    const rezepte = getAllRecipes();
+    if (rezepte.length > 0) exportRecipesToExcel(rezepte);
+  });
+  document.getElementById("admin-data-export-recipes-word")?.addEventListener("click", () => {
+    const rezepte = getAllRecipes();
+    if (rezepte.length > 0) exportRecipesToWord(rezepte);
+  });
+}
+
 export function initDataQuality() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(render);
@@ -84,4 +112,9 @@ export function initDataQuality() {
   onProductsChanged(render);
   onRecipesChanged(render);
   render();
+
+  initImportExport();
+  // Papierkorb: eigenes Modul (js/auditLog.js), nur hier eingehängt, damit
+  // die Wiederherstell-Logik nicht doppelt existiert.
+  initAuditTrash();
 }

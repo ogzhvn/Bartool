@@ -1840,3 +1840,50 @@ create policy "bilder: fotorecht loescht"
       or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
     )
   );
+
+-- ---------------------------------------------------------------------
+-- Paket 38: Kontenverwaltung ausbauen
+-- ---------------------------------------------------------------------
+-- Konto deaktivieren statt löschen, letzte Anmeldung sichtbar machen.
+
+alter table public.profiles add column if not exists is_active boolean not null default true;
+alter table public.profiles add column if not exists last_login_at timestamptz;
+
+-- Das letzte Admin-Konto ist bereits gegen Herabstufen und Löschen
+-- geschützt (private.guard_last_admin(), Paket 35/36). Jetzt zusätzlich:
+-- das letzte AKTIVE Admin-Konto lässt sich nicht deaktivieren, sonst könnte
+-- sich die Barleitung versehentlich aussperren.
+create or replace function private.guard_last_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  admin_count int;
+begin
+  if tg_op = 'UPDATE' then
+    if old.role = 'admin' and new.role is distinct from 'admin' then
+      select count(*) into admin_count from public.profiles where role = 'admin';
+      if admin_count <= 1 then
+        raise exception 'Das letzte Administrator-Konto kann nicht herabgestuft werden.';
+      end if;
+    end if;
+    if old.role = 'admin' and old.is_active and new.is_active = false then
+      select count(*) into admin_count from public.profiles where role = 'admin' and is_active;
+      if admin_count <= 1 then
+        raise exception 'Das letzte aktive Administrator-Konto kann nicht deaktiviert werden.';
+      end if;
+    end if;
+    return new;
+  end if;
+
+  if old.role = 'admin' then
+    select count(*) into admin_count from public.profiles where role = 'admin';
+    if admin_count <= 1 then
+      raise exception 'Das letzte Administrator-Konto kann nicht gelöscht werden.';
+    end if;
+  end if;
+  return old;
+end;
+$$;

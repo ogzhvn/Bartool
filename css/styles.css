@@ -1702,6 +1702,39 @@ select {
   margin-top: 0.6rem;
 }
 
+.trash-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.status-badge.status-active {
+  border-color: var(--accent-800);
+  color: var(--accent);
+}
+
+.status-badge.status-inactive {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .quality-item-list {
   display: flex;
   flex-wrap: wrap;

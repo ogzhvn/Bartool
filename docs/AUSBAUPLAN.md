@@ -93,13 +93,12 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 ## 1. Fortschritt
 
-**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33) und
-Runde 6 (39–46) sind vollständig umgesetzt.** Von Runde 5 (34–38, geplant am 09.09.2026)
-sind die Pakete 34–37 erledigt. **Offen ist nur noch Paket 38** (Kontenverwaltung);
-es hängt an keinem anderen Paket – wer hier neu anfängt, kann direkt damit beginnen.
-Maßgeblich ist immer die Tabelle unten, nicht dieser Absatz. Es gelten weiter die
-Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge einhalten, am Ende Status
-hier **und** in der Tabelle auf `erledigt` setzen und mitcommitten.
+**Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33), Runde 5
+(34–38, geplant am 09.09.2026) und Runde 6 (39–46, geplant am 10.09.2026) sind
+vollständig umgesetzt.** Maßgeblich ist immer die Tabelle unten, nicht dieser Absatz.
+Es gelten weiter die Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge
+einhalten, am Ende Status hier **und** in der Tabelle auf `erledigt` setzen und
+mitcommitten.
 
 | # | Paket | Status |
 |---|---|---|
@@ -182,7 +181,7 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 | 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5, hoher Denkaufwand |
 | 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5, hoher Denkaufwand |
 | 37 | Reporting unter Admin + Betrieb & Team | erledigt | Sonnet 5, mittlerer Denkaufwand |
-| 38 | Kontenverwaltung ausbauen | offen | Sonnet 5, mittlerer Denkaufwand |
+| 38 | Kontenverwaltung ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
 
 ### Runde 6 – Quiz-Ausbau (geplant am 10.09.2026)
 
@@ -2028,13 +2027,35 @@ mitnehmen.
    Einstiegspunkte in den Fach-Tabs bleiben, wo sie sind – nur zusätzlich erreichbar.
 
 **Abnahme**
-- [ ] Nach dem Zurücksetzen muss die betroffene Person beim nächsten Login ein neues Passwort setzen.
-- [ ] Ein deaktiviertes Konto kommt nicht mehr durch den Login, seine bisherigen Einträge
-      bleiben sichtbar.
-- [ ] Das letzte aktive Admin-Konto lässt sich nicht deaktivieren.
-- [ ] `last_login_at` steht nach einer Anmeldung in der Liste.
-- [ ] Ein gelöschtes Rezept ist über den Papierkorb wiederherstellbar.
-- [ ] `supabase/schema.sql` bildet die neuen Spalten ab.
+- [x] Nach dem Zurücksetzen muss die betroffene Person beim nächsten Login ein neues Passwort setzen
+      (bestehende Logik aus `admin-users`/`reset-password`, unverändert – setzt `must_change_password`
+      wieder auf `true`, der Erst-Login-Zwang greift von selbst).
+- [x] Ein deaktiviertes Konto kommt nicht mehr durch den Login, seine bisherigen Einträge bleiben
+      sichtbar (`login-with-username` lehnt `is_active = false` mit derselben Fehlermeldung wie ein
+      falsches Passwort ab; die übrigen Tabellen kennen `is_active` nicht, Einträge bleiben unverändert
+      lesbar). **Per curl gegen die echte Edge Function getestet**: Testkonto deaktiviert → Login mit
+      korrektem Passwort liefert dieselbe Fehlermeldung wie ein falsches Passwort; reaktiviert → Login
+      klappt wieder. Die Oberfläche selbst (Kontenliste, Filter, Deaktivieren-Knopf) ließ sich nicht per
+      Klick prüfen, weil `@supabase/supabase-js` von jsdelivr in dieser Sandbox nicht lädt (die
+      CDN-Hosts unterstützen kein HTTP/2 über den Proxy des Sandbox-Netzwerks) – dafür Code-Review.
+- [x] Das letzte aktive Admin-Konto lässt sich nicht deaktivieren (Trigger
+      `private.guard_last_admin()` erweitert, per `apply_migration` angewendet). **Per SQL getestet**:
+      in einer zurückgerollten Transaktion beide aktiven Admin-Konten deaktivieren löst beim zweiten
+      die erwartete Exception aus, der Zustand blieb unverändert.
+- [x] `last_login_at` steht nach einer Anmeldung in der Liste (`login-with-username` schreibt den
+      Zeitstempel nach erfolgreichem Login). **Per curl getestet**: vor dem Login `null`, danach der
+      Anmeldezeitpunkt. Sortierung/Anzeige in der Kontenliste selbst nicht per Klick geprüft, siehe oben.
+- [x] Ein gelöschtes Rezept ist über den Papierkorb wiederherstellbar (Papierkorb in `admin-data`
+      nutzt dieselbe `restore_row()`/`restoreEntry()`-Logik wie der bestehende Änderungsverlauf aus
+      Paket 15/36, nur auf Löschungen der letzten 30 Tage eingeschränkt). Die Papierkorb-Abfrage selbst
+      **per SQL gegenprobiert** (liefert die zuletzt gelöschten Produkte, u. a. „Agavensirup"); die
+      Wiederherstell-Funktion `restore_row()` ist unverändert und war schon vor diesem Paket über den
+      Änderungsverlauf im Einsatz. Die Papierkorb-Ansicht selbst nicht per Klick geprüft, siehe oben.
+- [x] `supabase/schema.sql` bildet die neuen Spalten ab (`profiles.is_active`, `profiles.last_login_at`,
+      erweiterter `guard_last_admin()`-Trigger). Migration `kontenverwaltung_paket38` und die
+      `login-with-username`-Function waren beim Start dieser Session bereits live (Rest eines
+      abgebrochenen, veralteten Versuchs auf `claude/paket-38-kontenverwaltung-o0kyed`) – hier nur
+      `schema.sql` nachgezogen, kein erneutes Deployment nötig.
 
 **Commit:** `Kontenverwaltung: Passwort-Reset, Deaktivieren, letzte Anmeldung, Papierkorb`
 
