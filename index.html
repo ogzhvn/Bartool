@@ -189,6 +189,14 @@
 
       <div class="home-stats" id="home-stats"></div>
 
+      <!-- Steht bewusst vor allem anderen und verschwindet komplett, wenn
+           nichts ansteht: die Startseite soll sagen, was zu tun ist, nicht
+           eine leere Rubrik zeigen. -->
+      <div id="home-today-wrap" hidden>
+        <h3 data-i18n="ui.heute_anstehend">Heute anstehend</h3>
+        <div id="home-today" class="today-list"></div>
+      </div>
+
       <div id="my-change-requests-wrapper" hidden>
         <h3 data-i18n="ui.meine_vorschlaege">Meine Vorschläge</h3>
         <div id="my-change-requests-list"></div>

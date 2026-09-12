@@ -1312,6 +1312,55 @@ select {
   margin-top: 0.15rem;
 }
 
+/* "Heute anstehend" auf der Startseite.
+   Volle Breite statt Kacheln: die Zeilen werden am Tresen gelesen, nicht
+   ueberflogen, und muessen einhaendig auf dem Handy treffbar sein. */
+.today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
+}
+
+.today-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-700);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.today-item:hover {
+  border-color: var(--accent-700);
+  color: var(--accent-300);
+}
+
+.today-item i {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+/* Abgelaufene Ansaetze und der heutige Event: die Farbe ist das Signal,
+   der Text sagt dasselbe noch einmal. */
+.today-item-urgent {
+  border-left-color: var(--danger);
+}
+
+.today-item-urgent i {
+  color: var(--danger);
+}
+
 .tool-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
