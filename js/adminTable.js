@@ -1,14 +1,20 @@
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { onProductsChanged, onRecipesChanged, isOffline } from "./storage.js";
+import { onProductsChanged, onRecipesChanged, isOffline, saveProduct, saveRecipe } from "./storage.js";
 import { openProductForEdit } from "./products.js";
 import { openRecipeForEdit } from "./recipes.js";
-import { switchTab, setPendingEditReturn } from "./tabs.js";
+import { switchTab, setPendingEditReturn, registerTabGuard } from "./tabs.js";
 import { can } from "./auth.js";
-import { t, onLanguageChanged, formatDecimal } from "./i18n.js";
-import { columnsFor, setsFor, NARROW_SETS } from "./catalogColumns.js";
-import { UNIT_LABELS } from "./units.js";
-import { formatNumber } from "./utils.js";
+import { t, onLanguageChanged } from "./i18n.js";
+import { columnsFor, setsFor, columnByField, NARROW_SETS } from "./catalogColumns.js";
+import {
+  anzeigeText,
+  baueEditor,
+  istEditierbarerTyp,
+  kuerze,
+  leseEditor,
+  normalisiere,
+} from "./catalogCell.js";
 
 // Katalogtabelle (Adminbereich, Sub-Tab "admin-catalog").
 //
@@ -17,9 +23,14 @@ import { formatNumber } from "./utils.js";
 // Bestand als Tabelle: alle Zeilen untereinander, die gewünschten Felder
 // nebeneinander, ohne für jedes Feld ein Formular zu öffnen.
 //
-// Etappe 1 (dieser Stand) zeigt und filtert. Das Bearbeiten in der Zelle
-// kommt in Etappe 2; die Zellen tragen dafür schon ihre Koordinaten
-// (data-name/data-field), damit dabei nichts am Aufbau umgestellt werden muss.
+// Etappe 2 (dieser Stand) bearbeitet in der Zelle: Klick oder Tippen öffnet
+// genau ein Eingabefeld, Änderungen sammeln sich in einem Puffer und gehen
+// erst auf Knopfdruck gebündelt in die Datenbank. Geschrieben wird
+// ausschließlich über saveProduct()/saveRecipe() aus js/storage.js – sonst
+// fehlen Änderungsverlauf, Preishistorie und Sync.
+//
+// Bereichsauswahl, Einfügen aus Excel und Suchen & Ersetzen kommen in
+// Etappe 3.
 
 const panelEl = document.getElementById("admin-catalog");
 const kindBtnsEl = document.getElementById("catalog-kind-switch");
@@ -30,14 +41,21 @@ const columnsBtnEl = document.getElementById("catalog-columns-btn");
 const columnsPopEl = document.getElementById("catalog-columns-pop");
 const countEl = document.getElementById("catalog-count");
 const noteEl = document.getElementById("catalog-note");
+const staleEl = document.getElementById("catalog-stale");
 const tableEl = document.getElementById("catalog-table");
+const listsEl = document.getElementById("catalog-datalists");
+const saveBarEl = document.getElementById("catalog-savebar");
+const dirtyCountEl = document.getElementById("catalog-dirty-count");
+const progressEl = document.getElementById("catalog-progress");
+const saveBtnEl = document.getElementById("catalog-save-btn");
+const discardBtnEl = document.getElementById("catalog-discard-btn");
 
 const STORAGE_KEY = "bartool.catalogTable";
 const NARROW_QUERY = "(max-width: 700px)";
 
-// Sichtbare Länge einer Textzelle. Der volle Text hängt im title-Attribut,
-// die Zelle bleibt damit eine Zeile hoch und die Tabelle lesbar.
-const CELL_MAX = 120;
+// Quelle, die in der Preishistorie landet, wenn hier ein Einkaufspreis
+// geändert wird. Inhalt bleibt deutsch (siehe CLAUDE.md, Regel 11).
+const PREIS_QUELLE = "Katalogtabelle";
 
 const state = {
   kind: "products",
@@ -47,6 +65,26 @@ const state = {
   query: "",
   sort: { field: "name", dir: "asc" },
 };
+
+// Offene Änderungen, getrennt nach Art der Datensätze: wer zwischen Produkten
+// und Rezepten umschaltet, soll seine Eingaben nicht verlieren.
+//   dirty     – Map<name, Map<feld, wert>> mit fertig geprüften Werten
+//   ungueltig – Map<name, Map<feld, rohtext>> für alles, was nicht parst
+//   fehler    – Map<name, text> mit dem Fehler des letzten Speicherlaufs
+const puffer = {
+  products: { dirty: new Map(), ungueltig: new Map(), fehler: new Map() },
+  recipes: { dirty: new Map(), ungueltig: new Map(), fehler: new Map() },
+};
+
+let offenerEditor = null;
+let speichertGerade = false;
+let externGeaendert = false;
+// Vorschlagslisten je Spalte, pro Render einmal gebaut.
+const listenCache = new Map();
+
+function buch(kind = state.kind) {
+  return puffer[kind];
+}
 
 function leseEinstellungen() {
   try {
@@ -101,43 +139,128 @@ function alleEintraege() {
   return state.kind === "recipes" ? getAllRecipes() : getAllProducts();
 }
 
+function eintragNach(name) {
+  return alleEintraege().find((eintrag) => eintrag.name === name) ?? null;
+}
+
 // Das Filterfeld über der Tabelle: bei Produkten die Gruppe (Gin, Whisky …),
 // bei Rezepten die Kategorie. Beides ist das, wonach man beim Pflegen sucht.
 function filterFeld() {
   return state.kind === "recipes" ? "category" : "group";
 }
 
-function zutatenText(recipe) {
-  return (recipe.ingredients ?? [])
-    .map((ing) => `${formatNumber(ing.amount)} ${UNIT_LABELS[ing.unit] ?? ing.unit} ${ing.name}`)
-    .join(" · ");
+// ---------------------------------------------------------------------
+// Werte: Puffer schlägt Datenbank
+// ---------------------------------------------------------------------
+
+function aktuellerWert(eintrag, spalte) {
+  const gepuffert = buch().dirty.get(eintrag.name);
+  if (gepuffert?.has(spalte.field)) return gepuffert.get(spalte.field);
+  return eintrag[spalte.field];
 }
 
-// Anzeigetext einer Zelle. Immer ein String – die Tabelle setzt ihn per
-// textContent, nie als HTML (siehe stored-XSS-Fix in der Bibliothek).
-function zellText(eintrag, spalte) {
-  const wert = eintrag[spalte.field];
-  if (spalte.field === "ingredients") return zutatenText(eintrag);
-  if (spalte.type === "bool") return wert ? t("ui.ja") : "";
-  if (spalte.type === "tags" || Array.isArray(wert)) return (wert ?? []).join(", ");
-  if (spalte.type === "select") {
-    const option = (spalte.options?.() ?? []).find((o) => o.value === wert);
-    return option ? option.label : (wert ?? "");
-  }
-  if (spalte.type === "number") {
-    if (wert === "" || wert == null) return "";
-    const zahl = Number(wert);
-    return Number.isFinite(zahl) ? formatDecimal(zahl, Number.isInteger(zahl) ? 0 : 2) : String(wert);
-  }
-  return wert == null ? "" : String(wert);
+function rohUngueltig(name, field) {
+  return buch().ungueltig.get(name)?.get(field);
 }
+
+function zellText(eintrag, spalte) {
+  const roh = rohUngueltig(eintrag.name, spalte.field);
+  if (roh !== undefined) return roh;
+  return anzeigeText(aktuellerWert(eintrag, spalte), spalte, eintrag);
+}
+
+function gleich(a, b) {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    const links = Array.isArray(a) ? a : [];
+    const rechts = Array.isArray(b) ? b : [];
+    return links.length === rechts.length && links.every((wert, i) => wert === rechts[i]);
+  }
+  return a === b;
+}
+
+function setzeWert(name, spalte, roh) {
+  const eintrag = eintragNach(name);
+  if (!eintrag) return;
+  const { dirty, ungueltig } = buch();
+  const { ok, wert } = normalisiere(roh, spalte);
+
+  if (!ok) {
+    if (!ungueltig.has(name)) ungueltig.set(name, new Map());
+    ungueltig.get(name).set(spalte.field, String(roh ?? ""));
+    return;
+  }
+
+  const ungueltigeZeile = ungueltig.get(name);
+  if (ungueltigeZeile) {
+    ungueltigeZeile.delete(spalte.field);
+    if (ungueltigeZeile.size === 0) ungueltig.delete(name);
+  }
+
+  // Zurück auf den Ursprungswert getippt? Dann ist die Zelle nicht mehr
+  // geändert – sonst stünde "1 Änderung" da, die keine ist.
+  if (gleich(wert, eintrag[spalte.field])) {
+    const zeile = dirty.get(name);
+    if (zeile) {
+      zeile.delete(spalte.field);
+      if (zeile.size === 0) dirty.delete(name);
+    }
+    return;
+  }
+
+  if (!dirty.has(name)) dirty.set(name, new Map());
+  dirty.get(name).set(spalte.field, wert);
+}
+
+function anzahlAenderungen(kind = state.kind) {
+  let summe = 0;
+  puffer[kind].dirty.forEach((zeile) => {
+    summe += zeile.size;
+  });
+  return summe;
+}
+
+function anzahlUngueltig(kind = state.kind) {
+  let summe = 0;
+  puffer[kind].ungueltig.forEach((zeile) => {
+    summe += zeile.size;
+  });
+  return summe;
+}
+
+function hatOffeneAenderungen() {
+  return ["products", "recipes"].some((kind) => anzahlAenderungen(kind) + anzahlUngueltig(kind) > 0);
+}
+
+function verwerfeAlles() {
+  ["products", "recipes"].forEach((kind) => {
+    puffer[kind].dirty.clear();
+    puffer[kind].ungueltig.clear();
+    puffer[kind].fehler.clear();
+  });
+}
+
+// ---------------------------------------------------------------------
+// Rechte
+// ---------------------------------------------------------------------
+
+function schreibrecht(kind = state.kind) {
+  return kind === "recipes" ? can("recipes.write") : can("products.write");
+}
+
+function kannBearbeiten() {
+  return !isOffline() && schreibrecht();
+}
+
+// ---------------------------------------------------------------------
+// Sortieren, Filtern, Suchen
+// ---------------------------------------------------------------------
 
 // Sortierwert: Zahlen als Zahl, alles andere kleingeschrieben als Text.
 // Leere Felder wandern ans Ende, egal in welche Richtung sortiert wird –
 // beim Pflegen sucht man die gefüllten Zeilen, nicht die Lücken.
 function sortSchluessel(eintrag, spalte) {
   if (spalte.type === "number") {
-    const zahl = Number(eintrag[spalte.field]);
+    const zahl = Number(aktuellerWert(eintrag, spalte));
     return Number.isFinite(zahl) ? zahl : null;
   }
   const text = zellText(eintrag, spalte);
@@ -185,6 +308,241 @@ function oeffneFormular(name) {
   else openProductForEdit(name);
 }
 
+// ---------------------------------------------------------------------
+// Vorschlagslisten (suggest: true)
+// ---------------------------------------------------------------------
+
+function listenId(spalte) {
+  return `catalog-list-${state.kind}-${spalte.field}`;
+}
+
+// Erst beim ersten Bearbeiten einer Spalte gebaut: eine <datalist> je
+// Textspalte vorab zu erzeugen kostet bei 40 Spalten mehr, als es bringt.
+function datalistFuer(spalte) {
+  if (!listsEl || !spalte.suggest) return null;
+  const id = listenId(spalte);
+  if (listenCache.has(id)) return id;
+
+  const werte = [...new Set(alleEintraege().map((e) => e[spalte.field]).filter(Boolean))]
+    .map(String)
+    .sort((a, b) => a.localeCompare(b, "de"));
+  const liste = document.createElement("datalist");
+  liste.id = id;
+  werte.forEach((wert) => {
+    const option = document.createElement("option");
+    option.value = wert;
+    liste.appendChild(option);
+  });
+  listsEl.appendChild(liste);
+  listenCache.set(id, true);
+  return id;
+}
+
+// ---------------------------------------------------------------------
+// Zelle malen
+// ---------------------------------------------------------------------
+
+function malZelle(td) {
+  const spalte = columnByField(state.kind, td.dataset.field);
+  const eintrag = eintragNach(td.dataset.name);
+  if (!spalte || !eintrag) return;
+
+  const text = zellText(eintrag, spalte);
+  const kurz = kuerze(text);
+  td.textContent = kurz;
+  if (kurz !== text) td.title = text;
+  else td.removeAttribute("title");
+
+  td.classList.toggle("catalog-cell-dirty", Boolean(buch().dirty.get(eintrag.name)?.has(spalte.field)));
+  td.classList.toggle("catalog-cell-invalid", rohUngueltig(eintrag.name, spalte.field) !== undefined);
+}
+
+// ---------------------------------------------------------------------
+// Editor: genau ein Eingabefeld, immer in der fokussierten Zelle
+// ---------------------------------------------------------------------
+
+function zelleIstEditierbar(td) {
+  if (!td || td.tagName !== "TD") return false;
+  const spalte = columnByField(state.kind, td.dataset.field);
+  return Boolean(spalte) && istEditierbarerTyp(spalte);
+}
+
+function schliesseEditor(uebernehmen) {
+  if (!offenerEditor) return;
+  const { td, editor, spalte, name } = offenerEditor;
+  offenerEditor = null;
+  if (uebernehmen) setzeWert(name, spalte, leseEditor(editor, spalte));
+  td.classList.remove("catalog-cell-editing");
+  editor.remove();
+  malZelle(td);
+  aktualisiereLeiste();
+}
+
+// startText: das Zeichen, mit dem die Bearbeitung angestoßen wurde. Wer in
+// einer fokussierten Zelle einfach lostippt, erwartet, dass dieses Zeichen
+// im Feld steht und den alten Wert ersetzt.
+function starteEdit(td, { startText = null, sofortToggle = false } = {}) {
+  if (!kannBearbeiten() || speichertGerade || !zelleIstEditierbar(td)) return;
+  if (offenerEditor?.td === td) return;
+  schliesseEditor(true);
+
+  const spalte = columnByField(state.kind, td.dataset.field);
+  const eintrag = eintragNach(td.dataset.name);
+  if (!eintrag) return;
+
+  const wert = aktuellerWert(eintrag, spalte);
+  const editor = baueEditor(spalte, wert, datalistFuer(spalte));
+  if (startText != null && spalte.type !== "bool" && spalte.type !== "select") editor.value = startText;
+
+  td.textContent = "";
+  td.removeAttribute("title");
+  td.classList.add("catalog-cell-editing");
+  td.appendChild(editor);
+  offenerEditor = { td, editor, spalte, name: eintrag.name };
+
+  editor.addEventListener("keydown", editorTaste);
+  editor.addEventListener("blur", () => {
+    // Erst im nächsten Tick: sonst räumt der blur den Editor weg, bevor ein
+    // Klick auf eine andere Zelle dort ankommt.
+    setTimeout(() => {
+      if (offenerEditor?.editor === editor) schliesseEditor(true);
+    }, 0);
+  });
+  if (spalte.type === "bool" || spalte.type === "select") {
+    editor.addEventListener("change", () => {
+      schliesseEditor(true);
+      td.focus();
+    });
+  }
+
+  editor.focus();
+  if (startText != null && editor.setSelectionRange) {
+    const ende = editor.value.length;
+    editor.setSelectionRange(ende, ende);
+  } else if (editor.select) {
+    editor.select();
+  }
+  // Ein Klick auf eine ja/nein-Zelle ist als Umschalten gemeint, nicht als
+  // "Kästchen öffnen und dann nochmal klicken".
+  if (sofortToggle && spalte.type === "bool") {
+    editor.checked = !editor.checked;
+    schliesseEditor(true);
+    td.focus();
+  }
+}
+
+function editorTaste(event) {
+  if (!offenerEditor) return;
+  const { td, spalte } = offenerEditor;
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    schliesseEditor(false);
+    malZelle(td);
+    td.focus();
+    return;
+  }
+  if (event.key === "Enter" && (spalte.type !== "longtext" || event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    schliesseEditor(true);
+    (naechsteZelle(td, 1, 0) ?? td).focus();
+    return;
+  }
+  if (event.key === "Tab") {
+    event.preventDefault();
+    schliesseEditor(true);
+    (naechsteEditierbare(td, event.shiftKey ? -1 : 1) ?? td).focus();
+  }
+}
+
+// ---------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------
+
+function zellKoordinaten(td) {
+  const tr = td.parentElement;
+  const tbody = tr?.parentElement;
+  if (!tbody) return null;
+  return { tbody, zeile: [...tbody.rows].indexOf(tr), spalte: [...tr.cells].indexOf(td) };
+}
+
+function naechsteZelle(td, dZeile, dSpalte) {
+  const koord = zellKoordinaten(td);
+  if (!koord) return null;
+  const zeile = koord.tbody.rows[koord.zeile + dZeile];
+  if (!zeile) return null;
+  return zeile.cells[koord.spalte + dSpalte] ?? null;
+}
+
+// Tab läuft über alle bearbeitbaren Zellen in Leserichtung und springt am
+// Zeilenende in die nächste Zeile – die Namensspalte wird übersprungen.
+function naechsteEditierbare(td, richtung) {
+  const zellen = [...tableEl.querySelectorAll("tbody td")].filter(zelleIstEditierbar);
+  const index = zellen.indexOf(td);
+  if (index === -1) return null;
+  return zellen[index + richtung] ?? null;
+}
+
+function tabellenTaste(event) {
+  const td = event.target.closest?.("td");
+  if (!td || offenerEditor) return;
+  const spalte = columnByField(state.kind, td.dataset.field);
+  if (!spalte) return;
+
+  const springe = (ziel) => {
+    if (!ziel) return;
+    event.preventDefault();
+    ziel.focus();
+  };
+
+  switch (event.key) {
+    case "ArrowDown":
+      return springe(naechsteZelle(td, 1, 0));
+    case "ArrowUp":
+      return springe(naechsteZelle(td, -1, 0));
+    case "ArrowRight":
+      return springe(naechsteZelle(td, 0, 1));
+    case "ArrowLeft":
+      return springe(naechsteZelle(td, 0, -1));
+    case "Tab":
+      return springe(naechsteEditierbare(td, event.shiftKey ? -1 : 1));
+    case "Enter":
+      // In der Namensspalte liegt der Fokus auf dem Button, der das Formular
+      // öffnet – da muss Enter seinen Normalweg gehen.
+      if (!zelleIstEditierbar(td)) return;
+      event.preventDefault();
+      starteEdit(td);
+      return;
+    case "Delete":
+    case "Backspace": {
+      if (!kannBearbeiten() || !zelleIstEditierbar(td)) return;
+      event.preventDefault();
+      setzeWert(td.dataset.name, spalte, spalte.type === "bool" ? false : "");
+      malZelle(td);
+      aktualisiereLeiste();
+      return;
+    }
+    default:
+      break;
+  }
+
+  // Losgetippt: das Zeichen eröffnet die Bearbeitung und steht schon drin.
+  if (
+    zelleIstEditierbar(td) &&
+    event.key.length === 1 &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  ) {
+    event.preventDefault();
+    starteEdit(td, { startText: event.key });
+  }
+}
+
+// ---------------------------------------------------------------------
+// Tabelle aufbauen
+// ---------------------------------------------------------------------
+
 function baueKopf(spalten) {
   const thead = document.createElement("thead");
   const zeile = document.createElement("tr");
@@ -205,6 +563,7 @@ function baueKopf(spalten) {
       th.setAttribute("aria-sort", state.sort.dir === "asc" ? "ascending" : "descending");
     }
     btn.addEventListener("click", () => {
+      schliesseEditor(true);
       if (state.sort.field === spalte.field) {
         state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
       } else {
@@ -222,7 +581,6 @@ function baueKopf(spalten) {
 
 function baueZelle(eintrag, spalte) {
   const td = document.createElement("td");
-  const text = zellText(eintrag, spalte);
   td.dataset.name = eintrag.name;
   td.dataset.field = spalte.field;
   td.className = `catalog-cell catalog-cell-${spalte.type}`;
@@ -239,22 +597,30 @@ function baueZelle(eintrag, spalte) {
     return td;
   }
 
-  if (spalte.type === "readonly") td.classList.add("catalog-cell-locked");
-  if (text.length > CELL_MAX) {
-    td.textContent = `${text.slice(0, CELL_MAX)}…`;
-    td.title = text;
+  if (spalte.type === "readonly") {
+    td.classList.add("catalog-cell-locked");
   } else {
-    td.textContent = text;
+    // Jede bearbeitbare Zelle ist eine eigene Tab-Station: so läuft die
+    // Tastaturbedienung ohne Sondertasten, wie man es von einer Tabelle
+    // erwartet.
+    td.tabIndex = 0;
   }
+
+  malZelle(td);
   return td;
 }
 
 function baueKoerper(eintraege, spalten) {
   const tbody = document.createElement("tbody");
   const fragment = document.createDocumentFragment();
+  const { fehler } = buch();
   eintraege.forEach((eintrag) => {
     const zeile = document.createElement("tr");
     zeile.dataset.name = eintrag.name;
+    if (fehler.has(eintrag.name)) {
+      zeile.classList.add("catalog-row-error");
+      zeile.title = fehler.get(eintrag.name);
+    }
     spalten.forEach((spalte) => zeile.appendChild(baueZelle(eintrag, spalte)));
     fragment.appendChild(zeile);
   });
@@ -344,16 +710,40 @@ function aktualisiereKindSchalter() {
 
 function aktualisiereHinweis() {
   if (!noteEl) return;
-  const schreibrecht = state.kind === "recipes" ? can("recipes.write") : can("products.write");
   let text = "";
   if (isOffline()) text = t("ui.offline_nur_lesen");
-  else if (!schreibrecht) text = t("ui.kein_schreibrecht_nur_lesen");
+  else if (!schreibrecht()) text = t("ui.kein_schreibrecht_nur_lesen");
   noteEl.textContent = text;
   noteEl.hidden = !text;
 }
 
+function aktualisiereBanner() {
+  if (!staleEl) return;
+  staleEl.hidden = !externGeaendert;
+}
+
+function aktualisiereLeiste() {
+  if (!saveBarEl) return;
+  const geaendert = anzahlAenderungen();
+  const ungueltig = anzahlUngueltig();
+  saveBarEl.hidden = geaendert + ungueltig === 0;
+
+  if (dirtyCountEl) {
+    const teile = [geaendert === 1 ? t("ui.eine_aenderung") : t("ui.n_aenderungen", { n: geaendert })];
+    if (ungueltig > 0) teile.push(t("ui.n_ungueltig", { n: ungueltig }));
+    dirtyCountEl.textContent = teile.join(" · ");
+    dirtyCountEl.classList.toggle("catalog-savebar-warn", ungueltig > 0);
+  }
+  if (saveBtnEl) saveBtnEl.disabled = speichertGerade || geaendert === 0 || ungueltig > 0;
+  if (discardBtnEl) discardBtnEl.disabled = speichertGerade;
+}
+
 function render() {
   if (!tableEl) return;
+  schliesseEditor(true);
+  listenCache.clear();
+  if (listsEl) listsEl.textContent = "";
+
   const spalten = sichtbareSpalten();
   // Sortierspalte ausgeblendet? Dann zurück auf den Namen, sonst sortiert die
   // Tabelle nach etwas, das niemand sieht.
@@ -367,6 +757,8 @@ function render() {
   fuelleSpaltenAuswahl();
   aktualisiereKindSchalter();
   aktualisiereHinweis();
+  aktualisiereBanner();
+  aktualisiereLeiste();
 
   tableEl.textContent = "";
   tableEl.appendChild(baueKopf(spalten));
@@ -378,8 +770,73 @@ function render() {
   if (searchEl) searchEl.placeholder = t("ui.in_sichtbaren_spalten_suchen");
 }
 
+// ---------------------------------------------------------------------
+// Speichern
+// ---------------------------------------------------------------------
+
+// Eine Zeile so zusammensetzen, wie sie das Formular auch abschicken würde:
+// der vollständige Eintrag plus die geänderten Felder. saveProduct()/
+// saveRecipe() upserten über den Namen, es geht also immer der ganze
+// Datensatz raus – ein Teil-Update gäbe es hier nicht.
+function zeileZumSpeichern(eintrag, aenderungen) {
+  const kopie = { ...eintrag, ...Object.fromEntries(aenderungen) };
+  if (state.kind === "products") {
+    // Wie im Produktformular: "geprüft" trägt das Datum der Prüfung mit.
+    if (kopie.verified) kopie.verifiedAt = kopie.verifiedAt || new Date().toISOString();
+    else kopie.verifiedAt = "";
+  }
+  return kopie;
+}
+
+async function speichere() {
+  const kind = state.kind;
+  const { dirty, fehler } = puffer[kind];
+  if (speichertGerade || dirty.size === 0 || anzahlUngueltig(kind) > 0) return;
+  if (!kannBearbeiten()) return;
+
+  schliesseEditor(true);
+  speichertGerade = true;
+  fehler.clear();
+  aktualisiereLeiste();
+
+  const namen = [...dirty.keys()];
+  let erledigt = 0;
+  for (const name of namen) {
+    if (progressEl) {
+      progressEl.hidden = false;
+      progressEl.textContent = t("ui.speichere_fortschritt", { fertig: erledigt, gesamt: namen.length });
+    }
+    try {
+      const eintrag = eintragNach(name);
+      if (!eintrag) throw new Error(t("ui.eintrag_nicht_mehr_vorhanden"));
+      const zeile = zeileZumSpeichern(eintrag, dirty.get(name));
+      if (kind === "recipes") await saveRecipe(zeile);
+      else await saveProduct(zeile, { priceSource: PREIS_QUELLE });
+      dirty.delete(name);
+    } catch (err) {
+      // Eine kaputte Zeile darf den Lauf nicht abbrechen: der Rest geht
+      // durch, die Zeile bleibt rot und im Puffer stehen.
+      fehler.set(name, err?.message ?? String(err));
+    }
+    erledigt += 1;
+  }
+
+  speichertGerade = false;
+  if (progressEl) {
+    progressEl.hidden = true;
+    progressEl.textContent = "";
+  }
+  externGeaendert = false;
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------
+
 function wechsleArt(kind) {
   if (kind === state.kind) return;
+  schliesseEditor(true);
   state.kind = kind;
   state.filter = "";
   state.query = "";
@@ -417,6 +874,30 @@ export function initAdminTable() {
     render();
   });
 
+  // Ein Klick öffnet den Editor genau in der getroffenen Zelle. mousedown
+  // statt click: so ist der Editor da, bevor der Browser den Fokus setzt,
+  // und ein Klick aus einem offenen Editor heraus landet gleich im Ziel.
+  tableEl.addEventListener("mousedown", (event) => {
+    const td = event.target.closest("td");
+    if (!td || !zelleIstEditierbar(td)) return;
+    if (offenerEditor?.td === td) return;
+    event.preventDefault();
+    starteEdit(td, { sofortToggle: true });
+  });
+  tableEl.addEventListener("keydown", tabellenTaste);
+
+  saveBtnEl?.addEventListener("click", () => {
+    speichere();
+  });
+  discardBtnEl?.addEventListener("click", () => {
+    if (speichertGerade) return;
+    if (anzahlAenderungen() + anzahlUngueltig() > 0 && !confirm(t("ui.aenderungen_wirklich_verwerfen"))) return;
+    schliesseEditor(false);
+    verwerfeAlles();
+    externGeaendert = false;
+    render();
+  });
+
   // Spaltenauswahl als eigenes Popover: ein <details> würde beim Klick auf
   // eine Checkbox nicht zufallen, soll aber beim Klick daneben verschwinden.
   columnsBtnEl?.addEventListener("click", () => {
@@ -431,16 +912,38 @@ export function initAdminTable() {
     columnsBtnEl?.setAttribute("aria-expanded", "false");
   });
 
-  // Neu rendern nur, wenn der Bereich offen ist: die Tabelle ist die teuerste
-  // Ansicht der App, und im Hintergrund sieht sie ohnehin niemand.
-  const neuWennSichtbar = () => {
+  // Fremde Änderungen (anderes Gerät, Realtime) dürfen den Puffer nicht
+  // überschreiben – sonst wäre die halbe Eingabe weg. Stattdessen ein
+  // Banner: neu laden kann man über Verwerfen.
+  const beiDatenaenderung = () => {
+    if (speichertGerade) return;
+    if (hatOffeneAenderungen()) {
+      externGeaendert = true;
+      aktualisiereBanner();
+      return;
+    }
     if (panelEl?.classList.contains("active")) render();
   };
-  onProductsChanged(neuWennSichtbar);
-  onRecipesChanged(neuWennSichtbar);
-  onLanguageChanged(neuWennSichtbar);
+  onProductsChanged(beiDatenaenderung);
+  onRecipesChanged(beiDatenaenderung);
+  // Neu rendern nur, wenn der Bereich offen ist: die Tabelle ist die teuerste
+  // Ansicht der App, und im Hintergrund sieht sie ohnehin niemand.
+  onLanguageChanged(() => {
+    if (panelEl?.classList.contains("active")) render();
+  });
   window.addEventListener("online", aktualisiereHinweis);
   window.addEventListener("offline", aktualisiereHinweis);
+
+  // Offene Änderungen gehen beim Tab- oder Seitenwechsel verloren.
+  registerTabGuard((zielTab) => {
+    if (zielTab === "admin-catalog" || !hatOffeneAenderungen()) return true;
+    return confirm(t("ui.offene_aenderungen_verlassen"));
+  });
+  window.addEventListener("beforeunload", (event) => {
+    if (!hatOffeneAenderungen()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
 
   render();
 }

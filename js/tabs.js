@@ -81,6 +81,20 @@ export function takePendingEditReturn() {
   return target;
 }
 
+// Module mit ungespeicherten Eingaben können hier eine Rückfrage anmelden
+// (Katalogtabelle: offene Zelländerungen). Gibt ein Guard false zurück,
+// bleibt der aktuelle Tab stehen und switchTab() meldet false zurück.
+const tabGuards = new Set();
+
+export function registerTabGuard(guard) {
+  tabGuards.add(guard);
+  return () => tabGuards.delete(guard);
+}
+
+function darfWechseln(tabId) {
+  return [...tabGuards].every((guard) => guard(tabId) !== false);
+}
+
 // Filterfeld im Kopf des mobilen Drawers: durchsucht die Nav-Einträge
 // (.tab-btn, .subnav-btn – Haupttabs, Admin-Unterpunkte, Rezept-/Produkt-
 // Kategoriebäume) live per Teilstring-Vergleich. Verändert dabei nie die
@@ -169,7 +183,12 @@ export function initTabs() {
 
   window.addEventListener("hashchange", () => {
     const tabId = resolveTab(location.hash.slice(1));
-    if (tabExists(tabId)) switchTab(tabId, { updateHash: false });
+    if (!tabExists(tabId)) return;
+    // Hat ein Guard abgelehnt, steht der neue Hash schon in der Adresszeile,
+    // der Tab aber nicht – deshalb den Hash zurückdrehen.
+    if (switchTab(tabId, { updateHash: false })) return;
+    const aktiv = currentTabId();
+    if (aktiv) history.replaceState(null, "", `${location.pathname}${location.search}#${aktiv}`);
   });
 
   const hashTab = resolveTab(location.hash.slice(1));
@@ -183,6 +202,7 @@ export function initTabs() {
 
 export function switchTab(tabId, { updateHash = true, replace = false, keepEditReturn = false } = {}) {
   tabId = resolveTab(tabId);
+  if (tabId !== currentTabId() && !darfWechseln(tabId)) return false;
   if (!keepEditReturn) pendingEditReturn = null;
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.dataset.tab === tabId;
@@ -214,4 +234,5 @@ export function switchTab(tabId, { updateHash = true, replace = false, keepEditR
       history.pushState(null, "", url);
     }
   }
+  return true;
 }
