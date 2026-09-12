@@ -13,20 +13,33 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 
 | Was | Wo |
 |---|---|
-| Einstieg, Modul-Init, Auth-Gating | `js/main.js` |
-| Tab-Umschaltung (`data-tab` ↔ `.tab-panel`) | `js/tabs.js` |
+| Einstieg, Modul-Init, Auth-Gating, `data-perm`-Gating | `js/main.js` |
+| Tab-Umschaltung (`data-tab` ↔ `.tab-panel`), Navigation | `js/tabs.js`, `js/headerMenu.js` |
 | Alle Markup-/Tab-Definitionen | `index.html` |
 | Styling, Theme-Variablen | `css/styles.css` |
-| DB-Zugriff Rezepte/Produkte | `js/storage.js` |
+| DB-Zugriff **aller** Datenarten, Offline-Cache | `js/storage.js` |
 | Supabase-Client + Keys | `js/supabaseClient.js`, `js/supabaseConfig.js` |
-| Login, Rollen (`isAdmin`) | `js/auth.js` |
+| Login, Session, `can()` / `canAny()` | `js/auth.js` |
+| Rollen, Rechtekatalog | `js/roles.js`, `js/permissions.js` |
+| Startseite, Favoriten, „Heute anstehend" | `js/home.js`, `js/favorites.js` |
 | Rechner | `js/batching.js`, `superjuice.js`, `syrup.js`, `dilution.js`, `calculation.js` |
+| ABV-Mathematik (zentral) | `js/abv.js`, Einheiten in `js/units.js` |
+| Kalkulation, Karte, Preise | `js/costing.js`, `menuCosting.js`, `priceHistory.js` |
 | Bibliothek (Merge DB+statisch) | `js/recipeLibrary.js`, `js/productLibrary.js` |
+| Rezept-/Produktpflege, Zutateneditor | `js/recipes.js`, `products.js`, `ingredientEditor.js` |
 | Statische Daten (GROSS, s.u.) | `js/classicsData.js`, `js/houseRecipes.js`, `js/productsData.js` |
+| Betrieb: Ansätze, Events, Übergabe, Checklisten | `js/preparations.js`, `events.js`, `shiftLog.js`, `checklists.js` |
+| Bestand: Inventur, Bestellung, Schwund, „Was kann ich bauen?" | `js/inventory.js`, `ordering.js`, `losses.js`, `buildable.js` |
+| Quiz | `js/quiz.js`, `quizGenerator.js`, `quizStats.js`, `adminQuiz.js` |
+| Allergene, Fotos, Suche, Druck | `js/allergens.js`, `photos.js`, `quickSearch.js`, `printView.js` |
+| Import/Export (xlsx) | `js/productImport.js`, `productExport.js`, `recipeExport.js` |
 | Mehrsprachigkeit DE/EN | `js/i18n.js`, `js/i18n/de.js`, `js/i18n/en.js`, `js/language.js` |
-| Admin, Audit, Änderungsanträge | `js/adminPanel.js`, `auditLog.js`, `changeRequests.js`, `dataQuality.js` |
+| Admin (Sub-Tabs), Audit, Änderungsanträge | `js/adminPanel.js`, `adminSections.js`, `adminUsers.js`, `adminRoles.js`, `adminReports.js`, `auditLog.js`, `changeRequests.js`, `dataQuality.js` |
+| Hilfsfunktionen (`escapeHtml`, Zahlen) | `js/utils.js` |
+| PWA-Shell, Cache-Version | `sw.js`, `manifest.json` |
 | DB-Schema + RLS + Setup | `supabase/schema.sql`, `supabase/README.md` |
 | Edge Functions | `supabase/functions/{admin-users,login-with-username}` |
+| Ausbauplan (Ist-Stand, Pakete) | `docs/AUSBAUPLAN.md` |
 | Historische Docs (**nicht** Ist-Stand) | `docs/archive/` |
 
 **Ein Feature = ein Modul unter `js/` mit einer `initX()`-Funktion + Import in
@@ -58,7 +71,8 @@ Dieses Muster nie durchbrechen.
    (`recipeLibrary.js`: DB > `HOUSE_RECIPES` > `CLASSIC_RECIPES`).
    **Der komplette Katalog aus `productsData.js`/`classicsData.js`/
    `houseRecipes.js` liegt inzwischen zusätzlich 1:1 in der DB gespiegelt**
-   (Stand: alle ~310 Produkte + Klassiker/Hausrezepte haben einen DB-Eintrag
+   (Stand 09/2026: 367 Produkte und 163 Rezepte in der DB, alle Einträge der
+   statischen Dateien haben einen DB-Eintrag
    mit identischem Namen). Das bedeutet: **eine Änderung nur in der statischen
    Datei ist im Live-Tool unsichtbar**, weil die DB-Version sie überschreibt.
    Vor jeder inhaltlichen Änderung an einem bestehenden Rezept/Produkt per
@@ -91,8 +105,8 @@ Dieses Muster nie durchbrechen.
 ## Kontext-Budget (wichtig – hier wird das meiste Geld verbrannt)
 
 Drei Dateien sind riesig und dürfen **nie komplett gelesen** werden:
-`js/productsData.js` (~130 KB), `js/classicsData.js` (~130 KB),
-`index.html` (~33 KB). Auch `js/products.js` und `js/recipes.js` nur gezielt.
+`js/productsData.js` (~340 KB), `js/classicsData.js` (~127 KB),
+`index.html` (~105 KB). Auch `css/styles.css` (~65 KB) nur gezielt. Auch `js/products.js` und `js/recipes.js` nur gezielt.
 
 Stattdessen:
 
