@@ -1265,4 +1265,23 @@ export const en = {
   "ui.noch_keine_frage_hat_die_schwellen_erreicht": "No question has enough attempts from enough people yet. The list fills up as the team keeps practising.",
   "ui.frage_nicht_mehr_im_katalog": "question no longer in the catalogue",
   "ui.gibt_es_in_dieser_schwierigkeit_keine_fragen": "\" there are no questions at this difficulty right now.",
+  "ui.bereich_shift_klick_strg_c_v_4b7e":
+    "Range: shift+click or shift+arrow keys, Ctrl+A takes the column · Ctrl+C copies to Excel, Ctrl+V pastes a block back in (never adds rows).",
+  "ui.n_zellen_ausgewaehlt": "{n} cells selected",
+  "ui.aus_zwischenablage_einfuegen": "Paste from clipboard",
+  "ui.einfuegen_vorschau": "{zellen} cells in {zeilen} rows, {ungueltig} of them invalid",
+  "ui.einfuegen_uebersprungen":
+    "{n} cells skipped – name column, read-only columns or outside the table.",
+  "ui.einfuegen_landet_im_puffer_7d31":
+    "The values go into the buffer – nothing is saved until you use the bar below.",
+  "ui.suchen_und_ersetzen": "Find & replace",
+  "ui.ersetzen_umfang_e5a2":
+    "Replaces in the text, long text and tag columns of the rows currently shown. The changes go into the buffer – nothing is saved until you use the bar below.",
+  "ui.suchen_nach": "Find",
+  "ui.ersetzen_durch": "Replace with",
+  "ui.gross_kleinschreibung_beachten": "Match case",
+  "ui.alle_ersetzen": "Replace all",
+  "ui.ersetzen_vorschau": "{treffer} matches in {zellen} cells",
+  "ui.ersetzen_keine_treffer": "No matches",
+  "ui.und_n_weitere": "… and {n} more",
 };

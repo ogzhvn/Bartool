@@ -27,6 +27,12 @@ const GRENZEN = {
   basePortions: { min: 0 },
 };
 
+// Was aus einer eingefügten Excel-Zelle als ja bzw. nein gelten soll. Ohne
+// diese Liste wäre jeder nichtleere Text ein "ja" – auch "nein", und genau
+// das kommt beim Einfügen aus einer Tabelle vor.
+const JA_WERTE = new Set(["ja", "yes", "true", "wahr", "x", "1", "✓", "✔"]);
+const NEIN_WERTE = new Set(["nein", "no", "false", "falsch", "0", "-", "–"]);
+
 // Zahl aus einer Eingabe. Hinterm Tresen wird mit Komma getippt, aus einer
 // kopierten Zelle kommt der Punkt – beides muss gehen.
 export function parseZahl(roh) {
@@ -40,7 +46,14 @@ export function parseZahl(roh) {
 // Wandelt die Rohfassung aus einem Editor in den Wert um, der im Eintrag
 // steht. { ok:false } heißt: die Zelle wird rot, gespeichert wird nichts.
 export function normalisiere(roh, spalte) {
-  if (spalte.type === "bool") return { ok: true, wert: Boolean(roh) };
+  if (spalte.type === "bool") {
+    // Das Kästchen liefert einen echten Boolean, die Zwischenablage Text.
+    if (typeof roh === "boolean") return { ok: true, wert: roh };
+    const text = String(roh ?? "").trim().toLowerCase();
+    if (text === "" || NEIN_WERTE.has(text)) return { ok: true, wert: false };
+    if (JA_WERTE.has(text)) return { ok: true, wert: true };
+    return { ok: false, wert: String(roh) };
+  }
   if (spalte.type === "tags") {
     const liste = String(roh ?? "")
       .split(",")
@@ -99,6 +112,16 @@ export function editorText(wert, spalte) {
   if (spalte.type === "tags" || Array.isArray(wert)) return (wert ?? []).join(", ");
   if (spalte.type === "number") return wert === "" || wert == null ? "" : String(wert);
   return wert == null ? "" : String(wert);
+}
+
+// Fassung für die Zwischenablage: der Wert so, wie ihn normalisiere() wieder
+// einlesen kann. Zahlen deshalb ohne Tausenderpunkt und ohne Rundung, eine
+// Auswahlspalte mit ihrem gespeicherten Wert statt der übersetzten
+// Beschriftung – sonst käme aus Excel "Liter" zurück, wo "liter" stehen muss.
+export function rohText(wert, spalte, eintrag = null) {
+  if (spalte.type === "number") return wert === "" || wert == null ? "" : String(wert);
+  if (spalte.type === "select") return wert == null ? "" : String(wert);
+  return anzeigeText(wert, spalte, eintrag);
 }
 
 export function kuerze(text) {

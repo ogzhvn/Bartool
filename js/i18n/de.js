@@ -1266,4 +1266,23 @@ export const de = {
   "ui.noch_keine_frage_hat_die_schwellen_erreicht": "Noch hat keine Frage genug Versuche von genug Personen. Die Liste füllt sich, sobald das Team weiter übt.",
   "ui.frage_nicht_mehr_im_katalog": "Frage nicht mehr im Katalog",
   "ui.gibt_es_in_dieser_schwierigkeit_keine_fragen": "\" gibt es in dieser Schwierigkeit derzeit keine Fragen.",
+  "ui.bereich_shift_klick_strg_c_v_4b7e":
+    "Bereich: Shift+Klick oder Shift+Pfeiltasten, Strg+A nimmt die Spalte · Strg+C kopiert nach Excel, Strg+V fügt einen Block wieder ein (legt nie neue Zeilen an).",
+  "ui.n_zellen_ausgewaehlt": "{n} Zellen ausgewählt",
+  "ui.aus_zwischenablage_einfuegen": "Aus Zwischenablage einfügen",
+  "ui.einfuegen_vorschau": "{zellen} Zellen in {zeilen} Zeilen, davon {ungueltig} ungültig",
+  "ui.einfuegen_uebersprungen":
+    "{n} Zellen übersprungen – Namensspalte, schreibgeschützte Spalten oder außerhalb der Tabelle.",
+  "ui.einfuegen_landet_im_puffer_7d31":
+    "Die Werte landen im Puffer – gespeichert wird erst über die Leiste unten.",
+  "ui.suchen_und_ersetzen": "Suchen & Ersetzen",
+  "ui.ersetzen_umfang_e5a2":
+    "Ersetzt in den Text-, Langtext- und Schlagwortspalten der gerade angezeigten Zeilen. Die Änderungen landen im Puffer – gespeichert wird erst über die Leiste unten.",
+  "ui.suchen_nach": "Suchen nach",
+  "ui.ersetzen_durch": "Ersetzen durch",
+  "ui.gross_kleinschreibung_beachten": "Groß-/Kleinschreibung beachten",
+  "ui.alle_ersetzen": "Alle ersetzen",
+  "ui.ersetzen_vorschau": "{treffer} Treffer in {zellen} Zellen",
+  "ui.ersetzen_keine_treffer": "Keine Treffer",
+  "ui.und_n_weitere": "… und {n} weitere",
 };

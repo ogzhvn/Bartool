@@ -3646,7 +3646,10 @@ input[type="datetime-local"] {
 
 /* --- Bearbeiten in der Zelle (Etappe 2) --- */
 
-.catalog-table td[tabindex] {
+/* Nur die bearbeitbaren Zellen sind Tab-Stopps (tabindex="0"); Name und
+   schreibgeschützte Spalten tragen tabindex="-1", damit sie sich mit den
+   Pfeiltasten erreichen und in einen Bereich aufnehmen lassen. */
+.catalog-table td[tabindex="0"] {
   cursor: text;
 }
 
@@ -3670,6 +3673,20 @@ input[type="datetime-local"] {
   background: rgba(200, 60, 60, 0.34);
   color: #ffb4b4;
   box-shadow: inset 3px 0 0 #dc5050;
+}
+
+/* --- Bereichsauswahl (Etappe 3) ---
+   Als background-image statt background-color: so bleibt die Färbung von
+   "geändert" bzw. "ungültig" darunter sichtbar, und eine ausgewählte Zelle
+   verliert ihren Zustand nicht aus dem Blick. Die Regel steht deshalb hinter
+   den beiden – bei gleicher Genauigkeit gewinnt die spätere. */
+.catalog-table tbody tr td.catalog-cell-selected {
+  background-image: linear-gradient(rgba(214, 173, 96, 0.18), rgba(214, 173, 96, 0.18));
+}
+
+.catalog-selection {
+  color: var(--accent-300);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Zeile, die im letzten Speicherlauf einen Fehler geliefert hat. Der Grund
@@ -3765,6 +3782,92 @@ input[type="datetime-local"] {
 .catalog-savebar-progress {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* --- Vorschau-Dialoge: Einfügen aus Excel, Suchen & Ersetzen --- */
+
+.catalog-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.catalog-dialog-wide {
+  max-width: 620px;
+}
+
+.catalog-dialog h3 {
+  margin: 0;
+}
+
+.catalog-dialog label {
+  margin: 0;
+}
+
+.catalog-dialog-summary {
+  margin: 0;
+  font-weight: 600;
+}
+
+.catalog-dialog-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-dialog .actions {
+  margin-top: 4px;
+}
+
+/* Trefferliste: je Zelle eine Zeile mit Fundstelle, altem und neuem Text.
+   Beides untereinander statt nebeneinander – ein Langtext wäre in zwei
+   Spalten nicht mehr zu lesen. */
+.catalog-replace-preview {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.catalog-replace-preview:empty {
+  display: none;
+}
+
+.catalog-replace-preview li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.catalog-replace-preview li:last-child {
+  border-bottom: none;
+}
+
+.catalog-replace-where {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.catalog-replace-old {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.catalog-replace-new {
+  color: var(--accent-300);
+}
+
+.catalog-replace-more {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 @media (max-width: 700px) {
