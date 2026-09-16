@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch origin main -q && git merge --ff-only origin/main -q 2>/dev/null; echo \"Stand: $(git log --oneline -1) | origin/main: $(git log --oneline -1 origin/main)\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -194,6 +194,12 @@ verwenden, nur zum Durchklicken des Tools.
 - Entwicklung und Push auf `main`.
 - Commit-Messages auf Deutsch: kurzer Titel, bei Bedarf 1–2 Zeilen Kontext.
 - Automatisch committen, wenn ein Arbeitsschritt fertig und lauffähig ist.
+- **Der Stand kommt vom SessionStart-Hook** (`.claude/settings.json`): er zieht zu
+  Sessionbeginn `origin/main` per Fast-Forward und gibt beide Commit-Hashes aus.
+  Stimmen die beiden Zeilen nicht überein (Hook nicht gelaufen, lokale Commits),
+  zuerst `git fetch origin main && git merge --ff-only origin/main`, **bevor**
+  irgendeine Datei gelesen wird. Ein veralteter Checkout kostet ein ganzes Fenster:
+  gelesene Dateien sind falsch, Module fehlen, Pläne beziehen sich auf toten Code.
 
 ## Nicht in dieser Datei
 Persönliche Kommunikations-/Arbeitspräferenzen stehen in den globalen
