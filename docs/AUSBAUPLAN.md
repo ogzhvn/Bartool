@@ -97,7 +97,7 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33), Runde 5
 (34–38, geplant am 09.09.2026) und Runde 6 (39–46, geplant am 10.09.2026) sind
-vollständig umgesetzt. Runde 7 (47–49) läuft.** Maßgeblich ist immer die Tabelle unten,
+vollständig umgesetzt, ebenso Runde 7 (47–49).** Maßgeblich ist immer die Tabelle unten,
 nicht dieser Absatz.
 Es gelten weiter die Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge
 einhalten, am Ende Status hier **und** in der Tabelle auf `erledigt` setzen und
@@ -219,7 +219,7 @@ Pflege über Tabellen statt über Formulare.
 |---|---|---|---|
 | 47 | Katalogtabelle im Adminbereich: Anzeige (Etappe 1) | erledigt | Opus 5, hoher Denkaufwand |
 | 48 | Quizfragen als Datenbankeinträge + Fragentabelle | erledigt | Opus 5, hoher Denkaufwand |
-| 49 | Bearbeiten in der Zelle (Etappe 2, beide Tabellen gemeinsam) | offen | Opus 5, hoher Denkaufwand |
+| 49 | Bearbeiten in der Zelle (Etappe 2, beide Tabellen gemeinsam) | erledigt | Opus 5, hoher Denkaufwand |
 
 **Paket 48 im Kern:** Der Generator (`js/quizGenerator.js`) baute seine Fragen bis dahin
 bei jeder Runde neu im Browser – sie waren deshalb nicht zu korrigieren und nicht
@@ -229,6 +229,16 @@ und `js/quizTable.js` zeigt sie in der Optik der Katalogtabelle. Von Hand geänd
 Fragen tragen `edited` und werden beim nächsten Abgleich nicht überschrieben; Fragen,
 deren Produkt aus dem Katalog fällt, werden stillgelegt statt gelöscht, damit die
 Versuchsstatistik ihren Bezug behält.
+
+**Paket 49 im Kern:** Beide Tabellen bearbeiten ihre Zellen über ein gemeinsames Modul
+(`js/tableEdit.js`). Der Spaltentyp entscheidet über das Eingabeelement, `suggest`
+über die Vorschlagsliste; gespeichert wird beim Verlassen, mit Enter oder mit Tab
+(weiter zur nächsten Zelle der Zeile), verworfen mit Esc. Geschrieben wird über
+`saveProduct`/`saveRecipe` bzw. `saveQuizQuestion` – also immer der ganze Datensatz.
+Damit zwei schnell hintereinander geänderte Felder derselben Zeile sich nicht
+gegenseitig zurückdrehen, hängen alle Schreibvorgänge an einer Kette und holen sich
+den Eintrag erst, wenn sie an der Reihe sind. Gesperrt bleiben Name und Frage (der
+Upsert läuft über sie), Zutaten, „passt gut zu", die Antwortfelder und „bearbeitet".
 
 ---
 

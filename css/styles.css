@@ -3618,9 +3618,67 @@ input[type="datetime-local"] {
   text-align: center;
 }
 
-/* Felder, die nur im Formular gepflegt werden (Zutaten, "passt gut zu"). */
+/* Felder, die nur im Formular gepflegt werden (Zutaten, "passt gut zu"),
+   und alles, was gerade nicht beschrieben werden darf (offline, kein Recht). */
 .catalog-cell-locked {
   color: var(--text-muted);
+}
+
+/* Bearbeitbare Zelle: nur ein Rahmen beim Überfahren. Ein dauerhafter Hinweis
+   an jeder Zelle würde die Tabelle in ein Gitter aus Kästchen verwandeln. */
+.catalog-table .catalog-cell-editable {
+  cursor: text;
+}
+
+.catalog-table .catalog-cell-editable:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Offene Zelle: das Eingabefeld füllt sie ganz aus, damit beim Tippen nichts
+   springt. Mehrzeilige Felder wachsen über die Zeile hinaus – deshalb hier
+   overflow sichtbar und ein hoher z-index am Textfeld. */
+.catalog-table .catalog-cell-open {
+  padding: 0;
+  overflow: visible;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.catalog-cell-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 9px;
+  border: none;
+  border-radius: 0;
+  background: var(--bg-elevated-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.catalog-cell-input:focus {
+  outline: none;
+}
+
+.catalog-cell-input-long {
+  position: relative;
+  z-index: 4;
+  min-height: 96px;
+  white-space: pre-wrap;
+  resize: vertical;
+  box-shadow: var(--shadow-pop);
+}
+
+/* Läuft gerade zum Server. Der neue Wert steht schon da – wer weiterarbeiten
+   will, soll nicht auf die Datenbank warten müssen. */
+.catalog-table .catalog-cell-saving {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Nicht gespeichert: bleibt stehen, bis der Wert durchgeht oder verworfen
+   wird. Der Grund hängt im title der Zelle. */
+.catalog-table .catalog-cell-error {
+  box-shadow: inset 0 0 0 2px var(--danger);
+  color: var(--danger);
 }
 
 @media (max-width: 700px) {

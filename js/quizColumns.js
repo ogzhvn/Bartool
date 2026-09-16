@@ -9,11 +9,15 @@ import { t } from "./i18n.js";
 //
 // `wert` ist optional und liefert einen abgeleiteten Text – die richtige
 // Antwort steht nicht in einem eigenen Feld, sondern ist options[correctIndex].
+//
+// `editierbar: false` sperrt eine Spalte, die zwar einen bearbeitbaren Typ
+// hat, aber nicht von Hand gesetzt werden soll: "bearbeitet" setzt
+// saveQuizQuestion() selbst, sobald jemand eine Frage anfasst.
 
 export const QUIZ_COLUMNS = [
   { field: "question", labelKey: "ui.frage", type: "readonly", width: 360 },
-  { field: "topic", labelKey: "ui.thema", type: "text", width: 160 },
-  { field: "parentTopic", labelKey: "ui.oberthema", type: "text", width: 150 },
+  { field: "topic", labelKey: "ui.thema", type: "text", width: 160, suggest: true },
+  { field: "parentTopic", labelKey: "ui.oberthema", type: "text", width: 150, suggest: true },
   {
     field: "difficulty",
     labelKey: "ui.schwierigkeit",
@@ -40,8 +44,8 @@ export const QUIZ_COLUMNS = [
     wert: (frage) => (frage.options ?? []).join(" · "),
   },
   { field: "explanation", labelKey: "ui.erklaerung", type: "longtext", width: 300 },
-  { field: "refProduct", labelKey: "ui.produkt", type: "text", width: 180 },
-  { field: "refRecipe", labelKey: "ui.rezept", type: "text", width: 180 },
+  { field: "refProduct", labelKey: "ui.produkt", type: "text", width: 180, suggest: true },
+  { field: "refRecipe", labelKey: "ui.rezept", type: "text", width: 180, suggest: true },
   {
     field: "source",
     labelKey: "ui.quelle",
@@ -52,7 +56,7 @@ export const QUIZ_COLUMNS = [
       { value: "kuratiert", label: t("ui.kuratiert") },
     ],
   },
-  { field: "edited", labelKey: "ui.bearbeitet", type: "bool", width: 110 },
+  { field: "edited", labelKey: "ui.bearbeitet", type: "bool", width: 110, editierbar: false },
   { field: "active", labelKey: "ui.aktiv", type: "bool", width: 90 },
   { field: "updatedAt", labelKey: "ui.zuletzt_geaendert", type: "date", width: 130 },
 ];
@@ -80,3 +84,7 @@ export const QUIZ_SETS = [
 
 // Auf dem Handy startet die Tabelle mit den Kernfeldern.
 export const QUIZ_NARROW_SET = "kern";
+
+export function quizColumnByField(field) {
+  return QUIZ_COLUMNS.find((spalte) => spalte.field === field) ?? null;
+}

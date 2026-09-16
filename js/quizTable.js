@@ -1,13 +1,27 @@
-import { loadQuizQuestions, onQuizQuestionsChanged } from "./storage.js";
+import { loadQuizQuestions, onQuizQuestionsChanged, saveQuizQuestion, isOffline } from "./storage.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
-import { QUIZ_COLUMNS, QUIZ_SETS, QUIZ_NARROW_SET } from "./quizColumns.js";
+import { QUIZ_COLUMNS, QUIZ_SETS, QUIZ_NARROW_SET, quizColumnByField } from "./quizColumns.js";
+import { getAllProducts } from "./productLibrary.js";
+import { getAllRecipes } from "./recipeLibrary.js";
+import { can } from "./auth.js";
+import {
+  initCellEditing,
+  istBearbeitungOffen,
+  istSpalteEditierbar,
+  beiBearbeitungEnde,
+  setzeZellInhalt,
+  zeichneFehlerNeu,
+} from "./tableEdit.js";
 
 // Fragentabelle im Adminbereich (Sub-Tab "admin-quiz").
 //
 // Gleiche Optik und Bedienung wie die Katalogtabelle (js/adminTable.js):
 // Spaltensets, Suche über die sichtbaren Spalten, Filter, Sortierung per
-// Spaltenkopf, stehende erste Spalte. Die Fragespalte ist der Anker – ein
-// Klick lädt die Frage in das Formular darunter.
+// Spaltenkopf, stehende erste Spalte, Bearbeiten in der Zelle über das
+// gemeinsame js/tableEdit.js. Die Fragespalte ist der Anker – ein Klick lädt
+// die Frage in das Formular darunter. Frage, Antworten und richtige Antwort
+// bleiben dem Formular vorbehalten: sie hängen aneinander, und ein
+// Antwortfeld allein zu ändern hieße, den Index daneben zu verschieben.
 //
 // Unterschied zur Katalogtabelle: hier stehen ein paar tausend Zeilen statt
 // ein paar hundert. Deshalb der Render-Deckel unten – der Browser soll die
@@ -21,11 +35,11 @@ const setEl = document.getElementById("quiz-table-set");
 const columnsBtnEl = document.getElementById("quiz-table-columns-btn");
 const columnsPopEl = document.getElementById("quiz-table-columns-pop");
 const countEl = document.getElementById("quiz-table-count");
+const noteEl = document.getElementById("quiz-table-note");
 const tableEl = document.getElementById("quiz-table");
 
 const STORAGE_KEY = "bartool.quizTable";
 const NARROW_QUERY = "(max-width: 700px)";
-const CELL_MAX = 120;
 // Mehr Zeilen zeichnet niemand mehr durch; wer eine bestimmte Frage sucht,
 // sucht sie über Suchfeld und Filter, nicht durch Scrollen.
 const MAX_ZEILEN = 300;
@@ -140,6 +154,43 @@ function gefiltert(spalten) {
     .filter((frage) => passtZurSuche(frage, spalten, state.query));
 }
 
+// Geschrieben wird nur online und nur mit dem Recht, Fragen zu pflegen.
+function darfSchreiben() {
+  return !isOffline() && can("quiz.manage");
+}
+
+function aktualisiereHinweis() {
+  if (!noteEl) return;
+  let text = "";
+  if (isOffline()) text = t("ui.offline_nur_lesen");
+  else if (!can("quiz.manage")) text = t("ui.kein_schreibrecht_nur_lesen");
+  noteEl.textContent = text;
+  noteEl.hidden = !text;
+}
+
+// Vorschlagslisten: Themen aus dem Fragenbestand, Produkt- und Rezeptbezug aus
+// dem Katalog. Der Bezug muss auf den Namen genau passen, sonst findet die
+// Frage ihr Produkt nicht mehr – von Hand getippt geht das regelmäßig schief.
+function vorschlaegeFuer(spalte) {
+  if (spalte.field === "refProduct") return getAllProducts().map((p) => p.name);
+  if (spalte.field === "refRecipe") return getAllRecipes().map((r) => r.name);
+  return [...new Set(loadQuizQuestions().map((frage) => frage[spalte.field]).filter(Boolean))]
+    .map(String)
+    .sort((a, b) => a.localeCompare(b, "de"));
+}
+
+// saveQuizQuestion() setzt bei einer vorhandenen id edited = true: von Hand
+// geänderte Fragen lässt der Katalog-Abgleich (js/quizSync.js) danach in Ruhe.
+//
+// Die Frage wird hier geholt und nicht beim Öffnen der Zelle: geschrieben wird
+// der ganze Datensatz, und zwei schnell hintereinander geänderte Felder
+// derselben Zeile würden sich sonst gegenseitig zurückdrehen.
+async function speichereZelle(id, spalte, wert) {
+  const aktuell = loadQuizQuestions().find((frage) => String(frage.id) === String(id));
+  if (!aktuell) throw new Error(t("ui.eintrag_nicht_mehr_vorhanden"));
+  await saveQuizQuestion({ ...aktuell, [spalte.field]: wert });
+}
+
 function baueKopf(spalten) {
   const thead = document.createElement("thead");
   const zeile = document.createElement("tr");
@@ -194,13 +245,12 @@ function baueZelle(frage, spalte) {
     return td;
   }
 
-  if (spalte.type === "readonly") td.classList.add("catalog-cell-locked");
-  if (text.length > CELL_MAX) {
-    td.textContent = `${text.slice(0, CELL_MAX)}…`;
-    td.title = text;
+  if (istSpalteEditierbar(spalte) && darfSchreiben()) {
+    td.classList.add("catalog-cell-editable");
   } else {
-    td.textContent = text;
+    td.classList.add("catalog-cell-locked");
   }
+  setzeZellInhalt(td, text);
   return td;
 }
 
@@ -331,10 +381,12 @@ export function render() {
   fuelleSets();
   fuelleFilter();
   fuelleSpaltenAuswahl();
+  aktualisiereHinweis();
 
   tableEl.textContent = "";
   tableEl.appendChild(baueKopf(spalten));
   tableEl.appendChild(baueKoerper(sichtbar, spalten));
+  zeichneFehlerNeu(tableEl);
 
   if (countEl) {
     const gesamt = loadQuizQuestions().length;
@@ -346,11 +398,34 @@ export function render() {
   if (searchEl) searchEl.placeholder = t("ui.in_sichtbaren_spalten_suchen");
 }
 
+// Merkt sich, dass während einer offenen Zelle eine Änderung hereinkam.
+let nachzuholen = false;
+
+function renderWennFrei() {
+  if (istBearbeitungOffen()) {
+    nachzuholen = true;
+    return;
+  }
+  render();
+}
+
 // `onOpen` bekommt die Frage, die im Formular landen soll.
 export function initQuizTable(onOpen) {
   if (!tableEl) return;
   oeffneImFormular = typeof onOpen === "function" ? onOpen : () => {};
   leseEinstellungen();
+
+  initCellEditing(tableEl, {
+    tabellenId: "quiz",
+    schluesselAttribut: "id",
+    spalte: quizColumnByField,
+    eintrag: (id) => loadQuizQuestions().find((frage) => String(frage.id) === String(id)) ?? null,
+    text: zellText,
+    darfSchreiben,
+    sperrhinweis: aktualisiereHinweis,
+    vorschlaege: vorschlaegeFuer,
+    speichern: speichereZelle,
+  });
 
   let suchTimer = null;
   searchEl?.addEventListener("input", () => {
@@ -392,7 +467,21 @@ export function initQuizTable(onOpen) {
     columnsBtnEl?.setAttribute("aria-expanded", "false");
   });
 
-  onQuizQuestionsChanged(render);
-  onLanguageChanged(render);
+  // Nie neu zeichnen, solange jemand in einer Zelle tippt – das Neuzeichnen
+  // würde das Eingabefeld mitsamt Inhalt wegräumen. Ein Sync-Lauf schreibt
+  // tausende Zeilen, und genau der trifft sonst mitten in eine Eingabe.
+  onQuizQuestionsChanged(renderWennFrei);
+  onLanguageChanged(renderWennFrei);
+  beiBearbeitungEnde(() => {
+    if (!nachzuholen) return;
+    nachzuholen = false;
+    render();
+  });
+  const netzWechsel = () => {
+    aktualisiereHinweis();
+    renderWennFrei();
+  };
+  window.addEventListener("online", netzWechsel);
+  window.addEventListener("offline", netzWechsel);
   render();
 }

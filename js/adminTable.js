@@ -1,14 +1,22 @@
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
-import { onProductsChanged, onRecipesChanged, isOffline } from "./storage.js";
+import { onProductsChanged, onRecipesChanged, isOffline, saveProduct, saveRecipe } from "./storage.js";
 import { openProductForEdit } from "./products.js";
 import { openRecipeForEdit } from "./recipes.js";
 import { switchTab, setPendingEditReturn } from "./tabs.js";
 import { can } from "./auth.js";
 import { t, onLanguageChanged, formatDecimal } from "./i18n.js";
-import { columnsFor, setsFor, NARROW_SETS } from "./catalogColumns.js";
+import { columnsFor, setsFor, NARROW_SETS, columnByField } from "./catalogColumns.js";
 import { UNIT_LABELS } from "./units.js";
 import { formatNumber } from "./utils.js";
+import {
+  initCellEditing,
+  istBearbeitungOffen,
+  istSpalteEditierbar,
+  beiBearbeitungEnde,
+  setzeZellInhalt,
+  zeichneFehlerNeu,
+} from "./tableEdit.js";
 
 // Katalogtabelle (Adminbereich, Sub-Tab "admin-catalog").
 //
@@ -17,9 +25,12 @@ import { formatNumber } from "./utils.js";
 // Bestand als Tabelle: alle Zeilen untereinander, die gewünschten Felder
 // nebeneinander, ohne für jedes Feld ein Formular zu öffnen.
 //
-// Etappe 1 (dieser Stand) zeigt und filtert. Das Bearbeiten in der Zelle
-// kommt in Etappe 2; die Zellen tragen dafür schon ihre Koordinaten
-// (data-name/data-field), damit dabei nichts am Aufbau umgestellt werden muss.
+// Gezeigt und gefiltert wird hier, bearbeitet wird in der Zelle selbst:
+// js/tableEdit.js hängt sich über die Koordinaten der Zellen
+// (data-name/data-field) ein und schreibt über saveProduct()/saveRecipe().
+// Gesperrt bleiben der Name (der Upsert läuft über ihn – ein Umbenennen in
+// der Tabelle legte eine zweite Zeile an) sowie Zutaten und "passt gut zu",
+// die im Formular gepflegt werden.
 
 const panelEl = document.getElementById("admin-catalog");
 const kindBtnsEl = document.getElementById("catalog-kind-switch");
@@ -34,10 +45,6 @@ const tableEl = document.getElementById("catalog-table");
 
 const STORAGE_KEY = "bartool.catalogTable";
 const NARROW_QUERY = "(max-width: 700px)";
-
-// Sichtbare Länge einer Textzelle. Der volle Text hängt im title-Attribut,
-// die Zelle bleibt damit eine Zeile hoch und die Tabelle lesbar.
-const CELL_MAX = 120;
 
 const state = {
   kind: "products",
@@ -178,6 +185,39 @@ function gefilterteEintraege(spalten) {
     .filter((eintrag) => passtZurSuche(eintrag, spalten, state.query));
 }
 
+// Geschrieben wird nur online und nur mit dem Recht auf die gerade gezeigte
+// Art. Beides kann sich im Betrieb ändern (Funkloch, Rollenwechsel), deshalb
+// wird es bei jedem Rendern und bei jedem Klick neu gefragt.
+function darfSchreiben() {
+  if (isOffline()) return false;
+  return state.kind === "recipes" ? can("recipes.write") : can("products.write");
+}
+
+// Vorschlagsliste einer Spalte: die Werte, die im Katalog schon vorkommen.
+// Bei "Gruppe" oder "Lieferant" tippt sonst jede Schicht eine eigene
+// Schreibweise, und der Filter darüber zerfällt in Varianten desselben Worts.
+function vorschlaegeFuer(spalte) {
+  return [...new Set(alleEintraege().map((eintrag) => eintrag[spalte.field]).filter(Boolean))]
+    .map(String)
+    .sort((a, b) => a.localeCompare(b, "de"));
+}
+
+// Eine Zelle speichern heißt: den vollständigen Eintrag mit dem geänderten
+// Feld erneut schreiben. Der Upsert läuft über den Namen, deshalb bleibt die
+// Namensspalte gesperrt – ein geänderter Name legte eine zweite Zeile an.
+//
+// Der Eintrag wird hier geholt und nicht beim Öffnen der Zelle: wer zwei
+// Felder einer Zeile schnell hintereinander ändert, hätte sonst beim zweiten
+// Mal den Stand von vor der ersten Änderung in der Hand und würde sie
+// stillschweigend zurückdrehen.
+async function speichereZelle(name, spalte, wert) {
+  const aktuell = alleEintraege().find((eintrag) => eintrag.name === name);
+  if (!aktuell) throw new Error(t("ui.eintrag_nicht_mehr_vorhanden"));
+  const neu = { ...aktuell, [spalte.field]: wert };
+  if (state.kind === "recipes") await saveRecipe(neu);
+  else await saveProduct(neu, { priceSource: "Tabellenpflege" });
+}
+
 function oeffneFormular(name) {
   setPendingEditReturn();
   switchTab(state.kind, { keepEditReturn: true });
@@ -239,13 +279,12 @@ function baueZelle(eintrag, spalte) {
     return td;
   }
 
-  if (spalte.type === "readonly") td.classList.add("catalog-cell-locked");
-  if (text.length > CELL_MAX) {
-    td.textContent = `${text.slice(0, CELL_MAX)}…`;
-    td.title = text;
+  if (istSpalteEditierbar(spalte) && darfSchreiben()) {
+    td.classList.add("catalog-cell-editable");
   } else {
-    td.textContent = text;
+    td.classList.add("catalog-cell-locked");
   }
+  setzeZellInhalt(td, text);
   return td;
 }
 
@@ -372,11 +411,16 @@ function render() {
   tableEl.appendChild(baueKopf(spalten));
   tableEl.appendChild(baueKoerper(eintraege, spalten));
 
+  zeichneFehlerNeu(tableEl);
+
   if (countEl) {
     countEl.textContent = `${eintraege.length} ${t("ui.von")} ${alleEintraege().length}`;
   }
   if (searchEl) searchEl.placeholder = t("ui.in_sichtbaren_spalten_suchen");
 }
+
+// Merkt sich, dass während einer offenen Zelle eine Änderung hereinkam.
+let nachzuholen = false;
 
 function wechsleArt(kind) {
   if (kind === state.kind) return;
@@ -392,6 +436,18 @@ function wechsleArt(kind) {
 export function initAdminTable() {
   if (!tableEl) return;
   leseEinstellungen();
+
+  initCellEditing(tableEl, {
+    tabellenId: "catalog",
+    schluesselAttribut: "name",
+    spalte: (feld) => columnByField(state.kind, feld),
+    eintrag: (name) => alleEintraege().find((e) => e.name === name) ?? null,
+    text: zellText,
+    darfSchreiben,
+    sperrhinweis: aktualisiereHinweis,
+    vorschlaege: vorschlaegeFuer,
+    speichern: speichereZelle,
+  });
 
   kindBtnsEl?.querySelectorAll("[data-kind]").forEach((btn) => {
     btn.addEventListener("click", () => wechsleArt(btn.dataset.kind));
@@ -432,15 +488,33 @@ export function initAdminTable() {
   });
 
   // Neu rendern nur, wenn der Bereich offen ist: die Tabelle ist die teuerste
-  // Ansicht der App, und im Hintergrund sieht sie ohnehin niemand.
+  // Ansicht der App, und im Hintergrund sieht sie ohnehin niemand. Und nie,
+  // solange jemand in einer Zelle tippt – das Neuzeichnen würde das
+  // Eingabefeld mitsamt Inhalt wegräumen.
   const neuWennSichtbar = () => {
-    if (panelEl?.classList.contains("active")) render();
+    if (!panelEl?.classList.contains("active")) return;
+    if (istBearbeitungOffen()) {
+      nachzuholen = true;
+      return;
+    }
+    render();
   };
+  beiBearbeitungEnde(() => {
+    if (!nachzuholen) return;
+    nachzuholen = false;
+    neuWennSichtbar();
+  });
   onProductsChanged(neuWennSichtbar);
   onRecipesChanged(neuWennSichtbar);
   onLanguageChanged(neuWennSichtbar);
-  window.addEventListener("online", aktualisiereHinweis);
-  window.addEventListener("offline", aktualisiereHinweis);
+  // Beim Wechsel zwischen online und offline ändert sich nicht nur der
+  // Hinweis, sondern auch, welche Zellen sich anfassen lassen.
+  const netzWechsel = () => {
+    aktualisiereHinweis();
+    neuWennSichtbar();
+  };
+  window.addEventListener("online", netzWechsel);
+  window.addEventListener("offline", netzWechsel);
 
   render();
 }
