@@ -31,6 +31,7 @@ import {
   initLossSync,
   initChecklistTemplateSync,
   initChecklistRunSync,
+  initQuizQuestionSync,
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
 import {
@@ -130,6 +131,7 @@ async function bootstrapAppOnce() {
     initLossSync(),
     initChecklistTemplateSync(),
     initChecklistRunSync(),
+    initQuizQuestionSync(),
     initPriceHistorySync(),
   ]);
   // Muss vor initTabs() stehen: initTabs() schaltet direkt auf den Start-Tab,

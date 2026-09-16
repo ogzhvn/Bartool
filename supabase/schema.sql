@@ -1225,10 +1225,14 @@ end $$;
 -- ---------------------------------------------------------------------
 -- Quiz (Paket 26)
 --
--- quiz_questions = kuratierte Fragen. Der Generator im Frontend
--- (js/quizGenerator.js) baut seine Fragen direkt aus products/recipes und
--- braucht keine Tabelle; hier steht nur, was in keinem Produktfeld steht:
--- Servicewissen, Hausregeln, Trainee-Prüfungsstoff.
+-- quiz_questions = alle Fragen des Quiz. Zwei Quellen, eine Tabelle:
+--   source = 'generator'  – aus products/recipes erzeugt (js/quizGenerator.js),
+--                           per "Aus Katalog aktualisieren" hier hereingeschrieben
+--                           (js/quizSync.js). Erst als Zeile lassen sie sich
+--                           bearbeiten, abschalten und in der Fragentabelle zeigen.
+--   source = 'kuratiert'  – von Hand geschrieben: Servicewissen, Hausregeln,
+--                           Trainee-Prüfungsstoff, steht in keinem Produktfeld.
+-- Das Quiz liest ausschließlich diese Tabelle.
 -- ---------------------------------------------------------------------
 
 create table if not exists public.quiz_questions (
@@ -1249,6 +1253,30 @@ create table if not exists public.quiz_questions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Nachtrag: Generatorfragen als Zeilen (September 2026)
+alter table public.quiz_questions
+  add column if not exists question_key text,
+  add column if not exists source text not null default 'kuratiert',
+  add column if not exists edited boolean not null default false,
+  add column if not exists parent_topic text;
+
+-- Der Schlüssel des Generators ("gen:abv:Bombay Sapphire Gin") hält die
+-- Verbindung zu quiz_attempts.question_key und damit zur Schwierigkeits-
+-- messung. Handgeschriebene Fragen haben keinen; dort bleibt es bei "db:<id>".
+-- Bewusst kein Teilindex (where question_key is not null): der taugt nicht als
+-- Ziel für ON CONFLICT über PostgREST. NULL-Werte gelten in Postgres ohnehin
+-- als verschieden, mehrere schlüssellose Fragen bleiben also erlaubt.
+create unique index if not exists quiz_questions_question_key_idx
+  on public.quiz_questions (question_key);
+
+alter table public.quiz_questions drop constraint if exists quiz_questions_source_check;
+alter table public.quiz_questions add constraint quiz_questions_source_check
+  check (source in ('generator', 'kuratiert'));
+
+-- Runden ziehen immer nur aktive Fragen, meist nach Thema gefiltert.
+create index if not exists quiz_questions_active_topic_idx
+  on public.quiz_questions (active, topic);
 
 alter table public.quiz_questions drop constraint if exists quiz_questions_correct_index_check;
 alter table public.quiz_questions add constraint quiz_questions_correct_index_check check (correct_index >= 0);

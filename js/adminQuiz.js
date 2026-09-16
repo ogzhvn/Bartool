@@ -1,21 +1,29 @@
-import { getSupabaseClient } from "./supabaseClient.js";
-import { loadCuratedQuestionRows, saveCuratedQuestion, deleteCuratedQuestion } from "./quiz.js";
+import {
+  deleteQuizQuestion,
+  loadQuizQuestions,
+  onQuizQuestionsChanged,
+  saveQuizQuestion,
+} from "./storage.js";
+import { syncGeneratedQuestions } from "./quizSync.js";
+import { initQuizTable, render as renderQuizTable } from "./quizTable.js";
 import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onLanguageChanged, t } from "./i18n.js";
 
 // Quiz-Fragen pflegen (Sub-Tab "admin-quiz").
-// Aus js/adminPanel.js herausgelöst (Paket 34). Die Team-Übersicht, die hier
-// ursprünglich mit dranhing, ist in Paket 37 nach js/adminReports.js
-// umgezogen – hier bleibt nur die Fragenpflege.
-// ---------------------------------------------------------------------
-// Kuratierte Quiz-Fragen (Paket 26)
 //
-// Der Generator deckt alles ab, was in Produkt- und Rezeptfeldern steht.
-// Hier kommt dazu, was nirgends als Feld existiert: Servicewissen,
-// Hausregeln, Prüfungsstoff. Vor dem Speichern gibt es eine Vorschau in
-// genau der Form, in der die Frage später im Quiz erscheint.
-// ---------------------------------------------------------------------
+// Seit September 2026 stehen *alle* Fragen in der Tabelle quiz_questions,
+// auch die aus dem Katalog erzeugten (js/quizSync.js schreibt sie dorthin).
+// Dieser Bereich besteht deshalb aus zwei Teilen:
+//
+//   - der Fragentabelle (js/quizTable.js) in der Optik der Katalogtabelle:
+//     suchen, filtern, sortieren, anklicken;
+//   - diesem Formular, in dem die angeklickte Frage landet und in dem neue
+//     kuratierte Fragen entstehen – Servicewissen, Hausregeln, Prüfungsstoff,
+//     also alles, was in keinem Produktfeld steht.
+//
+// Vor dem Speichern gibt es eine Vorschau in genau der Form, in der die Frage
+// später im Quiz erscheint.
 
 const quizForm = document.getElementById("quiz-admin-form");
 const quizQuestionEl = document.getElementById("quiz-admin-question");
@@ -33,10 +41,20 @@ const quizErrorEl = document.getElementById("quiz-admin-error");
 const quizPreviewBtn = document.getElementById("quiz-admin-preview");
 const quizPreviewBox = document.getElementById("quiz-admin-preview-box");
 const quizResetBtn = document.getElementById("quiz-admin-reset");
-const quizListEl = document.getElementById("quiz-admin-list");
+const quizDeleteBtn = document.getElementById("quiz-admin-delete");
+const quizSyncBtn = document.getElementById("quiz-admin-sync");
+const quizSyncNoteEl = document.getElementById("quiz-admin-sync-note");
 
-// id der Frage, die gerade bearbeitet wird (leer = neue Frage).
-let quizEditId = "";
+// Frage, die gerade bearbeitet wird (null = neue Frage). Die ganze Zeile,
+// weil Schlüssel, Quelle und Oberthema beim Speichern erhalten bleiben
+// müssen – sonst verliert eine Generatorfrage ihren Bezug zu den Versuchen.
+let quizEditRow = null;
+
+function quizSetSyncNote(text) {
+  if (!quizSyncNoteEl) return;
+  quizSyncNoteEl.hidden = !text;
+  quizSyncNoteEl.textContent = text ?? "";
+}
 
 function quizSetError(text) {
   quizErrorEl.hidden = !text;
@@ -89,7 +107,10 @@ function quizReadForm() {
     options.push(wert);
   });
   return {
-    id: quizEditId,
+    id: quizEditRow?.id ?? "",
+    questionKey: quizEditRow?.questionKey ?? "",
+    source: quizEditRow?.source ?? "kuratiert",
+    parentTopic: quizEditRow?.parentTopic ?? "",
     question: quizQuestionEl.value.trim(),
     options,
     correctIndex,
@@ -156,7 +177,8 @@ function quizRenderPreview() {
 }
 
 function quizResetForm() {
-  quizEditId = "";
+  quizEditRow = null;
+  if (quizDeleteBtn) quizDeleteBtn.hidden = true;
   quizForm.reset();
   quizOptionsEl.textContent = "";
   quizAddOptionRow("", true);
@@ -168,89 +190,22 @@ function quizResetForm() {
 }
 
 function quizLoadIntoForm(row) {
-  quizEditId = row.id;
+  quizEditRow = row;
+  if (quizDeleteBtn) quizDeleteBtn.hidden = false;
   quizQuestionEl.value = row.question ?? "";
   quizTopicEl.value = row.topic ?? "";
   quizDifficultyEl.value = String(row.difficulty ?? 2);
   quizExplanationEl.value = row.explanation ?? "";
-  quizRefProductEl.value = row.ref_product ?? "";
-  quizRefRecipeEl.value = row.ref_recipe ?? "";
+  quizRefProductEl.value = row.refProduct ?? "";
+  quizRefRecipeEl.value = row.refRecipe ?? "";
   quizActiveEl.checked = row.active !== false;
   quizOptionsEl.textContent = "";
   const optionen = Array.isArray(row.options) ? row.options : [];
-  optionen.forEach((option, i) => quizAddOptionRow(String(option ?? ""), i === Number(row.correct_index)));
+  optionen.forEach((option, i) => quizAddOptionRow(String(option ?? ""), i === Number(row.correctIndex)));
   if (optionen.length < 2) quizAddOptionRow();
   quizPreviewBox.hidden = true;
   quizSetError("");
   quizQuestionEl.scrollIntoView({ block: "center" });
-}
-
-function quizRenderList(rows) {
-  quizListEl.textContent = "";
-  if (rows.length === 0) {
-    const p = document.createElement("p");
-    p.className = "empty-note";
-    p.textContent = t("ui.noch_keine_kuratierten_fragen_der_c7a4");
-    quizListEl.appendChild(p);
-    return;
-  }
-  rows.forEach((row) => {
-    const item = document.createElement("div");
-    item.className = "quiz-admin-item";
-
-    const kopf = document.createElement("p");
-    kopf.className = "quiz-admin-item-question";
-    kopf.textContent = row.question ?? "";
-    item.appendChild(kopf);
-
-    const meta = document.createElement("p");
-    meta.className = "quiz-admin-item-meta";
-    const optionen = Array.isArray(row.options) ? row.options : [];
-    meta.textContent = `${row.topic ?? ""} · ${optionen.length} ${t("ui.antworten")}${row.active === false ? " · inaktiv" : ""}`;
-    item.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.className = "btn-secondary";
-    editBtn.textContent = t("ui.bearbeiten");
-    editBtn.addEventListener("click", () => quizLoadIntoForm(row));
-    actions.appendChild(editBtn);
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "btn-secondary";
-    deleteBtn.textContent = t("ui.loeschen");
-    deleteBtn.addEventListener("click", async () => {
-      if (!confirm(t("ui.diese_frage_wirklich_loeschen"))) return;
-      try {
-        await deleteCuratedQuestion(row.id);
-      } catch (error) {
-        quizSetError(t("ui.frage_konnte_nicht_geloescht_werden") + error.message);
-        return;
-      }
-      if (quizEditId === row.id) quizResetForm();
-      quizLoadQuestions();
-    });
-    actions.appendChild(deleteBtn);
-
-    item.appendChild(actions);
-    quizListEl.appendChild(item);
-  });
-}
-
-async function quizLoadQuestions() {
-  try {
-    quizRenderList(await loadCuratedQuestionRows());
-  } catch (error) {
-    quizListEl.textContent = "";
-    const p = document.createElement("p");
-    p.className = "empty-note";
-    p.textContent = t("ui.fragen_konnten_nicht_geladen_werden") + error.message;
-    quizListEl.appendChild(p);
-  }
 }
 
 function quizFillDatalists() {
@@ -275,34 +230,74 @@ async function quizHandleSubmit(e) {
     return;
   }
   try {
-    await saveCuratedQuestion(frage);
+    await saveQuizQuestion(frage);
   } catch (error) {
     quizSetError(t("ui.frage_konnte_nicht_gespeichert_werden") + error.message);
     return;
   }
   quizResetForm();
-  quizLoadQuestions();
+  renderQuizTable();
 }
 
-// ---------------------------------------------------------------------
-// Quiz: Team-Übersicht und Themen-Heatmap (Paket 27)
-//
-function initQuizAdmin() {
-  quizAddOptionBtn.addEventListener("click", () => quizAddOptionRow());
-  quizPreviewBtn.addEventListener("click", quizRenderPreview);
-  quizResetBtn.addEventListener("click", quizResetForm);
-  quizForm.addEventListener("submit", quizHandleSubmit);
+async function quizHandleDelete() {
+  if (!quizEditRow) return;
+  if (!confirm(t("ui.diese_frage_wirklich_loeschen"))) return;
+  try {
+    await deleteQuizQuestion(quizEditRow.id);
+  } catch (error) {
+    quizSetError(t("ui.frage_konnte_nicht_geloescht_werden") + error.message);
+    return;
+  }
   quizResetForm();
-  quizFillDatalists();
-  quizLoadQuestions();
+  renderQuizTable();
+}
+
+// Katalog-Abgleich. Läuft über js/quizSync.js und kann ein paar Sekunden
+// dauern – währenddessen bleibt der Knopf gesperrt, damit niemand zwei Läufe
+// übereinanderlegt.
+async function quizHandleSync() {
+  if (!quizSyncBtn) return;
+  quizSyncBtn.disabled = true;
+  quizSetSyncNote(t("ui.abgleich_laeuft"));
+  try {
+    const bilanz = await syncGeneratedQuestions();
+    quizSetSyncNote(
+      `${t("ui.abgleich_fertig")} ${bilanz.neu} ${t("ui.neu_klein")} · ` +
+        `${bilanz.geaendert} ${t("ui.aktualisiert_klein")} · ` +
+        `${bilanz.stillgelegt} ${t("ui.stillgelegt")} · ` +
+        `${bilanz.wiederbelebt} ${t("ui.wieder_aktiviert")} · ` +
+        `${bilanz.uebersprungen} ${t("ui.von_hand_geaendert_uebersprungen")}`
+    );
+  } catch (error) {
+    quizSetSyncNote(t("ui.abgleich_fehlgeschlagen") + error.message);
+  }
+  quizSyncBtn.disabled = false;
+  renderQuizTable();
 }
 
 export function initAdminQuiz() {
-  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
+  quizAddOptionBtn.addEventListener("click", () => quizAddOptionRow());
+  quizPreviewBtn.addEventListener("click", quizRenderPreview);
+  quizResetBtn.addEventListener("click", quizResetForm);
+  quizDeleteBtn?.addEventListener("click", quizHandleDelete);
+  quizSyncBtn?.addEventListener("click", quizHandleSync);
+  quizForm.addEventListener("submit", quizHandleSubmit);
+
+  quizResetForm();
+  quizFillDatalists();
+  initQuizTable(quizLoadIntoForm);
+
+  // Die Datalists hängen am Katalog, nicht an den Fragen – sie werden nur
+  // einmal gefüllt und bei Sprachwechsel nicht angefasst.
   onLanguageChanged(() => {
     quizResetForm();
-    quizLoadQuestions();
   });
 
-  initQuizAdmin();
+  // Fragen, die woanders geändert wurden (anderer Browser, Sync-Lauf): das
+  // offene Formular bleibt stehen, damit niemandem die halbe Eingabe wegfliegt.
+  onQuizQuestionsChanged(() => {
+    if (!quizEditRow) return;
+    const aktuell = loadQuizQuestions().find((zeile) => zeile.id === quizEditRow.id);
+    if (!aktuell) quizResetForm();
+  });
 }

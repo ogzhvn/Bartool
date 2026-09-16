@@ -7,7 +7,7 @@
 //
 // Diese Versionsnummer bei JEDER Änderung an Frontend-Dateien hochzählen,
 // sonst liefert der Cache alte Stände aus.
-const CACHE = "bartool-v64";
+const CACHE = "bartool-v65";
 
 // Der App-Shell: alles, was die Oberfläche zum Starten braucht.
 const PRECACHE = [
@@ -62,8 +62,11 @@ const PRECACHE = [
   "js/products.js",
   "js/quickSearch.js",
   "js/quiz.js",
+  "js/quizColumns.js",
   "js/quizGenerator.js",
   "js/quizStats.js",
+  "js/quizSync.js",
+  "js/quizTable.js",
   "js/recipeExport.js",
   "js/recipeLibrary.js",
   "js/recipes.js",

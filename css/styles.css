@@ -2786,20 +2786,10 @@ input[type="datetime-local"] {
   border-radius: var(--radius);
 }
 
-.quiz-admin-item {
-  padding: 0.8rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.quiz-admin-item-question {
-  margin: 0 0 0.2rem;
-  font-weight: 600;
-}
-
-.quiz-admin-item-meta {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* Fragentabelle (js/quizTable.js): abgeschaltete Fragen bleiben sichtbar,
+   sollen aber nicht wie aktive aussehen. */
+.quiz-row-inactive td {
+  opacity: 0.55;
 }
 
 /* Quiz-Auswertung: eigene Zahlen und Team-Übersicht (Paket 27) */

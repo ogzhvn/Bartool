@@ -1,12 +1,7 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser } from "./auth.js";
-import {
-  generateQuestions,
-  listGeneratedTopics,
-  measuredDifficultyFor,
-  setMeasuredDifficulty,
-} from "./quizGenerator.js";
-import { onProductsChanged, onRecipesChanged } from "./storage.js";
+import { listGeneratedTopics, measuredDifficultyFor, setMeasuredDifficulty } from "./quizGenerator.js";
+import { loadQuizQuestions, onQuizQuestionsChanged } from "./storage.js";
 import {
   baueRangliste,
   berechneStatistik,
@@ -28,10 +23,11 @@ import { formatDate, formatDecimal, getLocale, onLanguageChanged, t } from "./i1
 
 // Quiz – Schulungswerkzeug fürs Barteam (Paket 26).
 //
-// Hybrid aus zwei Quellen:
-//   - Generator (js/quizGenerator.js): Fragen aus dem geprüften Katalog.
-//   - Kuratierte Fragen aus der Tabelle quiz_questions: alles, was nicht in
-//     Produktfeldern steht (Servicewissen, Hausregeln, Prüfungsstoff).
+// Alle Fragen kommen aus der Tabelle quiz_questions (js/storage.js), auch die
+// aus dem Katalog erzeugten: js/quizGenerator.js schreibt sie über den
+// Abgleich in js/quizSync.js dorthin. Vorher entstanden sie bei jeder Runde
+// neu im Browser und waren deshalb nicht zu korrigieren und nicht
+// abzuschalten. Der Generator läuft seitdem nur noch beim Abgleich.
 //
 // Fragen und Antworten werden ausschließlich per textContent gesetzt – der
 // Text kommt aus Katalog und Datenbank, also aus Nutzereingaben.
@@ -81,7 +77,7 @@ const resultListEl = document.getElementById("quiz-result-list");
 const againBtn = document.getElementById("quiz-again");
 
 // Kuratierte Fragen aus der DB, gecacht bis zum nächsten Rundenstart.
-let curatedCache = [];
+let fragenCache = [];
 // Laufende Runde: { fragen, index, antworten: [{ frage, korrekt }] }
 let runde = null;
 // Eigene Versuche, neueste zuerst. Basis für Auswertung und Wiederholung.
@@ -132,84 +128,35 @@ function neueRundenId() {
 }
 
 // ---------------------------------------------------------------------
-// Kuratierte Fragen (Tabelle quiz_questions)
+// Fragen (Tabelle quiz_questions)
 // ---------------------------------------------------------------------
 
-// Wandelt eine DB-Zeile in dieselbe Form, die der Generator liefert. Fragen
-// mit kaputten Daten (leere Option, correct_index außerhalb) werden
-// verworfen statt halb angezeigt.
-function fromQuestionRow(row) {
-  const optionen = (Array.isArray(row?.options) ? row.options : []).map((o) => txt(o)).filter(Boolean);
-  const index = Number(row?.correct_index);
+// Wandelt einen Eintrag aus js/storage.js in die Form, mit der die Runde
+// arbeitet. Fragen mit kaputten Daten (leere Option, correct_index außerhalb)
+// werden verworfen statt halb angezeigt.
+function fromQuestionRow(zeile) {
+  const optionen = (Array.isArray(zeile?.options) ? zeile.options : []).map((o) => txt(o)).filter(Boolean);
+  const index = Number(zeile?.correctIndex);
   if (optionen.length < 2 || !Number.isInteger(index) || index < 0 || index >= optionen.length) return null;
   const richtig = optionen[index];
   const gemischt = shuffle(optionen);
+  // Der Schlüssel des Generators bleibt erhalten, solange es ihn gibt: an ihm
+  // hängen die Versuche der Kollegen und die Schwierigkeitsmessung.
+  const key = txt(zeile.questionKey) || `db:${zeile.id}`;
   return {
-    key: `db:${row.id}`,
-    question: txt(row.question),
+    key,
+    question: txt(zeile.question),
     options: gemischt,
     correctIndex: gemischt.indexOf(richtig),
-    explanation: txt(row.explanation),
-    topic: txt(row.topic) || t("ui.servicewissen"),
-    // Auch hier schlägt die Messung den gepflegten Vorgabewert (Paket 43).
-    difficulty: measuredDifficultyFor(`db:${row.id}`) ?? (Number(row.difficulty) || 2),
-    refProduct: txt(row.ref_product),
-    refRecipe: txt(row.ref_recipe),
-    source: "kuratiert",
+    explanation: txt(zeile.explanation),
+    topic: txt(zeile.topic) || t("ui.servicewissen"),
+    parent: txt(zeile.parentTopic) || txt(zeile.topic) || t("ui.servicewissen"),
+    // Die Messung schlägt den gepflegten Vorgabewert (Paket 43).
+    difficulty: measuredDifficultyFor(key) ?? (Number(zeile.difficulty) || 2),
+    refProduct: txt(zeile.refProduct),
+    refRecipe: txt(zeile.refRecipe),
+    source: zeile.source === "generator" ? "generator" : "kuratiert",
   };
-}
-
-async function fetchCuratedQuestions({ onlyActive = true } = {}) {
-  const supabase = getSupabaseClient();
-  let query = supabase.from("quiz_questions").select("*").order("topic").order("question");
-  if (onlyActive) query = query.eq("active", true);
-  try {
-    const { data, error } = await query;
-    if (error) return { rows: [], error };
-    return { rows: data ?? [], error: null };
-  } catch (err) {
-    // Offline: der Fetch wirft, statt nur `error` zu setzen. Das Quiz läuft
-    // dann mit den generierten Fragen weiter.
-    return { rows: [], error: err };
-  }
-}
-
-// Für die Admin-Maske (js/adminQuiz.js): Rohzeilen inklusive inaktiver.
-export async function loadCuratedQuestionRows() {
-  const { rows, error } = await fetchCuratedQuestions({ onlyActive: false });
-  if (error) throw error;
-  return rows;
-}
-
-export async function saveCuratedQuestion(question) {
-  const supabase = getSupabaseClient();
-  const nutzer = getCurrentUser();
-  const payload = {
-    question: txt(question.question),
-    options: question.options,
-    correct_index: question.correctIndex,
-    explanation: txt(question.explanation),
-    topic: txt(question.topic) || t("ui.servicewissen"),
-    difficulty: question.difficulty,
-    ref_product: txt(question.refProduct) || null,
-    ref_recipe: txt(question.refRecipe) || null,
-    active: question.active !== false,
-  };
-  if (question.id) {
-    const { error } = await supabase.from("quiz_questions").update(payload).eq("id", question.id);
-    if (error) throw error;
-    return;
-  }
-  const { error } = await supabase
-    .from("quiz_questions")
-    .insert({ ...payload, created_by: nutzer?.id ?? null });
-  if (error) throw error;
-}
-
-export async function deleteCuratedQuestion(id) {
-  const supabase = getSupabaseClient();
-  const { error } = await supabase.from("quiz_questions").delete().eq("id", id);
-  if (error) throw error;
 }
 
 // ---------------------------------------------------------------------
@@ -655,13 +602,18 @@ export function createLeaderboard(container, { limit = 10 } = {}) {
 // Fragenpool
 // ---------------------------------------------------------------------
 
-async function refreshCurated() {
-  const { rows } = await fetchCuratedQuestions();
-  curatedCache = rows.map(fromQuestionRow).filter(Boolean);
+// Aus dem Fragenbestand wird einmal je Aufruf der Rundenpool gebaut. Nur
+// aktive Fragen: abgeschaltete bleiben in der Tabelle, aber nicht im Quiz.
+function refreshPool() {
+  fragenCache = loadQuizQuestions()
+    .filter((zeile) => zeile.active !== false)
+    .map(fromQuestionRow)
+    .filter(Boolean);
 }
 
 function buildPool() {
-  return [...generateQuestions(), ...curatedCache];
+  if (fragenCache.length === 0) refreshPool();
+  return fragenCache;
 }
 
 function renderTopics(pool) {
@@ -706,7 +658,7 @@ function showView(view) {
 
 async function startRound({ size, topic = "", difficulty = 0 }) {
   setNote("");
-  await refreshCurated();
+  refreshPool();
   const pool = buildPool();
   renderTopics(pool);
   // Der Schwierigkeitsfilter greift vor der Rundenauswahl, damit Wiederholung
@@ -903,7 +855,7 @@ async function zurueckZumStart() {
   runde = null;
   showView("start");
   renderStats(null);
-  await refreshCurated();
+  refreshPool();
   renderTopics(buildPool());
   await refreshStats();
 }
@@ -913,6 +865,7 @@ export function initQuiz() {
 
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    refreshPool();
     renderTopics(buildPool());
     refreshStats();
   });
@@ -930,13 +883,13 @@ export function initQuiz() {
   abortBtn.addEventListener("click", zurueckZumStart);
   jumpBtn.addEventListener("click", () => springeZu(jumpBtn.dataset.kind, jumpBtn.dataset.name));
 
-  // Themenliste aktuell halten, wenn Katalogänderungen hereinkommen – aber
-  // nie in eine laufende Runde eingreifen.
-  const aktualisiere = () => {
-    if (!runde) renderTopics(buildPool());
-  };
-  onProductsChanged(aktualisiere);
-  onRecipesChanged(aktualisiere);
+  // Themenliste aktuell halten, wenn Fragen dazukommen oder abgeschaltet
+  // werden – aber nie in eine laufende Runde eingreifen.
+  onQuizQuestionsChanged(() => {
+    if (runde) return;
+    refreshPool();
+    renderTopics(buildPool());
+  });
 
   renderTopics(buildPool());
   showView("start");
@@ -944,9 +897,8 @@ export function initQuiz() {
   // Einmal pro Sitzung: die Messung holen und in den Generator schieben. Ab
   // dann kommt die Schwierigkeit aus dem Cache, nicht aus dem Netz.
   loadQuestionDifficulty().then(() => {
-    if (!runde) renderTopics(buildPool());
-  });
-  refreshCurated().then(() => {
-    if (!runde) renderTopics(buildPool());
+    if (runde) return;
+    refreshPool();
+    renderTopics(buildPool());
   });
 }

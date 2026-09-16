@@ -97,7 +97,8 @@ deutsche Kommentare), das betrifft nur die Antworten im Chat.
 
 **Runde 1 (Pakete 1–15), Runde 2 (16–20), Runde 3 (21–27), Runde 4 (28–33), Runde 5
 (34–38, geplant am 09.09.2026) und Runde 6 (39–46, geplant am 10.09.2026) sind
-vollständig umgesetzt.** Maßgeblich ist immer die Tabelle unten, nicht dieser Absatz.
+vollständig umgesetzt. Runde 7 (47–49) läuft.** Maßgeblich ist immer die Tabelle unten,
+nicht dieser Absatz.
 Es gelten weiter die Spielregeln aus Kapitel 0: ein Paket pro Session, Reihenfolge
 einhalten, am Ende Status hier **und** in der Tabelle auf `erledigt` setzen und
 mitcommitten.
@@ -208,6 +209,26 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 | 44 | Datenpflege: Bier und Mixer & Softdrink | erledigt | Opus 5, mittlerer Denkaufwand |
 | 45 | Datenpflege: Sirup, Saft, Fruchtpüree | erledigt | Opus 5, mittlerer Denkaufwand |
 | 46 | Datenpflege: Tee & Kaffee, Sonstiges | erledigt | Opus 5, mittlerer Denkaufwand |
+
+### Runde 7 – Pflege über Tabellen (laufend)
+
+Außerhalb der nummerierten Runden entstanden, weil der Tresenalltag es verlangt hat:
+Pflege über Tabellen statt über Formulare.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 47 | Katalogtabelle im Adminbereich: Anzeige (Etappe 1) | erledigt | Opus 5, hoher Denkaufwand |
+| 48 | Quizfragen als Datenbankeinträge + Fragentabelle | erledigt | Opus 5, hoher Denkaufwand |
+| 49 | Bearbeiten in der Zelle (Etappe 2, beide Tabellen gemeinsam) | offen | Opus 5, hoher Denkaufwand |
+
+**Paket 48 im Kern:** Der Generator (`js/quizGenerator.js`) baute seine Fragen bis dahin
+bei jeder Runde neu im Browser – sie waren deshalb nicht zu korrigieren und nicht
+abzuschalten. Seitdem schreibt `js/quizSync.js` sie als Zeilen nach `quiz_questions`
+(3655 Fragen aus dem geprüften Katalog), das Quiz liest ausschließlich diese Tabelle,
+und `js/quizTable.js` zeigt sie in der Optik der Katalogtabelle. Von Hand geänderte
+Fragen tragen `edited` und werden beim nächsten Abgleich nicht überschrieben; Fragen,
+deren Produkt aus dem Katalog fällt, werden stillgelegt statt gelöscht, damit die
+Versuchsstatistik ihren Bezug behält.
 
 ---
 

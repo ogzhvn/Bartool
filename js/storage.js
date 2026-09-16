@@ -10,6 +10,7 @@ const SHIFT_LOGS_UPDATED_EVENT = "bartool:shift-logs-updated";
 const LOSSES_UPDATED_EVENT = "bartool:losses-updated";
 const CHECKLIST_TEMPLATES_UPDATED_EVENT = "bartool:checklist-templates-updated";
 const CHECKLIST_RUNS_UPDATED_EVENT = "bartool:checklist-runs-updated";
+const QUIZ_QUESTIONS_UPDATED_EVENT = "bartool:quiz-questions-updated";
 
 let recipesCache = [];
 let productsCache = [];
@@ -19,6 +20,7 @@ let shiftLogsCache = [];
 let lossesCache = [];
 let checklistTemplatesCache = [];
 let checklistRunsCache = [];
+let quizQuestionsCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
@@ -27,6 +29,7 @@ let shiftLogsChannel = null;
 let lossesChannel = null;
 let checklistTemplatesChannel = null;
 let checklistRunsChannel = null;
+let quizQuestionsChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -46,6 +49,7 @@ const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
 const LOSSES_CACHE_KEY = "bartool:losses";
 const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
+const QUIZ_QUESTIONS_CACHE_KEY = "bartool:quiz-questions";
 
 function readCache(key) {
   try {
@@ -1105,4 +1109,161 @@ export async function saveInventoryItems(countId, eintraege) {
     .from("inventory_items")
     .upsert(rows, { onConflict: "count_id,product_name" });
   if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Quizfragen (Tabelle "quiz_questions" in Supabase)
+//
+// Gleiches Muster wie Rezepte und Produkte, mit zwei Besonderheiten:
+//
+//   1. Seitenweise laden. Der Generator (js/quizGenerator.js) schreibt seine
+//      Fragen als Zeilen in die Tabelle (js/quizSync.js); das sind ein paar
+//      tausend. PostgREST liefert pro Anfrage höchstens 1000 Zeilen, ein
+//      schlichtes select() würde den Pool also still abschneiden.
+//   2. Inaktive Fragen kommen mit. Das Quiz filtert selbst auf active, die
+//      Fragentabelle im Adminbereich braucht auch die abgeschalteten.
+// ---------------------------------------------------------------------
+
+const QUIZ_PAGE = 1000;
+
+export function fromQuizQuestionRow(row) {
+  return {
+    id: row.id,
+    questionKey: row.question_key ?? "",
+    question: row.question ?? "",
+    options: Array.isArray(row.options) ? row.options : [],
+    correctIndex: Number(row.correct_index) || 0,
+    explanation: row.explanation ?? "",
+    topic: row.topic ?? "",
+    parentTopic: row.parent_topic ?? "",
+    difficulty: Number(row.difficulty) || 2,
+    refProduct: row.ref_product ?? "",
+    refRecipe: row.ref_recipe ?? "",
+    source: row.source === "generator" ? "generator" : "kuratiert",
+    edited: row.edited ?? false,
+    active: row.active !== false,
+    updatedAt: row.updated_at ?? "",
+  };
+}
+
+export function toQuizQuestionRecord(frage) {
+  return {
+    question_key: frage.questionKey || null,
+    question: frage.question,
+    options: frage.options,
+    correct_index: frage.correctIndex,
+    explanation: frage.explanation ?? "",
+    topic: frage.topic || "Servicewissen",
+    parent_topic: frage.parentTopic || null,
+    difficulty: frage.difficulty ?? 2,
+    ref_product: frage.refProduct || null,
+    ref_recipe: frage.refRecipe || null,
+    source: frage.source === "generator" ? "generator" : "kuratiert",
+    active: frage.active !== false,
+  };
+}
+
+async function fetchAllQuizQuestions() {
+  const supabase = getSupabaseClient();
+  const alle = [];
+  for (let von = 0; ; von += QUIZ_PAGE) {
+    const { data, error } = await supabase
+      .from("quiz_questions")
+      .select("*")
+      .order("topic")
+      .order("question")
+      .range(von, von + QUIZ_PAGE - 1);
+    if (error) throw error;
+    alle.push(...(data ?? []));
+    if ((data ?? []).length < QUIZ_PAGE) return alle;
+  }
+}
+
+async function refreshQuizQuestions() {
+  try {
+    quizQuestionsCache = (await fetchAllQuizQuestions()).map(fromQuizQuestionRow);
+    writeCache(QUIZ_QUESTIONS_CACHE_KEY, quizQuestionsCache);
+  } catch {
+    const buffered = readCache(QUIZ_QUESTIONS_CACHE_KEY);
+    if (buffered) quizQuestionsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(QUIZ_QUESTIONS_UPDATED_EVENT));
+}
+
+export async function initQuizQuestionSync() {
+  const buffered = readCache(QUIZ_QUESTIONS_CACHE_KEY);
+  if (buffered) {
+    quizQuestionsCache = buffered;
+    window.dispatchEvent(new CustomEvent(QUIZ_QUESTIONS_UPDATED_EVENT));
+  }
+  await refreshQuizQuestions();
+  const supabase = getSupabaseClient();
+  if (quizQuestionsChannel) supabase.removeChannel(quizQuestionsChannel);
+  // Ein Sync-Lauf schreibt tausende Zeilen und würde ebenso viele Ereignisse
+  // auslösen. Deshalb wird das Neuladen gebündelt, nicht pro Zeile.
+  let sammelTimer = null;
+  quizQuestionsChannel = supabase
+    .channel("public:quiz_questions")
+    .on("postgres_changes", { event: "*", schema: "public", table: "quiz_questions" }, () => {
+      clearTimeout(sammelTimer);
+      sammelTimer = setTimeout(refreshQuizQuestions, 1500);
+    })
+    .subscribe();
+}
+
+export function loadQuizQuestions() {
+  return quizQuestionsCache;
+}
+
+export async function saveQuizQuestion(frage) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const datensatz = toQuizQuestionRecord(frage);
+  if (frage.id) {
+    // Von Hand geändert: der nächste Katalog-Abgleich lässt die Zeile in Ruhe.
+    const { error } = await supabase
+      .from("quiz_questions")
+      .update({ ...datensatz, edited: true })
+      .eq("id", frage.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("quiz_questions").insert(datensatz);
+    if (error) throw error;
+  }
+  await refreshQuizQuestions();
+}
+
+export async function deleteQuizQuestion(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("quiz_questions").delete().eq("id", id);
+  if (error) throw error;
+  await refreshQuizQuestions();
+}
+
+// Für den Katalog-Abgleich (js/quizSync.js): schreibt einen Block Fragen und
+// lädt bewusst nicht nach – das macht der Aufrufer einmal am Ende.
+export async function upsertQuizQuestions(zeilen) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("quiz_questions")
+    .upsert(zeilen, { onConflict: "question_key" });
+  if (error) throw error;
+}
+
+export async function setQuizQuestionsActive(ids, active) {
+  if (!ids.length) return;
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("quiz_questions").update({ active }).in("id", ids);
+  if (error) throw error;
+}
+
+export async function reloadQuizQuestions() {
+  await refreshQuizQuestions();
+}
+
+export function onQuizQuestionsChanged(callback) {
+  window.addEventListener(QUIZ_QUESTIONS_UPDATED_EVENT, callback);
 }

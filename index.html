@@ -1738,7 +1738,35 @@
     <!-- ADMIN – Quiz-Fragen und Team-Übersicht (js/adminQuiz.js) -->
     <section id="admin-quiz" class="tab-panel" data-perm="quiz.manage">
       <h2 data-i18n="ui.quiz_fragen">Quiz-Fragen</h2>
-      <p class="hint" data-i18n="ui.kuratierte_fragen_fuer_alles_was_nicht_in_6d14">Kuratierte Fragen für alles, was nicht in Produktfeldern steht: Servicewissen, Hausregeln, Prüfungsstoff. Die richtige Antwort wird über die Auswahl links neben dem Feld markiert; die Reihenfolge wird im Quiz gemischt.</p>
+      <p class="hint" data-i18n="ui.alle_fragen_des_quiz_stehen_hier_8f21">Alle Fragen des Quiz stehen hier als Datenbankeinträge – auch die aus dem Katalog erzeugten. „Aus Katalog aktualisieren" holt neue Produkt- und Rezeptfragen dazu; von Hand geänderte Fragen bleiben dabei unangetastet.</p>
+
+      <div class="actions">
+        <button type="button" id="quiz-admin-sync" class="btn-secondary" data-i18n="ui.aus_katalog_aktualisieren">Aus Katalog aktualisieren</button>
+      </div>
+      <p id="quiz-admin-sync-note" class="hint" hidden></p>
+
+      <div class="catalog-toolbar">
+        <input type="search" id="quiz-table-search" class="catalog-search" autocomplete="off" data-i18n-placeholder="ui.in_sichtbaren_spalten_suchen" data-i18n-aria-label="ui.in_sichtbaren_spalten_suchen" />
+
+        <select id="quiz-table-topic" data-i18n-aria-label="ui.thema"></select>
+        <select id="quiz-table-source" data-i18n-aria-label="ui.quelle"></select>
+        <select id="quiz-table-status" data-i18n-aria-label="ui.status"></select>
+        <select id="quiz-table-set" data-i18n-aria-label="ui.spaltenset"></select>
+
+        <div class="catalog-columns-wrap">
+          <button type="button" id="quiz-table-columns-btn" class="btn-secondary" aria-expanded="false" aria-controls="quiz-table-columns-pop" data-i18n="ui.spalten">Spalten</button>
+          <div id="quiz-table-columns-pop" class="catalog-columns-pop" hidden></div>
+        </div>
+
+        <span id="quiz-table-count" class="hint catalog-count"></span>
+      </div>
+
+      <div class="catalog-scroll">
+        <table id="quiz-table" class="catalog-table"></table>
+      </div>
+
+      <h3 data-i18n="ui.frage_bearbeiten_oder_neu_anlegen">Frage bearbeiten oder neu anlegen</h3>
+      <p class="hint" data-i18n="ui.klick_auf_eine_frage_in_der_tabelle_4c07">Klick auf eine Frage in der Tabelle lädt sie hier herein. Ohne Auswahl entsteht eine neue kuratierte Frage – für alles, was in keinem Produktfeld steht: Servicewissen, Hausregeln, Prüfungsstoff. Die richtige Antwort wird über die Auswahl links neben dem Feld markiert; die Reihenfolge wird im Quiz gemischt.</p>
       <form id="quiz-admin-form">
         <div class="field-row">
           <label data-i18n="ui.frage">
@@ -1791,10 +1819,10 @@
           <button type="button" id="quiz-admin-preview" class="btn-secondary" data-i18n="ui.vorschau">Vorschau</button>
           <button type="submit" class="btn-primary" data-i18n="ui.frage_speichern">Frage speichern</button>
           <button type="button" id="quiz-admin-reset" class="btn-secondary" data-i18n="ui.formular_leeren">Formular leeren</button>
+          <button type="button" id="quiz-admin-delete" class="btn-secondary" hidden data-i18n="ui.frage_loeschen">Frage löschen</button>
         </div>
       </form>
       <div id="quiz-admin-preview-box" class="quiz-preview" hidden></div>
-      <div id="quiz-admin-list"></div>
     </section>
 
     <!-- ADMIN – Datenqualität (js/dataQuality.js) -->

@@ -29,7 +29,9 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 | Rezept-/Produktpflege, Zutateneditor | `js/recipes.js`, `products.js`, `ingredientEditor.js` |
 | Betrieb: Ansätze, Events, Übergabe, Checklisten | `js/preparations.js`, `events.js`, `shiftLog.js`, `checklists.js` |
 | Bestand: Inventur, Bestellung, Schwund, „Was kann ich bauen?" | `js/inventory.js`, `ordering.js`, `losses.js`, `buildable.js` |
-| Quiz | `js/quiz.js`, `quizGenerator.js`, `quizStats.js`, `adminQuiz.js` |
+| Quiz (Fragen liegen in der DB) | `js/quiz.js`, `quizGenerator.js`, `quizSync.js`, `quizStats.js` |
+| Fragenpflege + Fragentabelle | `js/adminQuiz.js`, `quizTable.js`, `quizColumns.js` |
+| Katalogtabelle (Admin) | `js/adminTable.js`, `catalogColumns.js` |
 | Allergene, Fotos, Suche, Druck | `js/allergens.js`, `photos.js`, `quickSearch.js`, `printView.js` |
 | Import/Export (xlsx) | `js/productImport.js`, `productExport.js`, `recipeExport.js` |
 | Mehrsprachigkeit DE/EN | `js/i18n.js`, `js/i18n/de.js`, `js/i18n/en.js`, `js/language.js` |
@@ -75,6 +77,11 @@ Dieses Muster nie durchbrechen.
    Zeilen ein Skript nutzen, das die SQL-Statements erzeugt, statt Statements
    einzeln zu tippen. Offline liefert der localStorage-Cache aus `storage.js`
    den zuletzt geladenen Stand.
+   **Dasselbe gilt für Quizfragen:** seit September 2026 stehen *alle* Fragen in
+   `quiz_questions`, auch die aus dem Katalog erzeugten. Der Generator läuft nur
+   noch beim Abgleich („Aus Katalog aktualisieren" im Admin-Tab, `js/quizSync.js`).
+   Eine Änderung nur im Generator ist im Tool erst nach einem Abgleich sichtbar –
+   und überschreibt nie eine Frage mit `edited = true`.
 8. **Zutatennamen müssen exakt zu Produktnamen aus `products` passen.** Das
    Matching ist ein strikter Teilstring-Vergleich
    (`ingredient.name.toLowerCase().includes(product.name.toLowerCase())`).
