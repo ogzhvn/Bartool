@@ -270,7 +270,7 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 50 | Datenmodell Abteilungen + `canSee()` | offen | Opus 5, hoher Denkaufwand |
+| 50 | Datenmodell Abteilungen + `canSee()` | erledigt | Opus 5, hoher Denkaufwand |
 | 51 | Navigation nach Abteilung filtern | offen | Opus 5, mittlerer Denkaufwand |
 | 52 | Admin: Abteilungen, Matrix, Konten | offen | Sonnet 5, mittlerer Denkaufwand |
 
@@ -2676,13 +2676,19 @@ Abteilung sehen darf. Noch keine sichtbare Änderung in der Oberfläche.
    alles – wie ein Konto ohne Einschränkung –, damit niemand offline vor einem leeren Tool steht.
 
 **Abnahme**
-- [ ] Migration live, `supabase/schema.sql` bildet `departments`, `profiles.department` und
+- [x] Migration live, `supabase/schema.sql` bildet `departments`, `profiles.department` und
       `department_modules` samt Policies ab.
-- [ ] Alle bestehenden Konten haben `department = 'bar'`.
-- [ ] Ein Konto mit Rolle `barkeeper` kann seine eigene Abteilung per Update nicht ändern
+- [x] Alle bestehenden Konten haben `department = 'bar'`.
+- [x] Ein Konto mit Rolle `barkeeper` kann seine eigene Abteilung per Update nicht ändern
       (per SQL in zurückgerollter Transaktion geprüft).
-- [ ] `canSee("batching")` ist für `bar` wahr, für `wgr` falsch; `canSee("quiz")` für beide wahr.
-- [ ] Admin (Rang 100) sieht unabhängig von der Abteilung alles.
+- [x] `canSee("batching")` ist für `bar` wahr, für `wgr` falsch; `canSee("quiz")` für beide wahr.
+- [x] Admin (Rang 100) sieht unabhängig von der Abteilung alles.
+
+**Umsetzung (02.10.2026):** Migrationen `abteilungen_paket50_tabellen` und
+`abteilungen_paket50_profiles`. Startbelegung in `schema.sql` greift nur für Abteilungen ohne
+jeden Eintrag, damit ein erneuter Lauf keine im Admin abgewählten Module wieder einschaltet.
+Modul-Labels nutzen die vorhandenen `ui.*`-Schlüssel der Sidebar, neue i18n-Schlüssel waren nicht
+nötig. Abteilung ohne Zeilen = nur Start sichtbar; Abfrage fehlgeschlagen = alles sichtbar.
 
 **Commit:** `Abteilungen: Datenmodell, department_modules, canSee()`
 

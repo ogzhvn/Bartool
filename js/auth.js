@@ -1,5 +1,6 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { functionErrorMessage } from "./utils.js";
+import { ALWAYS_VISIBLE_MODULES } from "./modules.js";
 
 let currentSession = null;
 let currentProfile = null;
@@ -9,6 +10,9 @@ let currentProfile = null;
 // nur um die Sichtbarkeit in der Oberfläche.
 let currentPermissions = new Set();
 let currentRank = 0;
+// Sichtbare Module der eigenen Abteilung (Paket 50). null heißt "keine
+// Einschränkung bekannt" – so steht niemand offline vor einem leeren Tool.
+let currentVisibleModules = null;
 const listeners = new Set();
 
 function notify() {
@@ -20,6 +24,7 @@ async function loadProfile() {
     currentProfile = null;
     currentPermissions = new Set();
     currentRank = 0;
+    currentVisibleModules = null;
     return;
   }
   const supabase = getSupabaseClient();
@@ -37,18 +42,31 @@ async function loadProfile() {
 // Fällt eine der Abfragen aus (kein Netz), bleibt es bei Rang 0 und leerer
 // Rechteliste: die Oberfläche zeigt dann nur, was allen offensteht, statt
 // Schaltflächen anzubieten, die die Policy hinterher abweist.
+//
+// Die Module der Abteilung (department_modules, Paket 50) kommen im selben
+// Zug. Hier ist der Ausfall bewusst umgekehrt geregelt: ohne Antwort bleibt
+// currentVisibleModules null und canSee() zeigt alles. Sichtbarkeit ist
+// Kosmetik, kein Zugriffsschutz – die Policies greifen trotzdem.
 async function loadPermissions() {
   currentPermissions = new Set();
   currentRank = 0;
+  currentVisibleModules = null;
   const role = currentProfile?.role;
   if (!role) return;
+  const department = currentProfile.department;
   const supabase = getSupabaseClient();
-  const [rangAntwort, rechteAntwort] = await Promise.all([
+  const [rangAntwort, rechteAntwort, moduleAntwort] = await Promise.all([
     supabase.from("roles").select("rank").eq("key", role).maybeSingle(),
     supabase.from("role_permissions").select("permission_key").eq("role_key", role),
+    department
+      ? supabase.from("department_modules").select("module_key").eq("department_key", department)
+      : Promise.resolve({ data: null, error: null }),
   ]);
   currentRank = rangAntwort.data?.rank ?? 0;
   (rechteAntwort.data ?? []).forEach((zeile) => currentPermissions.add(zeile.permission_key));
+  if (!moduleAntwort.error && Array.isArray(moduleAntwort.data)) {
+    currentVisibleModules = new Set(moduleAntwort.data.map((zeile) => zeile.module_key));
+  }
 }
 
 export async function initAuth() {
@@ -160,6 +178,21 @@ export function myRank() {
 
 export function myPermissions() {
   return [...currentPermissions];
+}
+
+// Ob ein Modul (data-tab-ID, siehe js/modules.js) für die eigene Abteilung in
+// der Navigation steht. Rang 100 sieht immer alles, "home" ist nie
+// abschaltbar; ohne geladene Zuordnung (kein Netz, Abfrage fehlgeschlagen)
+// gilt das Konto als uneingeschränkt.
+export function canSee(moduleKey) {
+  if (ALWAYS_VISIBLE_MODULES.includes(moduleKey)) return true;
+  if (currentRank >= 100) return true;
+  if (currentVisibleModules === null) return true;
+  return currentVisibleModules.has(moduleKey);
+}
+
+export function myDepartment() {
+  return currentProfile?.department ?? null;
 }
 
 // Bleibt erhalten und bedeutet jetzt "oberste Ebene" statt "Rolle heißt

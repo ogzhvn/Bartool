@@ -436,6 +436,92 @@ revoke execute on function public.set_my_language(text) from anon;
 grant execute on function public.set_my_language(text) to authenticated;
 
 -- ---------------------------------------------------------------------
+-- Abteilungen und sichtbare Module (Paket 50)
+-- ---------------------------------------------------------------------
+-- Zweite Achse neben der Rolle: die Rolle regelt Schreibrechte und
+-- Verwaltung, die Abteilung nur, welche Module in der Navigation stehen.
+-- Das ist Kosmetik, kein Zugriffsschutz – gelesen wird weiter über die
+-- Policies der jeweiligen Tabellen. Eine Abteilung pro Konto, Rang 100 sieht
+-- immer alles (im Client, js/auth.js canSee()). Labels bleiben wie bei den
+-- Rollen unübersetzt.
+
+create table if not exists public.departments (
+  key text primary key,
+  label text not null,
+  sort int not null default 0
+);
+
+insert into public.departments (key, label, sort) values
+  ('bar', 'Bar', 10),
+  ('wgr', 'Wintergartenrestaurant', 20),
+  ('tellerwerk', 'Das Tellerwerk', 30)
+on conflict (key) do nothing;
+
+-- Ein fehlender Eintrag heißt: Modul für diese Abteilung nicht sichtbar.
+-- module_key = data-tab-ID aus js/modules.js; "home" steht nie hier, weil es
+-- nicht abschaltbar ist.
+create table if not exists public.department_modules (
+  department_key text not null references public.departments (key)
+    on update cascade on delete cascade,
+  module_key text not null,
+  primary key (department_key, module_key)
+);
+
+-- Bestehende Konten werden Bar. Kein on delete cascade: eine Abteilung mit
+-- Konten lässt sich nicht löschen, ohne die Konten vorher umzuhängen.
+alter table public.profiles add column if not exists department text not null default 'bar';
+
+alter table public.profiles drop constraint if exists profiles_department_fkey;
+alter table public.profiles add constraint profiles_department_fkey
+  foreign key (department) references public.departments (key) on update cascade;
+
+alter table public.departments enable row level security;
+alter table public.department_modules enable row level security;
+
+grant select, insert, update, delete on public.departments, public.department_modules to authenticated;
+
+drop policy if exists "departments: authenticated read" on public.departments;
+create policy "departments: authenticated read"
+  on public.departments for select to authenticated
+  using (true);
+
+drop policy if exists "departments: roles.manage write" on public.departments;
+create policy "departments: roles.manage write"
+  on public.departments for all to authenticated
+  using (private.has_permission('roles.manage'))
+  with check (private.has_permission('roles.manage'));
+
+drop policy if exists "department_modules: authenticated read" on public.department_modules;
+create policy "department_modules: authenticated read"
+  on public.department_modules for select to authenticated
+  using (true);
+
+drop policy if exists "department_modules: roles.manage write" on public.department_modules;
+create policy "department_modules: roles.manage write"
+  on public.department_modules for all to authenticated
+  using (private.has_permission('roles.manage'))
+  with check (private.has_permission('roles.manage'));
+
+-- profiles.department ändert nur, wer das Konto verwalten darf (Policy
+-- "profiles: users.manage verwaltet niedrigere Raenge"). Ein Self-Update auf
+-- profiles gibt es nicht, die eigene Abteilung ist also nicht selbst änderbar.
+
+-- Startbelegung. Nur für Abteilungen ohne jeden Eintrag, damit ein erneuter
+-- Lauf dieses Skripts keine im Admin abgewählten Module wieder einschaltet.
+insert into public.department_modules (department_key, module_key)
+select d.key, m.key
+  from (values ('bar'), ('wgr'), ('tellerwerk')) as d (key)
+  cross join (values
+    ('batching'), ('superjuice'), ('syrup'), ('dilution'), ('calculation'),
+    ('menu-costing'), ('preparations'), ('events'), ('shift-log'),
+    ('checklists'), ('inventory'), ('losses'), ('buildable'),
+    ('recipes'), ('products'), ('quiz')
+  ) as m (key)
+ where (d.key = 'bar' or m.key in ('recipes', 'products', 'quiz'))
+   and not exists (select 1 from public.department_modules dm where dm.department_key = d.key)
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
 -- ---------------------------------------------------------------------
 
