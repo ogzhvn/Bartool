@@ -170,6 +170,7 @@
             <button class="tab-btn subnav-btn" data-tab="admin-reports" data-perm="reports.view" role="tab" aria-selected="false" data-i18n="ui.reporting"><i class="ph ph-chart-line" aria-hidden="true"></i>Reporting</button>
             <button class="tab-btn subnav-btn" data-tab="admin-users" data-perm="users.manage" role="tab" aria-selected="false" data-i18n="ui.konten">Konten</button>
             <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-departments" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.abteilungen">Abteilungen</button>
             <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
             <button class="tab-btn subnav-btn" data-tab="admin-quiz" data-perm="quiz.manage" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
             <button class="tab-btn subnav-btn" data-tab="admin-catalog" data-perm-any="products.write,recipes.write" role="tab" aria-selected="false" data-i18n="ui.katalogtabelle">Katalogtabelle</button>
@@ -1675,6 +1676,13 @@
           </label>
         </div>
         <div class="field-row">
+          <label data-i18n="ui.abteilung">
+            Abteilung
+            <!-- Optionen kommen aus der DB-Tabelle "departments" (js/adminUsers.js) -->
+            <select id="admin-new-department"></select>
+          </label>
+        </div>
+        <div class="field-row">
           <label data-i18n="ui.passwort_temporaer">
             Passwort (temporär)
             <input type="password" id="admin-new-password" minlength="8" required />
@@ -1689,6 +1697,7 @@
       <h3 data-i18n="ui.konten">Konten</h3>
       <div class="field-row no-print">
         <select id="admin-users-role-filter"></select>
+        <select id="admin-users-department-filter"></select>
         <select id="admin-users-status-filter">
           <option value="" data-i18n="ui.alle_konten">Alle Konten</option>
           <option value="active" data-i18n="ui.nur_aktive">Nur aktive</option>
@@ -1724,6 +1733,32 @@
         <div id="admin-role-create-error" class="error-note" hidden></div>
         <div class="actions">
           <button type="submit" class="btn-primary" data-i18n="ui.rolle_anlegen">Rolle anlegen</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ADMIN – Abteilungen & Modul-Matrix (js/adminDepartments.js) -->
+    <section id="admin-departments" class="tab-panel" data-perm="roles.manage">
+      <h2 data-i18n="ui.abteilungen">Abteilungen</h2>
+      <p class="hint" data-i18n="ui.je_abteilung_festlegen_welche_module_in_der_navigation_stehen">Je Abteilung festlegen, welche Module in der Navigation stehen. Das ist nur die Ansicht, kein Zugriffsschutz; der Administrator sieht immer alles.</p>
+      <div id="admin-departments-status" class="hint" hidden></div>
+      <div id="admin-departments-matrix"></div>
+
+      <h3 data-i18n="ui.abteilung_anlegen">Abteilung anlegen</h3>
+      <form id="admin-department-create-form">
+        <div class="field-row">
+          <label data-i18n="ui.rollenschluessel">
+            Schlüssel
+            <input type="text" id="admin-department-new-key" pattern="[a-z][a-z0-9_]{1,31}" title="Nur Kleinbuchstaben, Zahlen und Unterstrich (2–32 Zeichen)" data-i18n-title="ui.nur_kleinbuchstaben_zahlen_unterstrich_7b31" required />
+          </label>
+          <label data-i18n="ui.bezeichnung">
+            Bezeichnung
+            <input type="text" id="admin-department-new-label" maxlength="60" required />
+          </label>
+        </div>
+        <div id="admin-department-create-error" class="error-note" hidden></div>
+        <div class="actions">
+          <button type="submit" class="btn-primary" data-i18n="ui.abteilung_anlegen">Abteilung anlegen</button>
         </div>
       </form>
     </section>

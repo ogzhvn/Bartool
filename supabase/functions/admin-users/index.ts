@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
     const password = String(body.password ?? "");
     const displayName = String(body.displayName ?? "").trim() || null;
     const role = String(body.role ?? "barkeeper").trim();
+    const department = String(body.department ?? "bar").trim();
 
     if (!email || !username || password.length < 8) {
       return jsonResponse(
@@ -148,6 +149,17 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Abteilung (Paket 52): muss existieren, sonst scheitert erst das Profil
+    // am Fremdschlüssel und der Auth-User müsste wieder weg.
+    const { data: abteilung } = await adminClient
+      .from("departments")
+      .select("key")
+      .eq("key", department)
+      .maybeSingle();
+    if (!abteilung) {
+      return jsonResponse({ error: "Diese Abteilung gibt es nicht." }, 400);
+    }
+
     const { data: created, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -163,6 +175,7 @@ Deno.serve(async (req) => {
       username,
       display_name: displayName,
       role,
+      department,
     });
     if (insertError) {
       // Aufräumen, damit kein verwaister Auth-User ohne Profil zurückbleibt.

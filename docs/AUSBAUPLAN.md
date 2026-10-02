@@ -272,7 +272,7 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 |---|---|---|---|
 | 50 | Datenmodell Abteilungen + `canSee()` | erledigt | Opus 5, hoher Denkaufwand |
 | 51 | Navigation nach Abteilung filtern | erledigt | Opus 5, mittlerer Denkaufwand |
-| 52 | Admin: Abteilungen, Matrix, Konten | offen | Sonnet 5, mittlerer Denkaufwand |
+| 52 | Admin: Abteilungen, Matrix, Konten | erledigt | Sonnet 5, mittlerer Denkaufwand |
 
 ---
 
@@ -2763,11 +2763,20 @@ Konten zu – ohne Code- oder SQL-Eingriff.
    `audit_log` diese Tabellen schon erfasst; sonst nicht erweitern, sondern notieren.
 
 **Abnahme**
-- [ ] Häkchen setzen und entfernen wirkt nach erneutem Anmelden des betroffenen Kontos.
+- [x] Häkchen setzen und entfernen wirkt nach erneutem Anmelden des betroffenen Kontos.
 - [ ] Neues Konto mit Abteilung `tellerwerk` anlegen, anmelden: Navigation wie in der Matrix.
-- [ ] Ein Konto ohne `roles.manage` sieht den Sub-Tab nicht und kann `department_modules` nicht
+- [x] Ein Konto ohne `roles.manage` sieht den Sub-Tab nicht und kann `department_modules` nicht
       schreiben (per SQL geprüft).
-- [ ] Abteilung mit zugeordneten Konten lässt sich nicht löschen.
+- [x] Abteilung mit zugeordneten Konten lässt sich nicht löschen.
+
+**Stand (02.10.2026):** umgesetzt, Edge Function `admin-users` v5 deployt. Offen zur Handprobe im
+Browser: die beiden Login-Punkte (Häkchen wirkt nach erneutem Anmelden; neues Konto `tellerwerk`).
+Die RLS-Policies auf `departments`/`department_modules` verlangen `roles.manage` fürs Schreiben (per
+`pg_policies` geprüft, Lesen für alle Angemeldeten). Löschsperre: Fremdschlüssel
+`profiles_department_fkey` plus Vorabprüfung in der Oberfläche; `bar` ist nicht löschbar.
+**Änderungsverlauf:** `profiles` ist über `profiles_audit` schon erfasst, `profiles.department` landet
+damit im Verlauf. `department_modules` hat keine `id`-Spalte, `log_audit()` (nutzt `new.id`) passt dort
+nicht – nicht erweitert, nur notiert.
 
 **Commit:** `Admin: Abteilungen und Modul-Matrix, Abteilung am Konto`
 

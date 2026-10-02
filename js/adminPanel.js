@@ -22,6 +22,7 @@ const CARDS = [
   { tab: "admin-reports", perm: "reports.view", icon: "ph-chart-line", titleKey: "ui.reporting", descKey: "ui.wareneinsatz_betrieb_und_team_auf_einen_blick" },
   { tab: "admin-users", perm: "users.manage", icon: "ph-users", titleKey: "ui.konten", descKey: "ui.konten_anlegen_rollen_setzen_passwoerter_b71a" },
   { tab: "admin-roles", perm: "roles.manage", icon: "ph-shield-check", titleKey: "ui.rollen_und_rechte", descKey: "ui.je_rolle_festlegen_welche_rechte_gelten_f7a2" },
+  { tab: "admin-departments", perm: "roles.manage", icon: "ph-buildings", titleKey: "ui.abteilungen", descKey: "ui.je_abteilung_festlegen_welche_module_sichtbar_sind" },
   { tab: "admin-requests", perm: "requests.review", icon: "ph-git-pull-request", titleKey: "ui.offene_vorschlaege", descKey: "ui.aenderungsvorschlaege_aus_dem_team_6ab3" },
   { tab: "admin-quiz", perm: "quiz.manage", icon: "ph-brain", titleKey: "ui.quiz_fragen", descKey: "ui.eigene_fragen_pflegen_und_das_team_4d19" },
   { tab: "admin-catalog", perm: ["products.write", "recipes.write"], icon: "ph-table", titleKey: "ui.katalogtabelle", descKey: "ui.alle_eintraege_als_tabelle_pflegen_5f2b" },

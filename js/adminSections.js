@@ -3,6 +3,7 @@ import { initAdminPanel } from "./adminPanel.js";
 import { initAdminReports } from "./adminReports.js";
 import { initAdminUsers } from "./adminUsers.js";
 import { initAdminRoles } from "./adminRoles.js";
+import { initAdminDepartments } from "./adminDepartments.js";
 import { initAdminQuiz } from "./adminQuiz.js";
 import { initAdminTable } from "./adminTable.js";
 import { initChangeRequestsAdmin } from "./changeRequests.js";
@@ -29,6 +30,7 @@ const SECTIONS = {
   "admin-reports": { init: initAdminReports, perm: "reports.view" },
   "admin-users": { init: initAdminUsers, perm: "users.manage" },
   "admin-roles": { init: initAdminRoles, perm: "roles.manage" },
+  "admin-departments": { init: initAdminDepartments, perm: "roles.manage" },
   "admin-requests": { init: initChangeRequestsAdmin, perm: "requests.review" },
   "admin-quiz": { init: initAdminQuiz, perm: "quiz.manage" },
   // Zwei Rechte, weil die Tabelle beide Kataloge zeigt: wer nur Produkte

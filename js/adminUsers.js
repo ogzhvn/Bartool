@@ -12,12 +12,48 @@ const createError = document.getElementById("admin-create-error");
 const employeeListEl = document.getElementById("admin-employee-list");
 const newRoleSelect = document.getElementById("admin-new-role");
 const roleFilterSelect = document.getElementById("admin-users-role-filter");
+const newDepartmentSelect = document.getElementById("admin-new-department");
+const departmentFilterSelect = document.getElementById("admin-users-department-filter");
 const statusFilterSelect = document.getElementById("admin-users-status-filter");
 
 // Zuletzt geladene Konten – Filter rendern daraus neu, ohne jedes Mal neu zu
 // laden. Sortiert wird schon in der Abfrage (nach letzter Anmeldung), Filter
 // ändern daran nichts.
 let employeesCache = [];
+
+// Abteilungen aus der DB-Tabelle "departments" (Paket 50/52). Die Abteilung
+// steuert nur die Navigation, nicht den Zugriff; geändert wird sie per Update
+// auf profiles wie die Rolle (Policy: users.manage).
+let departments = [];
+
+async function loadDepartments() {
+  const { data } = await getSupabaseClient()
+    .from("departments")
+    .select("key, label")
+    .order("sort", { ascending: true });
+  departments = data ?? [];
+}
+
+function departmentOptions(selectedKey) {
+  return departments
+    .map(
+      (d) =>
+        `<option value="${escapeHtml(d.key)}"${d.key === selectedKey ? " selected" : ""}>${escapeHtml(d.label)}</option>`
+    )
+    .join("");
+}
+
+function fillDepartmentSelects() {
+  if (newDepartmentSelect) {
+    const previous = newDepartmentSelect.value;
+    newDepartmentSelect.innerHTML = departmentOptions(previous || "bar");
+  }
+  if (departmentFilterSelect) {
+    const previous = departmentFilterSelect.value;
+    departmentFilterSelect.innerHTML = `<option value="">${t("ui.alle_abteilungen")}</option>${departmentOptions("")}`;
+    departmentFilterSelect.value = previous;
+  }
+}
 
 // Rollen kommen seit Paket 35 aus der DB-Tabelle "roles" (mit Rangfolge),
 // nicht mehr aus einem festen Enum. Die Labels sind bewusst nicht übersetzt.
@@ -81,8 +117,10 @@ function fillRoleFilterSelect() {
 function applyFilters(profiles) {
   const rolle = roleFilterSelect?.value ?? "";
   const status = statusFilterSelect?.value ?? "";
+  const abteilung = departmentFilterSelect?.value ?? "";
   return profiles.filter((p) => {
     if (rolle && p.role !== rolle) return false;
+    if (abteilung && p.department !== abteilung) return false;
     if (status === "active" && p.is_active === false) return false;
     if (status === "inactive" && p.is_active !== false) return false;
     return true;
@@ -90,9 +128,10 @@ function applyFilters(profiles) {
 }
 
 async function loadEmployees() {
-  await loadRoles();
+  await Promise.all([loadRoles(), loadDepartments()]);
   fillCreateRoleSelect();
   fillRoleFilterSelect();
+  fillDepartmentSelects();
   const supabase = getSupabaseClient();
   // Sortiert nach letzter Anmeldung, nie angemeldete Konten zuerst – so
   // fällt sofort auf, wer das Tool gar nicht nutzt (Paket 38).
@@ -116,7 +155,7 @@ function renderEmployees(profiles) {
 
   employeeListEl.innerHTML = `
     <table>
-      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th>${t("ui.quiz_auswertung")}</th><th>${t("ui.status")}</th><th>${t("ui.letzte_anmeldung")}</th><th></th></tr></thead>
+      <thead><tr><th>${t("ui.benutzername")}</th><th>${t("ui.e_mail")}</th><th>${t("ui.name")}</th><th>${t("ui.rolle")}</th><th>${t("ui.abteilung")}</th><th>${t("ui.quiz_auswertung")}</th><th>${t("ui.status")}</th><th>${t("ui.letzte_anmeldung")}</th><th></th></tr></thead>
       <tbody>
         ${profiles
           .map((p) => {
@@ -134,6 +173,11 @@ function renderEmployees(profiles) {
             <td>
               <select class="role-select" ${disabled}>
                 ${roleOptions(p.role)}
+              </select>
+            </td>
+            <td>
+              <select class="department-select" ${disabled}>
+                ${departmentOptions(p.department)}
               </select>
             </td>
             <td>
@@ -183,6 +227,18 @@ function renderEmployees(profiles) {
       const { error } = await supabase.from("profiles").update({ role: e.target.value }).eq("id", id);
       if (error) {
         alert(t("ui.rolle_konnte_nicht_geaendert_werden") + error.message);
+        loadEmployees();
+      }
+    });
+  });
+
+  employeeListEl.querySelectorAll(".department-select").forEach((select) => {
+    select.addEventListener("change", async (e) => {
+      const id = e.target.closest("tr").dataset.id;
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.from("profiles").update({ department: e.target.value }).eq("id", id);
+      if (error) {
+        alert(t("ui.abteilung_konnte_nicht_geaendert_werden") + error.message);
         loadEmployees();
       }
     });
@@ -262,10 +318,11 @@ async function handleCreate(e) {
   const password = document.getElementById("admin-new-password").value;
   const displayName = document.getElementById("admin-new-name").value.trim();
   const role = newRoleSelect.value;
+  const department = newDepartmentSelect?.value || "bar";
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke("admin-users", {
-    body: { action: "create", email, username, password, displayName, role },
+    body: { action: "create", email, username, password, displayName, role, department },
   });
 
   if (error || data?.error) {
@@ -285,6 +342,7 @@ export function initAdminUsers() {
   createForm.addEventListener("submit", handleCreate);
   // Filter ändern nur die Anzeige, kein erneutes Laden nötig.
   roleFilterSelect?.addEventListener("change", () => renderEmployees(applyFilters(employeesCache)));
+  departmentFilterSelect?.addEventListener("change", () => renderEmployees(applyFilters(employeesCache)));
   statusFilterSelect?.addEventListener("change", () => renderEmployees(applyFilters(employeesCache)));
   loadEmployees();
 }
