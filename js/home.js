@@ -16,8 +16,8 @@ import {
   onChecklistTemplatesChanged,
   onChecklistRunsChanged,
 } from "./storage.js";
-import { getCurrentProfile, getCurrentUser } from "./auth.js";
-import { getFavorites, getRecent, onFavoritesChanged } from "./favorites.js";
+import { getCurrentProfile, getCurrentUser, canSee, onAuthChange } from "./auth.js";
+import { getFavorites, getRecent, onFavoritesChanged, zielModul } from "./favorites.js";
 import { offeneAusLetzterSchicht, ablaufendeAnsaetze } from "./shiftLog.js";
 import { aktiveVorlagen, laufStatus } from "./checklists.js";
 import { focusRecipe } from "./recipes.js";
@@ -46,8 +46,11 @@ function renderStats() {
     [getAllRecipes().length, t("ui.rezepte_im_buch")],
     [loadRecipes().length, t("ui.davon_eigene")],
     [loadProducts().length, t("ui.produkte_im_katalog")],
-    [offeneAusLetzterSchicht(loadShiftLogs()).length, t("ui.offene_punkte_aus_der_letzten_schicht")],
   ];
+  // Die Übergabe ist nicht jeder Abteilung zugeordnet (Paket 51).
+  if (canSee("shift-log")) {
+    stats.push([offeneAusLetzterSchicht(loadShiftLogs()).length, t("ui.offene_punkte_aus_der_letzten_schicht")]);
+  }
   statsEl.innerHTML = stats
     .map(
       ([value, label]) => `
@@ -159,7 +162,7 @@ function renderToday() {
     ...checklistEintraege(),
     ...schichtEintraege(),
     ...eventEintraege(),
-  ];
+  ].filter((e) => canSee(e.tab)); // nur Module, die die Abteilung sieht (Paket 51)
   todayWrapEl.hidden = eintraege.length === 0;
   if (eintraege.length === 0) return;
 
@@ -194,7 +197,10 @@ function oeffne(art, name) {
   }
 }
 
-function renderShortcutList(el, wrapEl, eintraege) {
+function renderShortcutList(el, wrapEl, alleEintraege) {
+  // Einträge, deren Modul die Abteilung nicht sieht, bleiben gespeichert,
+  // werden aber nicht angeboten (Paket 51).
+  const eintraege = alleEintraege.filter((e) => canSee(zielModul(e.art)));
   // Leere Blöcke ganz ausblenden statt einen leeren Kasten zu zeigen.
   wrapEl.hidden = eintraege.length === 0;
   if (eintraege.length === 0) return;
@@ -234,6 +240,14 @@ export function initHome() {
     renderToday();
   });
   onFavoritesChanged(renderShortcuts);
+  // Profil und Abteilung können nach dem ersten Rendern noch einmal geladen
+  // werden (Session-Ereignis von Supabase); dann neu filtern (Paket 51).
+  onAuthChange(() => {
+    renderGreeting();
+    renderStats();
+    renderShortcuts();
+    renderToday();
+  });
   onPreparationsChanged(renderToday);
   onEventsChanged(renderToday);
   onChecklistTemplatesChanged(renderToday);

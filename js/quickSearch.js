@@ -5,6 +5,7 @@ import { focusProduct } from "./products.js";
 import { switchTab } from "./tabs.js";
 import { closeMobileNav } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
+import { canSee } from "./auth.js";
 import { getLocale, t } from "./i18n.js";
 
 // Globale Suche über Rezepte und Produkte in einem Fenster.
@@ -66,7 +67,11 @@ function sucheTreffer(suchbegriff) {
     suchbegriff
   ).slice(0, MAX_PRO_GRUPPE);
 
-  return { rezepte, produkte };
+  // Nur in Module springen, die die Abteilung sieht (Paket 51).
+  return {
+    rezepte: canSee("recipes") ? rezepte : [],
+    produkte: canSee("products") ? produkte : [],
+  };
 }
 
 function zeileHtml(eintrag, index) {

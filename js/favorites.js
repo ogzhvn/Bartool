@@ -30,6 +30,15 @@ function write(key, liste) {
   window.dispatchEvent(new CustomEvent(CHANGED_EVENT));
 }
 
+// Modul (data-tab-ID, js/modules.js), in dem ein Eintrag geöffnet wird. Die
+// Startseite blendet darüber Favoriten auf ausgeblendete Module aus (Paket 51),
+// ohne sie vom Gerät zu löschen – ein anderes Konto am selben Tablet sieht sie.
+const ZIEL_MODUL = { recipe: "recipes", product: "products" };
+
+export function zielModul(art) {
+  return ZIEL_MODUL[art] ?? null;
+}
+
 // Einträge sind { art: "recipe" | "product", name: string }.
 function schluessel(art, name) {
   return `${art}::${name}`;

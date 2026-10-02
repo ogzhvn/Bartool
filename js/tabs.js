@@ -23,8 +23,36 @@ function resolveTab(tabId) {
   return TAB_ALIASES[tabId] ?? tabId;
 }
 
+function tabButtons(tabId) {
+  if (!tabId) return [];
+  return [...document.querySelectorAll(`.tab-btn[data-tab="${CSS.escape(tabId)}"]`)];
+}
+
 function tabExists(tabId) {
-  return !!tabId && !!document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  return tabButtons(tabId).length > 0;
+}
+
+// Ein Ziel ist nur gültig, wenn es auch zu sehen ist: mindestens ein
+// Navigationseintrag ohne ausgeblendeten Vorfahren (Abteilung per
+// data-module, Paket 51, oder Rechte per data-perm) und ein Panel ohne
+// hidden. Sonst zeigte ein Deep-Link oder der gemerkte letzte Tab eine
+// leere Seite.
+// Die App-Shell selbst zählt nicht: sie ist vor dem Login hidden.
+function hiddenInApp(el) {
+  return !!el.closest("[hidden]:not(#app-shell)");
+}
+
+function tabAvailable(tabId) {
+  if (!tabButtons(tabId).some((btn) => !hiddenInApp(btn))) return false;
+  const panel = document.getElementById(tabId);
+  return !panel || !panel.hidden;
+}
+
+// Nach einer Änderung der Sichtbarkeit: steht der offene Tab nicht mehr zur
+// Verfügung, zurück auf Start.
+export function ensureVisibleTab() {
+  const tabId = currentTabId();
+  if (tabId && !tabAvailable(tabId)) switchTab("home", { replace: true });
 }
 
 function currentTabId() {
@@ -105,7 +133,9 @@ function filterNav(rawQuery) {
   }
 
   items.forEach((el) => {
-    const matches = el.textContent.trim().toLowerCase().includes(query);
+    // Ausgeblendete Module (Abteilung, Rechte) zählen nicht als Treffer,
+    // sonst bliebe eine Gruppe ohne sichtbaren Eintrag aufgeklappt stehen.
+    const matches = !hiddenInApp(el) && el.textContent.trim().toLowerCase().includes(query);
     el.classList.toggle("nav-filter-hidden", !matches);
   });
 
@@ -169,12 +199,14 @@ export function initTabs() {
 
   window.addEventListener("hashchange", () => {
     const tabId = resolveTab(location.hash.slice(1));
-    if (tabExists(tabId)) switchTab(tabId, { updateHash: false });
+    if (tabExists(tabId)) switchTab(tabId, { updateHash: false, replace: true });
   });
 
   const hashTab = resolveTab(location.hash.slice(1));
   const lastTab = resolveTab(localStorage.getItem(LAST_TAB_KEY));
   const defaultTab = document.querySelector(".tab-btn.active")?.dataset.tab;
+  // Ein ausgeblendetes Ziel (Hash oder gemerkter Tab) landet über
+  // switchTab() auf Start, statt still auf das nächste auszuweichen.
   const initialTab = [hashTab, lastTab, defaultTab].find(tabExists);
   if (initialTab) {
     switchTab(initialTab, { updateHash: true, replace: true });
@@ -183,6 +215,13 @@ export function initTabs() {
 
 export function switchTab(tabId, { updateHash = true, replace = false, keepEditReturn = false } = {}) {
   tabId = resolveTab(tabId);
+  if (!tabAvailable(tabId)) {
+    // Ausgeblendetes oder unbekanntes Ziel: Start, und die Adresszeile zieht
+    // mit, damit dort nicht weiter #batching steht.
+    tabId = "home";
+    updateHash = true;
+    replace = true;
+  }
   if (!keepEditReturn) pendingEditReturn = null;
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.dataset.tab === tabId;

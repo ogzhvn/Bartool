@@ -1,4 +1,4 @@
-import { initTabs, closeMobileNav } from "./tabs.js";
+import { initTabs, closeMobileNav, ensureVisibleTab } from "./tabs.js";
 import { initHome } from "./home.js";
 import { initBatching } from "./batching.js";
 import { initRecipes } from "./recipes.js";
@@ -42,6 +42,7 @@ import {
   isAdmin,
   can,
   canAny,
+  canSee,
   changePassword,
   completeFirstLogin,
 } from "./auth.js";
@@ -99,6 +100,31 @@ function applyRoleVisibility() {
       .filter(Boolean);
     el.hidden = !canAny(rechte.length > 0 ? rechte : ADMIN_AREA_PERMISSIONS);
   });
+  applyModuleVisibility();
+}
+
+// Sichtbarkeit nach Abteilung (Paket 51): data-module="<key>" an Tab-Button,
+// Panel, Startkachel und Kategoriebaum. Trägt ein Element zusätzlich einen
+// Rechte-Marker, darf die Abteilung es nur weiter einschränken, nie wieder
+// einblenden, was die Rechte schon ausgeblendet haben.
+// Danach fallen Sidebar-Gruppen weg, in denen kein Modul mehr übrig ist; die
+// Verwaltung hängt nur an Rechten und bleibt davon unberührt.
+function applyModuleVisibility() {
+  document.querySelectorAll("[data-module]").forEach((el) => {
+    const sichtbar = canSee(el.dataset.module);
+    if (el.matches("[data-admin-only], [data-perm], [data-perm-any]")) {
+      if (!sichtbar) el.hidden = true;
+    } else {
+      el.hidden = !sichtbar;
+    }
+  });
+  document.querySelectorAll(".sidebar-group").forEach((group) => {
+    const module = group.querySelectorAll(".tab-btn[data-module]");
+    if (module.length === 0) return;
+    group.hidden = [...module].every((btn) => btn.hidden);
+  });
+  // Ist der offene Tab gerade weggefallen (Profil neu geladen), zurück auf Start.
+  if (appInitialized) ensureVisibleTab();
 }
 
 function resetActivityTimer() {

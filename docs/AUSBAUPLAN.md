@@ -271,7 +271,7 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 50 | Datenmodell Abteilungen + `canSee()` | erledigt | Opus 5, hoher Denkaufwand |
-| 51 | Navigation nach Abteilung filtern | offen | Opus 5, mittlerer Denkaufwand |
+| 51 | Navigation nach Abteilung filtern | erledigt | Opus 5, mittlerer Denkaufwand |
 | 52 | Admin: Abteilungen, Matrix, Konten | offen | Sonnet 5, mittlerer Denkaufwand |
 
 ---
@@ -2724,14 +2724,14 @@ Seitenleiste, auf der Startseite, in der Suche und per Deep-Link.
 6. `sw.js`: Cache-Version hochzählen, `js/modules.js` in PRECACHE.
 
 **Abnahme**
-- [ ] Konto mit Abteilung `wgr`: Seitenleiste zeigt Start, Bibliothek (Rezepte, Produkte, Quiz) –
+- [x] Konto mit Abteilung `wgr`: Seitenleiste zeigt Start, Bibliothek (Rezepte, Produkte, Quiz) –
       keine Gruppe „Rechner", „Betrieb" oder „Admin".
-- [ ] `#batching` in der Adresszeile und ein gemerkter Tab `batching` landen auf Start, nicht auf
+- [x] `#batching` in der Adresszeile und ein gemerkter Tab `batching` landen auf Start, nicht auf
       einer leeren Seite.
-- [ ] Startseite zeigt keine Kacheln für ausgeblendete Module; Favoriten auf ausgeblendete Module
+- [x] Startseite zeigt keine Kacheln für ausgeblendete Module; Favoriten auf ausgeblendete Module
       werden nicht angezeigt.
-- [ ] Konto mit Abteilung `bar` sieht exakt das, was es vor dem Paket gesehen hat.
-- [ ] Mobil (Drawer) und Desktop geprüft; Navigationsfilter findet nur sichtbare Einträge.
+- [x] Konto mit Abteilung `bar` sieht exakt das, was es vor dem Paket gesehen hat.
+- [x] Mobil (Drawer) und Desktop geprüft; Navigationsfilter findet nur sichtbare Einträge.
 
 **Commit:** `Navigation: Module nach Abteilung ein- und ausblenden`
 
