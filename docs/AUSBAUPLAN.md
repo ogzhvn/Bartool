@@ -240,6 +240,40 @@ gegenseitig zurückdrehen, hängen alle Schreibvorgänge an einer Kette und hole
 den Eintrag erst, wenn sie an der Reihe sind. Gesperrt bleiben Name und Frage (der
 Upsert läuft über sie), Zutaten, „passt gut zu", die Antwortfelder und „bearbeitet".
 
+### Runde 8 – Abteilungen: WGR und Tellerwerk (geplant am 02.10.2026)
+
+Das Tool öffnet sich für die anderen Outlets: Wintergartenrestaurant (WGR, Buffet) und Das
+Tellerwerk (à la carte). Die Kolleginnen und Kollegen brauchen Produkte, Rezepte und Quiz – die
+Rechner und der Betriebsteil der Bar sind für sie nicht gedacht.
+
+**Entscheidungen (02.10.2026, mit dem Nutzer abgestimmt)**
+- **Zweite Achse statt Rollen:** Die Abteilung steht neben der Rolle. `roles.rank` ist `unique`;
+  Abteilungs-Rollen würden Ränge verbrauchen und die Rechtematrix mit der Zahl der Abteilungen
+  multiplizieren. Rolle/Rang regelt weiter Schreibrechte und Verwaltung, die Abteilung nur, welche
+  Module in der Navigation stehen.
+- **Eine Abteilung pro Konto.** Rang 100 sieht immer alles.
+- **Sichtbarkeit ist Kosmetik, kein Zugriffsschutz** – wie bisher bei `data-perm`. Lesen ist per RLS
+  für alle angemeldeten Konten offen (`recipes`, `products`, `product_prices`, `quiz_questions`).
+  Einkaufspreise und Kalkulation gelten als **nicht vertraulich**; sollte sich das ändern, braucht es
+  RLS auf `product_prices`, nicht nur ein ausgeblendetes Modul.
+- **Keine Datentrennung.** Übergaben, Checklisten, Inventur, Schwund, Events und Ansätze bleiben
+  hotelweit geteilt. Deshalb sind diese Module für WGR/Tellerwerk zunächst **ausgeblendet** – sonst
+  schreiben sie in die Bar-Übergabe und die Bar-Inventur. Die Datentrennung steht im Backlog.
+- **Startbelegung:** `bar` = alle Module wie heute. `wgr` und `tellerwerk` = Start, Rezepte, Produkte,
+  Quiz. Alles weitere stellt der Admin in der Matrix ein.
+- Neue Abteilungen und Zuordnungen brauchen keinen Code, nur Zeilen in `departments` /
+  `department_modules`. Labels stehen in der DB und bleiben unübersetzt wie Rollen.
+- Die Admin-Gruppe hängt weiter nur an Rechten und kommt **nicht** in die Modul-Matrix.
+
+Reihenfolge zwingend: 50 → 51 → 52. Alle neuen Beschriftungen über `data-i18n` bzw. `t()`, Schlüssel
+in `js/i18n/de.js` **und** `js/i18n/en.js`.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 50 | Datenmodell Abteilungen + `canSee()` | offen | Opus 5, hoher Denkaufwand |
+| 51 | Navigation nach Abteilung filtern | offen | Opus 5, mittlerer Denkaufwand |
+| 52 | Admin: Abteilungen, Matrix, Konten | offen | Sonnet 5, mittlerer Denkaufwand |
+
 ---
 
 # Paket 1 – PWA installierbar + App-Shell offline
@@ -2607,12 +2641,148 @@ Quiz-Code, Dark Theme und Layout-Grundgerüst.
 
 ---
 
+# Paket 50 – Datenmodell Abteilungen + `canSee()`
+
+**Abhängigkeit:** keine (Rollenmodell aus Paket 35/36 ist da).
+**Modell:** Opus 5, hoher Denkaufwand – Migration, RLS und eine Änderung in `auth.js`, auf der
+51 und 52 aufbauen. Eine falsche Migration kostet mehr als eine Session auf Opus.
+
+**Ziel:** Jedes Konto gehört zu einer Abteilung, und der Client weiß synchron, welche Module diese
+Abteilung sehen darf. Noch keine sichtbare Änderung in der Oberfläche.
+
+**Dateien:** neu `js/modules.js`; geändert `js/auth.js`, `supabase/schema.sql`.
+**Migration: ja** (über die Supabase-MCP-Tools, project_ref-gescoped; danach `schema.sql` nachziehen).
+
+**Schritte**
+1. Tabelle `departments (key text pk, label text, sort int)`; Seed `bar`, `wgr`, `tellerwerk`
+   (Labels „Bar", „Wintergartenrestaurant", „Das Tellerwerk").
+2. `profiles.department text not null default 'bar'` mit FK auf `departments(key)` (`on update
+   cascade`). Bestehende Konten werden damit Bar.
+3. Tabelle `department_modules (department_key, module_key, primary key (…))`, FK auf `departments`
+   mit `on delete cascade`. Ein fehlender Eintrag heißt: Modul nicht sichtbar.
+4. RLS: beide Tabellen für angemeldete Konten lesbar; Schreiben nur mit `roles.manage`. Das
+   Verwalten von `profiles.department` läuft über die bestehende Policy
+   `profiles: users.manage verwaltet niedrigere Raenge`; ein Self-Update auf `profiles` gibt es
+   bewusst nicht (nur die RPCs für Sprache/Passwort), die Abteilung ist also nicht selbst änderbar –
+   per SQL gegenprobieren.
+5. Seed für `department_modules` (siehe Entscheidungen). `bar` bekommt jedes Modul der Liste.
+6. `js/modules.js`: Katalog der schaltbaren Module mit Gruppe und Sortierung analog zu
+   `js/permissions.js`. Schlüssel = `data-tab`-IDs: `batching, superjuice, syrup, dilution,
+   calculation, menu-costing, preparations, events, shift-log, checklists, inventory, losses,
+   buildable, recipes, products, quiz`. `home` ist nicht abschaltbar.
+7. `js/auth.js`: `loadPermissions()` holt zusätzlich `profiles.department` (steckt schon im Profil)
+   und die Zeilen aus `department_modules`; neu `canSee(moduleKey)` (Rang ≥ 100 immer `true`,
+   `home` immer `true`), `myDepartment()`. Schlägt die Abfrage fehl (kein Netz), zeigt `canSee()`
+   alles – wie ein Konto ohne Einschränkung –, damit niemand offline vor einem leeren Tool steht.
+
+**Abnahme**
+- [ ] Migration live, `supabase/schema.sql` bildet `departments`, `profiles.department` und
+      `department_modules` samt Policies ab.
+- [ ] Alle bestehenden Konten haben `department = 'bar'`.
+- [ ] Ein Konto mit Rolle `barkeeper` kann seine eigene Abteilung per Update nicht ändern
+      (per SQL in zurückgerollter Transaktion geprüft).
+- [ ] `canSee("batching")` ist für `bar` wahr, für `wgr` falsch; `canSee("quiz")` für beide wahr.
+- [ ] Admin (Rang 100) sieht unabhängig von der Abteilung alles.
+
+**Commit:** `Abteilungen: Datenmodell, department_modules, canSee()`
+
+---
+
+# Paket 51 – Navigation nach Abteilung filtern
+
+**Abhängigkeit:** Paket 50.
+**Modell:** Opus 5, mittlerer Denkaufwand – berührt mehrere Module gleichzeitig (Grenzfall, daher
+das teurere Modell).
+
+**Ziel:** Wer in WGR oder Tellerwerk arbeitet, sieht nur Start, Rezepte, Produkte und Quiz – in der
+Seitenleiste, auf der Startseite, in der Suche und per Deep-Link.
+
+**Dateien:** geändert `index.html` (nur Attribute), `js/main.js`, `js/tabs.js`, `js/home.js`,
+`js/favorites.js`, `js/quickSearch.js`, `sw.js` (PRECACHE + Cache-Version), `js/i18n/de.js`,
+`js/i18n/en.js`. Gezielt greppen: `data-tab`, `tool-card`, `applyRoleVisibility`.
+
+**Schritte**
+1. `data-module="<key>"` an die Tab-Buttons der 16 Module, an die Panels und an die Kacheln auf der
+   Startseite. Die Kategoriebäume (`recipe-category-tree`, `product-category-tree`) folgen ihrem
+   Modul.
+2. `applyRoleVisibility()` in `js/main.js` erweitern: `[data-module]` bekommt `hidden`, wenn
+   `!canSee(...)`. Zusätzlich bleibt `data-perm` gültig.
+3. Leere Gruppen ausblenden: eine `.sidebar-group` ohne sichtbaren Eintrag bekommt `hidden`
+   (heute sind die Gruppenköpfe statisch; Gruppe „Rechner" fällt bei WGR/Tellerwerk komplett weg).
+4. `js/tabs.js`: `tabExists()` darf einen ausgeblendeten Tab nicht als gültiges Ziel durchlassen.
+   Hash, gemerkter letzter Tab (`bartool-last-tab`) und `switchTab()` fallen auf `home` zurück.
+   Dasselbe für die Admin-Panels prüfen, die heute nur per `data-perm` ausgeblendet werden.
+5. Startseite: „Heute anstehend" (`js/home.js`) und Favoriten (`js/favorites.js`) zeigen keine
+   Einträge, deren Ziel-Modul ausgeblendet ist; Schnellsuche (`js/quickSearch.js`) springt nur in
+   sichtbare Module.
+6. `sw.js`: Cache-Version hochzählen, `js/modules.js` in PRECACHE.
+
+**Abnahme**
+- [ ] Konto mit Abteilung `wgr`: Seitenleiste zeigt Start, Bibliothek (Rezepte, Produkte, Quiz) –
+      keine Gruppe „Rechner", „Betrieb" oder „Admin".
+- [ ] `#batching` in der Adresszeile und ein gemerkter Tab `batching` landen auf Start, nicht auf
+      einer leeren Seite.
+- [ ] Startseite zeigt keine Kacheln für ausgeblendete Module; Favoriten auf ausgeblendete Module
+      werden nicht angezeigt.
+- [ ] Konto mit Abteilung `bar` sieht exakt das, was es vor dem Paket gesehen hat.
+- [ ] Mobil (Drawer) und Desktop geprüft; Navigationsfilter findet nur sichtbare Einträge.
+
+**Commit:** `Navigation: Module nach Abteilung ein- und ausblenden`
+
+---
+
+# Paket 52 – Admin: Abteilungen, Matrix, Konten
+
+**Abhängigkeit:** Paket 50 und 51.
+**Modell:** Sonnet 5, mittlerer Denkaufwand – ein neuer Sub-Tab nach vorhandenem Muster
+(`adminRoles.js`), plus ein Feld im Kontenformular.
+
+**Ziel:** Der Admin legt Abteilungen an, schaltet pro Abteilung Module ein und aus und ordnet
+Konten zu – ohne Code- oder SQL-Eingriff.
+
+**Dateien:** neu `js/adminDepartments.js`; geändert `js/adminSections.js`, `js/adminUsers.js`,
+`js/adminPanel.js`, `index.html`, `css/styles.css`, `supabase/functions/admin-users/index.ts`,
+`js/i18n/de.js`, `js/i18n/en.js`.
+
+**Schritte**
+1. Neuer Sub-Tab `admin-departments` („Abteilungen"), Recht `roles.manage`, eingetragen in
+   `SECTIONS` in `js/adminSections.js` und in der Admin-Unternavigation.
+2. Matrix Modul × Abteilung (Häkchen), gruppiert wie in `js/modules.js`; Abteilung anlegen,
+   umbenennen, löschen (nur wenn kein Konto mehr zugeordnet ist; `bar` nicht löschbar).
+3. Kontenformular und Kontenliste (`js/adminUsers.js`): Auswahl „Abteilung" beim Anlegen, Änderung
+   in der Liste per Update wie bei der Rolle, Filter nach Abteilung.
+4. Edge Function `admin-users`: `department` beim Anlegen entgegennehmen und prüfen, dass die
+   Abteilung existiert. Deployment der Function mitnehmen.
+5. Änderungen an `department_modules` und `profiles.department` landen im Änderungsverlauf, falls
+   `audit_log` diese Tabellen schon erfasst; sonst nicht erweitern, sondern notieren.
+
+**Abnahme**
+- [ ] Häkchen setzen und entfernen wirkt nach erneutem Anmelden des betroffenen Kontos.
+- [ ] Neues Konto mit Abteilung `tellerwerk` anlegen, anmelden: Navigation wie in der Matrix.
+- [ ] Ein Konto ohne `roles.manage` sieht den Sub-Tab nicht und kann `department_modules` nicht
+      schreiben (per SQL geprüft).
+- [ ] Abteilung mit zugeordneten Konten lässt sich nicht löschen.
+
+**Commit:** `Admin: Abteilungen und Modul-Matrix, Abteilung am Konto`
+
+---
+
 ## Backlog (bewusst noch nicht eingeplant)
 
 Reihenfolge offen, erst nach Runde 4 entscheiden:
 - **Produktkatalog auf Englisch** – die 176 Produkttexte. Bewusst aus Paket 33 herausgehalten:
   eigene Runde oder gar nicht, aber nicht nebenbei.
 - **Bildfragen im Quiz** als eigenes Thema, sobald genug Rezepte ein Bild haben (aus Paket 31).
+- **Datentrennung je Abteilung** – Übergaben, Checklisten, Inventur, Schwund, Events und Ansätze
+  mit Spalte `department` und RLS über `private.my_department()`. Am 02.10.2026 bewusst verschoben
+  („erst mal gemeinsam"); Voraussetzung, um Betriebsmodule für WGR/Tellerwerk freizuschalten.
+- **Funktionen für WGR und Tellerwerk** – Anforderungen stehen aus. Kandidaten aus der Planung
+  (Annahmen, keine Vorgaben): Allergen-/Deklarationsmatrix für Gerichte, Temperatur-/HACCP-Protokoll,
+  Buffet-Mengenplanung, 86-Liste, Weinbegleitung. Gerichte passen vermutlich nicht in `recipes`
+  (Cocktail-Schema mit ABV, nicht geprüft) und wären eine neue Datenart.
+- **Quiz je Abteilung** – Themen/Fragenpool und Rangliste nach Abteilung filtern. Der Fragenpool kommt
+  heute aus dem Bar-Katalog; ob und wie er für WGR/Tellerwerk zugeschnitten wird, ist offen
+  (`js/quiz.js` nicht geprüft).
 
 ---
 
