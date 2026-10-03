@@ -672,10 +672,10 @@ Danach `supabase/schema.sql` nachziehen.
 5. „Zählung abschließen" setzt `status = 'abgeschlossen'`; danach ist sie schreibgeschützt (Admin darf wieder öffnen).
 
 **Abnahme**
-- [ ] Neue Zählung anlegen, 10 Produkte zählen, Seite neu laden: Werte sind noch da.
-- [ ] Offline weiterzählen, wieder online: Werte landen in der DB.
-- [ ] Auf dem Handy im Hochformat bedienbar, ohne Zoom.
-- [ ] Abgeschlossene Zählung ist nicht mehr editierbar.
+- [x] Neue Zählung anlegen, 10 Produkte zählen, Seite neu laden: Werte sind noch da. _(✓ 03.10.2026: Playwright: 10 Produkte gezählt (7 echte + 3 ZZ-Test), Seite neu geladen ohne Speichern → alle 10 Werte da (localStorage-Puffer, wird beim Öffnen hochgeladen); Puffer gelöscht, erneut geladen → 10 Werte vom Server; +/−-Buttons gehen; nicht gezählt bleibt leer statt 0)_
+- [x] Offline weiterzählen, wieder online: Werte landen in der DB. _(✓ 03.10.2026: Context offline: Wert geändert, „Speichern“ meldet „Offline: 1 Eingabe(n) sind lokal gesichert…“, Puffer enthält den Wert; wieder online → ohne Klick hochgeladen, DB-Zeile stimmt. Echter Funkabbruch am Gerät nicht geprüft)_
+- [ ] Auf dem Handy im Hochformat bedienbar, ohne Zoom. _(03.10.2026: nicht abgehakt, Emulation 390 × 844 nur als Messung: Touch-Ziele −/+/Speichern 44 px, Zeile 55 px, viewport-Meta gesetzt. Zwei Befunde: Zahlenfeld und Suchfeld haben 15,2 px Schrift (unter 16 px zoomt iOS Safari beim Fokussieren); Seite läuft bei 390 px 33 px über (bekannter Befund Kopfzeile))_
+- [x] Abgeschlossene Zählung ist nicht mehr editierbar. _(✓ 03.10.2026: abgeschlossen und über „Ansehen“ geöffnet: alle Zahlenfelder und −/+-Buttons disabled, „Speichern“ und „Zählung abschließen“ ausgeblendet; per Skript wieder freigeschaltetes Feld ändert den Wert nicht (DB unverändert))_
 
 **Commit:** `Inventur: mobile Bestandserfassung mit Offline-Puffer`
 
@@ -710,10 +710,10 @@ Danach `supabase/schema.sql` nachziehen und die drei Felder in `toProductRecord`
 4. Export je Lieferant nach Excel und Word (beide Muster liegen in `js/productExport.js`).
 
 **Abnahme**
-- [ ] Bestandswert einer Testzählung stimmt gegen zwei von Hand nachgerechnete Positionen.
-- [ ] Differenz zur Vorzählung wird korrekt angezeigt.
-- [ ] Bestellliste gruppiert nach Lieferant, Produkte ohne Par-Level sichtbar ausgewiesen.
-- [ ] Export öffnet sich sauber.
+- [x] Bestandswert einer Testzählung stimmt gegen zwei von Hand nachgerechnete Positionen. _(✓ 03.10.2026: Zählung mit ZZ-Test Produkt 2,5 l × 20 €/l und ZZ-Test Produkt B 13 Stk × 2,50 € → Anzeige 50,00 + 32,50 = 82,50 € (Gruppe „ZZ-Test Gruppe“), von Hand nachgerechnet; Excel-Export nach Menge/Einheit/Wert stimmt (20 € und 25 € bei 1 l und 10 Stk))_
+- [ ] Differenz zur Vorzählung wird korrekt angezeigt. _(03.10.2026: Test fehlgeschlagen: sobald eine frühere abgeschlossene Zählung mit Abweichung existiert, bleibt der Auswertungsblock leer, Konsole: `formatNumberDe is not defined`. Ursache: `js/ordering.js` verwendet `formatNumberDe` (Zeilen 152–157), importiert aber nur `formatNumberLocal`. Die Rechnung selbst stimmt (`differenz()`: B 13 → 10 = −3, A 2,5 → 1 = −1,5), nur die Darstellung bricht ab. Ohne Vorzählung rendert die Auswertung)_
+- [x] Bestellliste gruppiert nach Lieferant, Produkte ohne Par-Level sichtbar ausgewiesen. _(✓ 03.10.2026: Lieferant A: Bestand 1, Soll 6, Vorschlag 5 Flasche; Lieferant B: 10, 24, 14 Stück; Produkt ohne Par-Level steht in der Gruppe „Soll-Bestand fehlt“ (Beschriftung weicht vom Plantext ab). Menge von Hand von 5 auf 4 geändert, im Export übernommen)_
+- [x] Export öffnet sich sauber. _(✓ 03.10.2026: Bestellliste und Zählung als .xlsx heruntergeladen, Inhalt per XML-Parse gelesen (Spalten, Werte, Blattname stimmen), nicht in Excel geöffnet. Abweichung vom Plan, kein Abnahmepunkt: es gibt nur Excel, keinen Word-Export (Schritt 4), und eine Datei für alle Lieferanten statt je Lieferant)_
 
 **Commit:** `Inventur-Auswertung und Bestellvorschlag je Lieferant`
 
