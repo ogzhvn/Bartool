@@ -864,15 +864,15 @@ lesen/anlegen/ändern für jeden eingeloggten Nutzer, löschen nur Admin. Plus
 9. Gespeicherte Events als Liste (kommende zuerst), Klick lädt zurück in die Maske.
 
 **Abnahme-Checkliste**
-- [ ] Tab „Events" erscheint, Panel öffnet, Layout auf Handy einspaltig.
-- [ ] Event mit 3 Rezepten (Anteile 50/30/20) rechnet plausibel; Summenwarnung bei 90 % erscheint.
-- [ ] Zutat ohne Produkttreffer wird als „kein Preis hinterlegt" gemeldet, Gesamtsumme bleibt nachvollziehbar.
-- [ ] Stückzutaten stehen in einer eigenen Liste, nicht in Millilitern.
-- [ ] Speichern → Neuladen → Event ist noch da (Realtime + Offline-Cache).
-- [ ] „Batches als Ansätze anlegen" landet mit vorbelegten Werten im Mise en Place.
-- [ ] Druckansicht ohne Navigation, passt auf A4.
+- [x] Tab „Events" erscheint, Panel öffnet, Layout auf Handy einspaltig. _(✓ 03.10.2026: Playwright: Button in der Sidebar-Gruppe „Betrieb“ (sichtbar nach Aufklappen), Panel öffnet; bei 390 px Emulation stehen alle Feldreihen untereinander (gleiche linke Kante), kein echtes Gerät)_
+- [x] Event mit 3 Rezepten (Anteile 50/30/20) rechnet plausibel; Summenwarnung bei 90 % erscheint. _(✓ 03.10.2026: 100 Gäste, 4 h → Vorbelegung 5 Drinks/Gast und 0,35 kg Eis; Negroni 50 / Daiquiri 30 / ZZ-Test Rezept 20 → 550 Drinks (100 × 5 × 1,1) mit 275/165/110 Drinks, Eisbedarf 192,5 kg; bei 40/30/20 erscheint „Summe der Anteile: 90 % – sollte 100 % sein“)_
+- [x] Zutat ohne Produkttreffer wird als „kein Preis hinterlegt" gemeldet, Gesamtsumme bleibt nachvollziehbar. _(✓ 03.10.2026: „ZZ-Test Zutat ohne Treffer“ steht mit „kein Preis hinterlegt“ in der Entnahmeliste und im roten Hinweis „mit 0 € in der Summe … Wareneinsatz ist damit zu niedrig“; Summe 407 € = 132 € (6,6 l × 20 €/l) + 275 € (110 Stk × 2,50 €), von Hand nachgerechnet. Die echten Rezepte (Negroni, Daiquiri) haben im Katalog keine Preise und stehen deshalb ebenfalls in der Hinweisliste)_
+- [x] Stückzutaten stehen in einer eigenen Liste, nicht in Millilitern. _(✓ 03.10.2026: „ZZ-Test Produkt B“ 110 Stück steht in der eigenen Tabelle „Stückzutaten“, nicht in ml)_
+- [ ] Speichern → Neuladen → Event ist noch da (Realtime + Offline-Cache). _(03.10.2026: nicht abgehakt: Speichern und Neuladen gehen (Event nach Reload in der Liste, Laden füllt Maske mit Name, Gästen und 3 Rezeptzeilen, Cache-Key `bartool:events` gefüllt). Realtime fehlgeschlagen: zweiter Browser sah das Event nach 6 s nicht, Tabelle `events` fehlt in der Publikation `supabase_realtime` (siehe Paket 9))_
+- [x] „Batches als Ansätze anlegen" landet mit vorbelegten Werten im Mise en Place. _(✓ 03.10.2026: Button öffnet Mise en Place mit „Negroni – ZZ-Test Event“, Art batch, 24750 ml, 27,2 % ABV, haltbar bis +90 Tage; die weiteren Rezepte nennt nur ein Hinweisdialog („Nach dem Speichern hier zurückkommen für: Daiquiri, ZZ-Test Rezept“), es wird nur ein Ansatz vorbelegt)_
+- [x] Druckansicht ohne Navigation, passt auf A4. _(✓ 03.10.2026: Druckmedium → PDF: 2 A4-Seiten, Kopfzeile, Sidebar und Formular ausgeblendet, Tabellen passen in die Breite. Kleinigkeiten: Überschrift „Stückzutaten“ steht allein am Seitenende, Einheit dort „stk“ statt „Stück“, Stückliste ohne Kostenspalte. Kein Augenschein am echten Drucker)_
 - [x] `sw.js`: `js/events.js` in `PRECACHE`, `CACHE` hochgezählt. _(✓ 03.10.2026: CACHE `bartool-v70`, `js/events.js` im Precache)_
-- [ ] `supabase/schema.sql` enthält Tabelle + RLS identisch zur Migration.
+- [x] `supabase/schema.sql` enthält Tabelle + RLS identisch zur Migration. _(✓ 03.10.2026: Spalten, Defaults, Trigger `events_set_updated_at` und vier Policies in `schema.sql` (Zeilen 806–856) stimmen mit der Live-DB überein (information_schema, pg_policies); Löschen über `events.manage`. Kein `alter publication … events` in beiden)_
 
 ---
 
