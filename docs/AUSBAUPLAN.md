@@ -417,7 +417,7 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 4. Touch beachten: Trefferzeilen mindestens 44 px hoch, das Overlay muss auf dem Handy die volle Breite nutzen.
 
 **Abnahme**
-- [ ] Cmd/Ctrl+K öffnet, Esc schließt, Header-Button funktioniert auf dem Handy.
+- [x] Cmd/Ctrl+K öffnet, Esc schließt, Header-Button funktioniert auf dem Handy. _(✓ 03.10.2026: Playwright: Strg/Cmd+K, Esc und Header-Button bei 400 px Emulation, kein echtes Gerät)_
 - [ ] Treffer aus beiden Bibliotheken; Sprung öffnet den richtigen Eintrag im richtigen Tab.
 - [ ] Ein Rezeptname mit `<`/`&` bricht nichts.
 - [ ] Als Nicht-Admin (Rolle Mitarbeiter) landet der Sprung in der Leseansicht, nicht im Formular.
@@ -739,7 +739,7 @@ Danach `supabase/schema.sql` nachziehen und die drei Felder in `toProductRecord`
 **Abnahme**
 - [ ] Export → Datei ohne Änderung reimportieren → Vorschau zeigt „unverändert" für alle Zeilen.
 - [ ] Ein Feld in der Datei ändern → nur diese eine Zeile erscheint als „geändert".
-- [ ] Datei mit unbekannter Spalte → verständliche Fehlermeldung, kein Schreibvorgang.
+- [ ] Datei mit unbekannter Spalte → verständliche Fehlermeldung, kein Schreibvorgang. _(03.10.2026: Ist-Verhalten: unbekannte Spalten werden ignoriert und gemeldet, keine Fehlermeldung)_
 - [ ] Nicht-Admin sieht den Button nicht.
 
 **Commit:** `Produkte aus Excel importieren mit Diff-Vorschau`
@@ -871,7 +871,7 @@ lesen/anlegen/ändern für jeden eingeloggten Nutzer, löschen nur Admin. Plus
 - [ ] Speichern → Neuladen → Event ist noch da (Realtime + Offline-Cache).
 - [ ] „Batches als Ansätze anlegen" landet mit vorbelegten Werten im Mise en Place.
 - [ ] Druckansicht ohne Navigation, passt auf A4.
-- [ ] `sw.js`: `js/events.js` in `PRECACHE`, `CACHE` hochgezählt.
+- [x] `sw.js`: `js/events.js` in `PRECACHE`, `CACHE` hochgezählt. _(✓ 03.10.2026: CACHE `bartool-v70`, `js/events.js` im Precache)_
 - [ ] `supabase/schema.sql` enthält Tabelle + RLS identisch zur Migration.
 
 ---
@@ -916,7 +916,7 @@ RLS wie `preparations`.
 - [ ] Abgelaufener Ansatz taucht als Vorschlag auf, lässt sich abwählen.
 - [ ] Abhaken schreibt Name und Zeitstempel, auch nach Neuladen sichtbar.
 - [ ] Mitarbeiter (nicht Admin) darf anlegen und abhaken; löschen nur Admin.
-- [ ] `sw.js` aktualisiert, `schema.sql` nachgezogen.
+- [x] `sw.js` aktualisiert, `schema.sql` nachgezogen. _(✓ 03.10.2026: `shiftLog.js` im Precache, Tabelle `shift_logs` in `schema.sql`)_
 
 ---
 
@@ -970,7 +970,7 @@ Templates: lesen alle, schreiben nur Admin (Muster `recipes`). Runs: wie `prepar
 - [ ] Mitarbeiter füllt den Lauf aus, Werte und Namen stehen nach Neuladen noch drin.
 - [ ] Wert außerhalb der Grenzen ist markiert und verlangt eine Notiz.
 - [ ] Druckansicht zeigt Datum, Items, Werte, Namen.
-- [ ] `sw.js` aktualisiert, `schema.sql` nachgezogen.
+- [x] `sw.js` aktualisiert, `schema.sql` nachgezogen. _(✓ 03.10.2026: `checklists.js` im Precache, Checklisten-Tabellen in `schema.sql`)_
 
 ---
 
@@ -1016,7 +1016,7 @@ Lesen: alle eingeloggten. Schreiben: Admin.
 - [ ] Speichern ohne Preisänderung erzeugt keine Zeile.
 - [ ] Preisverlauf im Produktdetail sichtbar, Prozentdifferenz stimmt.
 - [ ] Kartenkalkulation markiert Drinks über der Zielquote.
-- [ ] `schema.sql` nachgezogen.
+- [x] `schema.sql` nachgezogen. _(✓ 03.10.2026: `product_prices` in `schema.sql`)_
 
 ---
 
@@ -1081,7 +1081,7 @@ Herkunftsland steckt bei Spirituosen nur im Freitext `category` („London Dry G
 
 **Abnahme**
 - [ ] Produkt speichern → Reload → alle neuen Felder unverändert vorhanden.
-- [ ] `select count(*) from products where abv_value is not null` ≥ 145.
+- [x] `select count(*) from products where abv_value is not null` ≥ 145. _(✓ 03.10.2026: 239 Produkte)_
 - [ ] Weinfelder erscheinen nur bei Wein/Schaumwein, nicht bei Gin.
 - [ ] Excel-Export enthält die neuen Spalten; Reimport derselben Datei meldet „unverändert".
 
@@ -1124,11 +1124,11 @@ Gin (⌀ 323) und Rum (⌀ 261) sind der Goldstandard – vor dem Schreiben zwei
 6. Am Ende: Prüfliste „gegen Flasche prüfen" als Markdown ausgeben, für den Tresen.
 
 **Abnahme**
-- [ ] `select count(*) from products where group_name = 'Liköre & Aperitifs' and length(story) >= 300` = 46.
-- [ ] `quick_pitch` bei allen 46 gefüllt, keiner länger als 120 Zeichen.
+- [x] `select count(*) from products where group_name = 'Liköre & Aperitifs' and length(story) >= 300` = 46. _(✓ 03.10.2026: 47 von 47 (Sortiment seitdem um 1 gewachsen))_
+- [x] `quick_pitch` bei allen 46 gefüllt, keiner länger als 120 Zeichen. _(✓ 03.10.2026: 47/47, keiner über 120 Zeichen)_
 - [ ] Jedes `pairsWith`-Rezept und jede `alternatives`-Angabe existiert wirklich.
 - [ ] Produkte-Tab: drei Stichproben zeigen alle neuen Felder korrekt an.
-- [ ] `js/productsData.js` und DB sind für alle 46 identisch.
+- [x] `js/productsData.js` und DB sind für alle 46 identisch. _(gegenstandslos: Datei seit `43e4509` gelöscht (Regel 7))_
 
 **Commit:** `Liköre und Aperitifs: Produktwissen ausgebaut`
 
@@ -1156,8 +1156,8 @@ Absinth 1, Bitters 1.
 3. `baseMaterial` konsequent: Gerstenmalz · Mais · Roggen · Weizen · Agave · Kartoffel.
 
 **Abnahme**
-- [ ] Alle 36 mit `story` ≥ 300 Zeichen, `quickPitch`, `productionMethod`, `baseMaterial`.
-- [ ] Jeder Whisky hat `originRegion` und `ageStatement`.
+- [ ] Alle 36 mit `story` ≥ 300 Zeichen, `quickPitch`, `productionMethod`, `baseMaterial`. _(03.10.2026: 35/36, `Stork Smoky Rye` ohne `production_method`)_
+- [ ] Jeder Whisky hat `originRegion` und `ageStatement`. _(03.10.2026: 26/27, `Stork Smoky Rye` ohne `origin_region`/`age_statement`)_
 - [ ] Regionen-Gruppierung im Produkte-Tab bleibt korrekt.
 
 **Commit:** `Whisky und weiße Spirituosen: Produktwissen ausgebaut`
@@ -1194,8 +1194,8 @@ strukturierten Felder aus Paket 21.
 4. Danach ist der Spirituosen-Katalog vollständig – Zwischenstand per SQL dokumentieren.
 
 **Abnahme**
-- [ ] Alle 176 alkoholischen Produkte haben `quickPitch`, `baseMaterial`, `abvValue`, `originCountry`.
-- [ ] Keine Gruppe mehr mit ⌀ `story` unter 300 Zeichen.
+- [ ] Alle 176 alkoholischen Produkte haben `quickPitch`, `baseMaterial`, `abvValue`, `originCountry`. _(03.10.2026: Ausnahmen: Absinth (Herkunftsland), Northman Calm Sea (ABV „bitte prüfen“), Chapeau Secco, Stork Smoky Rye, fünf Liköre mit ABV-Spanne (kein `abv_value`: Amaretto, Crème de Cassis, beide Crème de Menthe, Orange Curaçao))_
+- [ ] Keine Gruppe mehr mit ⌀ `story` unter 300 Zeichen. _(03.10.2026: nicht erfüllt: Rum & Cachaça ⌀ 261 Zeichen (Schritt 3 verbot das Neutexten))_
 - [ ] Gin/Rum-Texte unverändert (Diff prüfen).
 
 **Commit:** `Brände und Wermut ausgebaut, Gin und Rum strukturell nachgezogen`
@@ -1257,10 +1257,10 @@ bzw. 104 Zeichen zu dünn.
    `verified = false` lassen und auf die Prüfliste.
 
 **Abnahme**
-- [ ] Alle 30 mit `producer`, `sweetness`, `classification`, `servingTemp`.
-- [ ] `production` 30/30 statt 4/30.
+- [ ] Alle 30 mit `producer`, `sweetness`, `classification`, `servingTemp`. _(03.10.2026: erfüllt bis auf `Chapeau Secco`)_
+- [ ] `production` 30/30 statt 4/30. _(03.10.2026: Wein 76/76, Schaumwein 15/16 (`Chapeau Secco`))_
 - [ ] Produktnamen unverändert; Wein-Herkunftsgruppierung im Tab funktioniert weiter.
-- [ ] Prüfliste für den Tresen liegt als Markdown vor.
+- [ ] Prüfliste für den Tresen liegt als Markdown vor. _(03.10.2026: keine Wein-Prüfliste in `docs/` gefunden (nur `PRUEFLISTE_LIKOERE.md`))_
 
 **Commit:** `Wein und Schaumwein: Struktur und Beschreibungen ausgebaut`
 
@@ -1347,8 +1347,8 @@ kein zweiter Datenbestand, der gepflegt werden muss.
 4. Themen-Heatmap über das ganze Team: wo hakt es bei allen? Das ist die Vorlage fürs Teammeeting.
 
 **Abnahme**
-- [ ] Nicht-Admin sieht ausschließlich die eigenen Zahlen (RLS gegenprüfen, nicht nur die UI).
-- [ ] Admin sieht Aggregate, aber keine Einzelantworten.
+- [x] Nicht-Admin sieht ausschließlich die eigenen Zahlen (RLS gegenprüfen, nicht nur die UI). _(✓ 03.10.2026: Policy `quiz_attempts: own select` gelesen)_
+- [x] Admin sieht Aggregate, aber keine Einzelantworten. _(✓ 03.10.2026: keine Policy auf fremde Zeilen, Team-Daten nur über RPC mit Summen)_
 - [ ] Schwächste Themen führen per Klick in eine passende Übungsrunde.
 
 **Commit:** `Quiz-Auswertung und Team-Übersicht für die Barleitung`
@@ -1425,7 +1425,7 @@ anfassen und ist ohne neue Ansage des Nutzers nicht erlaubt.
 
 **Abnahme**
 - [ ] Jede Kennzahl ist auf eine vorhandene Datenquelle zurückführbar, nichts ist geschätzt.
-- [ ] Bei leerer Datenlage steht überall ein erklärender Text, kein 0-Wert und kein Fehler.
+- [x] Bei leerer Datenlage steht überall ein erklärender Text, kein 0-Wert und kein Fehler. _(✓ 03.10.2026: Reporting im Browser: überall Erklärtext)_
 - [ ] Zeitraumfilter wirkt auf alle Kacheln gleichzeitig.
 - [ ] Klick auf eine Kachel landet im richtigen Tab.
 - [ ] Ladezeit auf dem Handy unter zwei Sekunden.
@@ -1653,7 +1653,7 @@ und wandert ebenfalls erst in 37 – sie ist Auswertung, keine Fragenpflege.
    neue JS-Dateien in die Precache-Liste.
 
 **Abnahme**
-- [ ] `#admin-users` als Direktlink öffnet den richtigen Sub-Tab, die Subnav bleibt offen.
+- [x] `#admin-users` als Direktlink öffnet den richtigen Sub-Tab, die Subnav bleibt offen. _(✓ 03.10.2026: Playwright: Direktlink vor Login, Sub-Tab und Subnav offen)_
 - [ ] Beim Wechsel auf einen anderen Hauptpunkt klappt die Admin-Subnav zu; der Rezept- und
       Produkt-Kategoriebaum verhält sich unverändert.
 - [ ] Ein Konto ohne Adminrecht sieht weder Admin noch einen Unterpunkt und löst keinen der
@@ -1777,14 +1777,14 @@ Dieses Paket macht ausschließlich die Datenbank fertig; die Oberfläche folgt i
 8. `supabase/schema.sql` vollständig nachziehen (Regel 3 aus CLAUDE.md).
 
 **Abnahme**
-- [ ] Alle bestehenden Konten haben nach der Migration eine gültige Rolle, kein `null`.
+- [x] Alle bestehenden Konten haben nach der Migration eine gültige Rolle, kein `null`. _(✓ 03.10.2026: 0 Profile ohne gültige Rolle)_
 - [ ] Der eigene Admin-Zugang funktioniert unverändert, alle Admin-Funktionen wie vorher.
-- [ ] Ein Konto mit `barchef` kann kein Konto mit `admin` anlegen, ändern oder löschen –
+- [ ] Ein Konto mit `barchef` kann kein Konto mit `admin` anlegen, ändern oder löschen – _(03.10.2026: Ändern/Herabstufen (0 Zeilen) und Beförderung zu `admin` (RLS-Fehler) per Simulation mit Rollback geprüft; Anlegen und Löschen nicht)_
       geprüft gegen die Edge Function, nicht nur in der Oberfläche.
-- [ ] Das letzte Admin-Konto lässt sich nicht herabstufen und nicht löschen.
-- [ ] `select private.has_permission('roles.manage')` liefert für `barchef` false, für `admin` true.
-- [ ] `supabase/schema.sql` bildet den neuen Stand vollständig ab.
-- [ ] Der Supabase-Advisor meldet keine Tabelle ohne RLS.
+- [x] Das letzte Admin-Konto lässt sich nicht herabstufen und nicht löschen. _(✓ 03.10.2026: Triggerfunktion `guard_last_admin` gelesen (Herabstufen, Deaktivieren, Löschen), nicht ausgelöst)_
+- [x] `select private.has_permission('roles.manage')` liefert für `barchef` false, für `admin` true. _(✓ 03.10.2026: per Simulation als `barchef`: `roles.manage` = false; `admin` hat es in `role_permissions`)_
+- [x] `supabase/schema.sql` bildet den neuen Stand vollständig ab. _(✓ 03.10.2026: alle 21 Tabellen, 21× RLS, Funktionen vorhanden; Policies nicht Zeile für Zeile verglichen)_
+- [x] Der Supabase-Advisor meldet keine Tabelle ohne RLS. _(✓ 03.10.2026: keine Tabelle ohne RLS (Advisor: nur Warnungen zu Leaked-Password-Schutz und SECURITY-DEFINER-RPCs))_
 
 **Ergebnis (09.09.2026):** Umgesetzt wie beschrieben. Migration
 `rollenmodell_rollen_rechte_rangfolge` legt `roles` (5 Rollen mit Rang 100/80/60/40/20),
@@ -1881,7 +1881,7 @@ nicht erst angezeigt werden.
 - [ ] Eine Rolle mit zugewiesenen Konten lässt sich nicht löschen.
 - [ ] Rollennamen mit HTML-Sonderzeichen werden als Text angezeigt, nicht ausgeführt.
 - [ ] Kein Recht in der Matrix ohne zugehörige Policy.
-- [ ] Rechte-Labels sind auf Deutsch und Englisch beschriftet.
+- [x] Rechte-Labels sind auf Deutsch und Englisch beschriftet. _(✓ 03.10.2026: i18n-Schlüssel DE/EN deckungsgleich (1289/1289))_
 
 **Ergebnis (10.09.2026):** Umgesetzt wie beschrieben. Migration
 `rechte_durchsetzung_policies` schreibt alle 19 `is_admin()`-Policies auf
@@ -2178,12 +2178,12 @@ Keine Schemaänderung.
 9. `CACHE` in `sw.js` hochzählen.
 
 **Abnahme**
-- [ ] Themenliste enthält Rotwein, Weißwein und Roséwein mit plausibler Fragenzahl; kein Thema mit mehreren hundert Fragen.
+- [ ] Themenliste enthält Rotwein, Weißwein und Roséwein mit plausibler Fragenzahl; kein Thema mit mehreren hundert Fragen. _(03.10.2026: Rotwein 441, Weißwein 437, Roséwein 26 – „mehrere hundert“ ist seit Paket 42 überholt)_
 - [ ] Zehn Schnellrunden hintereinander: kein Thema stellt mehr als ein Viertel der Fragen.
 - [ ] Bei einer Rotwein-Frage sind alle Ablenker Rotweine.
 - [ ] Eine Jahrgangsfrage erscheint nur dort, wo es echte Alternativen gibt.
-- [ ] Kein Produkt steht auf `verified = true` ohne Herkunftsland und ABV.
-- [ ] `js/productsData.js` und die DB stimmen im `verified`-Flag überein (Stichprobe von fünf Weinen).
+- [ ] Kein Produkt steht auf `verified = true` ohne Herkunftsland und ABV. _(03.10.2026: Wein in Ordnung; drei Tee-Produkte `verified` ohne Herkunftsland: Idee Decaf, Ronnefeldt Lemon Fresh, Ronnefeldt Light my Flame)_
+- [x] `js/productsData.js` und die DB stimmen im `verified`-Flag überein (Stichprobe von fünf Weinen). _(gegenstandslos: Datei seit `43e4509` gelöscht (Regel 7))_
 - [ ] Auf EN umgeschaltet: kein deutscher Fragetext, keine leere Beschriftung.
 
 **Commit:** `Quiz: Wein und Direktprodukte als Fragenquelle`
@@ -2266,9 +2266,9 @@ Rangliste stehen.
 - [ ] Ein frisch angelegter Barkeeper taucht ohne Zutun in der Heatmap auf.
 - [ ] Ein Konto auf `barchef` verschwindet aus der Heatmap, ohne dass jemand einen Schalter anfasst.
 - [ ] „sichtbar" holt die Barleitung zurück, „ausgeblendet" nimmt einen Barkeeper heraus.
-- [ ] Ein Konto ohne `users.manage` kann `quiz_visible` nicht setzen – per REST mit einem Barkeeper-Token gegengeprüft.
+- [ ] Ein Konto ohne `users.manage` kann `quiz_visible` nicht setzen – per REST mit einem Barkeeper-Token gegengeprüft. _(03.10.2026: Policy-Lage: `profiles` nur über `can_manage_profile` schreibbar; REST-Test mit Barkeeper-Token offen)_
 - [ ] Ein Barkeeper mit zusätzlichem Recht `reports.view` bleibt in der Auswertung sichtbar.
-- [ ] `supabase/schema.sql` beschreibt den Ist-Stand.
+- [x] `supabase/schema.sql` beschreibt den Ist-Stand. _(✓ 03.10.2026: Quiz-Funktionen und Tabellen in `schema.sql`)_
 - [ ] Auf EN umgeschaltet: alle drei Zustände des Umschalters lesbar.
 
 **Commit:** `Quiz-Auswertung: Sichtbarkeit pro Person und Rolle`
@@ -2343,11 +2343,11 @@ genau deshalb gibt sie nur Summen je Person heraus.
 **Abnahme**
 - [ ] Ein Barkeeper ohne `reports.view` sieht die Rangliste.
 - [ ] Ausgeblendete Personen fehlen in der Liste, sehen sich selbst aber mit eigenem Rang.
-- [ ] Keine E-Mail-Adresse im DOM – in den Devtools gegengeprüft.
+- [x] Keine E-Mail-Adresse im DOM – in den Devtools gegengeprüft. _(✓ 03.10.2026: Rangliste im Browser ohne „@“; RPC liefert keine E-Mail)_
 - [ ] Umschalten auf „30 Tage" ändert die Reihenfolge nachvollziehbar.
-- [ ] Wer fünf Fragen beantwortet hat, steht nicht mit 100 % auf Platz 1.
+- [x] Wer fünf Fragen beantwortet hat, steht nicht mit 100 % auf Platz 1. _(✓ 03.10.2026: Quotenplatz erst ab 20 Antworten, Sortierung nach richtigen Antworten (RPC-Code gelesen))_
 - [ ] Auf 400 px Breite lesbar, ohne horizontale Scrollleiste.
-- [ ] Kein Aufruf gibt einzelne Antworten heraus (RPC-Rückgabe geprüft).
+- [x] Kein Aufruf gibt einzelne Antworten heraus (RPC-Rückgabe geprüft). _(✓ 03.10.2026: RPC `quiz_leaderboard` liefert nur Summen)_
 - [ ] Auf EN umgeschaltet: Spaltenköpfe, Zeitraum-Chips und Datumsangaben stimmen.
 
 **Commit:** `Quiz: Rangliste für das Team`
@@ -2597,9 +2597,9 @@ schlimmer als gar keine Frage.
 
 **Abnahme (je Paket)**
 - [ ] Kein Feld enthält einen Wert ohne Quelle – Stichprobe von fünf Produkten gegen die Vorlage.
-- [ ] DB und `js/productsData.js` stimmen überein.
+- [x] DB und `js/productsData.js` stimmen überein. _(gegenstandslos: Datei seit `43e4509` gelöscht (Regel 7))_
 - [ ] Die neuen Produkte tauchen im Quiz auf, mit Ablenkern aus der richtigen Untergruppe.
-- [ ] Kein Produkt ist `verified = true` mit leeren Pflichtfeldern.
+- [ ] Kein Produkt ist `verified = true` mit leeren Pflichtfeldern. _(03.10.2026: drei Tee-Produkte `verified` ohne Herkunftsland (siehe Paket 39); Pflichtfelder der Pakete 44–46 nicht nachgelesen)_
 
 **Commits:** `Produktdaten: Bier und Softdrinks`, `Produktdaten: Sirup, Saft, Fruchtpüree`,
 `Produktdaten: Tee, Kaffee und Sonstiges`
@@ -2782,6 +2782,34 @@ damit im Verlauf. `department_modules` hat keine `id`-Spalte, `log_audit()` (nut
 nicht – nicht erweitert, nur notiert.
 
 **Commit:** `Admin: Abteilungen und Modul-Matrix, Abteilung am Konto`
+
+---
+
+## Nachprüfung der offenen Abnahmepunkte (03.10.2026)
+
+Geprüft wurde lesend: SQL gegen die Datenbank, Code, `schema.sql`, `sw.js` und ein Browserdurchlauf
+(Playwright, Login `claude-test`, 1280 und 400 px). Abgehakt ist nur, was dabei direkt belegt wurde;
+der Beleg steht in Klammern an der Zeile. Alles andere bleibt offen.
+
+**Offen, weil Schreibtests mit Testdaten nötig sind:** Pakete 9–12 und 16–20 sowie 28 und 29. Diese
+Module haben keine Produktivdaten (Stand 03.10.: 0 Events, Übergaben, Ansätze, Checklistenläufe und
+Inventuren; Checklistenvorlagen leer; kein Produkt mit `par_level` oder Lieferant; `product_prices`
+nur 4 Startzeilen „Bestand bei Einführung“). Die Preishistorie wird im Client geschrieben
+(`js/priceHistory.js`), nicht per Trigger.
+
+**Offen, weil nur auf einem Gerät prüfbar:** Offline-Betrieb und Service Worker (Pakete 1 und 2),
+Ladezeiten, Handy-Bedienung, Druckqualität nach Augenschein.
+
+**Neuer Befund, nicht im Plan:** Die mobile Kopfzeile läuft bei 320–390 px je nach Tab-Titel bis
+140 px über den Bildschirm; der Konto-Button (Passwort ändern, Abmelden) rutscht aus dem Sichtfeld.
+Gemessen bei 390 px: Rezepte +19 px, Zuckersirup +69 px, Verdünnung & ABV +70 px. Als eigene Aufgabe
+angelegt, Layout-Grundgerüst (Regel 4) nicht ohne Rückfrage ändern.
+
+**Datenlücken** (stehen an den jeweiligen Zeilen): `Stork Smoky Rye`, `Chapeau Secco`, `Northman Calm Sea`,
+fünf Liköre ohne `abv_value`, drei Tee-Produkte `verified` ohne Herkunftsland, Rum ⌀ `story` unter 300.
+
+**Kleinkram:** `js/dilution.js` Zeile 197 enthält den festen Text „Bitte selbst eintragen.“ außerhalb von
+`t()` (Regel 11).
 
 ---
 
