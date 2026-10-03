@@ -2764,13 +2764,16 @@ Konten zu – ohne Code- oder SQL-Eingriff.
 
 **Abnahme**
 - [x] Häkchen setzen und entfernen wirkt nach erneutem Anmelden des betroffenen Kontos.
-- [ ] Neues Konto mit Abteilung `tellerwerk` anlegen, anmelden: Navigation wie in der Matrix.
+- [x] Neues Konto mit Abteilung `tellerwerk` anlegen, anmelden: Navigation wie in der Matrix.
 - [x] Ein Konto ohne `roles.manage` sieht den Sub-Tab nicht und kann `department_modules` nicht
       schreiben (per SQL geprüft).
 - [x] Abteilung mit zugeordneten Konten lässt sich nicht löschen.
 
-**Stand (02.10.2026):** umgesetzt, Edge Function `admin-users` v5 deployt. Offen zur Handprobe im
-Browser: die beiden Login-Punkte (Häkchen wirkt nach erneutem Anmelden; neues Konto `tellerwerk`).
+**Stand (03.10.2026):** umgesetzt, Edge Function `admin-users` v5 deployt. Handprobe im Browser
+(Playwright, Login `claude-test`) bestanden: Konto mit Abteilung `tellerwerk` über Admin → Konten
+angelegt, Navigation nach Anmeldung = Start, Rezepte, Produkte, Quiz (wie Matrix). Häkchen
+`syrup` für `tellerwerk` gesetzt → Navigation und Startkachel zeigen Zuckersirup nach erneutem
+Anmelden; Häkchen entfernt → wieder weg. Testkonto danach gelöscht, Matrix auf Ausgangszustand.
 Die RLS-Policies auf `departments`/`department_modules` verlangen `roles.manage` fürs Schreiben (per
 `pg_policies` geprüft, Lesen für alle Angemeldeten). Löschsperre: Fremdschlüssel
 `profiles_department_fkey` plus Vorabprüfung in der Oberfläche; `bar` ist nicht löschbar.
