@@ -594,10 +594,10 @@ Trigger `set_updated_at` anhängen wie bei den anderen Tabellen. Danach `supabas
 4. Sortierung immer nach `expires_at` aufsteigend. Datumsformat `de-DE`.
 
 **Abnahme**
-- [ ] Batch rechnen → „Als Ansatz speichern" → Eintrag erscheint sofort im Mise-en-Place-Tab.
-- [ ] Ein Ansatz mit Ablauf morgen steht in der Warngruppe, einer mit Ablauf gestern in „abgelaufen".
-- [ ] Zweiter Browser/Tab sieht neue Ansätze per Realtime ohne Reload.
-- [ ] Mitarbeiter (kein Admin) kann anlegen und auf „verbraucht" setzen, aber nicht löschen.
+- [x] Batch rechnen → „Als Ansatz speichern" → Eintrag erscheint sofort im Mise-en-Place-Tab. _(✓ 03.10.2026: Playwright: Batching 10 Portionen × 100 ml → „Als Ansatz“ → Formular vorbelegt (Name, 1000 ml, Haltbarkeit +7 Tage) → Speichern → Eintrag sofort im Tab, DB-Zeile vorhanden; Testdaten entfernt)_
+- [ ] Ein Ansatz mit Ablauf morgen steht in der Warngruppe, einer mit Ablauf gestern in „abgelaufen". _(03.10.2026: Test fehlgeschlagen: Ablauf morgen und gestern landen beide in „Aktiv“, die Gruppen „läuft bald ab“ und „abgelaufen“ werden nie befüllt. Ursache: `render()` in `js/preparations.js` vergleicht `t` (die i18n-Funktion) statt `tage` – `t !== null && t < 0` ist immer false. Nur das Statuswort an der Karte („seit 1 Tag(en) abgelaufen“) stimmt, die Optik `prep-expired`/`prep-soon` gibt es durch die Gruppen ebenfalls nicht)_
+- [ ] Zweiter Browser/Tab sieht neue Ansätze per Realtime ohne Reload. _(03.10.2026: Test fehlgeschlagen: zweiter Browser sah den neuen Ansatz auch nach 8 s nicht. Ursache: Tabelle `preparations` fehlt in der Publikation `supabase_realtime` (ebenso `events`, `inventory_counts`, `inventory_items`); in `schema.sql` steht kein `alter publication … add table public.preparations`)_
+- [x] Mitarbeiter (kein Admin) kann anlegen und auf „verbraucht" setzen, aber nicht löschen. _(✓ 03.10.2026: zweites Konto zz-test-bar (Barkeeper): legt Ansatz an, setzt „verbraucht“, kein Löschen-Button; Delete per Supabase-Client wird von RLS mit 0 Zeilen abgewiesen)_
 
 **Commit:** `Mise en Place: Ansätze mit Haltbarkeit erfassen und überwachen`
 
@@ -619,9 +619,9 @@ Trigger `set_updated_at` anhängen wie bei den anderen Tabellen. Danach `supabas
    Das URL-Hash-Routing ist in `js/tabs.js` bereits vorhanden. **Wenn dafür eine Library nötig wäre: weglassen** und dem Nutzer sagen, dass es fehlt.
 
 **Abnahme**
-- [ ] Druckvorschau zeigt saubere Etiketten ohne Navigationselemente.
-- [ ] Schrift auch bei langen Namen lesbar, kein Überlaufen.
-- [ ] Mehrere Etiketten passen ohne Zerschneiden auf eine Seite.
+- [x] Druckvorschau zeigt saubere Etiketten ohne Navigationselemente. _(✓ 03.10.2026: Playwright, Druckmedium → PDF: nur Etiketten, Kopfzeile/Sidebar/Formular ausgeblendet; Druckdialog selbst nicht prüfbar, kein Augenschein am echten Drucker)_
+- [x] Schrift auch bei langen Namen lesbar, kein Überlaufen. _(✓ 03.10.2026: Name mit 98 Zeichen und lange Notiz: kein Überlauf, 16 px; Hinweis: Name wird nach zwei Zeilen mit „…“ gekürzt, der Rest ist auf dem Etikett nicht lesbar)_
+- [x] Mehrere Etiketten passen ohne Zerschneiden auf eine Seite. _(✓ 03.10.2026: Etikett 70 × 40 mm, 12 pro A4-Seite (2 × 6): 2 Stück = 1 Seite, 14 = 2 Seiten (12 + 2), 30 = 3 Seiten, kein Etikett zerschnitten)_
 
 **Commit:** `Etiketten für Ansätze drucken`
 
