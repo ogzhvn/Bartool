@@ -955,6 +955,28 @@
           <div id="knowledge-ed-departments" class="knowledge-ed-checks"></div>
         </fieldset>
 
+        <fieldset class="knowledge-ed-group">
+          <legend data-i18n="ui.wissen_ed_lernkarte">Lernkarte</legend>
+          <p class="hint" data-i18n="ui.wissen_ed_berufe_hinweis">Keine Auswahl = gilt für alle Berufe.</p>
+          <div id="knowledge-ed-berufe" class="knowledge-ed-checks"></div>
+          <div class="field-row">
+            <label data-i18n="ui.wissen_jahr">
+              Ausbildungsjahr
+              <select id="knowledge-ed-jahr"></select>
+            </label>
+            <label data-i18n="ui.wissen_level">
+              Level
+              <select id="knowledge-ed-level"></select>
+            </label>
+          </div>
+          <label data-i18n="ui.wissen_ed_tags">
+            Tags
+            <input type="text" id="knowledge-ed-tags" maxlength="300" autocomplete="off" />
+          </label>
+          <p class="hint" data-i18n="ui.wissen_ed_tags_hinweis">Mit Komma trennen.</p>
+          <p class="hint" id="knowledge-ed-lernkarte-info" hidden></p>
+        </fieldset>
+
         <div class="photo-field" id="knowledge-ed-photo">
           <p class="photo-field-label" data-i18n="ui.wissen_ed_titelbild">Titelbild</p>
           <div class="photo-preview" id="knowledge-ed-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>

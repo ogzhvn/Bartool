@@ -692,6 +692,7 @@ export function initKnowledge() {
   initKnowledgeEditor({
     categories: KNOWLEDGE_CATEGORIES,
     getDepartments: () => departments,
+    berufe: KNOWLEDGE_BERUFE,
     safeHttpUrl,
     onClose: handleEditorClosed,
   });

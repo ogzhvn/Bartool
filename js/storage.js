@@ -1297,8 +1297,9 @@ export function fromKnowledgeRow(row) {
     departments: Array.isArray(row.departments) ? row.departments : [],
     imagePath: row.image_path ?? null,
     sort: Number(row.sort) || 0,
-    // Lernkarten-Metadaten (Paket 56). Pflege nur per SQL-Import; das
-    // Formular schickt sie nicht mit und lässt sie beim Speichern stehen.
+    // Lernkarten-Metadaten (Paket 56). berufe, jahr, level und tags pflegt der
+    // Editor; slug, lernfeld und pruefung kommen nur per SQL-Import und bleiben
+    // beim Speichern unangetastet (toKnowledgeRecord schickt sie nicht mit).
     slug: row.slug ?? null,
     berufe: Array.isArray(row.berufe) ? row.berufe : [],
     lernfeld: Array.isArray(row.lernfeld) ? row.lernfeld : [],
@@ -1325,6 +1326,10 @@ function toKnowledgeRecord(article) {
     departments: Array.isArray(article.departments) ? article.departments : [],
     image_path: article.imagePath || null,
     sort: Number(article.sort) || 0,
+    berufe: Array.isArray(article.berufe) ? article.berufe : [],
+    jahr: Number.isInteger(article.jahr) ? article.jahr : null,
+    level: article.level || null,
+    tags: Array.isArray(article.tags) ? article.tags : [],
     sources: Array.isArray(article.sources) ? article.sources : [],
     reviewed_at: article.reviewedAt || null,
     reviewed_by: article.reviewedBy?.trim() || null,

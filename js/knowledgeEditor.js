@@ -24,6 +24,11 @@ const titleEl = document.getElementById("knowledge-ed-title");
 const categoryEl = document.getElementById("knowledge-ed-category");
 const summaryEl = document.getElementById("knowledge-ed-summary");
 const departmentsEl = document.getElementById("knowledge-ed-departments");
+const berufeEl = document.getElementById("knowledge-ed-berufe");
+const jahrEl = document.getElementById("knowledge-ed-jahr");
+const levelEl = document.getElementById("knowledge-ed-level");
+const tagsEl = document.getElementById("knowledge-ed-tags");
+const lernkarteInfoEl = document.getElementById("knowledge-ed-lernkarte-info");
 const sectionsEl = document.getElementById("knowledge-ed-sections");
 const sourcesEl = document.getElementById("knowledge-ed-sources");
 const reviewedAtEl = document.getElementById("knowledge-ed-reviewed-at");
@@ -36,7 +41,11 @@ const photoPreviewEl = document.getElementById("knowledge-ed-photo-preview");
 const photoInputEl = document.getElementById("knowledge-ed-photo-input");
 const photoRemoveBtn = document.getElementById("knowledge-ed-photo-remove");
 
-let options = { categories: [], getDepartments: () => [], safeHttpUrl: () => null, onClose: () => {} };
+// Erlaubte Werte spiegeln die CHECK-Constraints von knowledge_articles.
+const JAHRE = [1, 2, 3];
+const LEVELS = ["basis", "aufbau"];
+
+let options = { categories: [], getDepartments: () => [], berufe: [], safeHttpUrl: () => null, onClose: () => {} };
 let state = null; // null = Editor zu
 let baseline = "";
 let previewObjectUrl = null;
@@ -64,6 +73,12 @@ function emptyState() {
     category: options.categories[0] ?? "",
     summary: "",
     departments: [],
+    berufe: [],
+    jahr: "", // "" = keine Angabe, sonst "1".."3" (wie im <select>)
+    level: "",
+    tagsText: "",
+    lernfeld: [],
+    pruefung: [],
     sections: [{ heading: "", text: "" }],
     sources: [],
     reviewedAt: todayIso(),
@@ -83,6 +98,12 @@ function stateFromArticle(article) {
     category: article.category,
     summary: article.summary,
     departments: [...article.departments],
+    berufe: [...(article.berufe ?? [])],
+    jahr: article.jahr ? String(article.jahr) : "",
+    level: article.level ?? "",
+    tagsText: (article.tags ?? []).join(", "),
+    lernfeld: [...(article.lernfeld ?? [])],
+    pruefung: [...(article.pruefung ?? [])],
     sections: article.sections.map((s) => ({ heading: s?.heading ?? "", text: s?.text ?? "" })),
     sources: article.sources.map((s) => ({ label: s?.label ?? "", url: s?.url ?? "", note: s?.note ?? "" })),
     // Ein Entwurf ohne Prüfvermerk bekommt heute + eigenes Konto vorbelegt.
@@ -170,6 +191,56 @@ function renderDepartments() {
       label.append(box, el("span", null, key));
       departmentsEl.appendChild(label);
     });
+}
+
+function checkbox(container, key, label, checked) {
+  const row = el("label", "knowledge-ed-check");
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  box.value = key;
+  box.checked = checked;
+  row.append(box, el("span", null, label));
+  container.appendChild(row);
+}
+
+function renderBerufe() {
+  berufeEl.textContent = "";
+  options.berufe.forEach((beruf) => checkbox(berufeEl, beruf.key, beruf.label, state.berufe.includes(beruf.key)));
+  // Wie bei den Abteilungen: unbekannte Schlüssel nicht still verlieren.
+  const listed = new Set(options.berufe.map((b) => b.key));
+  state.berufe.filter((key) => !listed.has(key)).forEach((key) => checkbox(berufeEl, key, key, true));
+}
+
+function fillSelect(selectEl, entries, value) {
+  selectEl.textContent = "";
+  entries.forEach(([optionValue, label]) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = label;
+    selectEl.appendChild(option);
+  });
+  selectEl.value = value;
+}
+
+function renderLernkarte() {
+  renderBerufe();
+  fillSelect(
+    jahrEl,
+    [["", t("ui.wissen_ed_keine_angabe")], ...JAHRE.map((n) => [String(n), t("ui.wissen_jahr_n", { n })])],
+    state.jahr
+  );
+  fillSelect(
+    levelEl,
+    [["", t("ui.wissen_ed_keine_angabe")], ...LEVELS.map((l) => [l, t(`ui.wissen_level_${l}`)])],
+    state.level
+  );
+  tagsEl.value = state.tagsText;
+  // Lernfeld und Prüfung kommen aus dem SQL-Import und sind hier nur zu sehen.
+  const info = [];
+  if (state.lernfeld.length) info.push(t("ui.wissen_ed_lernfeld", { list: state.lernfeld.join(", ") }));
+  if (state.pruefung.length) info.push(t("ui.wissen_ed_pruefung", { list: state.pruefung.join(", ") }));
+  lernkarteInfoEl.textContent = info.join(" · ");
+  lernkarteInfoEl.hidden = info.length === 0;
 }
 
 function iconButton(iconClass, labelKey, onClick, disabled = false) {
@@ -311,6 +382,7 @@ function renderAll() {
   publishedEl.checked = state.published;
   renderCategories();
   renderDepartments();
+  renderLernkarte();
   renderSections();
   renderSources();
   renderPhoto();
@@ -358,6 +430,20 @@ function cleanedSections() {
     .filter((s) => s.heading || s.text);
 }
 
+// Kommagetrennt → Liste ohne Leereinträge und ohne Dubletten (Groß-/Kleinschreibung egal).
+function parsedTags() {
+  const seen = new Set();
+  return state.tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      const key = tag.toLowerCase();
+      if (!tag || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 // Liefert { sources } oder { error }.
 function cleanedSources() {
   const sources = [];
@@ -402,6 +488,10 @@ function validate() {
       summary: state.summary.trim(),
       sections: cleanedSections(),
       departments: state.departments,
+      berufe: state.berufe,
+      jahr: state.jahr ? Number(state.jahr) : null,
+      level: state.level || null,
+      tags: parsedTags(),
       sort: state.sort,
       sources,
       reviewedAt,
@@ -472,7 +562,7 @@ function cancel() {
 // Verdrahtung
 // ---------------------------------------------------------------------
 
-// options: { categories, getDepartments(), safeHttpUrl(url), onClose(savedId|null) }
+// options: { categories, getDepartments(), berufe: [{ key, label }], safeHttpUrl(url), onClose(savedId|null) }
 export function initKnowledgeEditor(opts) {
   if (!formEl) return;
   options = { ...options, ...opts };
@@ -489,6 +579,13 @@ export function initKnowledgeEditor(opts) {
   departmentsEl.addEventListener("change", () => {
     state.departments = [...departmentsEl.querySelectorAll("input:checked")].map((box) => box.value);
   });
+
+  berufeEl.addEventListener("change", () => {
+    state.berufe = [...berufeEl.querySelectorAll("input:checked")].map((box) => box.value);
+  });
+  jahrEl.addEventListener("change", () => (state.jahr = jahrEl.value));
+  levelEl.addEventListener("change", () => (state.level = levelEl.value));
+  tagsEl.addEventListener("input", () => (state.tagsText = tagsEl.value));
 
   document.getElementById("knowledge-ed-add-section").addEventListener("click", () => {
     state.sections.push({ heading: "", text: "" });
@@ -528,6 +625,7 @@ export function initKnowledgeEditor(opts) {
   onLanguageChanged(() => {
     if (!state) return;
     headingEl.textContent = state.id ? t("ui.wissen_ed_artikel_bearbeiten") : t("ui.wissen_neuer_artikel");
+    renderLernkarte();
     renderSections();
     renderSources();
   });
