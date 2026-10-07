@@ -6,7 +6,8 @@ import { t } from "./i18n.js";
 // Bild auch mit bekannter URL nicht abrufbar.
 //
 // Pfadschema: produkte/<uuid>.jpg für Produktfotos, rezepte/<uuid>.jpg für
-// Rezeptfotos (Paket 31, Aufbau- und Garniturbild teilen sich den Ordner).
+// Rezeptfotos (Paket 31, Aufbau- und Garniturbild teilen sich den Ordner),
+// wissen/<uuid>.jpg für das Titelbild eines Wissensartikels (Paket 55).
 // Nie der Name im Pfad, sonst bricht jede Umbenennung das Bild.
 import { getSupabaseClient } from "./supabaseClient.js";
 import { can } from "./auth.js";
@@ -52,10 +53,14 @@ function resizeToJpeg(file) {
 }
 
 // Welches Recht ein Bild braucht, entscheidet der Ordner: Produktfotos
-// hängen an products.write, Rezeptfotos an recipes.write. Genauso steht es in
-// den Storage-Policies (Paket 36) – hier wird nur derselbe Schnitt gespiegelt.
+// hängen an products.write, Rezeptfotos an recipes.write, Wissensbilder an
+// knowledge.write. Genauso steht es in den Storage-Policies (Paket 36/53) –
+// hier wird nur derselbe Schnitt gespiegelt.
 function fotoRecht(folderOrPath) {
-  return String(folderOrPath).split("/")[0] === "rezepte" ? "recipes.write" : "products.write";
+  const folder = String(folderOrPath).split("/")[0];
+  if (folder === "rezepte") return "recipes.write";
+  if (folder === "wissen") return "knowledge.write";
+  return "products.write";
 }
 
 // Lädt ein Handyfoto verkleinert in den angegebenen Ordner hoch und gibt den
@@ -100,6 +105,14 @@ export function uploadRecipePhoto(file) {
 }
 
 export function deleteRecipePhoto(path) {
+  return deletePhoto(path);
+}
+
+export function uploadKnowledgePhoto(file) {
+  return uploadPhoto(file, "wissen");
+}
+
+export function deleteKnowledgePhoto(path) {
   return deletePhoto(path);
 }
 

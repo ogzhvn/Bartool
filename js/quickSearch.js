@@ -2,13 +2,15 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { getAllProducts } from "./productLibrary.js";
 import { focusRecipe } from "./recipes.js";
 import { focusProduct } from "./products.js";
+import { focusKnowledge } from "./knowledge.js";
+import { loadKnowledge } from "./storage.js";
 import { switchTab } from "./tabs.js";
 import { closeMobileNav } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
 import { canSee } from "./auth.js";
 import { getLocale, t } from "./i18n.js";
 
-// Globale Suche über Rezepte und Produkte in einem Fenster.
+// Globale Suche über Rezepte, Produkte und Wissensartikel in einem Fenster.
 //
 // Die beiden Bibliotheken haben je eine eigene Suche, aber wer hinterm Tresen
 // schnell etwas nachschlägt, weiß oft gar nicht, ob der Begriff ein Rezept
@@ -67,10 +69,27 @@ function sucheTreffer(suchbegriff) {
     suchbegriff
   ).slice(0, MAX_PRO_GRUPPE);
 
+  // Wissen: nur Veröffentlichtes – auch wer Entwürfe pflegen darf, sucht hier
+  // nur, was alle lesen können. Entwürfe stehen im Modul selbst.
+  const wissen = sortiereNachRelevanz(
+    loadKnowledge()
+      .filter(
+        (a) =>
+          a.published &&
+          (passt(a.title, suchbegriff) ||
+            passt(a.category, suchbegriff) ||
+            passt(a.summary, suchbegriff) ||
+            a.sections.some((s) => passt(s?.heading, suchbegriff) || passt(s?.text, suchbegriff)))
+      )
+      .map((a) => ({ art: "knowledge", id: a.id, name: a.title, zusatz: a.category })),
+    suchbegriff
+  ).slice(0, MAX_PRO_GRUPPE);
+
   // Nur in Module springen, die die Abteilung sieht (Paket 51).
   return {
     rezepte: canSee("recipes") ? rezepte : [],
     produkte: canSee("products") ? produkte : [],
+    wissen: canSee("knowledge") ? wissen : [],
   };
 }
 
@@ -99,8 +118,8 @@ function render() {
     return;
   }
 
-  const { rezepte, produkte } = sucheTreffer(suchbegriff);
-  treffer = [...rezepte, ...produkte];
+  const { rezepte, produkte, wissen } = sucheTreffer(suchbegriff);
+  treffer = [...rezepte, ...produkte, ...wissen];
 
   if (treffer.length === 0) {
     markiert = -1;
@@ -117,6 +136,10 @@ function render() {
   if (produkte.length > 0) {
     html += `<h4 class="quick-search-group">${t("ui.produkte")}</h4>`;
     html += produkte.map((e) => zeileHtml(e, index++)).join("");
+  }
+  if (wissen.length > 0) {
+    html += `<h4 class="quick-search-group">${t("ui.wissen")}</h4>`;
+    html += wissen.map((e) => zeileHtml(e, index++)).join("");
   }
   resultsEl.innerHTML = html;
 
@@ -143,6 +166,8 @@ function auswaehlen(index) {
   if (eintrag.art === "recipe") {
     switchTab("recipes");
     focusRecipe(eintrag.name);
+  } else if (eintrag.art === "knowledge") {
+    focusKnowledge(eintrag.id);
   } else {
     switchTab("products");
     focusProduct(eintrag.name);

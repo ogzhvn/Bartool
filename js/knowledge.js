@@ -1,7 +1,21 @@
 import { getSupabaseClient } from "./supabaseClient.js";
-import { myDepartment } from "./auth.js";
-import { loadKnowledge, loadKnowledgeReads, markKnowledgeRead, onKnowledgeChanged } from "./storage.js";
-import { resolveImageUrl } from "./photos.js";
+import { can, myDepartment } from "./auth.js";
+import {
+  deleteKnowledge,
+  loadKnowledge,
+  loadKnowledgeReads,
+  markKnowledgeRead,
+  onKnowledgeChanged,
+} from "./storage.js";
+import { deleteKnowledgePhoto, resolveImageUrl } from "./photos.js";
+import { switchTab } from "./tabs.js";
+import {
+  confirmDiscardKnowledgeEdits,
+  discardKnowledgeEditor,
+  initKnowledgeEditor,
+  isKnowledgeEditorOpen,
+  openKnowledgeEditor,
+} from "./knowledgeEditor.js";
 import { printKnowledge } from "./printView.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
@@ -13,6 +27,9 @@ import { formatDate, onLanguageChanged, t } from "./i18n.js";
 //
 // Der Abteilungsfilter ist Kosmetik, kein Zugriffsschutz: lesen dürfen alle
 // angemeldeten Konten (RLS), Entwürfe nur mit knowledge.write.
+//
+// Pflege (Paket 55): Anlegen, Bearbeiten, Veröffentlichen und Löschen steckt in
+// js/knowledgeEditor.js und hängt an knowledge.write.
 //
 // Titel, Texte, Quellen und Prüfvermerk sind Nutzereingaben. Alles wird
 // deshalb per DOM-Erzeugung und textContent gesetzt, nie als HTML.
@@ -39,6 +56,7 @@ const chipsEl = document.getElementById("knowledge-categories");
 const listEl = document.getElementById("knowledge-list");
 const listViewEl = document.getElementById("knowledge-list-view");
 const detailEl = document.getElementById("knowledge-detail");
+const newBtn = document.getElementById("knowledge-new");
 
 let departments = [];
 let activeCategory = "";
@@ -315,6 +333,17 @@ function renderDetail(article) {
   print.type = "button";
   print.dataset.action = "print";
   toolbar.append(back, print);
+  if (can("knowledge.write")) {
+    const edit = el("button", "btn-secondary", t("ui.bearbeiten"));
+    edit.type = "button";
+    edit.dataset.action = "edit";
+    edit.dataset.perm = "knowledge.write";
+    const remove = el("button", "btn-secondary knowledge-delete", t("ui.loeschen"));
+    remove.type = "button";
+    remove.dataset.action = "delete";
+    remove.dataset.perm = "knowledge.write";
+    toolbar.append(edit, remove);
+  }
   detailEl.appendChild(toolbar);
 
   const meta = el("div", "knowledge-card-head");
@@ -374,6 +403,48 @@ function showList() {
   listViewEl.hidden = false;
 }
 
+// Auf dem Weg in den Editor: Liste und Detail weg, offener Artikel bleibt
+// gemerkt, damit "Abbrechen" dorthin zurückführt.
+function hideForEditor() {
+  detailRenderToken += 1;
+  listViewEl.hidden = true;
+  detailEl.hidden = true;
+}
+
+function startEditing(article) {
+  if (!openKnowledgeEditor(article)) return;
+  hideForEditor();
+}
+
+// Editor ist zu: bei Speichern den Artikel zeigen, sonst dorthin zurück, wo
+// der Weg begann.
+function handleEditorClosed(savedId) {
+  if (savedId) {
+    openArticle(savedId);
+    return;
+  }
+  const article = openArticleId ? loadKnowledge().find((a) => a.id === openArticleId) : null;
+  if (article) openArticle(article.id);
+  else showList();
+}
+
+async function handleDelete() {
+  const article = loadKnowledge().find((a) => a.id === openArticleId);
+  if (!article || !can("knowledge.write")) return;
+  if (!confirm(t("ui.wissen_loeschen_bestaetigen", { title: article.title }))) return;
+  try {
+    await deleteKnowledge(article.id);
+  } catch (error) {
+    statusMessage = error?.message || t("ui.wissen_loeschen_fehler");
+    renderDetail(article);
+    return;
+  }
+  // Der Artikel ist weg; das Titelbild gehört zu keinem mehr.
+  if (article.imagePath) await deleteKnowledgePhoto(article.imagePath).catch(() => {});
+  showList();
+  render();
+}
+
 function openArticle(id) {
   const article = loadKnowledge().find((a) => a.id === id);
   if (!article) return;
@@ -385,6 +456,17 @@ function openArticle(id) {
   detailEl.scrollIntoView?.({ block: "start" });
 }
 
+// Sprung aus der globalen Suche: Tab wechseln, Artikel öffnen. Ungespeicherte
+// Änderungen im Editor werden vorher bestätigt.
+export function focusKnowledge(id) {
+  if (isKnowledgeEditorOpen()) {
+    if (!confirmDiscardKnowledgeEdits()) return;
+    discardKnowledgeEditor();
+  }
+  switchTab("knowledge");
+  openArticle(id);
+}
+
 // ---------------------------------------------------------------------
 // Zusammenspiel
 // ---------------------------------------------------------------------
@@ -393,7 +475,8 @@ function render() {
   renderDepartmentFilter();
   renderChips();
   renderList();
-  if (openArticleId) {
+  // Offenes Formular nicht durch Realtime/Sprachwechsel anfassen.
+  if (openArticleId && !isKnowledgeEditorOpen()) {
     const article = loadKnowledge().find((a) => a.id === openArticleId);
     if (article) renderDetail(article);
     else showList();
@@ -405,7 +488,8 @@ function render() {
 function refresh() {
   renderChips();
   renderList();
-  if (openArticleId) {
+  // Offenes Formular nicht durch Realtime/Sprachwechsel anfassen.
+  if (openArticleId && !isKnowledgeEditorOpen()) {
     const article = loadKnowledge().find((a) => a.id === openArticleId);
     if (article) renderDetail(article);
     else showList();
@@ -449,6 +533,10 @@ export function initKnowledge() {
     if (!button) return;
     if (button.dataset.action === "back") showList();
     else if (button.dataset.action === "read") handleMarkRead();
+    else if (button.dataset.action === "edit") {
+      const article = loadKnowledge().find((a) => a.id === openArticleId);
+      if (article) startEditing(article);
+    } else if (button.dataset.action === "delete") handleDelete();
     else if (button.dataset.action === "print") {
       const article = loadKnowledge().find((a) => a.id === openArticleId);
       if (article) {
@@ -469,6 +557,14 @@ export function initKnowledge() {
         });
       }
     }
+  });
+
+  newBtn.addEventListener("click", () => startEditing(null));
+  initKnowledgeEditor({
+    categories: KNOWLEDGE_CATEGORIES,
+    getDepartments: () => departments,
+    safeHttpUrl,
+    onClose: handleEditorClosed,
   });
 
   onKnowledgeChanged(refresh);

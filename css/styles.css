@@ -3892,13 +3892,148 @@ input[type="datetime-local"] {
   margin-top: 1.2rem;
 }
 
+/* Pflege (Paket 55) */
+
+.knowledge-admin-actions {
+  margin: 0 0 0.8rem;
+}
+
+.knowledge-admin-actions .btn-primary {
+  min-height: 44px;
+}
+
+.knowledge-delete {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.knowledge-editor {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.knowledge-editor[hidden] {
+  display: none;
+}
+
+.knowledge-editor h3 {
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.knowledge-editor input[type="text"],
+.knowledge-editor input[type="date"],
+.knowledge-editor select,
+.knowledge-editor textarea {
+  min-height: 44px;
+}
+
+.knowledge-editor textarea {
+  resize: vertical;
+}
+
+.knowledge-ed-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.knowledge-ed-group legend {
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.knowledge-ed-group .hint {
+  margin: 0;
+}
+
+.knowledge-ed-group > .btn-secondary {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+.knowledge-ed-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+
+.knowledge-ed-check {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.knowledge-ed-check input {
+  width: 22px;
+  height: 22px;
+}
+
+.knowledge-ed-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  margin-bottom: 0.7rem;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.knowledge-ed-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.knowledge-ed-row-tools {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.knowledge-ed-icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.knowledge-ed-actions {
+  margin: 0;
+}
+
+.knowledge-ed-actions .btn-primary,
+.knowledge-ed-actions .btn-secondary {
+  min-height: 44px;
+}
+
 @media (max-width: 700px) {
   .knowledge-list {
     grid-template-columns: 1fr;
   }
 
   .knowledge-toolbar .btn-secondary,
-  .knowledge-detail > .btn-primary {
+  .knowledge-detail > .btn-primary,
+  .knowledge-admin-actions .btn-primary,
+  .knowledge-ed-actions .btn-primary,
+  .knowledge-ed-actions .btn-secondary {
     flex: 1 1 100%;
   }
 }

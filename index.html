@@ -894,6 +894,10 @@
       <div id="knowledge-list-view">
         <p class="hint" data-i18n="ui.wissen_hinweis">Schulungen und Hintergrundwissen für alle Outlets: Produkte, Serviceabläufe, Standards. Artikel lesen und als gelesen markieren.</p>
 
+        <div class="actions knowledge-admin-actions">
+          <button type="button" id="knowledge-new" class="btn-primary" data-perm="knowledge.write" hidden data-i18n="ui.wissen_neuer_artikel">Neuer Artikel</button>
+        </div>
+
         <div class="field-row knowledge-filters">
           <input type="text" id="knowledge-search" placeholder="Titel oder Text suchen…" data-i18n-placeholder="ui.wissen_suche_placeholder" data-i18n-aria-label="ui.wissen_suche_placeholder" aria-label="Titel oder Text suchen…" autocomplete="off" />
           <label data-i18n="ui.wissen_abteilung">
@@ -911,6 +915,85 @@
       </div>
 
       <article id="knowledge-detail" class="knowledge-detail" hidden></article>
+
+      <!-- Editor: Sichtbarkeit steuert js/knowledgeEditor.js über can("knowledge.write"), nicht data-perm (das würde ihn beim Rechte-Update wieder einblenden). -->
+      <form id="knowledge-editor" class="knowledge-editor" hidden novalidate>
+        <h3 id="knowledge-ed-heading"></h3>
+        <p class="hint" data-i18n="ui.wissen_editor_hinweis">Entwürfe sieht nur, wer Wissen pflegen darf. Veröffentlichen geht erst mit mindestens einer Quelle und einem Prüfvermerk.</p>
+
+        <div class="field-row">
+          <label data-i18n="ui.wissen_ed_titel">
+            Titel
+            <input type="text" id="knowledge-ed-title" maxlength="200" autocomplete="off" />
+          </label>
+          <label data-i18n="ui.kategorie">
+            Kategorie
+            <select id="knowledge-ed-category"></select>
+          </label>
+        </div>
+
+        <label data-i18n="ui.wissen_ed_kurztext">
+          Kurztext
+          <textarea id="knowledge-ed-summary" rows="2"></textarea>
+        </label>
+
+        <fieldset class="knowledge-ed-group">
+          <legend data-i18n="ui.wissen_ed_abteilungen">Gilt für Abteilungen</legend>
+          <p class="hint" data-i18n="ui.wissen_ed_abteilungen_hinweis">Keine Auswahl = gilt für alle. Reine Kosmetik für den Filter, kein Zugriffsschutz.</p>
+          <div id="knowledge-ed-departments" class="knowledge-ed-checks"></div>
+        </fieldset>
+
+        <div class="photo-field" id="knowledge-ed-photo">
+          <p class="photo-field-label" data-i18n="ui.wissen_ed_titelbild">Titelbild</p>
+          <div class="photo-preview" id="knowledge-ed-photo-preview"><i class="ph ph-image" aria-hidden="true"></i></div>
+          <div class="photo-field-actions">
+            <label class="btn-secondary photo-upload-label" data-i18n="ui.foto_waehlen">
+              Foto wählen
+              <input type="file" id="knowledge-ed-photo-input" accept="image/*" hidden />
+            </label>
+            <button type="button" id="knowledge-ed-photo-remove" class="btn-secondary" hidden data-i18n="ui.foto_entfernen">Foto entfernen</button>
+          </div>
+        </div>
+
+        <fieldset class="knowledge-ed-group">
+          <legend data-i18n="ui.wissen_ed_abschnitte">Abschnitte</legend>
+          <p class="hint" data-i18n="ui.wissen_ed_abschnitte_hinweis">Leerzeile = neuer Absatz, Zeile mit „- “ am Anfang = Listenpunkt. Kein HTML, keine Formatierung.</p>
+          <div id="knowledge-ed-sections"></div>
+          <button type="button" id="knowledge-ed-add-section" class="btn-secondary" data-i18n="ui.wissen_ed_abschnitt_hinzufuegen">Abschnitt hinzufügen</button>
+        </fieldset>
+
+        <fieldset class="knowledge-ed-group">
+          <legend data-i18n="ui.wissen_quellen">Quellen</legend>
+          <p class="hint" data-i18n="ui.wissen_ed_quellen_hinweis">Bezeichnung Pflicht; Link nur bei Quellen im Netz (http/https), bei Hausstandards leer lassen.</p>
+          <div id="knowledge-ed-sources"></div>
+          <button type="button" id="knowledge-ed-add-source" class="btn-secondary" data-i18n="ui.wissen_ed_quelle_hinzufuegen">Quelle hinzufügen</button>
+        </fieldset>
+
+        <fieldset class="knowledge-ed-group">
+          <legend data-i18n="ui.wissen_ed_pruefvermerk">Prüfvermerk</legend>
+          <div class="field-row">
+            <label data-i18n="ui.wissen_ed_geprueft_am">
+              Geprüft am
+              <input type="date" id="knowledge-ed-reviewed-at" />
+            </label>
+            <label data-i18n="ui.wissen_ed_geprueft_von">
+              Geprüft von
+              <input type="text" id="knowledge-ed-reviewed-by" maxlength="120" autocomplete="off" />
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="knowledge-unread-toggle">
+          <input type="checkbox" id="knowledge-ed-published" />
+          <span data-i18n="ui.wissen_ed_veroeffentlicht">Veröffentlicht (für alle sichtbar)</span>
+        </label>
+
+        <p id="knowledge-ed-error" class="error-note" role="alert" hidden></p>
+        <div class="actions knowledge-ed-actions">
+          <button type="submit" id="knowledge-ed-save" class="btn-primary" data-i18n="ui.speichern">Speichern</button>
+          <button type="button" id="knowledge-ed-cancel" class="btn-secondary" data-i18n="ui.abbrechen">Abbrechen</button>
+        </div>
+      </form>
     </section>
 
     <!-- KARTENKALKULATION -->
@@ -1963,6 +2046,7 @@
                 <option value="" data-i18n="ui.alle">Alle</option>
                 <option value="recipes" data-i18n="ui.rezepte">Rezepte</option>
                 <option value="products" data-i18n="ui.produkte">Produkte</option>
+                <option value="knowledge_articles" data-i18n="ui.wissen">Wissen</option>
                 <option value="profiles" data-i18n="ui.konten">Konten</option>
               </select>
             </label>

@@ -18,7 +18,12 @@ let entriesCache = [];
 let trashCache = [];
 
 // Erst beim Rendern übersetzt, damit ein Sprachwechsel ohne Neuladen wirkt.
-const TABLE_LABEL_KEYS = { recipes: "ui.rezept", products: "ui.produkt", profiles: "ui.konto" };
+const TABLE_LABEL_KEYS = {
+  recipes: "ui.rezept",
+  products: "ui.produkt",
+  profiles: "ui.konto",
+  knowledge_articles: "ui.wissen",
+};
 const ACTION_LABEL_KEYS = { insert: "ui.angelegt", update: "ui.geaendert", delete: "ui.geloescht" };
 
 // Rein technische Felder, die bei praktisch jeder Änderung mitlaufen und
@@ -63,7 +68,7 @@ export function istWiederherstellbar(entry) {
 
 function entryLabel(entry) {
   const data = entry.new_data ?? entry.old_data ?? {};
-  return data.name ?? data.email ?? "";
+  return data.name ?? data.title ?? data.email ?? "";
 }
 
 async function loadAuditLog() {
