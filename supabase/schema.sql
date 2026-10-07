@@ -58,6 +58,7 @@ insert into public.permissions (key, label_key, group_key, sort) values
   ('products.write',      'perm.products.write',      'inhalte',    20),
   ('requests.review',     'perm.requests.review',     'inhalte',    30),
   ('quiz.manage',         'perm.quiz.manage',         'inhalte',    40),
+  ('knowledge.write',     'perm.knowledge.write',     'inhalte',    50),
   ('inventory.manage',    'perm.inventory.manage',    'betrieb',    10),
   ('preparations.manage', 'perm.preparations.manage', 'betrieb',    20),
   ('events.manage',       'perm.events.manage',       'betrieb',    30),
@@ -90,7 +91,7 @@ on conflict do nothing;
 insert into public.role_permissions (role_key, permission_key)
 select 'stellv_barchef', key from public.permissions
 where key in ('recipes.write', 'products.write', 'requests.review',
-              'inventory.manage', 'preparations.manage', 'events.manage',
+              'knowledge.write', 'inventory.manage', 'preparations.manage', 'events.manage',
               'checklists.manage', 'shiftlog.manage', 'losses.manage',
               'reports.view', 'audit.view')
 on conflict do nothing;
@@ -1909,6 +1910,182 @@ exception
 end $$;
 
 -- ---------------------------------------------------------------------
+-- Schulungen & Wissen (Paket 53)
+-- ---------------------------------------------------------------------
+-- Artikel für alle Outlets (Bar, WGR, Tellerwerk). Lesen für alle
+-- Angemeldeten, Entwürfe und Schreiben nur mit knowledge.write. Das Recht
+-- selbst steht oben im Rechtekatalog (barchef über die Gesamtzuweisung,
+-- stellv_barchef in der Liste).
+
+-- Qualitätsregel für veröffentlichte Artikel: mindestens eine Quelle, jede
+-- Quelle ein Objekt mit nicht-leerem label. Als Funktion, weil ein
+-- CHECK-Constraint keine Unterabfrage enthalten darf.
+create or replace function private.knowledge_sources_ok(p_sources jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(p_sources) = 'array'
+     and jsonb_array_length(p_sources) > 0
+     and not exists (
+       select 1
+         from jsonb_array_elements(p_sources) as e (quelle)
+        where jsonb_typeof(e.quelle) <> 'object'
+           or coalesce(btrim(e.quelle ->> 'label'), '') = ''
+     );
+$$;
+
+create table if not exists public.knowledge_articles (
+  id uuid primary key default gen_random_uuid(),
+  title text not null unique,
+  category text not null,
+  summary text,
+  -- [{heading, text}]; im Text: Leerzeile = Absatz, "- " = Listenpunkt.
+  -- Gerendert per DOM/textContent, nie als HTML.
+  sections jsonb not null default '[]'::jsonb,
+  -- Leer = gilt für alle Abteilungen. Nur Filter, kein Zugriffsschutz.
+  departments text[] not null default '{}',
+  -- Titelbild im Bucket "bilder", Schema wissen/<uuid>.jpg.
+  image_path text,
+  sort int not null default 0,
+  -- [{label, url?, note?}]; url entfällt bei Hausstandards.
+  sources jsonb not null default '[]'::jsonb,
+  reviewed_at date,
+  reviewed_by text,
+  published boolean not null default false,
+  created_by uuid default auth.uid() references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint knowledge_articles_sections_array check (jsonb_typeof(sections) = 'array'),
+  constraint knowledge_articles_sources_array check (jsonb_typeof(sources) = 'array'),
+  -- Die Qualitätsregel gilt in der Datenbank, nicht nur im Formular:
+  -- veröffentlicht wird nur mit Quelle und Prüfvermerk.
+  constraint knowledge_articles_published_geprueft check (
+    not published
+    or (
+      private.knowledge_sources_ok(sources)
+      and reviewed_at is not null
+      and coalesce(btrim(reviewed_by), '') <> ''
+    )
+  )
+);
+
+create index if not exists knowledge_articles_created_by_idx
+  on public.knowledge_articles (created_by);
+
+alter table public.knowledge_articles enable row level security;
+
+drop trigger if exists knowledge_articles_set_updated_at on public.knowledge_articles;
+create trigger knowledge_articles_set_updated_at
+  before update on public.knowledge_articles
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists knowledge_articles_audit on public.knowledge_articles;
+create trigger knowledge_articles_audit
+  after insert or update or delete on public.knowledge_articles
+  for each row execute function public.log_audit();
+
+-- Veröffentlichte Artikel für alle Angemeldeten, Entwürfe nur mit knowledge.write.
+drop policy if exists "knowledge_articles: lesen" on public.knowledge_articles;
+create policy "knowledge_articles: lesen"
+  on public.knowledge_articles for select to authenticated
+  using (published or private.has_permission('knowledge.write'));
+
+drop policy if exists "knowledge_articles: knowledge.write legt an" on public.knowledge_articles;
+create policy "knowledge_articles: knowledge.write legt an"
+  on public.knowledge_articles for insert to authenticated
+  with check (private.has_permission('knowledge.write'));
+
+drop policy if exists "knowledge_articles: knowledge.write aendert" on public.knowledge_articles;
+create policy "knowledge_articles: knowledge.write aendert"
+  on public.knowledge_articles for update to authenticated
+  using (private.has_permission('knowledge.write'))
+  with check (private.has_permission('knowledge.write'));
+
+drop policy if exists "knowledge_articles: knowledge.write loescht" on public.knowledge_articles;
+create policy "knowledge_articles: knowledge.write loescht"
+  on public.knowledge_articles for delete to authenticated
+  using (private.has_permission('knowledge.write'));
+
+-- Gelesen-Status je Konto. Jeder sieht nur die eigenen Zeilen – auch Admins
+-- (Muster quiz_attempts). Eine Auswertung für die Leitung gibt es bewusst nicht.
+create table if not exists public.knowledge_reads (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  article_id uuid not null references public.knowledge_articles (id) on delete cascade,
+  read_at timestamptz not null default now(),
+  primary key (user_id, article_id)
+);
+
+create index if not exists knowledge_reads_article_idx
+  on public.knowledge_reads (article_id);
+
+-- read_at ist immer Serverzeit: die Oberfläche vergleicht es mit
+-- knowledge_articles.updated_at ("Aktualisiert seit dem Lesen"), eine falsch
+-- gehende Geräteuhr darf das nicht verfälschen.
+create or replace function private.knowledge_reads_set_read_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.read_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists knowledge_reads_set_read_at on public.knowledge_reads;
+create trigger knowledge_reads_set_read_at
+  before insert or update on public.knowledge_reads
+  for each row execute function private.knowledge_reads_set_read_at();
+
+alter table public.knowledge_reads enable row level security;
+
+drop policy if exists "knowledge_reads: eigene lesen" on public.knowledge_reads;
+create policy "knowledge_reads: eigene lesen"
+  on public.knowledge_reads for select to authenticated
+  using (user_id = (select auth.uid()));
+
+drop policy if exists "knowledge_reads: eigene anlegen" on public.knowledge_reads;
+create policy "knowledge_reads: eigene anlegen"
+  on public.knowledge_reads for insert to authenticated
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "knowledge_reads: eigene aendern" on public.knowledge_reads;
+create policy "knowledge_reads: eigene aendern"
+  on public.knowledge_reads for update to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "knowledge_reads: eigene loeschen" on public.knowledge_reads;
+create policy "knowledge_reads: eigene loeschen"
+  on public.knowledge_reads for delete to authenticated
+  using (user_id = (select auth.uid()));
+
+grant select, insert, update, delete on public.knowledge_articles, public.knowledge_reads to authenticated;
+revoke all on public.knowledge_articles, public.knowledge_reads from anon;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.knowledge_articles;
+exception
+  when duplicate_object then null;
+end $$;
+
+-- Modul "Wissen" für alle drei Abteilungen. Bewusst ein eigener Seed und
+-- nicht Teil der "nur wenn Abteilung leer"-Startbelegung oben: dort sind die
+-- Abteilungen längst belegt, "Wissen" käme nie an. Live ist er einmalig per
+-- Migration gelaufen (knowledge_reads_module_paket53). Hier nur, solange
+-- noch keine Abteilung einen "knowledge"-Eintrag hat – sonst schaltet ein
+-- erneuter Lauf im Admin abgewählte Module wieder ein.
+insert into public.department_modules (department_key, module_key)
+select d.key, 'knowledge'
+  from public.departments d
+ where d.key in ('bar', 'wgr', 'tellerwerk')
+   and not exists (select 1 from public.department_modules dm where dm.module_key = 'knowledge')
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------
 -- Produktfotos: privater Storage-Bucket, Zugriff nur über signierte URLs
 -- ---------------------------------------------------------------------
 -- Bewusst kein öffentlicher Bucket: Bilder sollen nicht ohne Login abrufbar
@@ -1933,6 +2110,7 @@ create policy "bilder: fotorecht schreibt"
     and (
       (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
       or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+      or (split_part(name, '/', 1) = 'wissen' and private.has_permission('knowledge.write'))
     )
   );
 
@@ -1945,6 +2123,7 @@ create policy "bilder: fotorecht aktualisiert"
     and (
       (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
       or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+      or (split_part(name, '/', 1) = 'wissen' and private.has_permission('knowledge.write'))
     )
   )
   with check (
@@ -1952,6 +2131,7 @@ create policy "bilder: fotorecht aktualisiert"
     and (
       (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
       or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+      or (split_part(name, '/', 1) = 'wissen' and private.has_permission('knowledge.write'))
     )
   );
 
@@ -1964,6 +2144,7 @@ create policy "bilder: fotorecht loescht"
     and (
       (split_part(name, '/', 1) = 'produkte' and private.has_permission('products.write'))
       or (split_part(name, '/', 1) = 'rezepte' and private.has_permission('recipes.write'))
+      or (split_part(name, '/', 1) = 'wissen' and private.has_permission('knowledge.write'))
     )
   );
 

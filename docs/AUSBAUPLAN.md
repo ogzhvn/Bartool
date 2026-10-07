@@ -318,7 +318,7 @@ Tellerwerk), nicht nur für die Bar.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 53 | Datenmodell Wissen, Recht, Modul-Registrierung | offen | Opus 5.5, hoher Denkaufwand |
+| 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
@@ -2880,13 +2880,44 @@ Oberfläche außer einem leeren Tab.
 7. `storage.js` nach dem Datentyp-Muster (Offline-Cache wie `recipes`).
 
 **Abnahme**
-- [ ] Migration live, `schema.sql` bildet beide Tabellen, Policies, Recht und Seeds ab.
-- [ ] Veröffentlichen ohne Quelle bzw. ohne Prüfvermerk schlägt per SQL fehl (Constraint).
-- [ ] Per SQL in zurückgerollter Transaktion: Konto ohne `knowledge.write` kann nicht schreiben und
-      sieht keine Entwürfe; mit Recht kann es beides.
-- [ ] Konto A sieht keine `knowledge_reads`-Zeilen von Konto B (auch nicht als Admin).
-- [ ] Rechte-Matrix im Admin zeigt „Wissen pflegen"; Abteilungs-Matrix zeigt Modul „Wissen".
-- [ ] `get_advisors` (Security) ohne neue Warnungen.
+- [x] Migration live, `schema.sql` bildet beide Tabellen, Policies, Recht und Seeds ab. _(✓ 07.10.2026:
+      Migrationen `knowledge_write_recht_paket53`, `knowledge_sources_ok_paket53`,
+      `knowledge_articles_tabelle_paket53`, `knowledge_articles_trigger_policies_paket53`,
+      `knowledge_reads_module_paket53`, `bilder_wissen_policies_paket53`, `knowledge_reads_server_zeit_paket53`)_
+- [x] Veröffentlichen ohne Quelle bzw. ohne Prüfvermerk schlägt per SQL fehl (Constraint). _(✓ 07.10.2026:
+      abgelehnt ohne Quelle, ohne Prüfvermerk, mit Quelle ohne `label`, mit leerem `reviewed_by`, und
+      beim Entfernen der Quellen eines veröffentlichten Artikels)_
+- [x] Per SQL in zurückgerollter Transaktion: Konto ohne `knowledge.write` kann nicht schreiben und
+      sieht keine Entwürfe; mit Recht kann es beides. _(✓ 07.10.2026: Barkeeper sieht 1 von 2 Artikeln,
+      Insert abgelehnt, Update trifft 0 Zeilen, Upload nach `wissen/` abgelehnt; Admin sieht 2, Insert,
+      Update und Upload gehen. Delete nicht einzeln geprüft – gleiche Policy-Bedingung wie Insert/Update)_
+- [x] Konto A sieht keine `knowledge_reads`-Zeilen von Konto B (auch nicht als Admin). _(✓ 07.10.2026:
+      Azubi sieht nur die eigene, ändert fremde nicht; Admin sieht 0 von 2; fremde `user_id` beim Insert
+      abgelehnt)_
+- [x] Rechte-Matrix im Admin zeigt „Wissen pflegen"; Abteilungs-Matrix zeigt Modul „Wissen". _(✓ 07.10.2026:
+      im Browser mit `claude-test`, „Wissen" bei Bar, WGR und Tellerwerk angehakt)_
+- [x] `get_advisors` (Security) ohne neue Warnungen. _(✓ 07.10.2026: dieselben 8 + 1 Warnungen wie vor der
+      Migration)_
+
+**Umsetzungsnotizen (07.10.2026)**
+- Kein leerer Tab: `index.html` und UI bleiben laut Auftrag Paket 54 vorbehalten, ebenso der Aufruf von
+  `initKnowledgeSync()` in `js/main.js`. Das Modul steht schon in `js/modules.js` und `department_modules`.
+- Constraint strenger als geplant: jede Quelle muss ein Objekt mit nicht-leerem `label` sein
+  (`private.knowledge_sources_ok()`), `reviewed_by` darf nicht nur aus Leerzeichen bestehen.
+- `knowledge_reads.read_at` setzt ein Trigger immer auf Serverzeit, damit der Vergleich mit
+  `updated_at` nicht an einer falsch gehenden Tablet-Uhr hängt. `markKnowledgeRead()` schickt nur die
+  `article_id`.
+- Offline-Puffer (`bartool:knowledge`) enthält nur veröffentlichte Artikel, der Gelesen-Status gar
+  nicht im localStorage – am geteilten Tablet sähe sonst das nächste Konto Entwürfe bzw. fremden Status.
+- `saveKnowledge()` speichert über die `id` (Titel ist änderbar) und gibt den Artikel samt `id` zurück
+  (für das Titelbild in Paket 55). `knowledge_articles` hängt an `supabase_realtime`.
+- Seed in `schema.sql` nur, solange noch keine Abteilung einen `knowledge`-Eintrag hat; live lief er
+  einmalig per Migration.
+- Storage-Policies live per `alter policy` erweitert (kein Drop/Create), Inhalt identisch zu
+  `schema.sql`.
+- Werkzeug-Hinweis: Das Supabase-MCP hält Statements mit `drop`/`delete` zur Bestätigung zurück und
+  läuft nach 60 s in einen Timeout, ohne etwas anzuwenden. Migrationen für neue Objekte deshalb ohne
+  `drop ... if exists`, Änderungen bestehender Policies per `alter policy`.
 
 **Commit:** `Wissen: Datenmodell, Recht knowledge.write, Modul-Registrierung`
 

@@ -42,6 +42,7 @@ export const MODULES = [
   { key: "recipes", group: "bibliothek", sort: 10, labelKey: "ui.rezepte" },
   { key: "products", group: "bibliothek", sort: 20, labelKey: "ui.produkte" },
   { key: "quiz", group: "bibliothek", sort: 30, labelKey: "ui.quiz" },
+  { key: "knowledge", group: "bibliothek", sort: 40, labelKey: "ui.wissen" },
 ];
 
 export function moduleLabel(key) {

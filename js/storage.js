@@ -11,6 +11,7 @@ const LOSSES_UPDATED_EVENT = "bartool:losses-updated";
 const CHECKLIST_TEMPLATES_UPDATED_EVENT = "bartool:checklist-templates-updated";
 const CHECKLIST_RUNS_UPDATED_EVENT = "bartool:checklist-runs-updated";
 const QUIZ_QUESTIONS_UPDATED_EVENT = "bartool:quiz-questions-updated";
+const KNOWLEDGE_UPDATED_EVENT = "bartool:knowledge-updated";
 
 let recipesCache = [];
 let productsCache = [];
@@ -21,6 +22,8 @@ let lossesCache = [];
 let checklistTemplatesCache = [];
 let checklistRunsCache = [];
 let quizQuestionsCache = [];
+let knowledgeCache = [];
+let knowledgeReadsCache = new Map();
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
@@ -30,6 +33,7 @@ let lossesChannel = null;
 let checklistTemplatesChannel = null;
 let checklistRunsChannel = null;
 let quizQuestionsChannel = null;
+let knowledgeChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -50,6 +54,7 @@ const LOSSES_CACHE_KEY = "bartool:losses";
 const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
 const QUIZ_QUESTIONS_CACHE_KEY = "bartool:quiz-questions";
+const KNOWLEDGE_CACHE_KEY = "bartool:knowledge";
 
 function readCache(key) {
   try {
@@ -1266,4 +1271,159 @@ export async function reloadQuizQuestions() {
 
 export function onQuizQuestionsChanged(callback) {
   window.addEventListener(QUIZ_QUESTIONS_UPDATED_EVENT, callback);
+}
+
+// ---------------------------------------------------------------------
+// Wissen (Tabellen "knowledge_articles" und "knowledge_reads", Paket 53)
+//
+// Artikel nach dem Muster der Rezepte, mit zwei Besonderheiten:
+//
+//   1. Der Offline-Puffer enthält nur veröffentlichte Artikel. localStorage
+//      gehört dem Gerät, nicht dem Konto – am geteilten Tresen-Tablet sähe
+//      sonst das nächste Konto offline die Entwürfe der Barleitung, die ihm
+//      die Datenbank (RLS) gerade nicht zeigt.
+//   2. Der Gelesen-Status ist pro Konto und landet aus demselben Grund gar
+//      nicht im localStorage, nur im Speicher. read_at setzt die Datenbank
+//      (Serverzeit, Trigger), damit der Vergleich mit updated_at stimmt.
+// ---------------------------------------------------------------------
+
+export function fromKnowledgeRow(row) {
+  return {
+    id: row.id,
+    title: row.title ?? "",
+    category: row.category ?? "",
+    summary: row.summary ?? "",
+    sections: Array.isArray(row.sections) ? row.sections : [],
+    departments: Array.isArray(row.departments) ? row.departments : [],
+    imagePath: row.image_path ?? null,
+    sort: Number(row.sort) || 0,
+    sources: Array.isArray(row.sources) ? row.sources : [],
+    reviewedAt: row.reviewed_at ?? null,
+    reviewedBy: row.reviewed_by ?? "",
+    published: row.published === true,
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+  };
+}
+
+function toKnowledgeRecord(article) {
+  return {
+    title: (article.title ?? "").trim(),
+    category: (article.category ?? "").trim(),
+    summary: article.summary?.trim() || null,
+    sections: Array.isArray(article.sections) ? article.sections : [],
+    departments: Array.isArray(article.departments) ? article.departments : [],
+    image_path: article.imagePath || null,
+    sort: Number(article.sort) || 0,
+    sources: Array.isArray(article.sources) ? article.sources : [],
+    reviewed_at: article.reviewedAt || null,
+    reviewed_by: article.reviewedBy?.trim() || null,
+    published: article.published === true,
+  };
+}
+
+async function refreshKnowledge() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase
+      .from("knowledge_articles")
+      .select("*")
+      .order("category")
+      .order("sort")
+      .order("title"));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    knowledgeCache = (data ?? []).map(fromKnowledgeRow);
+    writeCache(KNOWLEDGE_CACHE_KEY, knowledgeCache.filter((a) => a.published));
+  } else {
+    const buffered = readCache(KNOWLEDGE_CACHE_KEY);
+    if (buffered) knowledgeCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(KNOWLEDGE_UPDATED_EVENT));
+}
+
+async function refreshKnowledgeReads() {
+  const supabase = getSupabaseClient();
+  try {
+    const { data, error } = await supabase.from("knowledge_reads").select("article_id, read_at");
+    if (error) throw error;
+    knowledgeReadsCache = new Map((data ?? []).map((row) => [row.article_id, row.read_at]));
+  } catch {
+    // Kein Netz: bekannten Stand behalten, nichts erfinden.
+  }
+  window.dispatchEvent(new CustomEvent(KNOWLEDGE_UPDATED_EVENT));
+}
+
+export async function initKnowledgeSync() {
+  const buffered = readCache(KNOWLEDGE_CACHE_KEY);
+  if (buffered) {
+    knowledgeCache = buffered;
+    window.dispatchEvent(new CustomEvent(KNOWLEDGE_UPDATED_EVENT));
+  }
+  // Nach einem Kontowechsel darf kein fremder Gelesen-Status stehen bleiben.
+  knowledgeReadsCache = new Map();
+  await Promise.all([refreshKnowledge(), refreshKnowledgeReads()]);
+  const supabase = getSupabaseClient();
+  if (knowledgeChannel) supabase.removeChannel(knowledgeChannel);
+  knowledgeChannel = supabase
+    .channel("public:knowledge_articles")
+    .on("postgres_changes", { event: "*", schema: "public", table: "knowledge_articles" }, refreshKnowledge)
+    .subscribe();
+}
+
+export function loadKnowledge() {
+  return knowledgeCache;
+}
+
+// Neu ohne id, sonst Update über die id (der Titel ist änderbar). Gibt den
+// gespeicherten Artikel zurück – das Titelbild (wissen/<uuid>.jpg) braucht
+// die id eines neuen Artikels. Ein Veröffentlichen ohne Quelle oder
+// Prüfvermerk lehnt die Datenbank ab (CHECK-Constraint), nicht nur das Formular.
+export async function saveKnowledge(article) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const record = toKnowledgeRecord(article);
+  const query = article.id
+    ? supabase.from("knowledge_articles").update(record).eq("id", article.id)
+    : supabase.from("knowledge_articles").insert(record);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  await refreshKnowledge();
+  return fromKnowledgeRow(data);
+}
+
+export async function deleteKnowledge(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("knowledge_articles").delete().eq("id", id);
+  if (error) throw error;
+  await refreshKnowledge();
+}
+
+// Map article_id -> read_at (ISO-String) des angemeldeten Kontos.
+export function loadKnowledgeReads() {
+  return knowledgeReadsCache;
+}
+
+export async function markKnowledgeRead(articleId) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  // user_id setzt die Datenbank (default auth.uid()), read_at der Trigger.
+  const { data, error } = await supabase
+    .from("knowledge_reads")
+    .upsert({ article_id: articleId }, { onConflict: "user_id,article_id" })
+    .select("article_id, read_at")
+    .single();
+  if (error) throw error;
+  knowledgeReadsCache.set(data.article_id, data.read_at);
+  window.dispatchEvent(new CustomEvent(KNOWLEDGE_UPDATED_EVENT));
+}
+
+export function onKnowledgeChanged(callback) {
+  window.addEventListener(KNOWLEDGE_UPDATED_EVENT, callback);
 }
