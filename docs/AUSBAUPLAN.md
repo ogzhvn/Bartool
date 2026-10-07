@@ -3088,6 +3088,38 @@ Suchtreffers.
 
 **Commit:** `Wissen: Inhalte <Thema> (Entwurf/Freigabe)`
 
+**Schreibregeln (07.10.2026)**
+
+Vorgabe des Nutzers. Zielgruppe: alle Mitarbeitenden in Bar, WGR und Tellerwerk – auch Azubis und
+Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu lang und zu kompliziert.
+- **Einfache Sprache:** kurze Sätze (ein Gedanke pro Satz), aktiv, Alltagswörter. Fachwörter, die man
+  an der Bar braucht (z. B. Agraffe, Moussierpunkt, degorgieren), beim ersten Vorkommen in einem
+  Halbsatz erklären.
+- **Abkürzungen:** beim ersten Vorkommen ausschreiben, Abkürzung in Klammern – z. B. „Weinverordnung
+  (WeinV)", „Deutsches Weininstitut (DWI)". Ab drei Abkürzungen zusätzlich eine kurze Liste
+  „Abkürzungen" im Abschnitt „Quellen und Stand".
+- **Allgemein und praxisnah:** Was muss ich am Gast tun und wissen, was fragt ein Gast? Keine
+  Paragraphenketten und Verweis-Ketten ins EU-Recht im Text. Rechtliches nur als Ergebnis
+  („Crémant darf nur heißen, was …"), Fundstelle kurz in Klammern („(§ 34a WeinV)").
+- **Wortlaut-Zitate** nur, wo die genaue Formulierung zählt (geschützte Bezeichnungen, Grenzwerte wie
+  Zuckergehalte), und kurz. Sonst in eigenen einfachen Worten mit Quellenangabe in Klammern, z. B. „(DWI)".
+- **Umfang:** Ziel max. ca. 5.000 Zeichen für alle Abschnitte zusammen, höchstens 7 Abschnitte,
+  lieber Listen als Fließtext.
+- **Aufbau:**
+  1. „Das Wichtigste in Kürze" – 3 bis 5 Punkte, die man sich merken muss.
+  2. Praxisabschnitte (z. B. Lagern und Kühlen, Öffnen, Einschenken).
+  3. Wissen für Gästefragen (z. B. Bezeichnungen, Geschmacksangaben – gern als Liste/Tabelle in Textform).
+  4. „Hausstandard A-ROSA Travemünde (offen)" – höchstens 6 Fragen an die Barleitung.
+  5. „Quellen und Stand" – kurz: Stand-Datum, Status „Entwurf, noch nicht von der Barleitung
+     geprüft", ggf. „Keine Rechtsberatung", Abkürzungen, offene/widersprüchliche Punkte in je
+     einer Zeile. Geprüfte Fassungen und „nicht abgerufen" gehören in die `note` der Quellen, nicht in
+     den Text.
+- **Verweise** auf andere Artikel in einer Zeile „Siehe auch: …" statt langer „Nicht hier"-Listen.
+- **„Auslegung:" und „Unklar:"** bleiben als Marker, aber je ein kurzer Satz.
+- **Fachliche Strenge bleibt unverändert:** Jede Aussage muss auf eine abgerufene Quelle rückführbar
+  sein, nichts aus dem Gedächtnis, Hausstandards nicht erfinden (Regel 6). Was nicht im Text steht,
+  gehört in den Abschlussbericht an den Nutzer: eine Liste Aussage → Quelle → Fundstelle/Wortlaut.
+
 ---
 
 ## Nachprüfung der offenen Abnahmepunkte (03.10.2026)
