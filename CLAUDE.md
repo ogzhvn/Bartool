@@ -174,9 +174,9 @@ sonst als Faustregel nach Art der Aufgabe, nicht nach Paketnummer:
 
 | Art der Aufgabe | Modell | Denkaufwand |
 |---|---|---|
-| Schema-/RLS-Umbau, neue Datenart, mehrere Module gleichzeitig, Datenimport, Redesign | Opus 5 | hoch |
-| Ein Modul nach vorhandenem Muster, liest überwiegend vorhandene Daten, Auswertungs-/Anzeigeseiten | Sonnet 5 | mittel |
-| Textausbau vieler Produkte nach festem Raster (Massenänderung per Skript/SQL) | Sonnet 5 | niedrig |
+| Schema-/RLS-Umbau, neue Datenart, mehrere Module gleichzeitig, Datenimport, Redesign | Opus 5.5 | hoch |
+| Ein Modul nach vorhandenem Muster, liest überwiegend vorhandene Daten, Auswertungs-/Anzeigeseiten | Sonnet 5.5 | mittel |
+| Textausbau vieler Produkte nach festem Raster (Massenänderung per Skript/SQL) | Sonnet 5.5 | niedrig |
 | Kleinkram: Tippfehler, CSS-Detail, eine einzelne Funktion, Cache-Bump | Haiku 4.5 | niedrig |
 
 Bei Grenzfällen das teurere Modell nennen: eine falsche Schema-Migration kostet
