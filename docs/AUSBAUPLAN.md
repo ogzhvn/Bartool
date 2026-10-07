@@ -180,11 +180,11 @@ Template-Strings – die Mehrsprachigkeit aus Paket 32/33 wird nicht wieder aufg
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5, mittlerer Denkaufwand |
-| 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5, hoher Denkaufwand |
-| 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5, hoher Denkaufwand |
-| 37 | Reporting unter Admin + Betrieb & Team | erledigt | Sonnet 5, mittlerer Denkaufwand |
-| 38 | Kontenverwaltung ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
+| 34 | Adminbereich als Gruppe mit Submenü | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 35 | Rollenmodell: Rollen, Rechte, Rangfolge (DB) | erledigt | Opus 5.5, hoher Denkaufwand |
+| 36 | Rechte-Matrix im Adminbereich + Durchsetzung | erledigt | Opus 5.5, hoher Denkaufwand |
+| 37 | Reporting unter Admin + Betrieb & Team | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
+| 38 | Kontenverwaltung ausbauen | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 
 ### Runde 6 – Quiz-Ausbau (geplant am 10.09.2026)
 
@@ -201,14 +201,14 @@ an `onLanguageChanged()`. Produkt- und Rezeptinhalte bleiben deutsch.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 39 | Wein und Direktprodukte ins Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
-| 40 | Sichtbarkeit in Heatmap und Rangliste | erledigt | Opus 5, hoher Denkaufwand |
-| 41 | Rangliste im Quiz | erledigt | Opus 5, mittlerer Denkaufwand |
-| 42 | Fragen ausbauen | erledigt | Sonnet 5, mittlerer Denkaufwand |
-| 43 | Schwierigkeitsranking der Fragen | erledigt | Opus 5, hoher Denkaufwand |
-| 44 | Datenpflege: Bier und Mixer & Softdrink | erledigt | Opus 5, mittlerer Denkaufwand |
-| 45 | Datenpflege: Sirup, Saft, Fruchtpüree | erledigt | Opus 5, mittlerer Denkaufwand |
-| 46 | Datenpflege: Tee & Kaffee, Sonstiges | erledigt | Opus 5, mittlerer Denkaufwand |
+| 39 | Wein und Direktprodukte ins Quiz | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 40 | Sichtbarkeit in Heatmap und Rangliste | erledigt | Opus 5.5, hoher Denkaufwand |
+| 41 | Rangliste im Quiz | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 42 | Fragen ausbauen | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
+| 43 | Schwierigkeitsranking der Fragen | erledigt | Opus 5.5, hoher Denkaufwand |
+| 44 | Datenpflege: Bier und Mixer & Softdrink | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 45 | Datenpflege: Sirup, Saft, Fruchtpüree | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 46 | Datenpflege: Tee & Kaffee, Sonstiges | erledigt | Opus 5.5, mittlerer Denkaufwand |
 
 ### Runde 7 – Pflege über Tabellen (laufend)
 
@@ -217,9 +217,9 @@ Pflege über Tabellen statt über Formulare.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 47 | Katalogtabelle im Adminbereich: Anzeige (Etappe 1) | erledigt | Opus 5, hoher Denkaufwand |
-| 48 | Quizfragen als Datenbankeinträge + Fragentabelle | erledigt | Opus 5, hoher Denkaufwand |
-| 49 | Bearbeiten in der Zelle (Etappe 2, beide Tabellen gemeinsam) | erledigt | Opus 5, hoher Denkaufwand |
+| 47 | Katalogtabelle im Adminbereich: Anzeige (Etappe 1) | erledigt | Opus 5.5, hoher Denkaufwand |
+| 48 | Quizfragen als Datenbankeinträge + Fragentabelle | erledigt | Opus 5.5, hoher Denkaufwand |
+| 49 | Bearbeiten in der Zelle (Etappe 2, beide Tabellen gemeinsam) | erledigt | Opus 5.5, hoher Denkaufwand |
 
 **Paket 48 im Kern:** Der Generator (`js/quizGenerator.js`) baute seine Fragen bis dahin
 bei jeder Runde neu im Browser – sie waren deshalb nicht zu korrigieren und nicht
@@ -270,9 +270,9 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 50 | Datenmodell Abteilungen + `canSee()` | erledigt | Opus 5, hoher Denkaufwand |
-| 51 | Navigation nach Abteilung filtern | erledigt | Opus 5, mittlerer Denkaufwand |
-| 52 | Admin: Abteilungen, Matrix, Konten | erledigt | Sonnet 5, mittlerer Denkaufwand |
+| 50 | Datenmodell Abteilungen + `canSee()` | erledigt | Opus 5.5, hoher Denkaufwand |
+| 51 | Navigation nach Abteilung filtern | erledigt | Opus 5.5, mittlerer Denkaufwand |
+| 52 | Admin: Abteilungen, Matrix, Konten | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 
 ---
 
@@ -318,10 +318,10 @@ Tellerwerk), nicht nur für die Bar.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 53 | Datenmodell Wissen, Recht, Modul-Registrierung | offen | Opus 5, hoher Denkaufwand |
-| 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | offen | Sonnet 5, mittlerer Denkaufwand |
-| 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 53 | Datenmodell Wissen, Recht, Modul-Registrierung | offen | Opus 5.5, hoher Denkaufwand |
+| 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ---
 
@@ -1642,7 +1642,7 @@ bleiben bewusst deutsch, ebenso der ganze Produktkatalog (Backlog Runde 5).
 
 **Abhängigkeit:** keine. Muss vor 35–38 laufen, weil es den Ort schafft, an dem die
 folgenden Pakete landen.
-**Modell:** Opus 5, mittlerer Denkaufwand. Viele Dateien gleichzeitig, aber keine kniffligen
+**Modell:** Opus 5.5, mittlerer Denkaufwand. Viele Dateien gleichzeitig, aber keine kniffligen
 Entscheidungen – die Struktur steht unten, es ist sorgfältiges Umbauen.
 
 **Ziel:** Der Admin-Tab ist heute ein einziges Panel (`<section id="admin">` in `index.html`)
@@ -1736,7 +1736,7 @@ gegen einen Stub-Client durchgeklickt.
 # Paket 35 – Rollenmodell: Rollen, Rechte, Rangfolge (DB)
 
 **Abhängigkeit:** Paket 34.
-**Modell:** Opus 5, hoher Denkaufwand. Enum-Umbau an einer Spalte, an der jede RLS-Policy
+**Modell:** Opus 5.5, hoher Denkaufwand. Enum-Umbau an einer Spalte, an der jede RLS-Policy
 hängt, plus eine Edge Function. Fehler hier sperren Konten aus – kein Paket zum Nebenbei.
 
 **Ziel:** Statt des zweiwertigen `user_role`-Enums (`admin` | `mitarbeiter`) und der einen
@@ -1876,7 +1876,7 @@ wie in Paket 34 gegen einen Stub-Client durchgeklickt (Rollenliste, Vorbelegung
 # Paket 36 – Rechte-Matrix im Adminbereich + Durchsetzung
 
 **Abhängigkeit:** Paket 35.
-**Modell:** Opus 5, hoher Denkaufwand. Das größte Paket der Runde: rund 15 Policies und
+**Modell:** Opus 5.5, hoher Denkaufwand. Das größte Paket der Runde: rund 15 Policies und
 etwa ebenso viele `isAdmin()`-Fundstellen in zehn Modulen, jeweils Datenbank und Oberfläche
 im Gleichschritt.
 
@@ -2040,7 +2040,7 @@ Paket 35 für `azubi` schon zurückgestellt hat, und gehört in ein eigenes Pake
 
 **Abhängigkeit:** Paket 34 (Ort), 36 (`reports.view`), 18 (Checklisten), 17 (Übergabe),
 27 (Quiz-Auswertung), 9 (Ansätze), 29 (bestehende Reporting-Kacheln).
-**Modell:** Sonnet 5, mittlerer Denkaufwand. Ein Tab-Umzug und weitere Kacheln nach einem
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand. Ein Tab-Umzug und weitere Kacheln nach einem
 Muster, das in `js/reporting.js` schon steht – Fleißarbeit, keine Architekturfrage.
 
 **Ziel:** Reporting liegt im Adminbereich statt als eigener Hauptpunkt, und beantwortet
@@ -2113,7 +2113,7 @@ Punkte oben bitte einmal im Browser mit einem eingeschränkten Testkonto nachpr�
 # Paket 38 – Kontenverwaltung ausbauen
 
 **Abhängigkeit:** Paket 36.
-**Modell:** Sonnet 5, mittlerer Denkaufwand. Klar umrissene Einzelfunktionen, eine kleine
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand. Klar umrissene Einzelfunktionen, eine kleine
 Migration, keine offenen Entwurfsfragen.
 
 **Ziel:** Der Sub-Tab `admin-users` reicht für den Saisonbetrieb: Konten kommen und gehen,
@@ -2237,7 +2237,7 @@ Keine Schemaänderung.
 
 **Commit:** `Quiz: Wein und Direktprodukte als Fragenquelle`
 
-**Modell:** Opus 5, mittlerer Denkaufwand – drei Module gleichzeitig plus eine Massendatenänderung
+**Modell:** Opus 5.5, mittlerer Denkaufwand – drei Module gleichzeitig plus eine Massendatenänderung
 in DB und statischer Datei. Kein Schema-Umbau, deshalb nicht „hoch".
 
 **Startprompt fürs neue Fenster**
@@ -2322,7 +2322,7 @@ Rangliste stehen.
 
 **Commit:** `Quiz-Auswertung: Sichtbarkeit pro Person und Rolle`
 
-**Modell:** Opus 5, hoher Denkaufwand – Schema, RLS und zwei SECURITY-DEFINER-Funktionen.
+**Modell:** Opus 5.5, hoher Denkaufwand – Schema, RLS und zwei SECURITY-DEFINER-Funktionen.
 Ein Fehler kostet hier entweder Datenschutz oder eine falsch gesperrte Kontenverwaltung.
 
 **Startprompt fürs neue Fenster**
@@ -2401,7 +2401,7 @@ genau deshalb gibt sie nur Summen je Person heraus.
 
 **Commit:** `Quiz: Rangliste für das Team`
 
-**Modell:** Opus 5, mittlerer Denkaufwand – eine RPC mit Sichtbarkeitsregel, Zeitfenster und
+**Modell:** Opus 5.5, mittlerer Denkaufwand – eine RPC mit Sichtbarkeitsregel, Zeitfenster und
 Rängen in einem Statement, der Rest ist Anzeige nach vorhandenem Muster.
 
 **Startprompt fürs neue Fenster**
@@ -2478,9 +2478,9 @@ neuen Datenbestand.
 
 **Commit:** `Quiz: neue Fragetypen aus Produkt- und Rezeptfeldern`
 
-**Modell:** Sonnet 5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest
 ausschließlich vorhandene Daten. Nur die Schritte 6 und 7 brechen aus dem `baueFrage()`-Muster
-aus; hakt es dort, für dieses Teilstück auf Opus 5 wechseln.
+aus; hakt es dort, für dieses Teilstück auf Opus 5.5 wechseln.
 
 **Startprompt fürs neue Fenster**
 ```
@@ -2557,7 +2557,7 @@ danach **nirgends ausgewertet**. Der Wert ist heute reine Dekoration.
 
 **Commit:** `Quiz: gemessene Schwierigkeit je Frage`
 
-**Modell:** Opus 5, hoher Denkaufwand – RPC mit zwei Schutzschwellen, eine Kalibrierung, die in
+**Modell:** Opus 5.5, hoher Denkaufwand – RPC mit zwei Schutzschwellen, eine Kalibrierung, die in
 den Generator zurückgreift, und die Key-zu-Text-Rekonstruktion. Drei Stellen, an denen ein
 falscher Kurzschluss lange unbemerkt bleibt.
 
@@ -2653,7 +2653,7 @@ schlimmer als gar keine Frage.
 **Commits:** `Produktdaten: Bier und Softdrinks`, `Produktdaten: Sirup, Saft, Fruchtpüree`,
 `Produktdaten: Tee, Kaffee und Sonstiges`
 
-**Modell:** Opus 5, mittlerer Denkaufwand für Recherche, Zuordnung und den Abgleich gegen die
+**Modell:** Opus 5.5, mittlerer Denkaufwand für Recherche, Zuordnung und den Abgleich gegen die
 Quelle – Regel 6 ist hier scharf, und ein kleineres Modell füllt Lücken erfahrungsgemäß mit
 Plausiblem. Steht die Tabelle und ist sie abgenommen, reicht für das reine Erzeugen der
 `UPDATE`-Statements und des Skripts für `js/productsData.js` Haiku 4.5, niedriger Denkaufwand.
@@ -2693,7 +2693,7 @@ Quiz-Code, Dark Theme und Layout-Grundgerüst.
 # Paket 50 – Datenmodell Abteilungen + `canSee()`
 
 **Abhängigkeit:** keine (Rollenmodell aus Paket 35/36 ist da).
-**Modell:** Opus 5, hoher Denkaufwand – Migration, RLS und eine Änderung in `auth.js`, auf der
+**Modell:** Opus 5.5, hoher Denkaufwand – Migration, RLS und eine Änderung in `auth.js`, auf der
 51 und 52 aufbauen. Eine falsche Migration kostet mehr als eine Session auf Opus.
 
 **Ziel:** Jedes Konto gehört zu einer Abteilung, und der Client weiß synchron, welche Module diese
@@ -2746,7 +2746,7 @@ nötig. Abteilung ohne Zeilen = nur Start sichtbar; Abfrage fehlgeschlagen = all
 # Paket 51 – Navigation nach Abteilung filtern
 
 **Abhängigkeit:** Paket 50.
-**Modell:** Opus 5, mittlerer Denkaufwand – berührt mehrere Module gleichzeitig (Grenzfall, daher
+**Modell:** Opus 5.5, mittlerer Denkaufwand – berührt mehrere Module gleichzeitig (Grenzfall, daher
 das teurere Modell).
 
 **Ziel:** Wer in WGR oder Tellerwerk arbeitet, sieht nur Start, Rezepte, Produkte und Quiz – in der
@@ -2789,7 +2789,7 @@ Seitenleiste, auf der Startseite, in der Suche und per Deep-Link.
 # Paket 52 – Admin: Abteilungen, Matrix, Konten
 
 **Abhängigkeit:** Paket 50 und 51.
-**Modell:** Sonnet 5, mittlerer Denkaufwand – ein neuer Sub-Tab nach vorhandenem Muster
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – ein neuer Sub-Tab nach vorhandenem Muster
 (`adminRoles.js`), plus ein Feld im Kontenformular.
 
 **Ziel:** Der Admin legt Abteilungen an, schaltet pro Abteilung Module ein und aus und ordnet
@@ -2838,7 +2838,7 @@ nicht – nicht erweitert, nur notiert.
 # Paket 53 – Datenmodell Wissen, Recht, Modul-Registrierung
 
 **Abhängigkeit:** Runde 8 (Pakete 50–52) ist da.
-**Modell:** Opus 5, hoher Denkaufwand – neue Datenart, Migration, RLS, neues Recht, Eingriff in
+**Modell:** Opus 5.5, hoher Denkaufwand – neue Datenart, Migration, RLS, neues Recht, Eingriff in
 `department_modules`. Eine falsche Migration kostet mehr als eine Session auf Opus.
 
 **Ziel:** Datenbank, Rechtekatalog und Modulkatalog kennen „Wissen". Noch keine sichtbare
@@ -2895,7 +2895,7 @@ Oberfläche außer einem leeren Tab.
 # Paket 54 – Modul Wissen: Liste, Filter, Detail, Gelesen-Status
 
 **Abhängigkeit:** Paket 53.
-**Modell:** Sonnet 5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest nur.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest nur.
 
 **Ziel:** Jedes Konto findet Artikel, liest sie und markiert sie als gelesen.
 
@@ -2936,7 +2936,7 @@ Oberfläche außer einem leeren Tab.
 # Paket 55 – Wissen pflegen: Editor, Titelbild, Verlauf, Suche
 
 **Abhängigkeit:** Paket 54.
-**Modell:** Sonnet 5, mittlerer Denkaufwand – Editor nach Muster von `recipes.js`/`ingredientEditor.js`.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – Editor nach Muster von `recipes.js`/`ingredientEditor.js`.
 
 **Ziel:** Wer `knowledge.write` hat, legt Artikel an, bearbeitet sie, veröffentlicht und löscht sie.
 
@@ -2973,7 +2973,7 @@ Oberfläche außer einem leeren Tab.
 
 **Abhängigkeit:** Paket 53 (Datenmodell); sinnvoll nach 55. Entwürfe können per `INSERT` direkt in
 `knowledge_articles` (Regel 7), nie in eine JS-Datei.
-**Modell:** Opus 5, hoher Denkaufwand – Recherche und Fachgenauigkeit zählen mehr als Tempo.
+**Modell:** Opus 5.5, hoher Denkaufwand – Recherche und Fachgenauigkeit zählen mehr als Tempo.
 **Arbeitsweise:** pro Session **ein Thema** (ein Artikel oder eine kleine Gruppe), danach Freigabe
 durch den Nutzer; nie mehrere Themen in einem Rutsch.
 
