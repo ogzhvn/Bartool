@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__Supabase__execute_sql"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
