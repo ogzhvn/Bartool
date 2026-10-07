@@ -3710,6 +3710,8 @@ input[type="datetime-local"] {
 
 .knowledge-filters select {
   min-height: 44px;
+  /* Lange Berufsnamen dürfen das Feld nicht über den Rand schieben. */
+  max-width: 100%;
 }
 
 .knowledge-unread-toggle {
@@ -4027,6 +4029,15 @@ input[type="datetime-local"] {
 @media (max-width: 700px) {
   .knowledge-list {
     grid-template-columns: 1fr;
+  }
+
+  .knowledge-filters > label:not(.knowledge-unread-toggle) {
+    flex: 1 1 calc(50% - 0.8rem);
+    min-width: 0;
+  }
+
+  .knowledge-filters select {
+    width: 100%;
   }
 
   .knowledge-toolbar .btn-secondary,

@@ -35,9 +35,29 @@ import { formatDate, onLanguageChanged, t } from "./i18n.js";
 // deshalb per DOM-Erzeugung und textContent gesetzt, nie als HTML.
 
 // Feste Kategorien in Anzeigereihenfolge. Die Namen bleiben deutsch
-// (Fachinhalt, Regel 11). Kategorien, die nur in den Daten vorkommen,
-// hängen hinten an.
+// (Fachinhalt, Regel 11). Zuerst die Kategorien des Lernkarten-Themenkatalogs
+// (Paket 56, Reihenfolge laut Themenliste), dahinter die älteren Kategorien
+// der Schulungsartikel. Kategorien, die nur in den Daten vorkommen, hängen
+// hinten an.
 export const KNOWLEDGE_CATEGORIES = [
+  "Gastgeberrolle & Kommunikation",
+  "Serviceablauf & Servierarten",
+  "Gastraum, Mise en place & Eindecken",
+  "Speisen- & Menükunde",
+  "Ernährungsformen, Allergene & Kennzeichnung",
+  "Alkoholfreie Getränke",
+  "Kaffee & Tee",
+  "Bier",
+  "Wein & Schaumwein",
+  "Spirituosen",
+  "Bar & Mixology",
+  "Warenwirtschaft & Lager",
+  "Kalkulation, Kasse & Zahlung",
+  "Hygiene & Lebensmittelrecht",
+  "Arbeitssicherheit, Gesundheit & Nachhaltigkeit",
+  "Recht & Betriebsorganisation",
+  "Veranstaltungen & Bankett",
+  "Team, Führung & Ausbildung",
   "Produktwissen",
   "Service & Abläufe",
   "Getränkekunde",
@@ -46,12 +66,25 @@ export const KNOWLEDGE_CATEGORIES = [
   "Sonstiges",
 ];
 
+// Ausbildungsberufe der Lernkarten (Spalte berufe). Amtliche Bezeichnungen,
+// deshalb wie die Kategorien nur deutsch.
+export const KNOWLEDGE_BERUFE = [
+  { key: "fg", label: "Fachkraft für Gastronomie" },
+  { key: "frv", label: "Fachmann/-frau für Restaurants und Veranstaltungsgastronomie" },
+  { key: "hofa", label: "Hotelfachmann/-frau" },
+];
+const KNOWLEDGE_JAHRE = [1, 2, 3];
+const KNOWLEDGE_LEVELS = ["basis", "aufbau"];
+
 const FILTER_OWN = "own";
 const FILTER_ALL = "all";
 
 const searchEl = document.getElementById("knowledge-search");
 const departmentEl = document.getElementById("knowledge-department");
 const unreadEl = document.getElementById("knowledge-unread");
+const berufEl = document.getElementById("knowledge-beruf");
+const jahrEl = document.getElementById("knowledge-jahr");
+const levelEl = document.getElementById("knowledge-level");
 const chipsEl = document.getElementById("knowledge-categories");
 const listEl = document.getElementById("knowledge-list");
 const listViewEl = document.getElementById("knowledge-list-view");
@@ -61,6 +94,10 @@ const newBtn = document.getElementById("knowledge-new");
 let departments = [];
 let activeCategory = "";
 let departmentFilter = null;
+// "" = alle. Jahr als String, wie es aus dem <select> kommt.
+let berufFilter = "";
+let jahrFilter = "";
+let levelFilter = "";
 let openArticleId = null;
 let statusMessage = "";
 let detailRenderToken = 0;
@@ -96,9 +133,20 @@ function readState(article) {
   return "gelesen";
 }
 
+// Rang einer Kategorie: feste Reihenfolge, unbekannte dahinter.
+function categoryRank(category) {
+  const index = KNOWLEDGE_CATEGORIES.indexOf(category);
+  return index === -1 ? KNOWLEDGE_CATEGORIES.length : index;
+}
+
 function sortedArticles() {
   return [...loadKnowledge()].sort(
-    (a, b) => a.sort - b.sort || a.title.localeCompare(b.title, "de", { sensitivity: "base" })
+    (a, b) =>
+      categoryRank(a.category) - categoryRank(b.category) ||
+      (categoryRank(a.category) === KNOWLEDGE_CATEGORIES.length &&
+        a.category.localeCompare(b.category, "de", { sensitivity: "base" })) ||
+      a.sort - b.sort ||
+      a.title.localeCompare(b.title, "de", { sensitivity: "base" })
   );
 }
 
@@ -109,9 +157,20 @@ function matchesDepartment(article) {
   return key ? article.departments.includes(key) : true;
 }
 
+// Leeres berufe = gilt für alle Berufe (wie departments). Jahr und Level
+// zählen nur, wo sie gesetzt sind: bei aktivem Filter fallen Artikel ohne
+// Angabe heraus. Offline-Puffer älterer Stände kennt die Felder evtl. nicht.
+function matchesMeta(article) {
+  const berufe = article.berufe ?? [];
+  if (berufFilter && berufe.length > 0 && !berufe.includes(berufFilter)) return false;
+  if (jahrFilter && article.jahr !== Number(jahrFilter)) return false;
+  if (levelFilter && article.level !== levelFilter) return false;
+  return true;
+}
+
 function matchesSearch(article, query) {
   if (!query) return true;
-  const parts = [article.title, article.summary, article.category];
+  const parts = [article.title, article.summary, article.category, ...(article.tags ?? [])];
   article.sections.forEach((section) => {
     parts.push(section?.heading ?? "", section?.text ?? "");
   });
@@ -124,6 +183,7 @@ function visibleArticles() {
   return sortedArticles().filter((article) => {
     if (activeCategory && article.category !== activeCategory) return false;
     if (!matchesDepartment(article)) return false;
+    if (!matchesMeta(article)) return false;
     if (!matchesSearch(article, query)) return false;
     if (onlyUnread && !["neu", "aktualisiert"].includes(readState(article))) return false;
     return true;
@@ -204,6 +264,29 @@ function departmentsText(article) {
     : t("ui.wissen_gilt_fuer", { list: article.departments.map(departmentLabel).join(", ") });
 }
 
+function berufLabel(key) {
+  return KNOWLEDGE_BERUFE.find((b) => b.key === key)?.label ?? key;
+}
+
+// "Für: <Berufe> · 1. Ausbildungsjahr · Basis" – leer ohne Lernkarten-Daten.
+function lernkarteText(article) {
+  const parts = [];
+  if (article.jahr) parts.push(t("ui.wissen_jahr_n", { n: article.jahr }));
+  if (article.level) parts.push(t(`ui.wissen_level_${article.level}`));
+  const berufe = article.berufe ?? [];
+  if (berufe.length === 0 && parts.length === 0) return "";
+  if (berufe.length > 0) parts.unshift(berufe.map(berufLabel).join(", "));
+  return t("ui.wissen_lernkarte_fuer", { list: parts.join(" · ") });
+}
+
+// Lernkarten wiederholen die Kurzfassung als ersten Satz des ersten
+// Abschnitts; dann wird sie nicht doppelt gezeigt.
+export function summaryRepeated(article) {
+  const summary = (article.summary ?? "").trim();
+  const first = String(article.sections?.[0]?.text ?? "").trim();
+  return summary !== "" && first.startsWith(summary);
+}
+
 // ---------------------------------------------------------------------
 // Liste
 // ---------------------------------------------------------------------
@@ -226,6 +309,35 @@ function renderDepartmentFilter() {
   const wanted = previous ?? (own ? FILTER_OWN : FILTER_ALL);
   departmentFilter = options.some(([value]) => value === wanted) ? wanted : FILTER_ALL;
   departmentEl.value = departmentFilter;
+}
+
+function fillSelect(selectEl, options, value) {
+  selectEl.textContent = "";
+  options.forEach(([optionValue, label]) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = label;
+    selectEl.appendChild(option);
+  });
+  selectEl.value = value;
+}
+
+function renderMetaFilters() {
+  fillSelect(
+    berufEl,
+    [["", t("ui.wissen_beruf_alle")], ...KNOWLEDGE_BERUFE.map((b) => [b.key, b.label])],
+    berufFilter
+  );
+  fillSelect(
+    jahrEl,
+    [["", t("ui.wissen_jahr_alle")], ...KNOWLEDGE_JAHRE.map((n) => [String(n), t("ui.wissen_jahr_n", { n })])],
+    jahrFilter
+  );
+  fillSelect(
+    levelEl,
+    [["", t("ui.wissen_level_alle")], ...KNOWLEDGE_LEVELS.map((l) => [l, t(`ui.wissen_level_${l}`)])],
+    levelFilter
+  );
 }
 
 function renderChips() {
@@ -350,6 +462,8 @@ function renderDetail(article) {
   meta.append(el("span", "knowledge-card-category", article.category), statusBadge(article));
   detailEl.append(meta, el("h3", "knowledge-detail-title", article.title));
   detailEl.appendChild(el("p", "hint", departmentsText(article)));
+  const lernkarte = lernkarteText(article);
+  if (lernkarte) detailEl.appendChild(el("p", "hint", lernkarte));
 
   if (article.imagePath) {
     const img = el("img", "knowledge-cover");
@@ -364,7 +478,9 @@ function renderDetail(article) {
     });
   }
 
-  if (article.summary) detailEl.appendChild(el("p", "knowledge-summary", article.summary));
+  if (article.summary && !summaryRepeated(article)) {
+    detailEl.appendChild(el("p", "knowledge-summary", article.summary));
+  }
   article.sections.forEach((section) => detailEl.appendChild(renderSection(section)));
 
   const footer = el("div", "knowledge-footer");
@@ -473,6 +589,7 @@ export function focusKnowledge(id) {
 
 function render() {
   renderDepartmentFilter();
+  renderMetaFilters();
   renderChips();
   renderList();
   // Offenes Formular nicht durch Realtime/Sprachwechsel anfassen.
@@ -517,6 +634,18 @@ export function initKnowledge() {
     departmentFilter = departmentEl.value;
     renderList();
   });
+  berufEl.addEventListener("change", () => {
+    berufFilter = berufEl.value;
+    renderList();
+  });
+  jahrEl.addEventListener("change", () => {
+    jahrFilter = jahrEl.value;
+    renderList();
+  });
+  levelEl.addEventListener("change", () => {
+    levelFilter = levelEl.value;
+    renderList();
+  });
   chipsEl.addEventListener("click", (e) => {
     const chip = e.target.closest(".quiz-lb-chip");
     if (!chip) return;
@@ -544,7 +673,7 @@ export function initKnowledge() {
           title: article.title,
           category: article.category,
           departmentsText: departmentsText(article),
-          summary: article.summary,
+          summary: summaryRepeated(article) ? "" : article.summary,
           sections: article.sections.map((s) => ({ heading: s?.heading ?? "", blocks: parseSectionText(s?.text) })),
           stand:
             article.reviewedAt && article.reviewedBy

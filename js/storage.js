@@ -1297,6 +1297,15 @@ export function fromKnowledgeRow(row) {
     departments: Array.isArray(row.departments) ? row.departments : [],
     imagePath: row.image_path ?? null,
     sort: Number(row.sort) || 0,
+    // Lernkarten-Metadaten (Paket 56). Pflege nur per SQL-Import; das
+    // Formular schickt sie nicht mit und lässt sie beim Speichern stehen.
+    slug: row.slug ?? null,
+    berufe: Array.isArray(row.berufe) ? row.berufe : [],
+    lernfeld: Array.isArray(row.lernfeld) ? row.lernfeld : [],
+    pruefung: Array.isArray(row.pruefung) ? row.pruefung : [],
+    jahr: Number.isInteger(row.jahr) ? row.jahr : null,
+    level: row.level ?? null,
+    tags: Array.isArray(row.tags) ? row.tags : [],
     sources: Array.isArray(row.sources) ? row.sources : [],
     reviewedAt: row.reviewed_at ?? null,
     reviewedBy: row.reviewed_by ?? "",

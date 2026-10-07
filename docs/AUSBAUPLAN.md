@@ -3086,6 +3086,15 @@ Suchtreffers.
 
 **Commit:** `Wissen: Inhalte <Thema> (Entwurf/Freigabe)`
 
+**Lernkarten (07.10.2026):** Migration `knowledge_lernkarten_paket56` ergänzt `slug`, `berufe`
+(fg/frv/hofa, leer = alle), `lernfeld`, `pruefung`, `jahr`, `level`, `tags`. 55 Lernkarten (Jahr 1,
+Basis, je ein Abschnitt „Kurz erklärt") als Entwurf importiert, Abgleich per md5 gegen die JSON.
+Wissen-Ansicht: Filter Beruf/Ausbildungsjahr/Level, Sortierung nach fester Kategoriereihenfolge
+(18 Kategorien der Themenliste vor den alten), Tags in der Suche, Kurzfassung wird nicht doppelt
+gezeigt, wenn sie wörtlich den ersten Abschnitt einleitet. Offen: 41 Karten ohne Quelle (nicht
+veröffentlichbar); die Karten folgen nicht dem Aufbau der Schreibregeln oben (Lernkarten-Format,
+3–5 Sätze). Metadaten sind im Formular nicht pflegbar, nur per SQL/Import.
+
 **Schreibregeln (07.10.2026)**
 
 Vorgabe des Nutzers. Zielgruppe: alle Mitarbeitenden in Bar, WGR und Tellerwerk – auch Azubis und

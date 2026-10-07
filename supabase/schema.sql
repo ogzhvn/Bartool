@@ -1957,6 +1957,15 @@ create table if not exists public.knowledge_articles (
   created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  -- Lernkarten-Metadaten (Paket 56, Migration knowledge_lernkarten_paket56).
+  -- slug = Schlüssel für den Import; leere Arrays = nicht zugeordnet.
+  slug text,
+  berufe text[] not null default '{}',     -- fg | frv | hofa; leer = alle Berufe
+  lernfeld int[] not null default '{}',    -- KMK-Lernfelder 1-13
+  pruefung text[] not null default '{}',   -- Prüfungsbereich-Codes
+  jahr smallint check (jahr between 1 and 3),
+  level text check (level in ('basis', 'aufbau')),
+  tags text[] not null default '{}',
   constraint knowledge_articles_sections_array check (jsonb_typeof(sections) = 'array'),
   constraint knowledge_articles_sources_array check (jsonb_typeof(sources) = 'array'),
   -- Die Qualitätsregel gilt in der Datenbank, nicht nur im Formular:
@@ -1973,6 +1982,12 @@ create table if not exists public.knowledge_articles (
 
 create index if not exists knowledge_articles_created_by_idx
   on public.knowledge_articles (created_by);
+create unique index if not exists knowledge_articles_slug_key
+  on public.knowledge_articles (slug);
+create index if not exists knowledge_articles_berufe_idx
+  on public.knowledge_articles using gin (berufe);
+create index if not exists knowledge_articles_tags_idx
+  on public.knowledge_articles using gin (tags);
 
 alter table public.knowledge_articles enable row level security;
 
