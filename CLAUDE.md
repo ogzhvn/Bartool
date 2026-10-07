@@ -182,6 +182,20 @@ sonst als Faustregel nach Art der Aufgabe, nicht nach Paketnummer:
 Bei Grenzfällen das teurere Modell nennen: eine falsche Schema-Migration kostet
 mehr als eine Session auf Opus.
 
+## Große Texte per `execute_sql` schreiben
+
+Ein **UPDATE mit großem Text-Literal** (ab ca. 4 KB, z. B. `sections` eines
+Wissensartikels) hängt über den Supabase-MCP reproduzierbar 60 s und kommt nie in
+der DB an (beobachtet 07.10.2026, Ursache unbekannt). SELECT, INSERT gleicher
+Größe, kleine UPDATEs und UPDATE mit `rollback` laufen. Deshalb so schreiben:
+
+1. Neuen Inhalt per `insert` in eine Hilfszeile derselben Tabelle legen
+   (`published = false`, Titel `ZZ-Staging <id>`), `returning id, md5(...)`.
+2. Eine kleine Anweisung kopiert und löscht atomar:
+   `with s as (delete from <tabelle> where id = '<staging>' returning <spalte>)
+   update <tabelle> t set <spalte> = s.<spalte> from s where t.id = '<ziel>'`.
+3. md5 gegen den lokalen Stand prüfen, Restzeilen `ZZ-Staging%` = 0 prüfen.
+
 ## Testaccount (Supabase Auth)
 Für Login-/Feature-Tests existiert ein Admin-Testaccount in der Supabase-
 Instanz (Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen
