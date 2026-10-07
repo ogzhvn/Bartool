@@ -627,7 +627,7 @@ function renderProductItem(product) {
         <span class="product-thumb"><i class="ph ph-wine" aria-hidden="true"></i></span>
         ${escapeHtml(product.name)}
       </span>
-      <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
+      <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="${isFavorite("product", product.name) ? "ph-fill" : "ph"} ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       ${product.imagePath ? `<img class="product-photo-large" alt="${escapeHtml(product.name)}" loading="lazy" hidden />` : ""}
@@ -644,7 +644,11 @@ function renderProductItem(product) {
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    favBtn.classList.toggle("is-fav", toggleFavorite("product", product.name));
+    const fav = toggleFavorite("product", product.name);
+    favBtn.classList.toggle("is-fav", fav);
+    const icon = favBtn.querySelector("i");
+    icon.classList.toggle("ph-fill", fav);
+    icon.classList.toggle("ph", !fav);
   });
 
   if (product.imagePath) {

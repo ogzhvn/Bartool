@@ -462,7 +462,7 @@ function renderRecipeItem(recipe) {
         <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
         ${escapeHtml(recipe.name)}
       </span>
-      <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="ph ph-star" aria-hidden="true"></i></button>
+      <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="${isFavorite("recipe", recipe.name) ? "ph-fill" : "ph"} ph-star" aria-hidden="true"></i></button>
     </summary>
     <div class="recipe-item-body">
       ${recipe.imagePath || recipe.garnishImagePath ? `<div class="item-photo-row">
@@ -501,7 +501,11 @@ function renderRecipeItem(recipe) {
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    favBtn.classList.toggle("is-fav", toggleFavorite("recipe", recipe.name));
+    const fav = toggleFavorite("recipe", recipe.name);
+    favBtn.classList.toggle("is-fav", fav);
+    const icon = favBtn.querySelector("i");
+    icon.classList.toggle("ph-fill", fav);
+    icon.classList.toggle("ph", !fav);
   });
 
   // Aufklappen zählt als "angesehen" – das füttert die Startseite.

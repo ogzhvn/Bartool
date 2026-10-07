@@ -1503,6 +1503,8 @@ select {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+  /* Füllt die Zeile, damit Stern und "+" bei jedem Eintrag rechts bündig stehen. */
+  flex: 1;
 }
 
 .recipe-select-checkbox,
@@ -2591,7 +2593,6 @@ input[type="datetime-local"] {
 .fav-btn.is-fav {
   color: var(--accent);
 }
-
 .shortcut-list {
   display: flex;
   flex-wrap: wrap;

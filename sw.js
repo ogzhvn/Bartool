@@ -7,7 +7,7 @@
 //
 // Diese Versionsnummer bei JEDER Änderung an Frontend-Dateien hochzählen,
 // sonst liefert der Cache alte Stände aus.
-const CACHE = "bartool-v70";
+const CACHE = "bartool-v71";
 
 // Der App-Shell: alles, was die Oberfläche zum Starten braucht.
 const PRECACHE = [
@@ -104,6 +104,7 @@ const CDN_PRECACHE = [
   "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
   "https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css",
+  "https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css",
 ];
 
 self.addEventListener("install", (event) => {
