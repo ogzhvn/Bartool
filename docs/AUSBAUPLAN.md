@@ -3063,7 +3063,7 @@ Suchtreffers.
 6. Prüfzyklus: Rechtsthemen jährlich neu gegen die Quelle prüfen (Eintrag im Backlog bzw.
    Kalender des Nutzers; kein Mechanismus im Tool in dieser Runde).
 
-**Themenkatalog (Vorschlag, noch nicht bestätigt)**
+**Themenkatalog (vom Nutzer bestätigt 07.10.2026; weitere Themen nur auf Zuruf)**
 - *Recht & Pflicht:* Allergene und Zusatzstoffe (14 Hauptallergene nach LMIV, mündliche Auskunft
   und schriftliche Dokumentation, Besonderheiten Bar: Sulfite in Wein, Ei, Nüsse/Mandel in Sirupen
   und Likören); Jugendschutz (§ 9 JuSchG, Altersprüfung); Hygiene (Belehrung nach § 43 IfSG,
@@ -3073,10 +3073,8 @@ Suchtreffers.
   Gläserkunde und Glaspflege; Weinservice (Öffnen, Einschenken, Temperaturen, Dekantieren);
   Schaumwein und Champagner; Bierservice; alkoholfreie Getränke und Alternativen; Kaffee und
   Heißgetränke; Beschwerdemanagement.
-- *Produktwissen allgemein:* Spirituosenkategorien und ihre Rechtsgrundlagen; Weinbau und Rebsorten
-  (Grundlagen); Bier (Stile, Herstellung); Kaffee und Tee (Grundlagen). Spezifisches Wissen zu
-  einzelnen Produkten bleibt in `products` (Pakete 21–25, 44–46), nicht doppeln – Artikel verweisen
-  darauf.
+- *Produktwissen allgemein:* gestrichen (07.10.2026). Spezifisches Wissen zu einzelnen Produkten
+  bleibt in `products` (Pakete 21–25, 44–46), nicht doppeln – Artikel verweisen darauf.
 - *Haus & Outlets:* Outlet-Überblick (Bar, WGR, Tellerwerk), Sterne-/Hotelstandards laut
   Kriterienkatalog, Notfall-/Brandschutz-Basics laut Hausvorgabe (**vom Nutzer**).
 
