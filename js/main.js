@@ -12,6 +12,7 @@ import { initPreparations } from "./preparations.js";
 import { initInventory } from "./inventory.js";
 import { initBuildable } from "./buildable.js";
 import { initQuiz } from "./quiz.js";
+import { initKnowledge } from "./knowledge.js";
 import { initEvents } from "./events.js";
 import { initShiftLog } from "./shiftLog.js";
 import { initLosses } from "./losses.js";
@@ -32,6 +33,7 @@ import {
   initChecklistTemplateSync,
   initChecklistRunSync,
   initQuizQuestionSync,
+  initKnowledgeSync,
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
 import {
@@ -158,6 +160,7 @@ async function bootstrapAppOnce() {
     initChecklistTemplateSync(),
     initChecklistRunSync(),
     initQuizQuestionSync(),
+    initKnowledgeSync(),
     initPriceHistorySync(),
   ]);
   // Muss vor initTabs() stehen: initTabs() schaltet direkt auf den Start-Tab,
@@ -177,6 +180,7 @@ async function bootstrapAppOnce() {
   initInventory();
   initBuildable();
   initQuiz();
+  initKnowledge();
   initEvents();
   initShiftLog();
   initLosses();

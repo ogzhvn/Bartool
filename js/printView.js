@@ -61,6 +61,34 @@ export function printProducts(products) {
   );
 }
 
+// Wissensartikel (Paket 54). Der Text kommt aus Nutzereingaben und wird
+// deshalb vollständig escaped; die Blöcke stammen aus parseSectionText().
+export function printKnowledge(doc) {
+  const sections = doc.sections
+    .map((section) => {
+      const body = section.blocks
+        .map((block) =>
+          block.type === "ul"
+            ? `<ul>${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+            : `<p>${escapeHtml(block.text).replace(/\n/g, "<br>")}</p>`
+        )
+        .join("");
+      return `${section.heading ? `<h2>${escapeHtml(section.heading)}</h2>` : ""}${body}`;
+    })
+    .join("");
+  const sources = doc.sources.length
+    ? `<h2>${escapeHtml(doc.sourcesTitle)}</h2><ul>${doc.sources.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`
+    : "";
+  printBlocks(
+    doc.title,
+    `<p class="meta">${escapeHtml([doc.category, doc.departmentsText].filter(Boolean).join(" · "))}</p>` +
+      (doc.summary ? `<p><strong>${escapeHtml(doc.summary)}</strong></p>` : "") +
+      sections +
+      sources +
+      (doc.stand ? `<p class="meta">${escapeHtml(doc.stand)}</p>` : "")
+  );
+}
+
 // ---------------------------------------------------------------------
 // Etiketten für Ansätze
 //

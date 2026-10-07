@@ -3696,3 +3696,219 @@ input[type="datetime-local"] {
     left: 0;
   }
 }
+
+/* ── Wissen (Paket 54) ──────────────────────────────────── */
+
+.knowledge-filters {
+  align-items: flex-end;
+}
+
+.knowledge-filters input[type="text"] {
+  flex: 1 1 220px;
+  min-height: 44px;
+}
+
+.knowledge-filters select {
+  min-height: 44px;
+}
+
+.knowledge-unread-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.knowledge-unread-toggle input {
+  width: 22px;
+  height: 22px;
+}
+
+.knowledge-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.7rem;
+}
+
+.knowledge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  min-height: 118px;
+}
+
+.knowledge-card:hover {
+  border-color: var(--accent-700);
+  background: var(--bg-elevated-2);
+}
+
+.knowledge-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.knowledge-card-category {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.knowledge-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.knowledge-card-summary {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.knowledge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.knowledge-badge-new {
+  color: var(--accent);
+  border-color: var(--accent-700);
+  background: var(--accent-900);
+}
+
+.knowledge-badge-updated {
+  color: var(--accent-300);
+  border-color: var(--accent-700);
+}
+
+.knowledge-badge-read {
+  color: var(--text-muted);
+}
+
+.knowledge-badge-draft {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.knowledge-detail {
+  max-width: 760px;
+}
+
+.knowledge-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.knowledge-detail-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.5rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.knowledge-cover {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 0.8rem 0;
+}
+
+.knowledge-summary {
+  font-size: 1.05rem;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.knowledge-section h4,
+.knowledge-sources h4 {
+  margin: 1.4rem 0 0.4rem;
+  font-size: 1.05rem;
+  color: var(--accent);
+}
+
+.knowledge-text {
+  white-space: pre-line;
+  text-wrap: pretty;
+}
+
+.knowledge-section ul,
+.knowledge-sources ul {
+  padding-left: 1.3rem;
+  margin: 0.4rem 0;
+}
+
+.knowledge-section li,
+.knowledge-sources li {
+  margin-bottom: 0.3rem;
+}
+
+.knowledge-sources a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.knowledge-source-note {
+  color: var(--text-muted);
+}
+
+.knowledge-footer {
+  margin-top: 1.4rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.knowledge-detail > .btn-primary {
+  margin-top: 1.2rem;
+}
+
+@media (max-width: 700px) {
+  .knowledge-list {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-toolbar .btn-secondary,
+  .knowledge-detail > .btn-primary {
+    flex: 1 1 100%;
+  }
+}
+
+@media print {
+  .print-area ul {
+    margin: 4pt 0 8pt;
+    padding-left: 16pt;
+  }
+  .print-area p {
+    margin: 0 0 6pt;
+  }
+}

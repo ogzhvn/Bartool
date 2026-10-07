@@ -319,7 +319,7 @@ Tellerwerk), nicht nur für die Bar.
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
-| 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
@@ -2953,12 +2953,42 @@ Oberfläche außer einem leeren Tab.
    sonst weglassen und notieren.
 
 **Abnahme**
-- [ ] Konto `wgr` sieht Modul, eigene + „alle"-Artikel; Entwürfe unsichtbar.
-- [ ] Als gelesen markieren überlebt Neuladen; Änderung am Artikel setzt „Aktualisiert".
-- [ ] Nutzereingaben nirgends per `innerHTML` (grep auf `knowledge.js`); Quell-Link mit
-      `javascript:`-URL wird nicht verlinkt.
-- [ ] Layout auf Handy (Touch-Targets) und Desktop; offline zeigt der Cache den letzten Stand.
-- [ ] DE/EN umschaltbar, keine hartcodierten Texte.
+- [x] Konto `wgr` sieht Modul, eigene + „alle"-Artikel; Entwürfe unsichtbar. _(✓ 07.10.2026: Modul über
+      `data-module`/`canSee()`; Filter „Meine Abteilung + alle" im Browser mit gestubbtem Storage und
+      Abteilung `wgr` geprüft (zeigt „alle" + `wgr`, nicht `bar`). Entwürfe filtert die RLS (Paket 53,
+      dort per SQL belegt), der Offline-Puffer enthält ohnehin nur Veröffentlichtes. Kein Login mit echtem
+      `wgr`-Konto durchgespielt)_
+- [x] Als gelesen markieren überlebt Neuladen; Änderung am Artikel setzt „Aktualisiert". _(✓ 07.10.2026:
+      `markKnowledgeRead` schreibt in `knowledge_reads` (Paket 53); „Aktualisiert seit dem Lesen" bei
+      `updated_at > read_at` im Browser mit gestubbten Zeitstempeln geprüft, Button wird dann „Erneut als
+      gelesen markieren". Neuladen gegen die echte DB nicht durchgespielt)_
+- [x] Nutzereingaben nirgends per `innerHTML` (grep auf `knowledge.js`); Quell-Link mit
+      `javascript:`-URL wird nicht verlinkt. _(✓ 07.10.2026: grep ohne Treffer; Titel/Summary/Text mit
+      HTML-Tags erscheinen als Text, `javascript:`-Quelle bleibt reiner Text, https-Link trägt
+      `rel="noopener noreferrer"` und `target="_blank"`)_
+- [x] Layout auf Handy (Touch-Targets) und Desktop; offline zeigt der Cache den letzten Stand. _(✓ 07.10.2026:
+      Chromium 390 px: kein horizontales Scrollen, Buttons/Select/Suchfeld ≥ 44 px, Chips 40 px wie im
+      Quiz. Offline-Stand: `initKnowledgeSync()` füllt die Liste aus dem Puffer; der Gelesen-Status liegt
+      bewusst nicht im Puffer – offline erscheint alles als „Neu", Markieren meldet den Offline-Hinweis)_
+- [x] DE/EN umschaltbar, keine hartcodierten Texte. _(✓ 07.10.2026: 23 neue Schlüssel `ui.wissen_*` in
+      `de.js` und `en.js`, Markup über `data-i18n`, Rendering aus `t()`, Neuzeichnen per
+      `onLanguageChanged()`)_
+
+**Umsetzungsnotizen (07.10.2026)**
+- Detail ersetzt die Liste im selben Panel (kein eigener Hash/Tab). Filter und Suche bleiben beim Zurück
+  erhalten.
+- Suche läuft über Titel, Kurztext, Kategorie sowie Überschriften und Text der Abschnitte; „Nur ungelesen"
+  zeigt „Neu" und „Aktualisiert". Kategorie-Chips erscheinen nur für Kategorien mit Artikeln, unbekannte
+  Kategorien aus den Daten hängen hinter der festen Liste an. Chips nutzen die vorhandene Klasse
+  `quiz-lb-chip`.
+- Abteilungsfilter: „Meine Abteilung + alle" (Standard, nur mit eigener Abteilung), „Alle Abteilungen"
+  und je Abteilung; Bezeichnungen aus der Tabelle `departments` (offline: Schlüssel).
+- Druck: neue `printKnowledge()` in `js/printView.js` über den vorhandenen `printBlocks()` (Text wird mit
+  `escapeHtml` escaped); ohne Titelbild, Quellen als Text mit URL.
+- Startkachel „Wissen" als `tool-card` in `index.html`; `js/home.js` braucht keine Änderung, der
+  Klick-Handler gilt für alle Kacheln.
+- Suchfeld ist `type="text"`, weil `input[type="search"]` im Theme nicht gestylt ist.
+- `sw.js`: `js/knowledge.js` im PRECACHE, Cache `bartool-v73`.
 
 **Commit:** `Wissen: Liste, Filter, Detailansicht, Gelesen-Status`
 

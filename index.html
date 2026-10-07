@@ -158,6 +158,7 @@
           <button class="tab-btn" data-tab="products" data-module="products" role="tab" aria-selected="false" data-i18n="ui.produkte"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
           <div id="product-category-tree" class="sidebar-subnav" data-module="products"></div>
           <button class="tab-btn" data-tab="quiz" data-module="quiz" role="tab" aria-selected="false" data-i18n="ui.quiz"><i class="ph ph-brain" aria-hidden="true"></i>Quiz</button>
+          <button class="tab-btn" data-tab="knowledge" data-module="knowledge" role="tab" aria-selected="false" data-i18n="ui.wissen"><i class="ph ph-graduation-cap" aria-hidden="true"></i>Wissen</button>
         </div>
       </div>
       <div class="sidebar-group collapsed" data-perm-any="" role="presentation">
@@ -231,6 +232,11 @@
           <i class="ph ph-wine tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.produkte">Produkte</span>
           <span class="tool-card-desc" data-i18n="ui.getraenke_und_zutatenkatalog_der_bar">Getränke- und Zutatenkatalog der Bar</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="knowledge" data-module="knowledge">
+          <i class="ph ph-graduation-cap tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.wissen">Wissen</span>
+          <span class="tool-card-desc" data-i18n="ui.wissen_kachel">Schulungen, Standards und Hintergrundwissen für alle Outlets</span>
         </button>
         <button type="button" class="tool-card" data-tab="superjuice" data-module="superjuice">
           <i class="ph ph-orange-slice tool-card-icon" aria-hidden="true"></i>
@@ -879,6 +885,32 @@
           <button type="button" id="quiz-again" class="btn-primary" data-i18n="ui.neue_runde">Neue Runde</button>
         </div>
       </div>
+    </section>
+
+    <!-- WISSEN -->
+    <section id="knowledge" class="tab-panel" data-module="knowledge">
+      <h2 data-i18n="ui.wissen">Wissen</h2>
+
+      <div id="knowledge-list-view">
+        <p class="hint" data-i18n="ui.wissen_hinweis">Schulungen und Hintergrundwissen für alle Outlets: Produkte, Serviceabläufe, Standards. Artikel lesen und als gelesen markieren.</p>
+
+        <div class="field-row knowledge-filters">
+          <input type="text" id="knowledge-search" placeholder="Titel oder Text suchen…" data-i18n-placeholder="ui.wissen_suche_placeholder" data-i18n-aria-label="ui.wissen_suche_placeholder" aria-label="Titel oder Text suchen…" autocomplete="off" />
+          <label data-i18n="ui.wissen_abteilung">
+            Abteilung
+            <select id="knowledge-department"></select>
+          </label>
+          <label class="knowledge-unread-toggle">
+            <input type="checkbox" id="knowledge-unread" />
+            <span data-i18n="ui.wissen_nur_ungelesen">Nur ungelesen</span>
+          </label>
+        </div>
+
+        <div id="knowledge-categories" class="quiz-lb-chips" role="group" data-i18n-aria-label="ui.wissen_kategorien" aria-label="Kategorien"></div>
+        <div id="knowledge-list" class="knowledge-list"></div>
+      </div>
+
+      <article id="knowledge-detail" class="knowledge-detail" hidden></article>
     </section>
 
     <!-- KARTENKALKULATION -->
