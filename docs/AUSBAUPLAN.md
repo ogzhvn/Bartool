@@ -320,7 +320,7 @@ Tellerwerk), nicht nur für die Bar.
 |---|---|---|---|
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ---
