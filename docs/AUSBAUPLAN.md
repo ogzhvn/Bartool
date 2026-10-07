@@ -276,6 +276,55 @@ in `js/i18n/de.js` **und** `js/i18n/en.js`.
 
 ---
 
+### Runde 9 – Schulungen & Wissen (geplant am 07.10.2026)
+
+Neues Bibliotheks-Modul `knowledge` („Schulungen & Wissen") neben Rezepte, Produkte und Quiz:
+Allgemeinwissen zu Produkten, Serviceabläufen, Standards – für alle Outlets im Haus (Bar, WGR,
+Tellerwerk), nicht nur für die Bar.
+
+**Entscheidungen (07.10.2026, mit dem Nutzer abgestimmt)**
+- **Form: Artikel + Gelesen-Status.** Keine Lernpfade, keine Zertifikate, keine Quiz-Verknüpfung im
+  ersten Wurf (→ Backlog).
+- **Neue Datenart `knowledge_articles`**, nicht in `recipes`/`products` hineingebogen. Lesen für alle
+  angemeldeten Konten (RLS), Schreiben nur mit neuem Recht **`knowledge.write`** (Gruppe `inhalte`).
+  Startbelegung: `admin`, `barchef`, `stellv_barchef`; weitere Rollen über die Rechte-Matrix.
+- **Abteilungs-Tag je Artikel**, `departments text[]`: leer = gilt für alle. Modul `knowledge` ist für
+  `bar`, `wgr` und `tellerwerk` freigeschaltet. Filter in der Liste, Standard = eigene Abteilung +
+  „alle". Wie in Runde 8 **Kosmetik, kein Zugriffsschutz** – Lesen bleibt per RLS für alle offen.
+- **Inhalt als strukturierte Abschnitte** (`sections jsonb` = `[{heading, text}]`), kein
+  Markdown-Parser, kein HTML. Gerendert per DOM/`textContent` (Regel 5). Im Text: Leerzeile =
+  Absatz, Zeile mit `- ` am Anfang = Listenpunkt.
+- **Entwurf/Veröffentlicht** (`published`), damit Leads in Ruhe schreiben können; Entwürfe sieht nur,
+  wer `knowledge.write` hat.
+- **Gelesen-Status** pro Konto in `knowledge_reads` (nur eigene Zeilen sichtbar, wie `quiz_attempts`).
+  Wird ein Artikel nach dem Lesen geändert (`updated_at > read_at`), steht „Aktualisiert seit dem
+  Lesen". Auswertung für die Leitung (wer hat was gelesen) ist **nicht** Teil dieser Runde.
+- **Inhalte nur Deutsch** (Regel 11: Fachinhalte bleiben deutsch); Oberfläche DE/EN über i18n.
+  Englische Zweitfassung → Backlog.
+- **Qualität vor Menge (Vorgabe des Nutzers, 07.10.2026):** Die Inhalte müssen fachlich korrekt sein
+  und hohen Service-Standards entsprechen. Deshalb **per Datenbank erzwungen**: ein Artikel lässt
+  sich nur veröffentlichen, wenn er mindestens eine Quelle (`sources`) und einen Prüfvermerk
+  (`reviewed_at` + `reviewed_by`) trägt. Gesetz, Behörde und Hersteller/Verband stehen vor
+  Blogs; Blogs, Foren und KI-Zusammenfassungen sind nie alleinige Quelle. Rechtsthemen (Allergene,
+  Jugendschutz, Hygiene) tragen ein Stand-Datum und den Hinweis „keine Rechtsberatung".
+  **Hausstandards des A-ROSA (Servicefolge, Begrüßung, Garnituren …) erfindet Claude nicht** – die
+  bestätigt der Nutzer (Regel 6). Alle Fakten in Artikeln werden gegen die Primärquelle geprüft,
+  nicht aus dem Gedächtnis geschrieben; Unsicheres wird im Entwurf markiert, nicht geglättet.
+  Claude schreibt Entwürfe (`published = false`), der Nutzer bzw. die Barleitung gibt frei.
+- **Fotos:** vorhandener Bucket `bilder`, neuer Präfix `wissen/<uuid>.jpg`, Schreibrecht an
+  `knowledge.write`. Ein Titelbild pro Artikel, keine Bilder im Fließtext.
+- **Reihenfolge zwingend: 53 → 54 → 55 → 56.** Alle neuen Beschriftungen über `data-i18n` bzw. `t()`,
+  Schlüssel in `js/i18n/de.js` **und** `js/i18n/en.js`.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 53 | Datenmodell Wissen, Recht, Modul-Registrierung | offen | Opus 5, hoher Denkaufwand |
+| 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | offen | Sonnet 5, mittlerer Denkaufwand |
+| 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | offen | Sonnet 5, mittlerer Denkaufwand |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+
+---
+
 # Paket 1 – PWA installierbar + App-Shell offline
 
 **Abhängigkeit:** keine.
@@ -2785,6 +2834,201 @@ nicht – nicht erweitert, nur notiert.
 
 ---
 
+---
+# Paket 53 – Datenmodell Wissen, Recht, Modul-Registrierung
+
+**Abhängigkeit:** Runde 8 (Pakete 50–52) ist da.
+**Modell:** Opus 5, hoher Denkaufwand – neue Datenart, Migration, RLS, neues Recht, Eingriff in
+`department_modules`. Eine falsche Migration kostet mehr als eine Session auf Opus.
+
+**Ziel:** Datenbank, Rechtekatalog und Modulkatalog kennen „Wissen". Noch keine sichtbare
+Oberfläche außer einem leeren Tab.
+
+**Dateien:** `supabase/schema.sql`, `js/permissions.js`, `js/modules.js`, `js/storage.js`
+(`loadKnowledge`/`saveKnowledge`/`deleteKnowledge`/`onKnowledgeChanged`/`initKnowledgeSync`,
+`loadKnowledgeReads`/`markKnowledgeRead`), `js/i18n/de.js`, `js/i18n/en.js`.
+**Migration: ja** (Supabase-MCP-Tools, project_ref-gescoped; danach `schema.sql` nachziehen).
+
+**Schritte**
+1. Tabelle `knowledge_articles`: `id uuid pk default gen_random_uuid()`, `title text not null unique`,
+   `category text not null`, `summary text`, `sections jsonb not null default '[]'`,
+   `departments text[] not null default '{}'`, `image_path text`, `sort int not null default 0`,
+   `sources jsonb not null default '[]'` (`[{label, url?, note?}]`, `url` entfällt bei
+   Hausstandards), `reviewed_at date`, `reviewed_by text`,
+   `published boolean not null default false`, `created_by uuid default auth.uid()`,
+   `created_at`, `updated_at` (Trigger wie bei den anderen Tabellen, falls vorhanden – sonst im
+   Speicherpfad setzen und notieren).
+   **CHECK-Constraint:** `not published or (jsonb_array_length(sources) > 0 and reviewed_at is not null
+   and reviewed_by is not null)` – die Qualitätsregel gilt in der DB, nicht nur im Formular.
+2. RLS: Lesen für `authenticated`, aber Entwürfe nur mit `knowledge.write`
+   (`published or private.has_permission('knowledge.write')`); Schreiben nur mit
+   `knowledge.write`. Audit-Trigger `log_audit()` wie bei `recipes` (Tabelle hat `id`).
+3. Tabelle `knowledge_reads (user_id uuid default auth.uid() → auth.users on delete cascade,
+   article_id uuid → knowledge_articles on delete cascade, read_at timestamptz default now(),
+   primary key (user_id, article_id))`. RLS: nur eigene Zeilen lesen/schreiben/löschen – auch
+   Admins (Muster `quiz_attempts`).
+4. Recht `knowledge.write`: Zeile in `permissions` (`perm.knowledge.write`, Gruppe `inhalte`,
+   sort 50), `role_permissions` für `admin`, `barchef` (greift über die bestehende
+   Gesamtzuweisung), `stellv_barchef` (explizit in die Liste); Eintrag in `js/permissions.js`
+   mit `policy: "knowledge_articles, storage/bilder (wissen/)"`; Label in beiden Sprachdateien.
+5. Storage-Policies für `bilder`: Präfix `wissen/` an `knowledge.write` hängen (Muster der
+   bestehenden `fotorecht`-Policies; erst lesen, nicht blind kopieren).
+6. Modulkatalog: `{ key: "knowledge", group: "bibliothek", sort: 40, labelKey: "ui.wissen" }` in
+   `js/modules.js`. Seed `department_modules` für `bar`, `wgr`, `tellerwerk` einmalig per
+   Migration mit `on conflict do nothing` – **nicht** in den „nur wenn Abteilung leer"-Seed, sonst
+   schaltet ein erneuter Lauf Admin-Abwahlen wieder ein.
+7. `storage.js` nach dem Datentyp-Muster (Offline-Cache wie `recipes`).
+
+**Abnahme**
+- [ ] Migration live, `schema.sql` bildet beide Tabellen, Policies, Recht und Seeds ab.
+- [ ] Veröffentlichen ohne Quelle bzw. ohne Prüfvermerk schlägt per SQL fehl (Constraint).
+- [ ] Per SQL in zurückgerollter Transaktion: Konto ohne `knowledge.write` kann nicht schreiben und
+      sieht keine Entwürfe; mit Recht kann es beides.
+- [ ] Konto A sieht keine `knowledge_reads`-Zeilen von Konto B (auch nicht als Admin).
+- [ ] Rechte-Matrix im Admin zeigt „Wissen pflegen"; Abteilungs-Matrix zeigt Modul „Wissen".
+- [ ] `get_advisors` (Security) ohne neue Warnungen.
+
+**Commit:** `Wissen: Datenmodell, Recht knowledge.write, Modul-Registrierung`
+
+---
+
+# Paket 54 – Modul Wissen: Liste, Filter, Detail, Gelesen-Status
+
+**Abhängigkeit:** Paket 53.
+**Modell:** Sonnet 5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster, liest nur.
+
+**Ziel:** Jedes Konto findet Artikel, liest sie und markiert sie als gelesen.
+
+**Dateien:** neu `js/knowledge.js` (`initKnowledge()`); geändert `js/main.js`, `index.html`
+(`<button data-tab="knowledge" data-module="knowledge">` unter Bibliothek nach Quiz,
+`<section id="knowledge" class="tab-panel">`), `css/styles.css`, `js/home.js` (Startkachel),
+`js/i18n/de.js`, `js/i18n/en.js`.
+
+**Schritte**
+1. Nav-Button und Panel nach Muster; Icon `ph-graduation-cap`. Navigation kommt über `canSee()`
+   automatisch.
+2. Liste: Karten mit Titel, Kategorie, Kurztext, Gelesen-Haken bzw. „Neu" / „Aktualisiert";
+   Kategorie-Chips, Abteilungsfilter (Standard = eigene Abteilung + „alle"), Suchfeld über Titel und
+   Text, Filter „Ungelesen".
+3. Kategorien als feste Liste in `js/knowledge.js` (Startvorschlag: Produktwissen, Service &
+   Abläufe, Getränkekunde, Hygiene & Sicherheit, Haus & Outlets, Sonstiges); Anzeigenamen bleiben
+   deutsch (Regel 11).
+4. Detailansicht: Titelbild über `resolveImageUrl`, Abschnitte per DOM-Erzeugung (Überschrift,
+   Absätze, `- `-Listen), Fußzeile „Stand: <reviewed_at> · geprüft von <reviewed_by>" und
+   Quellenliste (Links nur mit `http(s)`-Schema, `rel="noopener noreferrer"`, per `textContent`),
+   Button „Als gelesen markieren" → `markKnowledgeRead`.
+5. Rendert bei `onLanguageChanged()` neu; Datum über `formatDate`.
+6. Druck: Detailansicht über die vorhandene `printView.js` druckbar, falls ohne Umbau möglich –
+   sonst weglassen und notieren.
+
+**Abnahme**
+- [ ] Konto `wgr` sieht Modul, eigene + „alle"-Artikel; Entwürfe unsichtbar.
+- [ ] Als gelesen markieren überlebt Neuladen; Änderung am Artikel setzt „Aktualisiert".
+- [ ] Nutzereingaben nirgends per `innerHTML` (grep auf `knowledge.js`); Quell-Link mit
+      `javascript:`-URL wird nicht verlinkt.
+- [ ] Layout auf Handy (Touch-Targets) und Desktop; offline zeigt der Cache den letzten Stand.
+- [ ] DE/EN umschaltbar, keine hartcodierten Texte.
+
+**Commit:** `Wissen: Liste, Filter, Detailansicht, Gelesen-Status`
+
+---
+
+# Paket 55 – Wissen pflegen: Editor, Titelbild, Verlauf, Suche
+
+**Abhängigkeit:** Paket 54.
+**Modell:** Sonnet 5, mittlerer Denkaufwand – Editor nach Muster von `recipes.js`/`ingredientEditor.js`.
+
+**Ziel:** Wer `knowledge.write` hat, legt Artikel an, bearbeitet sie, veröffentlicht und löscht sie.
+
+**Dateien:** `js/knowledge.js` (oder neu `js/knowledgeEditor.js`, falls die Datei zu groß wird),
+`js/photos.js` (`uploadKnowledgePhoto`/`deleteKnowledgePhoto`, Präfix `wissen/`),
+`js/quickSearch.js`, `js/auditLog.js`, `js/i18n/de.js`, `js/i18n/en.js`, `css/styles.css`.
+
+**Schritte**
+1. Gating per `data-perm="knowledge.write"`: Buttons „Neuer Artikel", „Bearbeiten", „Löschen".
+2. Formular: Titel, Kategorie, Kurztext, Abteilungs-Tags (Mehrfachauswahl aus `departments`, leer =
+   alle), Abschnittsliste (hinzufügen, umsortieren, entfernen – Überschrift + Text), Quellenliste
+   (Bezeichnung + URL), Prüfvermerk (Datum, Name – Vorbelegung heute + eigenes Konto), Titelbild
+   (Upload/Entfernen), Schalter „Veröffentlicht". Validierung: Titel Pflicht, eindeutig; leere
+   Abschnitte verwerfen; „Veröffentlicht" nur mit Quelle und Prüfvermerk (Meldung vor dem DB-Fehler).
+3. Speichern über `saveKnowledge()`; Löschen mit Bestätigung. Ungespeicherte Änderungen nicht
+   stillschweigend verwerfen.
+4. Globale Suche (`quickSearch.js`): Artikel als Trefferart, nur sichtbare (veröffentlichte, per
+   `canSee("knowledge")`).
+5. Änderungsverlauf: `knowledge_articles` im Audit-Log-Filter ergänzen; Wiederherstellen über
+   `restore_row()` nur, wenn die Funktion die Tabelle ohne Umbau trägt – sonst notieren.
+
+**Abnahme**
+- [ ] Barkeeper ohne Recht sieht keine Pflege-Buttons und kann per Konsole nichts schreiben.
+- [ ] Artikel anlegen → Entwurf unsichtbar für andere → veröffentlichen → sichtbar.
+- [ ] Titelbild hochladen, ersetzen, löschen; verwaiste Datei bleibt nicht liegen.
+- [ ] Artikel taucht in der globalen Suche und im Änderungsverlauf auf.
+- [ ] Ein Test mit `<script>`/`<img onerror>` im Text wird als Text angezeigt.
+
+**Commit:** `Wissen: Artikel-Editor, Titelbild, Suche, Änderungsverlauf`
+
+---
+
+# Paket 56 – Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe
+
+**Abhängigkeit:** Paket 53 (Datenmodell); sinnvoll nach 55. Entwürfe können per `INSERT` direkt in
+`knowledge_articles` (Regel 7), nie in eine JS-Datei.
+**Modell:** Opus 5, hoher Denkaufwand – Recherche und Fachgenauigkeit zählen mehr als Tempo.
+**Arbeitsweise:** pro Session **ein Thema** (ein Artikel oder eine kleine Gruppe), danach Freigabe
+durch den Nutzer; nie mehrere Themen in einem Rutsch.
+
+**Ziel:** Ein belastbarer Grundstock an Artikeln, der hohen Service-Standards entspricht und bei
+Nachfrage einer Kontrolle oder eines Gastes standhält.
+
+**Quellenrangfolge**
+1. Gesetz und Behörde im Original: `gesetze-im-internet.de`, EUR-Lex, BfR, Länder-/Kreisbehörden,
+   Hotelstars Union (Kriterienkatalog 2025–2030).
+2. Verbände und Hersteller: DEHOGA, IHK, DGE, Sommelier-Union Deutschland, OIV, Herstellerseiten.
+3. Fachliteratur und Lehrbücher (Titel, Auflage, Jahr angeben).
+Foren, Blogs, Social Media und KI-Zusammenfassungen sind nie alleinige Quelle. Suchtreffer sind nur
+ein Weg zur Primärquelle: **zitiert wird, was dort im Wortlaut steht**, nicht die Zusammenfassung des
+Suchtreffers.
+
+**Schritte**
+1. **Themenkatalog bestätigen lassen** (Vorschlag unten, Nutzer streicht/ergänzt/priorisiert).
+2. Pro Thema: Primärquelle(n) abrufen und lesen, Kernaussagen mit Fundstelle notieren, Widersprüche
+   zwischen Quellen im Entwurf offenlegen statt wegzuglätten.
+3. Entwurf schreiben (Abschnitte, Kurztext, Quellen, Abteilungs-Tags), als `published = false`
+   einspielen. Rechtsthemen mit Stand-Datum und dem Hinweis „keine Rechtsberatung".
+4. Hausspezifisches (Servicefolge, Begrüßungsformeln, Haus- und Outlet-Standards, Zuständigkeiten,
+   Kontakte) ausdrücklich **beim Nutzer erfragen**; bis zur Bestätigung bleibt der Abschnitt leer
+   oder als „offen" markiert.
+5. Nutzer liest gegen, ergänzt Hausstandard, setzt Prüfvermerk → erst dann `published = true`.
+6. Prüfzyklus: Rechtsthemen jährlich neu gegen die Quelle prüfen (Eintrag im Backlog bzw.
+   Kalender des Nutzers; kein Mechanismus im Tool in dieser Runde).
+
+**Themenkatalog (Vorschlag, noch nicht bestätigt)**
+- *Recht & Pflicht:* Allergene und Zusatzstoffe (14 Hauptallergene nach LMIV, mündliche Auskunft
+  und schriftliche Dokumentation, Besonderheiten Bar: Sulfite in Wein, Ei, Nüsse/Mandel in Sirupen
+  und Likören); Jugendschutz (§ 9 JuSchG, Altersprüfung); Hygiene (Belehrung nach § 43 IfSG,
+  Schulung nach LMHV, Händehygiene, Gläserspülung); verantwortungsvoller Ausschank (angetrunkene
+  Gäste).
+- *Servicehandwerk:* Grundlagen Gästeansprache und Servicefolge (**Hausstandard, vom Nutzer**);
+  Gläserkunde und Glaspflege; Weinservice (Öffnen, Einschenken, Temperaturen, Dekantieren);
+  Schaumwein und Champagner; Bierservice; alkoholfreie Getränke und Alternativen; Kaffee und
+  Heißgetränke; Beschwerdemanagement.
+- *Produktwissen allgemein:* Spirituosenkategorien und ihre Rechtsgrundlagen; Weinbau und Rebsorten
+  (Grundlagen); Bier (Stile, Herstellung); Kaffee und Tee (Grundlagen). Spezifisches Wissen zu
+  einzelnen Produkten bleibt in `products` (Pakete 21–25, 44–46), nicht doppeln – Artikel verweisen
+  darauf.
+- *Haus & Outlets:* Outlet-Überblick (Bar, WGR, Tellerwerk), Sterne-/Hotelstandards laut
+  Kriterienkatalog, Notfall-/Brandschutz-Basics laut Hausvorgabe (**vom Nutzer**).
+
+**Abnahme (pro Themenpaket)**
+- [ ] Jede Sachaussage ist auf eine abgerufene Quelle rückführbar; Quellenliste im Artikel.
+- [ ] Hausspezifische Angaben sind vom Nutzer bestätigt, nicht von Claude ergänzt.
+- [ ] Stand-Datum und Prüfvermerk gesetzt, Artikel erst nach Freigabe `published = true`.
+- [ ] Gegenlesen durch den Nutzer; Korrekturen eingearbeitet.
+
+**Commit:** `Wissen: Inhalte <Thema> (Entwurf/Freigabe)`
+
+---
+
 ## Nachprüfung der offenen Abnahmepunkte (03.10.2026)
 
 Geprüft wurde lesend: SQL gegen die Datenbank, Code, `schema.sql`, `sw.js` und ein Browserdurchlauf
@@ -2826,6 +3070,9 @@ Reihenfolge offen, erst nach Runde 4 entscheiden:
   (Annahmen, keine Vorgaben): Allergen-/Deklarationsmatrix für Gerichte, Temperatur-/HACCP-Protokoll,
   Buffet-Mengenplanung, 86-Liste, Weinbegleitung. Gerichte passen vermutlich nicht in `recipes`
   (Cocktail-Schema mit ABV, nicht geprüft) und wären eine neue Datenart.
+- **Wissen – Ausbau** (nach Runde 9, nur auf Wunsch): Lesestatus-Auswertung für die Leitung (nur
+  Aggregate, Muster `quiz_team_overview()`); Quizfragen je Artikel; Lernpfade (z. B. Onboarding
+  Service) mit Pflichtartikeln; englische Zweitfassung der Artikel; Bilder im Fließtext.
 - **Quiz je Abteilung** – Themen/Fragenpool und Rangliste nach Abteilung filtern. Der Fragenpool kommt
   heute aus dem Bar-Katalog; ob und wie er für WGR/Tellerwerk zugeschnitten wird, ist offen
   (`js/quiz.js` nicht geprüft).
