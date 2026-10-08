@@ -2151,6 +2151,65 @@ select d.key, 'knowledge'
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
+-- Persönliche Einstellungen je Konto (Startseiten-Kacheln)
+-- ---------------------------------------------------------------------
+-- Bewusst nicht in public.profiles: dort steht die Rolle, und ein
+-- Self-Update-Recht auf profiles wäre ein Eskalationsrisiko. Hier darf jedes
+-- Konto nur die eigene Zeile sehen und schreiben – auch Admins.
+-- home_tiles: {"order": ["batching", …], "hidden": ["dilution", …]},
+-- Schlüssel = data-tab der Kachel (js/home.js).
+create table if not exists public.user_preferences (
+  user_id uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  home_tiles jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  constraint user_preferences_home_tiles_object check (jsonb_typeof(home_tiles) = 'object'),
+  constraint user_preferences_home_tiles_size check (pg_column_size(home_tiles) <= 8192)
+);
+
+-- updated_at ist immer Serverzeit (Muster knowledge_reads).
+create or replace function private.user_preferences_set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists user_preferences_set_updated_at on public.user_preferences;
+create trigger user_preferences_set_updated_at
+  before insert or update on public.user_preferences
+  for each row execute function private.user_preferences_set_updated_at();
+
+alter table public.user_preferences enable row level security;
+
+drop policy if exists "user_preferences: eigene lesen" on public.user_preferences;
+create policy "user_preferences: eigene lesen"
+  on public.user_preferences for select to authenticated
+  using (user_id = (select auth.uid()));
+
+drop policy if exists "user_preferences: eigene anlegen" on public.user_preferences;
+create policy "user_preferences: eigene anlegen"
+  on public.user_preferences for insert to authenticated
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "user_preferences: eigene aendern" on public.user_preferences;
+create policy "user_preferences: eigene aendern"
+  on public.user_preferences for update to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists "user_preferences: eigene loeschen" on public.user_preferences;
+create policy "user_preferences: eigene loeschen"
+  on public.user_preferences for delete to authenticated
+  using (user_id = (select auth.uid()));
+
+grant select, insert, update, delete on public.user_preferences to authenticated;
+revoke all on public.user_preferences from anon;
+
+-- ---------------------------------------------------------------------
 -- Produktfotos: privater Storage-Bucket, Zugriff nur über signierte URLs
 -- ---------------------------------------------------------------------
 -- Bewusst kein öffentlicher Bucket: Bilder sollen nicht ohne Login abrufbar

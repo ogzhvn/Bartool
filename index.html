@@ -242,8 +242,25 @@
         <div id="home-recent" class="shortcut-list"></div>
       </div>
 
-      <h3 data-i18n="ui.deine_werkzeuge">Deine Werkzeuge</h3>
-      <div class="tool-grid">
+      <div class="tool-grid-head">
+        <h3 data-i18n="ui.deine_werkzeuge">Deine Werkzeuge</h3>
+        <div class="tool-grid-actions">
+          <button type="button" class="btn-secondary" id="home-tiles-edit">
+            <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_anpassen">Anpassen</span>
+          </button>
+          <button type="button" class="btn-secondary" id="home-tiles-reset" hidden>
+            <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_standard">Standard wiederherstellen</span>
+          </button>
+          <button type="button" class="btn-primary" id="home-tiles-done" hidden>
+            <i class="ph ph-check" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_fertig">Fertig</span>
+          </button>
+        </div>
+      </div>
+      <p class="hint" id="home-tiles-hint" hidden data-i18n="ui.kacheln_hinweis">Kachel gedrückt halten und ziehen, um sie zu verschieben. Mit der Tastatur: Kachel auswählen, Pfeiltasten verschieben, Entf blendet aus.</p>
+      <div class="tool-grid" id="home-tool-grid">
         <button type="button" class="tool-card" data-tab="batching" data-module="batching">
           <i class="ph ph-flask tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.batching">Batching</span>
@@ -290,6 +307,12 @@
           <span class="tool-card-desc" data-i18n="ui.mitarbeiterkonten_anlegen_und_rollen_2ea8">Mitarbeiterkonten anlegen und Rollen verwalten</span>
         </button>
       </div>
+      <div id="home-tiles-add-wrap" hidden>
+        <h3 data-i18n="ui.werkzeug_hinzufuegen">Werkzeug hinzufügen</h3>
+        <div id="home-tiles-add" class="shortcut-list"></div>
+        <p class="hint" id="home-tiles-add-empty" data-i18n="ui.werkzeug_hinzufuegen_leer">Alle Werkzeuge sind sichtbar.</p>
+      </div>
+      <p id="home-tiles-live" class="tool-grid-live" aria-live="polite"></p>
     </section>
 
     <!-- BATCHING -->

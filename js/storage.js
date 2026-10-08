@@ -1441,3 +1441,147 @@ export async function markKnowledgeRead(articleId) {
 export function onKnowledgeChanged(callback) {
   window.addEventListener(KNOWLEDGE_UPDATED_EVENT, callback);
 }
+
+// ---------------------------------------------------------------------
+// Persönliche Einstellungen (Tabelle "user_preferences" in Supabase)
+//
+// Eine Zeile je Konto, nur für das eigene Konto les- und schreibbar (RLS).
+// Aktuell nur home_tiles: Reihenfolge und ausgeblendete Kacheln der
+// Startseite ({ order: [...], hidden: [...] }, Schlüssel = data-tab).
+//
+// Anders als die Kataloge darf hier auch offline gespeichert werden: die
+// Änderung landet sofort im Puffer (Feld pending) und geht beim nächsten
+// Netzkontakt per upsert an die Datenbank. Der Puffer ist pro Konto
+// geschlüsselt – am geteilten Tresen-Tablet bekäme sonst das nächste Konto
+// die Startseite des vorigen.
+// ---------------------------------------------------------------------
+
+const USER_PREFERENCES_UPDATED_EVENT = "bartool:user-preferences-updated";
+const USER_PREFERENCES_CACHE_PREFIX = "bartool:user-preferences:";
+
+let userPreferencesCache = { homeTiles: {} };
+let userPreferencesUserId = null;
+let userPreferencesPending = false;
+let userPreferencesWrite = Promise.resolve();
+let userPreferencesOnlineHooked = false;
+
+function normalizeUserPreferences(prefs) {
+  const homeTiles = prefs?.homeTiles;
+  return {
+    homeTiles: homeTiles && typeof homeTiles === "object" && !Array.isArray(homeTiles) ? homeTiles : {},
+  };
+}
+
+function readUserPreferencesCache(userId) {
+  try {
+    const raw = localStorage.getItem(USER_PREFERENCES_CACHE_PREFIX + userId);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeUserPreferencesCache() {
+  if (!userPreferencesUserId) return;
+  try {
+    localStorage.setItem(
+      USER_PREFERENCES_CACHE_PREFIX + userPreferencesUserId,
+      JSON.stringify({ ...userPreferencesCache, pending: userPreferencesPending })
+    );
+  } catch {
+    // Kein Platz oder kein Zugriff: der Puffer ist Komfort, kein Muss.
+  }
+}
+
+async function refreshUserPreferences() {
+  const supabase = getSupabaseClient();
+  try {
+    const { data, error } = await supabase
+      .from("user_preferences")
+      .select("home_tiles")
+      .eq("user_id", userPreferencesUserId)
+      .maybeSingle();
+    if (error) throw error;
+    // Während des Ladens lokal geändert: der lokale Stand ist neuer.
+    if (userPreferencesPending) return;
+    userPreferencesCache = normalizeUserPreferences({ homeTiles: data?.home_tiles });
+    writeUserPreferencesCache();
+  } catch {
+    // Kein Netz: Puffer behalten.
+  }
+  window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT));
+}
+
+// Schreibt den aktuellen Stand, wenn er noch aussteht. Aufrufe laufen
+// nacheinander, damit ein langsamer älterer upsert keinen neueren überholt.
+function flushUserPreferences() {
+  userPreferencesWrite = userPreferencesWrite.then(async () => {
+    if (!userPreferencesPending || !userPreferencesUserId || isOffline()) return;
+    const snapshot = userPreferencesCache;
+    const supabase = getSupabaseClient();
+    try {
+      const { error } = await supabase
+        .from("user_preferences")
+        .upsert({ user_id: userPreferencesUserId, home_tiles: snapshot.homeTiles }, { onConflict: "user_id" });
+      if (error) throw error;
+      // Nur abhaken, wenn in der Zwischenzeit nichts Neueres kam.
+      if (userPreferencesCache === snapshot) {
+        userPreferencesPending = false;
+        writeUserPreferencesCache();
+      }
+    } catch {
+      // Bleibt pending und geht beim nächsten "online" oder Start raus.
+    }
+  });
+  return userPreferencesWrite;
+}
+
+export async function initUserPreferencesSync() {
+  const supabase = getSupabaseClient();
+  let userId = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    userId = data?.session?.user?.id ?? null;
+  } catch {
+    userId = null;
+  }
+  userPreferencesUserId = userId;
+  userPreferencesCache = { homeTiles: {} };
+  userPreferencesPending = false;
+  if (!userId) {
+    window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT));
+    return;
+  }
+  const buffered = readUserPreferencesCache(userId);
+  if (buffered) {
+    userPreferencesCache = normalizeUserPreferences(buffered);
+    userPreferencesPending = buffered.pending === true;
+  }
+  window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT));
+  if (!userPreferencesOnlineHooked) {
+    userPreferencesOnlineHooked = true;
+    window.addEventListener("online", () => flushUserPreferences());
+  }
+  if (userPreferencesPending) await flushUserPreferences();
+  else await refreshUserPreferences();
+}
+
+export function loadUserPreferences() {
+  return userPreferencesCache;
+}
+
+// Übernimmt die Änderung sofort (auch offline) und schreibt im Hintergrund.
+// Gibt das Promise des Schreibvorgangs zurück; ein Fehler bleibt im Puffer
+// stehen und wird nicht geworfen.
+export function saveUserPreferences(changes) {
+  userPreferencesCache = normalizeUserPreferences({ ...userPreferencesCache, ...changes });
+  userPreferencesPending = true;
+  writeUserPreferencesCache();
+  window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT));
+  return flushUserPreferences();
+}
+
+export function onUserPreferencesChanged(callback) {
+  window.addEventListener(USER_PREFERENCES_UPDATED_EVENT, callback);
+}

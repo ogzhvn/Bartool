@@ -1915,6 +1915,127 @@ select {
   text-wrap: pretty;
 }
 
+/* ── Startseite: Kacheln anpassen (js/home.js) ───────────── */
+
+.tool-grid-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.8rem 0 0.6rem;
+}
+
+.tool-grid-head h3 {
+  margin: 0;
+}
+
+.tool-grid-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Handy im Bearbeiten-Modus: beide Knöpfe nebeneinander über volle Breite
+   statt übereinander gestapelt. */
+@media (max-width: 599px) {
+  .tool-grid-head.is-editing .tool-grid-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .tool-grid-head.is-editing .tool-grid-actions > button {
+    flex: 1 1 0;
+    justify-content: center;
+    text-align: center;
+    padding-inline: 0.6rem;
+  }
+}
+
+/* Bezugsrahmen für offsetLeft/offsetTop beim Ziehen. */
+.tool-grid {
+  position: relative;
+}
+
+.tool-card {
+  position: relative;
+}
+
+/* Vom Nutzer ausgeblendet – bewusst eine Klasse und nicht hidden: das
+   hidden-Attribut gehört der Rechte-/Abteilungssteuerung in js/main.js. */
+.tool-card.tool-card-off {
+  display: none;
+}
+
+.tool-card-remove {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.tool-card-remove i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-strong);
+  font-size: 0.85rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tool-card-remove:hover {
+    color: var(--danger);
+  }
+
+  .tool-card-remove:hover i {
+    border-color: var(--danger);
+  }
+}
+
+.tool-grid-editing .tool-card {
+  border-style: dashed;
+  border-color: var(--accent-800);
+  cursor: grab;
+}
+
+.tool-grid-editing .tool-card-remove {
+  display: flex;
+}
+
+/* Abgehoben: folgt dem Finger ohne Verzögerung, daher keine
+   transform-Transition (die Position setzt js/home.js inline). */
+.tool-card.tool-card-lifted {
+  z-index: 5;
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--bg-elevated-2);
+  box-shadow: var(--shadow-pop);
+  cursor: grabbing;
+  transition: box-shadow var(--dur-hover) var(--ease-out);
+}
+
+/* Nur für Screenreader (Positionsansagen beim Verschieben). */
+.tool-grid-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ── Rezepte / Produkte: Listen & Bearbeiten ────────────── */
 
 .recipe-edit-layout {

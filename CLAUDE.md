@@ -196,6 +196,12 @@ Größe, kleine UPDATEs und UPDATE mit `rollback` laufen. Deshalb so schreiben:
    update <tabelle> t set <spalte> = s.<spalte> from s where t.id = '<ziel>'`.
 3. md5 gegen den lokalen Stand prüfen, Restzeilen `ZZ-Staging%` = 0 prüfen.
 
+Auch `apply_migration` hing am 08.10.2026 zweimal 60 s ohne Wirkung (ca. 2,5 KB,
+Tabelle + Funktion + `drop policy if exists` + Policies + Grants). In drei
+kleine Migrationen aufgeteilt (Tabelle / Policies+Grants / Funktion+Trigger) lief
+jede sofort. Nach einem Timeout immer erst per `execute_sql` prüfen, ob etwas
+angekommen ist, dann klein aufgeteilt neu anwenden.
+
 ## Testaccount (Supabase Auth)
 Für Login-/Feature-Tests existiert ein Admin-Testaccount in der Supabase-
 Instanz (Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen
