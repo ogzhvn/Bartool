@@ -271,7 +271,10 @@ function uebernehmen(danach) {
   td.classList.remove("catalog-cell-open", "catalog-cell-error");
   loescheFehler(config, schluessel, spalte.field);
 
-  if (gleich(spalte, eintrag[spalte.field], wert)) {
+  // Läuft noch ein Speichern, ist `eintrag` womöglich veraltet: wer die Zelle
+  // gleich wieder auf den alten Wert zurückstellt, hätte sonst nichts zu
+  // schreiben – die Datenbank behielte aber den Zwischenstand.
+  if (laufendeSpeicher === 0 && gleich(spalte, eintrag[spalte.field], wert)) {
     setzeZellInhalt(td, config.text(eintrag, spalte));
     if (danach) danach();
     meldeEnde();
@@ -287,7 +290,11 @@ function uebernehmen(danach) {
 
   laufendeSpeicher += 1;
   speicherKette = speicherKette
-    .then(() => config.speichern(schluessel, spalte, wert))
+    .then(() => {
+      const frisch = config.eintrag(schluessel) ?? eintrag;
+      if (gleich(spalte, frisch[spalte.field], wert)) return undefined;
+      return config.speichern(schluessel, spalte, wert);
+    })
     .then(() => {
       td.classList.remove("catalog-cell-saving");
     })

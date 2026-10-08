@@ -2273,6 +2273,11 @@ select {
   color: var(--text-muted);
 }
 
+/* Konten-Tabelle ist breiter als das Handy: im Container scrollen, nicht die Seite weiten. */
+#admin-employee-list {
+  overflow-x: auto;
+}
+
 #admin-employee-list select,
 #admin-employee-list input {
   padding: 0.35rem 0.5rem;
@@ -3758,11 +3763,12 @@ input[type="datetime-local"] {
 
 .report-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 0.9rem;
 }
 
 .report-tile {
+  min-width: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -3850,7 +3856,7 @@ input[type="datetime-local"] {
 
 .report-bar-row {
   display: grid;
-  grid-template-columns: minmax(80px, 1fr) minmax(60px, 2fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(40px, 2fr) auto;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.55rem;

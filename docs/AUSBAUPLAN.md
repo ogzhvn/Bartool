@@ -366,7 +366,7 @@ erfinden.
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 61 | Wissen: Kategorien bereinigen (Daten) | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
-| 63 | Verwaltung: Admin-Unterseiten | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 63 | Verwaltung: Admin-Unterseiten | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 
 ---
 
@@ -3482,9 +3482,15 @@ Kategorienamen (`hyphens: auto`) greift im Test-Chromium unter Linux nicht, auf 
    Knopf-Zeilen, Abstände); große Umbauten als neues Paket vorschlagen statt sofort bauen.
 
 **Abnahme**
-- [ ] Jede Admin-Unterseite auf 390 px ohne horizontalen Seiten-Überlauf (Tabellen scrollen in
-      ihrem Container).
-- [ ] Bearbeiten/Speichern einer Zeile in Katalog- und Quiz-Tabelle durchgespielt.
+- [x] Jede Admin-Unterseite auf 390 px ohne horizontalen Seiten-Überlauf (Tabellen scrollen in
+      ihrem Container). Gemessen per Playwright über alle 10 Unterseiten (1366/390 px). Befunde
+      vorher: Konten-Tabelle weitete die Seite (1775 px bzw. 1356 px) → `#admin-employee-list`
+      scrollt jetzt selbst; Berichte +37 px bei 390 px → Kachel `min-width: 0`, Raster
+      `minmax(min(280px, 100%), 1fr)`. Übrige Seiten ohne Überlauf, keine weiteren Umbauten nötig.
+- [x] Bearbeiten/Speichern einer Zeile in Katalog- und Quiz-Tabelle durchgespielt (Zelle ändern,
+      zurückstellen, DB geprüft, Testdaten zurückgesetzt). Dabei in `js/tableEdit.js` gehärtet:
+      Wird eine Zelle direkt nach dem Speichern wieder geändert, vergleicht die Speicherkette
+      gegen den frischen Eintrag statt gegen den beim Öffnen gelesenen.
 
 ---
 
