@@ -82,7 +82,6 @@ const FILTER_ALL = "all";
 const searchEl = document.getElementById("knowledge-search");
 const departmentEl = document.getElementById("knowledge-department");
 const unreadEl = document.getElementById("knowledge-unread");
-const berufEl = document.getElementById("knowledge-beruf");
 const jahrEl = document.getElementById("knowledge-jahr");
 const levelEl = document.getElementById("knowledge-level");
 const chipsEl = document.getElementById("knowledge-categories");
@@ -95,7 +94,6 @@ let departments = [];
 let activeCategory = "";
 let departmentFilter = null;
 // "" = alle. Jahr als String, wie es aus dem <select> kommt.
-let berufFilter = "";
 let jahrFilter = "";
 let levelFilter = "";
 let openArticleId = null;
@@ -157,12 +155,10 @@ function matchesDepartment(article) {
   return key ? article.departments.includes(key) : true;
 }
 
-// Leeres berufe = gilt für alle Berufe (wie departments). Jahr und Level
+// Jahr und Level
 // zählen nur, wo sie gesetzt sind: bei aktivem Filter fallen Artikel ohne
-// Angabe heraus. Offline-Puffer älterer Stände kennt die Felder evtl. nicht.
+// Angabe heraus.
 function matchesMeta(article) {
-  const berufe = article.berufe ?? [];
-  if (berufFilter && berufe.length > 0 && !berufe.includes(berufFilter)) return false;
   if (jahrFilter && article.jahr !== Number(jahrFilter)) return false;
   if (levelFilter && article.level !== levelFilter) return false;
   return true;
@@ -323,11 +319,6 @@ function fillSelect(selectEl, options, value) {
 }
 
 function renderMetaFilters() {
-  fillSelect(
-    berufEl,
-    [["", t("ui.wissen_beruf_alle")], ...KNOWLEDGE_BERUFE.map((b) => [b.key, b.label])],
-    berufFilter
-  );
   fillSelect(
     jahrEl,
     [["", t("ui.wissen_jahr_alle")], ...KNOWLEDGE_JAHRE.map((n) => [String(n), t("ui.wissen_jahr_n", { n })])],
@@ -632,10 +623,6 @@ export function initKnowledge() {
   unreadEl.addEventListener("change", renderList);
   departmentEl.addEventListener("change", () => {
     departmentFilter = departmentEl.value;
-    renderList();
-  });
-  berufEl.addEventListener("change", () => {
-    berufFilter = berufEl.value;
     renderList();
   });
   jahrEl.addEventListener("change", () => {

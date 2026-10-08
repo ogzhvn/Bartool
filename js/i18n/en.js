@@ -1102,8 +1102,6 @@ export const en = {
   "ui.wissen_abt_alle": "All departments",
   "ui.wissen_nur_ungelesen": "Unread only",
   "ui.wissen_kategorien": "Categories",
-  "ui.wissen_beruf": "Apprenticeship",
-  "ui.wissen_beruf_alle": "All apprenticeships",
   "ui.wissen_jahr": "Training year",
   "ui.wissen_jahr_alle": "All years",
   "ui.wissen_jahr_n": "Year {n}",

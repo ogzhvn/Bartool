@@ -1103,8 +1103,6 @@ export const de = {
   "ui.wissen_abt_alle": "Alle Abteilungen",
   "ui.wissen_nur_ungelesen": "Nur ungelesen",
   "ui.wissen_kategorien": "Kategorien",
-  "ui.wissen_beruf": "Beruf",
-  "ui.wissen_beruf_alle": "Alle Berufe",
   "ui.wissen_jahr": "Ausbildungsjahr",
   "ui.wissen_jahr_alle": "Alle Jahre",
   "ui.wissen_jahr_n": "{n}. Ausbildungsjahr",
