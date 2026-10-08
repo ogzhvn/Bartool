@@ -3368,7 +3368,7 @@ input[type="datetime-local"] {
    Rand; der Name steht mittig daneben. */
 .recipe-item summary:has(.product-thumb.has-photo) {
   padding: 0 1rem 0 0;
-  min-height: 140px;
+  min-height: 100px;
 }
 
 .recipe-item-title:has(.product-thumb.has-photo) {
@@ -3378,7 +3378,7 @@ input[type="datetime-local"] {
 }
 
 .recipe-item-title:has(.product-thumb.has-photo) .product-thumb {
-  width: 108px;
+  width: 80px;
   height: auto;
   border-radius: 0;
   padding: 4px 6px;
@@ -4646,7 +4646,7 @@ input[type="datetime-local"] {
 .catalog-cell-input-long {
   position: relative;
   z-index: 4;
-  min-height: 140px;
+  min-height: 100px;
   white-space: pre-wrap;
   resize: vertical;
   box-shadow: var(--shadow-pop);
