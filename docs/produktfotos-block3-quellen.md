@@ -1,12 +1,15 @@
 # Produktfotos Block 3 – Quellen
 
-Stand 08.10.2026. Gruppen Bier, Mixer & Softdrink, Schaumwein, Wein (133 Produkte): **83 Fotos**, 50 ohne Bild (Bier 4 von 10, Mixer & Softdrink 25 von 31, Schaumwein 11 von 16, Wein 43 von 76).
+Stand 08.10.2026. Gruppen Bier, Mixer & Softdrink, Schaumwein, Wein (133 Produkte): **86 Fotos**, 47 ohne Bild (Bier 4 von 10, Mixer & Softdrink 25 von 31, Schaumwein 11 von 16, Wein 46 von 76).
 Pipeline: `tools/produktfotos/` (rembg u2net, 900×1200 transparent, WebP q85). Storage: `bilder/produkte/<product-uuid>.webp`, `products.image_path` gesetzt.
 
 Quellen: Knuspr/gurkerl.at/kifli.hu (Händler), vinello.de und vinoscout.de (Weinhändler, meist freigestellte PNG/WebP), schweppes.de und fachingen.de (Hersteller), piccantino.com, Open Food Facts (Nutzerfotos, CC-BY-SA). Bereits freigestellte Bilder (PNG/WebP mit Alpha) wurden nur zugeschnitten, nicht erneut per rembg bearbeitet. Mixer sind 0,2-l-Gastroflaschen (Schweppes, Fever-Tree, Thomas Henry, Fachingen), Fritz 0,33 l (nach Vorgabe). Bei den Schweppes-Sorten Tonic, Bitter Lemon, Ginger Ale und Wild Berry zeigte das Herstellerbild die Flasche vor dem 4er-Karton; die Flasche wurde ausmaskiert.
 
 | Produkt | Seite | Bild-URL | Konfidenz | Hinweis |
 |---|---|---|---|---|
+| "Altos Ibéricos" Gran Reserva (Miguel Torres) | https://www.vinoscout.de/products/altos-ibericos-crianza-rioja-doca | vs:altos-ibericos-crianza-rioja-doca | mittel | vinoscout.de Altos Ibéricos Crianza; vom Nutzer bestätigt (DB-Name sagt Gran Reserva, gemeint ist Crianza) |
+| "Dicker Franz" Blaufränkisch VDP.Ortswein (Weingut Klumpp) | https://www.vinoscout.de/products/burg-ravensburg-dicker-franz-blaufrankisch-grosse-lage | vs:burg-ravensburg-dicker-franz-blaufrankisch-grosse-lage | mittel | vinoscout.de Burg Ravensburg 'Große Lage'; vom Nutzer bestätigt (Weingut ist Ravensburg), DB nennt VDP.Ortswein/Klumpp |
+| Rioja "Viña Imas" Crianza (Barón de Ley) | https://www.vinoscout.de/products/baron-de-ley-vina-imas-gran-reserva | vs:baron-de-ley-vina-imas-gran-reserva | mittel | vinoscout.de Viña Imas Gran Reserva; vom Nutzer bestätigt (DB-Name sagt Crianza, gemeint ist Gran Reserva) |
 | Apfelsinfonie Prisecco Jörg Geiger | https://www.vinoscout.de/products/prisecco-apfelsinfonie-0-75l | vs:prisecco-apfelsinfonie-0-75l | hoch | vinoscout.de |
 | Auxerrois (Weingut Klumpp) | https://www.vinoscout.de/products/klumpp-auxerrois-trocken | vs:klumpp-auxerrois-trocken | hoch | vinoscout.de |
 | Bardolino DOC Classico (Bolla) | https://www.vinello.de/bardolino-classico-bolla | vn:bardolino-classico-bolla | hoch | vinello.de |
@@ -97,13 +100,15 @@ Quellen: Knuspr/gurkerl.at/kifli.hu (Händler), vinello.de und vinoscout.de (Wei
 - **Jahrgang nicht belegbar:** Dom Pérignon Vintage Rosé 2008 (gefundenes Bild vermutlich 2009), Taittinger Comtes de Champagne Blanc de Blancs 2011 (Jahrgang der Abbildung nicht lesbar), Taittinger Comtes Rosé 2007 (Label zeigt 2012).
 - **Nur schlechte Quellen:** Helles Oberdorfer (nur Dosenfoto), Radeberger Alkoholfrei (nur Handfoto).
 - **Variante unklar:** Bismarck Feinperlig (Marke führt Classic/Medium/Still), Cigalus (Blanc oder Rouge), Couvent des Jacobins (Blanc oder Rouge), „Côtes du Rhône" Syrah (Guigal/Baldès).
-- **Keine passende Quelle gefunden:** Schöfferhofer Weizen Dunkel und Kristall, Graf Zitronen-Limo, The Basil Limo, Rauch Eistee Granatapfel, 3³ Secco, Chapeau Secco; Wein: Altos Ibéricos Gran Reserva, Creso, Dicker Franz, Kähnner, Pannobile, Prestige Rouge, Cabernet Franc Obertura, Cabernet Sauvignon & Merlot Rosé (Pfaffmann), Cuvée Luitmar, Cuvée №1 (Penfolds), Drei³ (4 Sorten), Dreissigacker Vintage Riesling Magnum, Fattoria Aldobrandesca Alicante, Gewürztraminer Réserve, Grauburgunder (Gröhl), Grüner Veltliner Green, Heitlinger Hassapfel, Iphöfer Kammer, La Maladière Mercurey, Merlot Réserve (Burg Ravensburg), Petit Clos des Baldes Malbec Cahors, Puligny-Montrachet, Riesling (Spreitzer), Rioja Viña Imas Crianza, Sauvignon Blanc (Pfannebecker), Condrieu.
+- **Keine passende Quelle gefunden:** Schöfferhofer Weizen Dunkel und Kristall, Graf Zitronen-Limo, The Basil Limo, Rauch Eistee Granatapfel, 3³ Secco, Chapeau Secco; Wein: Creso, Kähnner, Pannobile, Prestige Rouge (Château Minuty; als Rotwein keine Bildquelle), Cabernet Franc Obertura, Cabernet Sauvignon & Merlot Rosé (Pfaffmann), Cuvée Luitmar, Cuvée №1 (Penfolds), Drei³ (4 Sorten), Dreissigacker Vintage Riesling Magnum, Fattoria Aldobrandesca Alicante, Gewürztraminer Réserve, Grauburgunder (Gröhl), Grüner Veltliner Green, Heitlinger Hassapfel, Iphöfer Kammer, La Maladière Mercurey, Merlot Réserve (Burg Ravensburg), Petit Clos des Baldes Malbec Cahors, Puligny-Montrachet, Riesling (Spreitzer), Sauvignon Blanc (Pfannebecker), Condrieu.
 
 ## Vom Nutzer bestätigt
 
-Mixer als 0,2-l-Gastroflaschen, Fachingen als weiße Gastroflaschen, Fritz 0,33 l, Schweppes-Gastroflasche von schweppes.de.
+Altos Ibéricos = Crianza (Torres), Viña Imas = Gran Reserva (Barón de Ley), Dicker Franz = Burg Ravensburg, Minuty = Château (nicht Domaine). Mixer als 0,2-l-Gastroflaschen, Fachingen als weiße Gastroflaschen, Fritz 0,33 l, Schweppes-Gastroflasche von schweppes.de.
 
 ## Auffälligkeiten (DB nicht geändert)
+
+- Namen laut Nutzer fehlerhaft: „Altos Ibéricos Gran Reserva" (gemeint Crianza, doppelt zu „Tempranillo Crianza Altos Ibéricos"), „Viña Imas Crianza" (gemeint Gran Reserva), „Dicker Franz … (Weingut Klumpp)" (Weingut Burg Ravensburg), „Prestige Rouge (Domaine Minuty)" (Château Minuty).
 
 - „Johann Topl" (Strass im Strassertal, Green): das Weingut heißt Johann Topf.
 - „Cuvée №1 Shiraz Cabernet Sauvignon (Penfolds)" und „Shiraz Cabernet Koonunga Hill" sind zwei verschiedene Weine; nur Koonunga Hill hat ein Bild.
