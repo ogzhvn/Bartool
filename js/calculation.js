@@ -174,6 +174,8 @@ export function initCalculation() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
     populateRecipeSelect();
+    // Kosten und Preisbasis je Zeile (Dezimaltrennzeichen, „/ Liter") neu schreiben
+    ingredientsEl.querySelectorAll(".calc-ing-unit").forEach((el) => el.dispatchEvent(new Event("input", { bubbles: true })));
     calculate();
     applyTranslations(panelEl);
   });

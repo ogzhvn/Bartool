@@ -199,10 +199,12 @@ function renderDataStatus() {
     return;
   }
   statusEl.hidden = false;
-  statusEl.textContent =
-    t("ui.datenbasis_noch_unvollstaendig") +
-    luecken.join(" · ") +
-    t("ui.einkaufspreise_stehen_im_produkt_1a01");
+  // Befund fett, Erklärung klein darunter – statt eines langen Fließtexts.
+  const befund = document.createElement("strong");
+  befund.textContent = t("ui.datenbasis_noch_unvollstaendig") + luecken.join(" · ");
+  const erklaerung = document.createElement("span");
+  erklaerung.textContent = t("ui.einkaufspreise_stehen_im_produkt_1a01").replace(/^\.\s*/, "");
+  statusEl.replaceChildren(befund, erklaerung);
 }
 
 function berechnen() {

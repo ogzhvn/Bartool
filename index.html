@@ -1033,7 +1033,7 @@
       <h2 data-i18n="ui.kartenkalkulation">Kartenkalkulation</h2>
       <p class="hint" data-i18n="ui.mehrere_drinks_nebeneinander_wareneinsatz_2b63">Mehrere Drinks nebeneinander: Wareneinsatz, Rohertrag und Wareneinsatzquote auf einen Blick. Der Verkaufspreis wird im jeweiligen Rezept gepflegt.</p>
 
-      <p id="menu-data-status" class="empty-note" hidden></p>
+      <div id="menu-data-status" class="data-note" hidden></div>
 
       <div class="field-row">
         <label data-i18n="ui.ziel_wareneinsatzquote">
@@ -1534,13 +1534,15 @@
                 <span class="unit-suffix" data-i18n="ui.g">g</span>
               </div>
             </label>
-            <div class="juice-result">
-              <span class="juice-result-label" data-i18n="ui.zitronensaeure">Zitronensäure</span>
-              <span class="juice-result-value" id="sj-lime-citric">0.00 g</span>
-            </div>
-            <div class="juice-result">
-              <span class="juice-result-label" data-i18n="ui.apfelsaeure">Apfelsäure</span>
-              <span class="juice-result-value" id="sj-lime-malic">0.00 g</span>
+            <div class="juice-result-pair">
+              <div class="juice-result">
+                <span class="juice-result-label" data-i18n="ui.zitronensaeure">Zitronensäure</span>
+                <span class="juice-result-value" id="sj-lime-citric">0 g</span>
+              </div>
+              <div class="juice-result">
+                <span class="juice-result-label" data-i18n="ui.apfelsaeure">Apfelsäure</span>
+                <span class="juice-result-value" id="sj-lime-malic">0 g</span>
+              </div>
             </div>
             <div class="juice-result">
               <span class="juice-result-label" data-i18n="ui.wasser">Wasser</span>
@@ -1559,13 +1561,15 @@
                 <span class="unit-suffix" data-i18n="ui.g">g</span>
               </div>
             </label>
-            <div class="juice-result">
-              <span class="juice-result-label" data-i18n="ui.zitronensaeure">Zitronensäure</span>
-              <span class="juice-result-value" id="sj-lemon-citric">0.00 g</span>
-            </div>
-            <div class="juice-result">
-              <span class="juice-result-label" data-i18n="ui.apfelsaeure">Apfelsäure</span>
-              <span class="juice-result-value" id="sj-lemon-malic">0.00 g</span>
+            <div class="juice-result-pair">
+              <div class="juice-result">
+                <span class="juice-result-label" data-i18n="ui.zitronensaeure">Zitronensäure</span>
+                <span class="juice-result-value" id="sj-lemon-citric">0 g</span>
+              </div>
+              <div class="juice-result">
+                <span class="juice-result-label" data-i18n="ui.apfelsaeure">Apfelsäure</span>
+                <span class="juice-result-value" id="sj-lemon-malic">0 g</span>
+              </div>
             </div>
             <div class="juice-result">
               <span class="juice-result-label" data-i18n="ui.wasser">Wasser</span>
@@ -1708,7 +1712,6 @@
       </div>
 
       <h3 data-i18n="ui.preisziel">Preisziel</h3>
-      <p id="menu-data-status" class="empty-note" hidden></p>
 
       <div class="field-row">
         <label data-i18n="ui.ziel_wareneinsatzquote">

@@ -1260,7 +1260,7 @@ export const de = {
   "ui.ziel_nicht_erreichbar_unverduennt_hat_das_61af": "Ziel nicht erreichbar: unverdünnt hat das Rezept nur",
   "ui.ziel_portionen": "Ziel-Portionen",
   "ui.ziel_volumen_in_ml": "Ziel-Volumen in ml",
-  "ui.ziel_wareneinsatzquote": "Ziel-Wareneinsatzquote (%)",
+  "ui.ziel_wareneinsatzquote": "Ziel-Wareneinsatz (%)",
   "ui.zielpreis_brutto": "Zielpreis brutto",
   "ui.zielquote": "Zielquote",
   "ui.zitronensaeure": "Zitronensäure",

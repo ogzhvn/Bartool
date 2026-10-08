@@ -1,4 +1,4 @@
-import { onLanguageChanged } from "./i18n.js";
+import { formatDecimal, onLanguageChanged } from "./i18n.js";
 const PRESETS = {
   "1:1": { sugar: 1, water: 1 },
   "2:1": { sugar: 2, water: 1 },
@@ -39,8 +39,8 @@ function calculate() {
   const sugarAmount = waterAmount * (sugarParts / waterParts);
   const totalWeight = waterAmount + sugarAmount;
 
-  sugarAmountEl.textContent = `${Math.round(sugarAmount)} g`;
-  yieldAmountEl.textContent = `${Math.round(totalWeight)} g`;
+  sugarAmountEl.textContent = `${formatDecimal(Math.round(sugarAmount), 0)} g`;
+  yieldAmountEl.textContent = `${formatDecimal(Math.round(totalWeight), 0)} g`;
 }
 
 export function initSyrup() {

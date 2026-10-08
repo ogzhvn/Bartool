@@ -361,7 +361,7 @@ erfinden.
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 57 | Querschnitt: Header, native Felder, Hover, Abstände | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 61 | Wissen: Kategorien bereinigen (Daten) | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -3250,10 +3250,25 @@ Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu 
   volle Zeilen; Suchfeld nicht volle Breite; Hinweis zur Datenbasis als langer Fließtext.
 
 **Abnahme**
-- [ ] Keine Zahl im UI mit falschem Dezimaltrennzeichen (DE und EN gegengeprüft).
-- [ ] Alle vier Rechner auf 390 px ohne Überlauf, ×-Knöpfe quadratisch, Labels in einer Zeile
-      bündig mit dem Nachbarfeld.
-- [ ] Rechenergebnisse unverändert (je ein Beispiel vorher/nachher gleich).
+- [x] Keine Zahl im UI mit falschem Dezimaltrennzeichen (DE und EN gegengeprüft). Superjuice und Zuckersirup
+      formatieren per `formatDecimal` (DE `166,67 g` / `4.165 g`, EN `166.67 g` / `4,165 g`; `120 g` statt `120.00 g`).
+      Dazu ein vorhandener Fehler behoben: Kosten und Preisbasis bestehender Kalkulationszeilen
+      („0.00 €“, „€ / litre“) wurden beim Sprachwechsel nicht neu geschrieben (`onLanguageChanged` in
+      `js/calculation.js` stößt jetzt `updateRow` je Zeile an).
+- [x] Alle vier Rechner auf 390 px ohne Überlauf (Playwright, DE und EN), ×-Knöpfe 44 × 44 px (gemessen),
+      „Ziel-Wareneinsatz (%)“ und „MwSt.-Satz (%)“ in einer Zeile, Felder gleiche Höhe und Oberkante.
+      Beschriftung gekürzt (DE „Ziel-Wareneinsatz (%)“ statt „…quote“), sonst bricht sie bei 390 px um.
+- [x] Rechenergebnisse unverändert: Superjuice 250 g Limette → 166,67 / 83,25 / 4.165 g, 120 g Zitrone → 120 / 0 / 1.999 g;
+      Sirup 2:1 bei 500 ml → 1.000 g Zucker, 1.500 g gesamt; Kalkulation 60 ml à 24,50 €/l → 1,47 € (vorher = nachher).
+- [x] Superjuice: Zitronen-/Apfelsäure nebeneinander, Wasser darunter; Karten auf dem Handy kompakter.
+      Zuckersirup: gesperrte Teile-Felder gestrichelt statt halbtransparent und nebeneinander; leere Zeile
+      über „Zucker benötigt“ entfernt (`.juice-card-body > .juice-result:first-child`).
+      Kalkulation: Zeile ≤ 700 px = Name / Menge · Einheit · × / Preis · Preisbasis · Kosten, Trennlinie je Zutat.
+      Karte: Suche volle Breite (max. 32 rem), „Alle auswählen“ + „Auswahl aufheben“ nebeneinander, Excel darunter;
+      Datenbasis als Befund (fett) + kleine Erklärung statt Fließtext (`.data-note`, Markup in `menuCosting.js`).
+      Die doppelte ID `menu-data-status` (im Kalkulations-Tab nie befüllt) ist entfernt.
+- Cache-Version `bartool-v89`. Vorher/nachher-Screenshots 390 px und 1366 px aller vier Tabs.
+- Auf Gerät prüfen: Kalkulationszeile und Karten-Auswahlleiste auf echtem Handy (Touch-Größen, Umbruch bei 360 px).
 
 ---
 

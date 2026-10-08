@@ -1348,22 +1348,38 @@ select {
   white-space: nowrap;
 }
 
+/* ×-Knopf quadratisch (44 × 44), auch auf dem Desktop */
+.calc-ingredient-row .remove-btn {
+  width: 44px;
+  padding: 0;
+}
+
 @media (max-width: 700px) {
+  /* Menge/Einheit/×-Knopf in einer Zeile, Preis/Preisbasis/Kosten in der nächsten:
+     die Kosten stehen neben dem Preis statt allein in einer Zeile. */
   .calc-ingredient-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
     grid-template-areas:
-      "name name"
-      "amount unit"
-      "price label"
-      "cost remove";
+      "name name name"
+      "amount unit remove"
+      "price label cost";
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .calc-ingredient-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
   }
   .calc-ingredient-row .calc-ing-name { grid-area: name; }
   .calc-ingredient-row .calc-ing-amount { grid-area: amount; }
   .calc-ingredient-row .calc-ing-unit { grid-area: unit; }
   .calc-ingredient-row .calc-ing-price { grid-area: price; }
   .calc-ingredient-row .calc-price-label { grid-area: label; }
-  .calc-ingredient-row .calc-cost { grid-area: cost; }
-  .calc-ingredient-row .remove-btn { grid-area: remove; }
+  .calc-ingredient-row .calc-cost { grid-area: cost; min-width: 4.5rem; }
+  .calc-ingredient-row .remove-btn { grid-area: remove; justify-self: end; }
+  .calc-ingredient-list {
+    gap: 0.9rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1541,6 +1557,124 @@ select {
   font-size: 1.7rem;
   font-weight: 500;
   color: var(--accent-300);
+}
+
+/* Erstes Ergebnis direkt unter dem Kartenkopf: keine leere Zeile davor */
+.juice-card-body > .juice-result:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Zitronen- und Apfelsäure nebeneinander, Wasser darunter über die volle Breite */
+.juice-result-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+@media (max-width: 599px) {
+  .juice-card-body {
+    padding: 0.85rem;
+  }
+
+  .juice-result {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+  }
+
+  .juice-result-value {
+    font-size: 1.45rem;
+  }
+}
+
+/* Zuckersirup: Teile-Felder immer nebeneinander; gesperrt (Voreinstellung) sichtbar
+   gesperrt, aber mit lesbarem Wert – nicht wie ein leeres Feld. */
+#syrup .field-row > label {
+  min-width: 0;
+}
+
+#syrup .field-row input {
+  width: 100%;
+  min-width: 0;
+}
+
+#syrup input:disabled {
+  opacity: 1;
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-muted);
+  -webkit-text-fill-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ── Kalkulation / Karte: Preisziel-Zeile ───────────────── */
+
+/* Beide Felder bündig, auch wenn eine Beschriftung doch einmal umbricht */
+#calculation .field-row:not(.recipe-load-row),
+#menu-costing .field-row:not(.no-print) {
+  align-items: flex-end;
+}
+
+#calculation .field-row:not(.recipe-load-row) > label,
+#menu-costing .field-row:not(.no-print) > label {
+  min-width: 0;
+}
+
+#calculation .field-row:not(.recipe-load-row) input,
+#menu-costing .field-row:not(.no-print) input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Karte: Suche, Auswahlleiste, Datenbasis ────────────── */
+
+#menu-search {
+  flex: 1 1 100%;
+  max-width: 32rem;
+}
+
+.data-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0 0 1rem;
+  padding: 0.1rem 0 0.1rem 0.8rem;
+  border-left: 2px solid var(--accent-700);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.data-note[hidden] {
+  display: none;
+}
+
+.data-note strong {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.data-note span {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 899px) {
+  /* Zähler oben, „Alle“ und „Aufheben“ nebeneinander, Excel darunter */
+  #menu-costing .export-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  #menu-costing .export-count {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  #menu-costing #menu-export-excel {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ── Start / Dashboard ──────────────────────────────────── */

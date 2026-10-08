@@ -1,4 +1,4 @@
-import { onLanguageChanged } from "./i18n.js";
+import { formatDecimal, onLanguageChanged } from "./i18n.js";
 // Faktoren beziehen sich auf das Gewicht der (übrig gebliebenen) Zitrusschalen.
 const RATIOS = {
   lime: { citric: 0.6667, malic: 0.333, water: 16.66 },
@@ -8,9 +8,9 @@ const RATIOS = {
 function calcFor(type) {
   const peelWeight = parseFloat(document.getElementById(`sj-${type}-peel`).value) || 0;
   const ratio = RATIOS[type];
-  document.getElementById(`sj-${type}-citric`).textContent = `${(peelWeight * ratio.citric).toFixed(2)} g`;
-  document.getElementById(`sj-${type}-malic`).textContent = `${(peelWeight * ratio.malic).toFixed(2)} g`;
-  document.getElementById(`sj-${type}-water`).textContent = `${Math.round(peelWeight * ratio.water)} g`;
+  document.getElementById(`sj-${type}-citric`).textContent = `${formatDecimal(peelWeight * ratio.citric)} g`;
+  document.getElementById(`sj-${type}-malic`).textContent = `${formatDecimal(peelWeight * ratio.malic)} g`;
+  document.getElementById(`sj-${type}-water`).textContent = `${formatDecimal(Math.round(peelWeight * ratio.water), 0)} g`;
 }
 
 export function initSuperjuice() {
