@@ -494,7 +494,7 @@ Reihenfolge: **70 → 71 → 72 → 73**. **74** sobald die Küchenlisten vorlie
 | 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 74 | Gerichte erfassen: Import aus den Küchenlisten | offen (wartet auf Listen) | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
+| 74 | Gerichte erfassen: Import aus den Küchenlisten | teilweise (08.10.2026): Tellerwerk-Karte importiert, Allergene und WGR offen | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
 
 ---
 
@@ -4251,6 +4251,20 @@ das die `insert`-Statements erzeugt (Regel 7: Massenänderung per Skript).
 - [ ] Jede offene Unklarheit steht als Liste beim Nutzer, nichts wurde geschätzt.
 
 **Commit:** keiner nötig (nur DB); Plan-Status mit `Gerichte: Import WGR/Tellerwerk` committen.
+
+**Umsetzungsnotizen Teil 1 (08.10.2026, nur Tellerwerk-Karte)**
+- Importiert: **33 Gerichte** mit `departments = {tellerwerk}` (Vorspeise 5, Hauptgang 8, Steak 3, Flammkuchen 3,
+  Dessert 5, Kinderkarte 6, Menü 3). Skript: Scratchpad `gen_tellerwerk.py`, `insert … on conflict (name) do nothing`.
+- Entscheidungen mit dem Nutzer: ein Eintrag je Karteneintrag, `components` leer, Zusätze/Größen/Beilagen/Soßen
+  und **Preise im `description`** („Preis: 13,50 €“), weil `dishes` kein Preisfeld hat. Preise sind damit
+  Text und werden bei Preisänderung von Hand gepflegt. Uhrzeiten (Mittag 12–15, Flammkuchen 12–20) nicht übernommen.
+  Chef's Choice, 4- und 5-Gang-Menü als Kategorie „Menü“. „Nordisches Matjesfilet“ (nur im Menü) ohne Preis.
+- **Allergene, Spuren, Zusatzstoffe, Prüfvermerk, Weinbegleitung: leer.** Die Karte enthält nur die Legende, keine
+  Zuordnung je Gericht. Leer heißt „nicht erfasst“, nicht „allergenfrei“.
+- Legende → Schlüssel liegt vor (A Weizen → `gluten_weizen` …). Ohne Schlüssel in `js/declarations.js`:
+  9 geschwefelt, 11 koffeinhaltig, 15 gentechnisch verändert, 16 chininhaltig. 10 Sulfite ist doppelt zu D.
+- **Offen:** Allergenliste Tellerwerk (per `update`), Speisekarte und Allergenliste WGR (per `insert`).
+  Abnahme „Anzahl je Abteilung = Listen“ gilt nur für Tellerwerk (33 = 33), WGR 0.
 
 ---
 
