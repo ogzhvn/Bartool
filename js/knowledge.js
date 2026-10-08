@@ -697,6 +697,17 @@ export function initKnowledge() {
     onClose: handleEditorClosed,
   });
 
+  // "Wissen" direkt anklicken (Sidebar-Button, Start-Kachel) führt aus einem
+  // offenen Artikel zurück zur Liste. Der Editor bleibt unberührt, damit
+  // ungespeicherte Änderungen nicht verloren gehen.
+  document.querySelectorAll('[data-tab="knowledge"]').forEach((el) => {
+    el.addEventListener("click", () => {
+      if (isKnowledgeEditorOpen() || !openArticleId) return;
+      showList();
+      renderList();
+    });
+  });
+
   onKnowledgeChanged(refresh);
   onLanguageChanged(render);
   render();
