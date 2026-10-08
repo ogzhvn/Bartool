@@ -2110,33 +2110,6 @@ select {
   }
 }
 
-/* Rezepte/Produkte: Zähler oben, „Alle“/„Aufheben“ und Excel/Word paarweise,
-   Drucken darunter – statt fünf vollbreiter Knöpfe, die den ersten Bildschirm
-   füllen. */
-@media (max-width: 899px) {
-  :is(#recipes, #products) .export-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-  }
-
-  :is(#recipes, #products) .export-bar .export-count {
-    grid-column: 1 / -1;
-    margin: 0;
-  }
-
-  :is(#recipes, #products) .export-bar .btn-secondary:last-child {
-    grid-column: 1 / -1;
-  }
-
-  /* „Als Excel exportieren" bleibt einzeilig in der halben Breite */
-  :is(#recipes, #products) .export-bar .btn-secondary {
-    justify-content: center;
-    padding-inline: 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-
 @media (max-width: 599px) {
   /* Kategorie-Filter unter dem Suchfeld über die volle Breite, nicht halb */
   :is(#recipes, #products) .field-row > select {
@@ -5210,6 +5183,7 @@ p.knowledge-nav-title {
   color: var(--text-muted);
 }
 
+.recipe-item.selected,
 .knowledge-row.selected {
   box-shadow: inset 3px 0 0 var(--accent);
   background: var(--bg-elevated);

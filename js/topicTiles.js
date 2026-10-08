@@ -39,3 +39,69 @@ export function renderTopicNav(container, title, count, onBack) {
   heading.appendChild(el("span", "knowledge-nav-count", ` · ${count}`));
   container.append(back, heading);
 }
+
+// Mehrfachauswahl wie in Wissen: Leiste mit "Auswählen"; bei aktiver Auswahl
+// "Alle auswählen", Zähler, die übergebenen Aktionen und "Fertig". Die Leiste
+// hält die Auswahl (Namen); die Liste fragt `selecting` ab und zeigt dann
+// Checkboxen. actions: [{ key, icon, label, run(names) }]; onChange() rendert
+// die Liste neu, wenn sich der Auswahlmodus ändert.
+export function createBulkBar(container, { actions, onChange }) {
+  const bar = { selecting: false, selected: new Set(), shown: [] };
+
+  function button(action, icon, label, disabled = false) {
+    const node = document.createElement("button");
+    node.type = "button";
+    node.className = "btn-secondary";
+    node.dataset.action = action;
+    node.disabled = disabled;
+    const i = el("i", `ph ${icon}`);
+    i.setAttribute("aria-hidden", "true");
+    node.append(i, el("span", null, label));
+    return node;
+  }
+
+  bar.render = (shown) => {
+    bar.shown = shown;
+    container.textContent = "";
+    container.hidden = shown.length === 0;
+    if (shown.length === 0) return;
+    if (!bar.selecting) {
+      container.appendChild(button("select", "ph-check-square", t("ui.wissen_auswaehlen")));
+      return;
+    }
+    const shownSet = new Set(shown);
+    [...bar.selected].forEach((name) => !shownSet.has(name) && bar.selected.delete(name));
+    const all = bar.selected.size === shown.length;
+    container.append(
+      button("select-all", all ? "ph-square" : "ph-check-square", all ? t("ui.wissen_alle_abwaehlen") : t("ui.wissen_alle_auswaehlen")),
+      el("span", "knowledge-bulk-count", t("ui.wissen_n_ausgewaehlt", { n: bar.selected.size }))
+    );
+    actions.forEach((a) => container.appendChild(button(a.key, a.icon, a.label(), bar.selected.size === 0)));
+    container.appendChild(button("done", "ph-x", t("ui.wissen_auswahl_beenden")));
+  };
+
+  bar.refresh = () => bar.render(bar.shown);
+
+  bar.end = () => {
+    bar.selecting = false;
+    bar.selected.clear();
+  };
+
+  container.addEventListener("click", (e) => {
+    const target = e.target.closest("button[data-action]");
+    if (!target || target.disabled) return;
+    const action = target.dataset.action;
+    if (action === "select") bar.selecting = true;
+    else if (action === "done") bar.end();
+    else if (action === "select-all") {
+      if (bar.selected.size === bar.shown.length) bar.selected.clear();
+      else bar.shown.forEach((name) => bar.selected.add(name));
+    } else {
+      actions.find((a) => a.key === action)?.run([...bar.selected]);
+      return;
+    }
+    onChange();
+  });
+
+  return bar;
+}

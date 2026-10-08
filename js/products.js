@@ -2,7 +2,7 @@ import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
 import { printProducts } from "./printView.js";
-import { renderTopicTiles, renderTopicNav } from "./topicTiles.js";
+import { renderTopicTiles, renderTopicNav, createBulkBar } from "./topicTiles.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
@@ -159,7 +159,7 @@ const groupFilterEl = document.getElementById("product-group-filter");
 const categoryTreeEl = document.getElementById("product-category-tree");
 const topicsEl = document.getElementById("product-topics");
 const navEl = document.getElementById("product-nav");
-const exportBarEl = document.querySelector("#products-list-view .export-bar");
+const bulkEl = document.getElementById("product-bulk");
 
 // Kachel "Alle": Liste ohne Oberkategorie. Ohne Filter, Suche und diesen
 // Schalter zeigt der Tab die Kachelübersicht (wie Wissen).
@@ -168,21 +168,21 @@ const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
 const sidebarSearchEl = document.getElementById("product-sidebar-search");
-const selectedCountEl = document.getElementById("product-selected-count");
-const selectAllBtn = document.getElementById("product-select-all");
-const selectNoneBtn = document.getElementById("product-select-none");
-const exportExcelBtn = document.getElementById("product-export-excel");
-const exportWordBtn = document.getElementById("product-export-word");
-const printBtn = document.getElementById("product-print");
 
 // Namen der für den Export angehakten Produkte (überlebt Neurendern der Liste).
-const selectedNames = new Set();
+// Mehrfachauswahl (Excel/Word/Drucken) wie im Wissen-Tab.
+const byNames = (names) => getAllProducts().filter((p) => names.includes(p.name));
+const bar = createBulkBar(bulkEl, {
+  actions: [
+    { key: "excel", icon: "ph-file-xls", label: () => "Excel", run: (names) => names.length && exportProductsToExcel(byNames(names)) },
+    { key: "word", icon: "ph-file-doc", label: () => "Word", run: (names) => names.length && exportProductsToWord(byNames(names)) },
+    { key: "print", icon: "ph-printer", label: () => t("ui.drucken"), run: (names) => printProducts(byNames(names)) },
+  ],
+  onChange: () => renderBrowseList(),
+});
 
 function updateExportBar() {
-  selectedCountEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
-  exportExcelBtn.disabled = selectedNames.size === 0;
-  exportWordBtn.disabled = selectedNames.size === 0;
-  printBtn.disabled = selectedNames.size === 0;
+  bar.render(topicsEl.hidden ? currentFilteredProducts().map((p) => p.name) : []);
 }
 
 let editingOriginalName = null;
@@ -631,7 +631,7 @@ function renderProductItem(product) {
   item.innerHTML = `
     <summary>
       <span class="recipe-item-title">
-        <input type="checkbox" class="product-select-checkbox" ${selectedNames.has(product.name) ? "checked" : ""} />
+        ${bar.selecting ? `<input type="checkbox" class="product-select-checkbox" ${bar.selected.has(product.name) ? "checked" : ""} />` : ""}
         <span class="product-thumb"><i class="ph ph-wine" aria-hidden="true"></i></span>
         ${escapeHtml(product.name)}
       </span>
@@ -684,15 +684,23 @@ function renderProductItem(product) {
   });
 
   const checkbox = item.querySelector(".product-select-checkbox");
-  checkbox.addEventListener("click", (e) => e.stopPropagation());
-  checkbox.addEventListener("change", () => {
-    if (checkbox.checked) {
-      selectedNames.add(product.name);
-    } else {
-      selectedNames.delete(product.name);
-    }
-    updateExportBar();
-  });
+  if (checkbox) {
+    item.classList.toggle("selected", checkbox.checked);
+    checkbox.addEventListener("click", (e) => e.stopPropagation());
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) bar.selected.add(product.name);
+      else bar.selected.delete(product.name);
+      item.classList.toggle("selected", checkbox.checked);
+      updateExportBar();
+    });
+    // Im Auswahlmodus schaltet ein Klick auf die Zeile die Auswahl um, statt aufzuklappen.
+    item.querySelector("summary").addEventListener("click", (e) => {
+      if (e.target.closest(".fav-btn") || e.target === checkbox) return;
+      e.preventDefault();
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event("change"));
+    });
+  }
   const editBtn = item.querySelector(".edit-btn");
   if (editBtn) {
     editBtn.addEventListener("click", (e) => {
@@ -755,9 +763,9 @@ function renderBrowseList() {
     !searchEl.value.trim() && !activeOberkategorie && !activeWeinTyp && !groupFilterEl.value && !showAll;
   topicsEl.hidden = !overview;
   navEl.hidden = overview;
-  exportBarEl.hidden = overview;
   listEl.hidden = overview;
   if (overview) {
+    bar.end();
     groupFilterEl.hidden = true;
     renderTopics();
     updateExportBar();
@@ -985,25 +993,6 @@ export function initProducts() {
   searchEl.addEventListener("input", renderBrowseList);
   groupFilterEl.addEventListener("change", renderBrowseList);
   sidebarSearchEl.addEventListener("input", renderSidebarList);
-  selectAllBtn.addEventListener("click", () => {
-    currentFilteredProducts().forEach((p) => selectedNames.add(p.name));
-    renderBrowseList();
-  });
-  selectNoneBtn.addEventListener("click", () => {
-    selectedNames.clear();
-    renderBrowseList();
-  });
-  exportExcelBtn.addEventListener("click", () => {
-    const products = getAllProducts().filter((p) => selectedNames.has(p.name));
-    if (products.length > 0) exportProductsToExcel(products);
-  });
-  exportWordBtn.addEventListener("click", () => {
-    const products = getAllProducts().filter((p) => selectedNames.has(p.name));
-    if (products.length > 0) exportProductsToWord(products);
-  });
-  printBtn.addEventListener("click", () => {
-    printProducts(getAllProducts().filter((p) => selectedNames.has(p.name)));
-  });
   // "Produkte" direkt anklicken (Sidebar-Button, Start-Kachel) zeigt wieder
   // den vollen Katalog statt in der zuletzt gewählten Kategorie zu bleiben.
   document.querySelectorAll('[data-tab="products"]').forEach((el) => {

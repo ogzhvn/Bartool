@@ -7,7 +7,7 @@ import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { allergensForRecipe, allergenLabel } from "./allergens.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { printRecipes } from "./printView.js";
-import { renderTopicTiles, renderTopicNav } from "./topicTiles.js";
+import { renderTopicTiles, renderTopicNav, createBulkBar } from "./topicTiles.js";
 import { can } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
@@ -43,7 +43,7 @@ const categoryFilterEl = document.getElementById("recipe-category-filter");
 const categoryTreeEl = document.getElementById("recipe-category-tree");
 const topicsEl = document.getElementById("recipe-topics");
 const navEl = document.getElementById("recipe-nav");
-const exportBarEl = document.querySelector("#recipes-list-view .export-bar");
+const bulkEl = document.getElementById("recipe-bulk");
 
 // Kachel "Alle": Liste ohne Kategorie-Filter. Ohne Filter, Suche und diesen
 // Schalter zeigt der Tab die Kachelübersicht (wie Wissen).
@@ -77,17 +77,20 @@ const ingredientsEl = document.getElementById("recipe-ingredients");
 const searchEl = document.getElementById("recipe-search");
 const sidebarListEl = document.getElementById("recipe-sidebar-list");
 const sidebarSearchEl = document.getElementById("recipe-sidebar-search");
-const selectedCountEl = document.getElementById("recipe-selected-count");
-const selectAllBtn = document.getElementById("recipe-select-all");
-const selectNoneBtn = document.getElementById("recipe-select-none");
-const exportExcelBtn = document.getElementById("recipe-export-excel");
-const exportWordBtn = document.getElementById("recipe-export-word");
-const printBtn = document.getElementById("recipe-print");
 
 const editor = createIngredientEditor(ingredientsEl);
 
 let editingOriginalName = null;
-const selectedNames = new Set();
+// Mehrfachauswahl (Excel/Word/Drucken) wie im Wissen-Tab.
+const byNames = (names) => getAllRecipes().filter((r) => names.includes(r.name));
+const bar = createBulkBar(bulkEl, {
+  actions: [
+    { key: "excel", icon: "ph-file-xls", label: () => "Excel", run: (names) => names.length && exportRecipesToExcel(byNames(names)) },
+    { key: "word", icon: "ph-file-doc", label: () => "Word", run: (names) => names.length && exportRecipesToWord(byNames(names)) },
+    { key: "print", icon: "ph-printer", label: () => t("ui.drucken"), run: (names) => printRecipes(byNames(names)) },
+  ],
+  onChange: () => renderBrowseList(),
+});
 // Scroll-Position der Liste, gemerkt beim Öffnen des Formulars aus der
 // Liste heraus, damit man nach dem Speichern/Löschen/Zurück wieder an der
 // gleichen Stelle landet statt oben in der Liste.
@@ -394,10 +397,7 @@ function groupRecipesByCategory(recipes) {
 }
 
 function updateExportBar() {
-  selectedCountEl.textContent = `${selectedNames.size} ${t("ui.ausgewaehlt")}`;
-  exportExcelBtn.disabled = selectedNames.size === 0;
-  exportWordBtn.disabled = selectedNames.size === 0;
-  printBtn.disabled = selectedNames.size === 0;
+  bar.render(topicsEl.hidden ? currentFilteredRecipes().map((r) => r.name) : []);
 }
 
 // Allergen-Block für die Rezeptansicht. Sagt nie "allergenfrei": was nicht
@@ -467,7 +467,7 @@ function renderRecipeItem(recipe) {
   item.innerHTML = `
     <summary>
       <span class="recipe-item-title">
-        <input type="checkbox" class="recipe-select-checkbox" ${selectedNames.has(recipe.name) ? "checked" : ""} />
+        ${bar.selecting ? `<input type="checkbox" class="recipe-select-checkbox" ${bar.selected.has(recipe.name) ? "checked" : ""} />` : ""}
         ${escapeHtml(recipe.name)}
       </span>
       <button type="button" class="fav-btn${isFavorite("recipe", recipe.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="${isFavorite("recipe", recipe.name) ? "ph-fill" : "ph"} ph-star" aria-hidden="true"></i></button>
@@ -522,15 +522,23 @@ function renderRecipeItem(recipe) {
   });
 
   const checkbox = item.querySelector(".recipe-select-checkbox");
-  checkbox.addEventListener("click", (e) => e.stopPropagation());
-  checkbox.addEventListener("change", () => {
-    if (checkbox.checked) {
-      selectedNames.add(recipe.name);
-    } else {
-      selectedNames.delete(recipe.name);
-    }
-    updateExportBar();
-  });
+  if (checkbox) {
+    item.classList.toggle("selected", checkbox.checked);
+    checkbox.addEventListener("click", (e) => e.stopPropagation());
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) bar.selected.add(recipe.name);
+      else bar.selected.delete(recipe.name);
+      item.classList.toggle("selected", checkbox.checked);
+      updateExportBar();
+    });
+    // Im Auswahlmodus schaltet ein Klick auf die Zeile die Auswahl um, statt aufzuklappen.
+    item.querySelector("summary").addEventListener("click", (e) => {
+      if (e.target.closest(".fav-btn") || e.target === checkbox) return;
+      e.preventDefault();
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event("change"));
+    });
+  }
   const editBtn = item.querySelector(".edit-btn");
   if (editBtn) {
     editBtn.addEventListener("click", (e) => {
@@ -589,10 +597,10 @@ function renderBrowseList() {
   const overview = !searchEl.value.trim() && !categoryFilterEl.value && !showAll;
   topicsEl.hidden = !overview;
   navEl.hidden = overview;
-  exportBarEl.hidden = overview;
   listEl.hidden = overview;
   categoryFilterEl.hidden = overview;
   if (overview) {
+    bar.end();
     renderTopics();
     updateExportBar();
     return;
@@ -758,25 +766,6 @@ export function initRecipes() {
     el.addEventListener("click", resetCategoryFilter);
   });
   sidebarSearchEl.addEventListener("input", renderSidebarList);
-  selectAllBtn.addEventListener("click", () => {
-    currentFilteredRecipes().forEach((r) => selectedNames.add(r.name));
-    renderBrowseList();
-  });
-  selectNoneBtn.addEventListener("click", () => {
-    selectedNames.clear();
-    renderBrowseList();
-  });
-  exportExcelBtn.addEventListener("click", () => {
-    const recipes = getAllRecipes().filter((r) => selectedNames.has(r.name));
-    if (recipes.length > 0) exportRecipesToExcel(recipes);
-  });
-  exportWordBtn.addEventListener("click", () => {
-    const recipes = getAllRecipes().filter((r) => selectedNames.has(r.name));
-    if (recipes.length > 0) exportRecipesToWord(recipes);
-  });
-  printBtn.addEventListener("click", () => {
-    printRecipes(getAllRecipes().filter((r) => selectedNames.has(r.name)));
-  });
   onRecipesChanged(() => {
     populateCategoryFilter();
     populateCategoryOptions();
