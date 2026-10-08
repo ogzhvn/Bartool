@@ -9,7 +9,7 @@ import {
   onKnowledgeChanged,
 } from "./storage.js";
 import { deleteKnowledgePhoto, resolveImageUrl } from "./photos.js";
-import { switchTab } from "./tabs.js";
+import { switchTab, closeMobileNav } from "./tabs.js";
 import {
   confirmDiscardKnowledgeEdits,
   discardKnowledgeEditor,
@@ -592,10 +592,36 @@ function currentMode() {
   return activeCategory ? "category" : "overview";
 }
 
+// Kategorie-Baum in der Sidebar unter "Wissen", wie bei Rezepte und Produkte:
+// ein Klick wechselt in den Wissen-Tab und öffnet die Kategorie.
+function renderSidebarTree() {
+  const treeEl = document.getElementById("knowledge-category-tree");
+  if (!treeEl) return;
+  treeEl.textContent = "";
+  presentCategories(loadKnowledge()).forEach((category) => {
+    const btn = el("button", "subnav-btn" + (category === activeCategory ? " active" : ""), category);
+    btn.type = "button";
+    btn.addEventListener("click", () => {
+      if (isKnowledgeEditorOpen()) return;
+      switchTab("knowledge");
+      closeMobileNav();
+      showList();
+      listScrollTop = null;
+      searchEl.value = "";
+      activeCategory = category;
+      endSelection();
+      renderBrowse();
+      window.scrollTo({ top: 0 });
+    });
+    treeEl.appendChild(btn);
+  });
+}
+
 function renderBrowse() {
   // Kategorie verschwunden (gelöscht/umbenannt): zurück zur Übersicht.
   if (activeCategory && activeCategory !== CATEGORY_ALL && !loadKnowledge().some((a) => a.category === activeCategory)) activeCategory = "";
   const mode = currentMode();
+  renderSidebarTree();
   renderFilterState();
   if (mode === "overview") endSelection();
   topicsEl.hidden = mode !== "overview";
