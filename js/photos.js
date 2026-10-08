@@ -8,6 +8,8 @@ import { t } from "./i18n.js";
 // Pfadschema: produkte/<uuid>.jpg für Produktfotos, rezepte/<uuid>.jpg für
 // Rezeptfotos (Paket 31, Aufbau- und Garniturbild teilen sich den Ordner),
 // wissen/<uuid>.jpg für das Titelbild eines Wissensartikels (Paket 55).
+// PNG- und WebP-Vorlagen (z. B. freigestellte Flaschen) landen als .webp,
+// damit die Transparenz erhalten bleibt.
 // Nie der Name im Pfad, sonst bricht jede Umbenennung das Bild.
 import { getSupabaseClient } from "./supabaseClient.js";
 import { can } from "./auth.js";
@@ -15,13 +17,17 @@ import { can } from "./auth.js";
 const BUCKET = "bilder";
 const MAX_EDGE_PX = 1200;
 const JPEG_QUALITY = 0.8;
+const WEBP_QUALITY = 0.85;
+// Eingabeformate mit möglichem Alphakanal. JPEG würde transparente Flächen
+// schwarz füllen, deshalb werden sie als WebP (mit Alpha) gespeichert.
+const ALPHA_TYPES = new Set(["image/png", "image/webp"]);
 const SIGNED_URL_TTL_SECONDS = 3600;
 
 // path -> { url, expiresAt }. Signierte URLs pro Session cachen, statt bei
 // jeder Anzeige neu zu signieren.
 const urlCache = new Map();
 
-function resizeToJpeg(file) {
+function resizeImage(file, outputType, quality) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -40,8 +46,8 @@ function resizeToJpeg(file) {
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error(t("ui.bild_konnte_nicht_verkleinert_werden")))),
-        "image/jpeg",
-        JPEG_QUALITY
+        outputType,
+        quality
       );
     };
     img.onerror = () => {
@@ -72,11 +78,16 @@ async function uploadPhoto(file, folder) {
   if (!file || !file.type.startsWith("image/")) {
     throw new Error(t("ui.bitte_eine_bilddatei_auswaehlen"));
   }
-  const blob = await resizeToJpeg(file);
-  const path = `${folder}/${crypto.randomUUID()}.jpg`;
+  const keepAlpha = ALPHA_TYPES.has(file.type);
+  const outputType = keepAlpha ? "image/webp" : "image/jpeg";
+  const blob = await resizeImage(file, outputType, keepAlpha ? WEBP_QUALITY : JPEG_QUALITY);
+  // Browser ohne WebP-Encoder liefern stillschweigend PNG – Endung und
+  // contentType richten sich deshalb nach dem tatsächlichen Blob.
+  const ext = blob.type === "image/webp" ? "webp" : blob.type === "image/png" ? "png" : "jpg";
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
   const client = getSupabaseClient();
   const { error } = await client.storage.from(BUCKET).upload(path, blob, {
-    contentType: "image/jpeg",
+    contentType: blob.type || outputType,
     upsert: false,
   });
   if (error) throw new Error(error.message);
