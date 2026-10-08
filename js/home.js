@@ -41,15 +41,23 @@ function renderGreeting() {
   greetingEl.textContent = name ? `${t("ui.willkommen_zurueck")} ${name}` : t("ui.willkommen_bei_bartool");
 }
 
+// Bis alle Start-Syncs durch sind (Event aus js/main.js), ist eine 0 noch
+// kein Befund: sie steht für „noch nicht geladen“ und wird als „–“ gezeigt.
+let syncing = true;
+
+function statValue(count) {
+  return syncing && count === 0 ? "–" : count;
+}
+
 function renderStats() {
   const stats = [
-    [getAllRecipes().length, t("ui.rezepte_im_buch")],
-    [loadRecipes().length, t("ui.davon_eigene")],
-    [loadProducts().length, t("ui.produkte_im_katalog")],
+    [statValue(getAllRecipes().length), t("ui.rezepte_im_buch")],
+    [statValue(loadRecipes().length), t("ui.davon_eigene")],
+    [statValue(loadProducts().length), t("ui.produkte_im_katalog")],
   ];
   // Die Übergabe ist nicht jeder Abteilung zugeordnet (Paket 51).
   if (canSee("shift-log")) {
-    stats.push([offeneAusLetzterSchicht(loadShiftLogs()).length, t("ui.offene_punkte_aus_der_letzten_schicht")]);
+    stats.push([statValue(offeneAusLetzterSchicht(loadShiftLogs()).length), t("ui.offene_punkte_aus_der_letzten_schicht")]);
   }
   statsEl.innerHTML = stats
     .map(
@@ -233,6 +241,10 @@ export function initHome() {
   renderStats();
   renderShortcuts();
   renderToday();
+  window.addEventListener("bartool:sync-done", () => {
+    syncing = false;
+    renderStats();
+  });
   onRecipesChanged(renderStats);
   onProductsChanged(renderStats);
   onShiftLogsChanged(() => {

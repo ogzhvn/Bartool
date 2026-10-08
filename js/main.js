@@ -146,6 +146,10 @@ function startSessionTimeoutWatch() {
   }, 60 * 1000);
 }
 
+// Wird gesendet, sobald alle Start-Syncs durch sind (js/home.js zeigt bis dahin
+// „–“ statt einer 0, die wie ein leerer Katalog aussieht).
+const SYNC_DONE_EVENT = "bartool:sync-done";
+
 // Zeigt, wie viele Sync-Aufträge schon fertig sind. Blockiert nichts: die
 // Anzeige sitzt fest unten rechts und verschwindet, sobald alle Syncs durch sind.
 function showBootProgress(tasks) {
@@ -166,6 +170,7 @@ function showBootProgress(tasks) {
     .finally(() => {
       stopLanguageWatch();
       box.hidden = true;
+      window.dispatchEvent(new CustomEvent(SYNC_DONE_EVENT));
     });
 }
 
