@@ -32,6 +32,9 @@ const MAX_OPTION_LEN = 60;
 // Datenpflege-Hinweise im Feld sind keine Antwort, sondern eine Aufgabe für
 // den Wareneingang ("genaue DOC-Angabe vom Etikett übernehmen").
 const HINWEIS_MUSTER = /pr\u00fcf|etikett|nicht dokumentiert|erg\u00e4nzen/i;
+// Unter so vielen verschiedenen Jahrgängen in der Themen-Einheit rät sich
+// eine Jahrgangsfrage von selbst (Ablenker wären Nachbarjahre).
+const MIN_JAHRGAENGE = 4;
 // Mindestabstand zwischen Platz 1 und Platz 2 bei der Alkohol-Vergleichsfrage.
 // Liegen zwei Flaschen dichter beieinander, ist die Frage Glückssache.
 const MIN_ABV_ABSTAND = 2;
@@ -197,9 +200,12 @@ const NICHT_IM_QUIZ_GRUPPEN = new Set([
   "Sonstiges",
 ]);
 
-// Beim Wein ist das Herkunftsland kaum eine Frage (fast alles Deutschland,
-// Italien, Frankreich); gefragt wird dort nach Region, Rebsorte, Körper.
-const WEIN_GRUPPEN = new Set(["Wein", "Schaumwein"]);
+// "Klassiker" im Sinn der Garniturfragen: Drinks mit gepflegter Historie
+// (Ursprung, Erfinder, Jahr). Hausrezepte und alkoholfreie Kreationen haben
+// keine – deren Garnitur ist Geschmackssache, kein Allgemeinwissen.
+function istDokumentierterDrink(recipe) {
+  return txt(recipe?.history).length >= 40 && txt(recipe?.category) !== "Alkoholfrei";
+}
 
 // Höchstens so viele Zutatenfragen je Drink ("Was gehört in einen X?"): bei
 // fünf Alkoholika im Rezept wäre es sonst fünfmal dieselbe Frage.
@@ -264,13 +270,22 @@ function mitPitch(product, satz) {
   return pitch ? `${satz} ${pitch}` : satz;
 }
 
+// Steht die Antwort schon im Produktnamen ("Weingut Spreitzer" im Namen,
+// Erzeuger "Weingut Spreitzer, Oestrich-Winkel"; "Champagne" im Namen, Region
+// "Champagne (Reims)"; Jahrgang 2013 im Namen), ist die Frage geschenkt.
+// Verglichen wird der Kern der Antwort bis zum ersten Komma, Klammer oder Strich.
+function verraetSich(name, antwort) {
+  const kern = normKey(String(antwort ?? "").split(/[,(–\/]/)[0]);
+  return kern.length >= 4 && normKey(name).includes(kern);
+}
+
 // Gemeinsames Gerüst für alle Fragen "ein Feld eines Produkts erraten".
 function feldFragen({ produkte, feld, keyPrefix, frage, erklaerung, formatiere, difficulty }) {
   const nachThema = gruppiere(produkte, "quizTopic");
   const fragen = [];
   produkte.forEach((product) => {
     const richtig = formatiere ? formatiere(product[feld]) : txt(product[feld]);
-    if (!richtig) return;
+    if (!richtig || verraetSich(product.name, richtig)) return;
     const kandidaten = (nachThema.get(txt(product.quizTopic)) ?? [])
       .filter((p) => p.name !== product.name)
       .map((p) => (formatiere ? formatiere(p[feld]) : txt(p[feld])));
@@ -921,6 +936,85 @@ function methodenFragen(rezepte) {
   return fragen;
 }
 
+function erzeugerFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "producer",
+    keyPrefix: "producer",
+    frage: (p) => t("ui.quiz_frage_erzeuger", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_erzeuger", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function ausbauFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "aging",
+    keyPrefix: "aging",
+    frage: (p) => t("ui.quiz_frage_ausbau", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_ausbau", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+function klassifikationFragen(produkte) {
+  return feldFragen({
+    produkte,
+    feld: "classification",
+    keyPrefix: "class",
+    frage: (p) => t("ui.quiz_frage_klassifikation", { name: p.name }),
+    erklaerung: (p, wert) => mitPitch(p, t("ui.quiz_erklaerung_klassifikation", { name: p.name, wert })),
+    formatiere: kurzOption,
+    difficulty: 3,
+  });
+}
+
+// 9. Jahrgang – nur mit Bremse
+//
+// Ablenker sind hier zwangsläufig andere Jahreszahlen. Stehen in der
+// Themen-Einheit nur zwei oder drei verschiedene Jahrgänge, ist die Frage durch
+// Ausschluss lösbar und damit wertlos. Deshalb erst ab MIN_JAHRGAENGE und
+// grundsätzlich als schwere Frage.
+function jahrgangFragen(produkte) {
+  const nachThema = gruppiere(produkte, "quizTopic");
+  const fragen = [];
+  produkte.forEach((product) => {
+    const richtig = kurzOption(product.vintage);
+    if (!richtig || verraetSich(product.name, richtig)) return;
+    const geschwister = (nachThema.get(txt(product.quizTopic)) ?? []).filter((p) => p.name !== product.name);
+    const jahrgaenge = [...new Set([product, ...geschwister].map((p) => kurzOption(p.vintage)).filter(Boolean))];
+    if (jahrgaenge.length < MIN_JAHRGAENGE) return;
+    const frage = baueFrage({
+      key: `gen:vintage:${product.name}`,
+      question: t("ui.quiz_frage_jahrgang", { name: product.name }),
+      correct: richtig,
+      candidates: geschwister.map((p) => kurzOption(p.vintage)),
+      explanation: mitPitch(product, t("ui.quiz_erklaerung_jahrgang", { name: product.name, wert: richtig })),
+      topic: txt(product.quizTopic),
+      parent: product.quizParent,
+      difficulty: 3,
+      refProduct: product.name,
+    });
+    if (frage) fragen.push(frage);
+  });
+  return fragen;
+}
+
+// 6b. Rezept → Garnitur
+function garniturFragen(rezepte) {
+  return rezeptFeldFragen({
+    rezepte,
+    feld: "garnish",
+    keyPrefix: "garnish",
+    frage: (r) => t("ui.quiz_frage_garnitur", { name: r.name }),
+    erklaerung: (r, wert) => t("ui.quiz_erklaerung_garnitur", { name: r.name, wert }),
+    difficulty: 2,
+  });
+}
+
 // ---------------------------------------------------------------------
 // Öffentliche API
 // ---------------------------------------------------------------------
@@ -933,12 +1027,17 @@ export function generateQuestions() {
   // Ablenker, und gute Fragen fallen mit weg. Gefiltert wird erst am Ende.
   const produkte = gepruefteProdukte();
   const rezepte = rezepteMitKategorie();
+  const klassiker = rezepte.filter(istDokumentierterDrink);
   const imQuiz = new Set(produkte.filter(istKernProdukt).map((p) => p.name));
-  const wein = new Set(produkte.filter((p) => WEIN_GRUPPEN.has(txt(p.group))).map((p) => p.name));
   istPraegendeZutat = baueZutatenFilter(produkte.filter((p) => !NICHT_IM_QUIZ_GRUPPEN.has(txt(p.group))));
   return [
     ...abvFragen(produkte),
     ...herkunftFragen(produkte),
+    ...erzeugerFragen(produkte),
+    ...ausbauFragen(produkte),
+    ...klassifikationFragen(produkte),
+    ...jahrgangFragen(produkte),
+    ...erzeugerFragen(produkte),
     ...rohstoffFragen(produkte),
     ...verfahrenFragen(produkte),
     ...aromaFragen(produkte),
@@ -955,15 +1054,13 @@ export function generateQuestions() {
     ...abvVergleichFragen(produkte),
     ...zutatenFragen(rezepte),
     ...glasFragen(rezepte),
+    ...garniturFragen(klassiker),
     ...eisFragen(rezepte),
     ...methodenFragen(rezepte),
     ...negativFragen(rezepte),
     ...umkehrFragen(rezepte),
     ...mengenFragen(rezepte),
-  ].filter((f) => {
-    if (f.refProduct && !imQuiz.has(f.refProduct)) return false;
-    return !(f.key.startsWith("gen:country:") && wein.has(f.refProduct));
-  });
+  ].filter((f) => !f.refProduct || imQuiz.has(f.refProduct));
 }
 
 // Themen (Produktgruppen und Rezeptkategorien), zu denen es überhaupt Fragen
