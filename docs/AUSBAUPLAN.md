@@ -425,6 +425,79 @@ und `tellerwerk` in der Modul-Matrix erst nach Paket 69 einschalten, und nur nac
 
 ---
 
+### Runde 11 – Gerichte, Allergenmatrix, Weinbegleitung für WGR und Tellerwerk (geplant am 08.10.2026)
+
+Seit Runde 10 haben WGR und Tellerwerk den Betriebsteil, aber keinen eigenen Inhalt: Rezepte und
+Produkte sind die Bar. Diese Runde gibt ihnen **Gerichte** als neue Datenart, darauf eine
+**Allergen-/Deklarationsmatrix** (Service am Gast, Aushang am Buffet) und eine **Weinbegleitung**
+aus dem vorhandenen Weinkatalog. Löst den Backlog-Punkt „Funktionen für WGR und Tellerwerk" ab.
+
+**Entscheidungen (08.10.2026, mit dem Nutzer abgestimmt)**
+- **Umfang:** Allergenmatrix für Gerichte und Weinbegleitung. **Nicht gewählt** (bleiben im
+  Backlog): 86-Liste, Buffet-Mengenplanung. HACCP-/Temperaturprotokoll ist seit 08.10.2026
+  abgewählt („Bewusst nicht im Scope"). „Quiz je Abteilung" bleibt im Backlog.
+- **Reihenfolge:** Gerichte + Allergene zuerst, Weinbegleitung danach.
+- **Neue Datenart `dishes`**, nicht in `recipes` hineingebogen. Befund per `execute_sql`
+  (08.10.2026): `recipes` hat **keine** ABV-Spalte (ABV wird aus den Zutaten berechnet; die
+  Backlog-Annahme war falsch), aber Bar-Felder (`glass`, `ice`, `garnish`, `base_portions`,
+  `ingredients` mit Produkt-Matching nach Regel 8). Allergene leitet `allergensForRecipe()` nur aus
+  `products.allergens` ab – Küchenzutaten (Mehl, Butter, Sellerie …) stehen nicht in `products`.
+  In `recipes` müsste jedes Bar-Modul (Batching, Kalkulation, Quiz-Generator, „Was kann ich
+  bauen?", Bibliothek) Gerichte herausfiltern.
+
+**Entscheidungen von Claude (Vorschlag; im jeweiligen Paket nur nach Rückfrage ändern)**
+- **Lesen offen wie Rezepte/Produkte/Wissen**, kein RLS nach Abteilung. Abteilungs-Tag
+  `departments text[]` wie bei Wissen (Runde 9): leer = alle, Filter in der Liste, Kosmetik.
+- **Allergene strukturiert direkt am Gericht deklariert**, nicht aus Zutaten abgeleitet:
+  `allergens text[]` und `traces text[]` (Spuren, freiwillig) aus einer festen Schlüsselliste der
+  14 Hauptallergengruppen nach LMIV Anhang II, mit Unterschlüsseln für Getreideart und Schalenfrucht
+  (LMIV verlangt die konkrete Art). `additives text[]` für kennzeichnungspflichtige Zusatzstoffe.
+  Schlüsselliste in neuer Datei `js/declarations.js`, Labels über i18n (DE/EN – Allergenbezeichnungen
+  sind Oberflächenvokabular, nützlich für internationale Gäste). Die DB prüft die Schlüssel per
+  Funktion, nicht nur das Formular.
+  _Aus dem Gedächtnis, nicht nachgeschlagen:_ die 14 Gruppen (glutenhaltiges Getreide, Krebstiere,
+  Eier, Fisch, Erdnüsse, Soja, Milch, Schalenfrüchte, Sellerie, Senf, Sesam, Schwefeldioxid/Sulfite
+  > 10 mg/kg bzw. l, Lupinen, Weichtiere). Rechtsgrundlage der Zusatzstoffkennzeichnung in der
+  Gastronomie (früher § 9 ZZulV; ob inzwischen abgelöst, weiß ich nicht). **Beides in Paket 70
+  gegen die Primärquelle prüfen** (EUR-Lex, gesetze-im-internet.de) und Stand-Datum notieren.
+- **Prüfvermerk statt Selbstauskunft:** `allergens_checked_at` / `allergens_checked_by`. Setzt der
+  Client den Vermerk, schreibt der Server `now()` und `auth.uid()` (kein Fälschen von Name/Datum).
+  **Jede Änderung an `allergens`, `traces` oder `additives` ohne neuen Vermerk löscht den Vermerk**
+  (Trigger) – das Gericht gilt dann wieder als ungeprüft.
+- **Nie „allergenfrei".** Ungeprüfte Gerichte sind überall deutlich markiert, tauchen im
+  Gast-Filter nie als „passt" auf und fehlen im Druck der Matrix. Wie bei `js/allergens.js`: Lücke
+  zeigen ist besser als falsche Sicherheit.
+- **Inhalte erfindet Claude nicht** (Regel 6): Gerichte, Komponenten, Allergene und
+  Weinbegleitungen kommen von Küche/Restaurantleitung bzw. vom Nutzer. Claude baut Struktur und
+  importiert gelieferte Listen (Paket 74), setzt aber nie einen Prüfvermerk.
+- **Neues Recht `dishes.write`** (Gruppe `inhalte`), Startbelegung `admin` + `barchef` (über die
+  bestehende Gesamtzuweisung). Eine Küchen-/Restaurantleitungsrolle gibt es nicht; wer in WGR und
+  Tellerwerk pflegt, stellt der Admin über die Rechte-Matrix ein.
+- **Modul `dishes` („Gerichte")**, Gruppe `bibliothek`, freigeschaltet für `wgr` und `tellerwerk`,
+  für `bar` aus (Admin kann zuschalten). Die Matrix ist eine **Ansicht im Gerichte-Tab**
+  (Liste | Matrix), kein eigenes Modul.
+- **Weinbegleitung per Produkt-ID**, nicht per Namensmatching: `wine_pairings jsonb`
+  `[{product_id, note}]`, nur Produkte der Gruppen `Wein` und `Schaumwein` (108 Produkte, davon
+  92 mit `food_pairing`-Text, Stand 08.10.2026). Grund: eine Umbenennung im Katalog soll die
+  Zuordnung nicht still brechen (vgl. „Old Cuban", Regel 8). Die Spalte kommt schon in Paket 70,
+  damit nur ein Paket das Schema anfasst.
+- Keine Fotos, keine Kalkulation, kein Verkaufspreis für Gerichte in dieser Runde.
+- Gerichte-Inhalte bleiben deutsch (Regel 11), Oberfläche DE/EN.
+
+Reihenfolge: **70 → 71 → 72 → 73**. **74** sobald die Küchenlisten vorliegen, frühestens nach 70
+(sinnvoll nach 71, damit die Leitung in der App prüfen kann). Alle neuen Beschriftungen über
+`data-i18n` bzw. `t()`, Schlüssel in `js/i18n/de.js` **und** `js/i18n/en.js`.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 70 | Datenmodell Gerichte, Deklarationsschlüssel, Recht, Modul-Registrierung | offen | Opus 5.5, hoher Denkaufwand |
+| 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 74 | Gerichte erfassen: Import aus den Küchenlisten | offen (wartet auf Listen) | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
+
+---
+
 # Paket 1 – PWA installierbar + App-Shell offline
 
 **Abhängigkeit:** keine.
@@ -3866,6 +3939,233 @@ i18n, `sw.js`.
 
 ---
 
+# Paket 70 – Datenmodell Gerichte, Deklarationsschlüssel, Recht, Modul-Registrierung
+
+**Abhängigkeit:** Runde 10 (Pakete 64–69) ist da.
+**Modell:** Opus 5.5, hoher Denkaufwand – neue Datenart, Migration, RLS, Trigger, neues Recht,
+Eingriff in `department_modules`, dazu rechtlich relevante Schlüsselliste.
+
+**Ziel:** Datenbank, Rechtekatalog und Modulkatalog kennen „Gerichte". Noch keine Oberfläche außer
+der Registrierung (Muster Paket 53).
+
+**Dateien:** `supabase/schema.sql`, neu `js/declarations.js`, `js/permissions.js`, `js/modules.js`,
+`js/storage.js` (`loadDishes`/`saveDish`/`deleteDish`/`onDishesChanged`/`initDishesSync`),
+`js/i18n/de.js`, `js/i18n/en.js`.
+**Migration: ja**, klein aufgeteilt (CLAUDE.md „Große Texte"): (a) Schlüssel-Funktion + Recht,
+(b) Tabelle + Trigger, (c) Policies + Grants + Realtime + Modul-Seed. Ohne `drop`/`delete` im
+Statement; nach einem Timeout zuerst per `execute_sql` prüfen, was angekommen ist.
+
+**Schritte**
+1. **Primärquelle prüfen, bevor ein Schlüssel festgeschrieben wird:** LMIV (VO (EU) Nr. 1169/2011)
+   Anhang II auf EUR-Lex – die 14 Gruppen, die Unterarten bei Getreide und Schalenfrüchten,
+   offizielle englische Bezeichnungen. Dazu die aktuelle deutsche Rechtsgrundlage der
+   Zusatzstoffkennzeichnung bei loser Ware/Gastronomie und deren Kennzeichnungsklassen
+   (gesetze-im-internet.de). Fundstelle + Stand-Datum als Kommentar in `js/declarations.js`.
+   Unklares mit dem Nutzer klären, nicht glätten.
+2. `js/declarations.js`: `ALLERGENS` (Schlüssel, z. B. `gluten`, `gluten_weizen`, …, `nuts_haselnuss`,
+   …), `ADDITIVES`, `declarationLabel(key)` über `t("decl.allergen.<key>")` bzw.
+   `t("decl.additive.<key>")`. Unterschlüssel tragen ihre Hauptgruppe (`parent`), damit die Matrix
+   pro Gruppe eine Spalte zeigen kann.
+3. `private.declaration_keys_ok(kind text, keys text[]) returns boolean` (immutable, `search_path = ''`)
+   mit derselben Liste. Liste in JS und SQL gleich halten – Hinweis-Kommentar an beiden Stellen.
+4. Tabelle `dishes`: `id uuid pk default gen_random_uuid()`, `name text not null unique`,
+   `category text` (frei, z. B. Vorspeise, Hauptgang, Dessert, Buffet), `description text`,
+   `components jsonb not null default '[]'` (`[{name, note?}]`, Freitext, kein Produkt-Matching),
+   `departments text[] not null default '{}'`, `allergens text[] not null default '{}'`,
+   `traces text[] not null default '{}'`, `additives text[] not null default '{}'`,
+   `allergens_checked_at timestamptz`, `allergens_checked_by uuid references auth.users on delete set null`,
+   `wine_pairings jsonb not null default '[]'` (`[{product_id, note?}]`), `active boolean not null
+   default true` (nicht auf der Karte, bleibt erhalten), `sort int not null default 0`,
+   `created_by uuid default auth.uid()`, `created_at`, `updated_at`.
+   CHECK: `declaration_keys_ok('allergen', allergens)`, `declaration_keys_ok('allergen', traces)`,
+   `declaration_keys_ok('additive', additives)`, `departments` nur Keys aus `departments`
+   (Trigger, Arrays haben keinen FK – Muster `private.normalize_dept_keys`).
+5. Trigger `private.dishes_guard()` (before insert or update):
+   - Prüfvermerk: setzt der Client `allergens_checked_at` neu (nicht null, geändert), schreibt der
+     Server `now()` und `auth.uid()`.
+   - Ändern sich `allergens`, `traces` oder `additives` und wird im selben Statement **kein** neuer
+     Vermerk gesetzt: Vermerk auf `null`.
+   - `wine_pairings`: jede `product_id` existiert in `products` und hat `group_name in ('Wein',
+     'Schaumwein')`, sonst `raise`. Keine Duplikate.
+   - `updated_at = now()`.
+6. RLS: Lesen für `authenticated`, Schreiben/Löschen nur mit `private.has_permission('dishes.write')`,
+   Policies `to authenticated`. Audit-Trigger `log_audit()` wie bei `recipes`. Tabelle in
+   `supabase_realtime`.
+7. Recht `dishes.write`: Zeile in `permissions` (`perm.dishes.write`, Gruppe `inhalte`), Zuordnung
+   `admin`; `barchef` über die Gesamtzuweisung (prüfen, ob die neue Rechte automatisch erfasst – in
+   Paket 64 war ein Ausschluss nötig). Eintrag in `js/permissions.js` mit `policy: "dishes"`,
+   Label in beiden Sprachdateien.
+8. Modulkatalog: `{ key: "dishes", group: "bibliothek", labelKey: "ui.gerichte" }` in `js/modules.js`
+   (sort zwischen Rezepte und Produkte, vorhandene Werte prüfen). Seed `department_modules` für
+   `wgr` und `tellerwerk` einmalig per Migration mit `on conflict do nothing` (Muster Paket 53).
+9. `storage.js` nach dem Datentyp-Muster, Offline-Cache wie `recipes` (nicht kontogebunden, alle
+   lesen dasselbe). `saveDish()` speichert über die `id` und nutzt beim Bearbeiten `update` statt
+   `upsert` (Befund Paket 66/68).
+10. `supabase/schema.sql` nachziehen; `get_advisors` (security) ohne neue Befunde.
+
+**Abnahme** (per `execute_sql` mit `set local role authenticated` + `request.jwt.claims` je Konto,
+danach Rollback; Löschen über den `USING`-Ausdruck prüfen, nicht mit echtem `delete`)
+- [ ] Unbekannter Allergen- oder Zusatzstoffschlüssel und unbekannte Abteilung werden abgewiesen.
+- [ ] Vermerk setzen → `checked_by` = eigenes Konto, `checked_at` = Serverzeit, auch wenn der Client
+      andere Werte schickt. Danach `allergens` ändern → Vermerk `null`. Allergene + neuer Vermerk in
+      einem Statement → Vermerk bleibt.
+- [ ] `wine_pairings` mit Gin-Produkt bzw. unbekannter `product_id` → abgewiesen.
+- [ ] `claude-test-wgr` (barkeeper, ohne `dishes.write`): liest, schreibt nicht. Admin: beides.
+- [ ] Rechte-Matrix zeigt „Gerichte pflegen", Abteilungs-Matrix zeigt „Gerichte" bei WGR und
+      Tellerwerk angehakt, bei Bar nicht.
+- [ ] Fundstelle und Stand der Schlüsselliste stehen in `js/declarations.js`.
+
+**Commit:** `Gerichte: Datenmodell, Deklarationsschlüssel, Recht dishes.write`
+
+---
+
+# Paket 71 – Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk
+
+**Abhängigkeit:** Paket 70.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – ein Modul nach vorhandenem Muster (Wissen).
+
+**Ziel:** WGR und Tellerwerk sehen ihre Gerichte mit Komponenten und Allergenen; wer
+`dishes.write` hat, pflegt sie und setzt den Prüfvermerk.
+
+**Dateien:** neu `js/dishes.js` (`initDishes()`), neu `js/dishEditor.js`, `js/main.js`,
+`index.html` (nur neuer `<button data-tab="dishes">` und `<section class="tab-panel">` per `grep`),
+`js/quickSearch.js`, `css/styles.css` (nur falls nötig, Dark Theme unverändert), i18n, `sw.js`
+(neue Dateien in `PRECACHE`, Version hochzählen).
+
+**Schritte**
+1. Liste: Name, Kategorie, Allergen-Kurzform (Schlüssel als kurze Chips), Status „geprüft am …" bzw.
+   deutlich „Allergene ungeprüft". Filter Abteilung (Standard eigene + „alle", Muster Wissen),
+   Kategorie, „auch inaktive". Suche im Tab.
+2. Detail: Beschreibung, Komponenten, Allergene/Spuren/Zusatzstoffe ausgeschrieben (i18n-Labels),
+   Prüfvermerk mit Name und Datum. Kein „allergenfrei": ohne Allergene **und** mit Vermerk steht
+   „Keine der 14 Hauptallergene laut Küche (geprüft am …)", ohne Vermerk nur „ungeprüft".
+3. Editor (`dishes.write`, `data-perm`): Felder aus Paket 70 außer `wine_pairings` (Paket 73).
+   Allergene als Chips je Hauptgruppe, Unterart aufklappbar; Spuren und Zusatzstoffe getrennt.
+   Touch-Ziele ≥ 44 px. Schalter „Allergenangaben geprüft" setzt den Vermerk; ändert jemand die
+   Allergene, ohne ihn erneut zu setzen, weist das Formular vor dem Speichern darauf hin
+   (die DB löscht den Vermerk ohnehin).
+4. Globale Suche (Cmd/Ctrl+K): Gerichte als eigene Gruppe, nur mit `canSee("dishes")`.
+5. Alles per `textContent`/DOM (Regel 5), Neu-Rendern bei `onLanguageChanged()` und
+   `onDishesChanged()`.
+
+**Abnahme**
+- [ ] Admin legt ein Testgericht mit Gluten (Weizen) + Milch an, setzt den Vermerk; `claude-test-wgr`
+      sieht es mit „geprüft am …", ohne Bearbeiten-Knopf.
+- [ ] Allergene nachträglich geändert ohne Vermerk → Liste zeigt „ungeprüft".
+- [ ] Gericht ohne Allergene und ohne Vermerk zeigt nirgends eine Entwarnung.
+- [ ] Bar-Konto ohne Freischaltung sieht den Tab nicht; Suche liefert keine Gerichte.
+- [ ] Screenshots 390 px und 1366 px, kein horizontaler Überlauf. Testgericht danach über die UI
+      löschen.
+
+**Commit:** `Gerichte: Modul mit Liste, Detail, Editor und Prüfvermerk`
+
+---
+
+# Paket 72 – Allergenmatrix: Matrixansicht, Gast-Filter, Druck
+
+**Abhängigkeit:** Paket 71.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – Anzeigeseite auf vorhandenen Daten.
+
+**Ziel:** Der Service beantwortet Gästefragen am Tablet in Sekunden, und am Buffet hängt eine
+aktuelle, gedruckte Matrix.
+
+**Dateien:** neu `js/dishMatrix.js` (von `js/dishes.js` aufgerufen, kein eigener Tab),
+`js/dishes.js` (Umschalter Liste | Matrix), `js/printView.js`, `index.html` (nur Gerichte-Panel),
+`css/styles.css` (Matrix + `@media print`), i18n, `sw.js`.
+
+**Schritte**
+1. Matrix: Zeilen = aktive Gerichte (Filter Abteilung/Kategorie aus Paket 71), Spalten = 14
+   Hauptgruppen (Unterart als Text in der Zelle, z. B. „Weizen"), dazu Spalte Zusatzstoffe.
+   Zelle: enthalten / Spuren / leer. Ungeprüfte Zeilen ausgegraut mit Hinweis, Zellen dort leer
+   **mit** „ungeprüft" statt einer stillen Leerzeile. Spaltenköpfe sticky, Tabelle horizontal
+   scrollbar in eigenem Container (Seite selbst ohne Querscroll bei 390 px).
+2. Gast-Filter „Gast verträgt nicht: [Chips]": zeigt **nur geprüfte** Gerichte ohne die gewählten
+   Allergene; Gerichte mit nur Spuren davon in eigener Gruppe „nur Spuren – mit Küche klären".
+   Ungeprüfte erscheinen nie als passend, sondern als Zahl „x Gerichte ungeprüft".
+3. Druck A4 quer über `printView.js`: nur geprüfte Gerichte, Kopf mit Abteilung + Druckdatum, Fuß
+   mit „Angaben laut Küche, Stand: <ältester Vermerk der gedruckten Gerichte>" und Legende der Zusatzstoffe.
+   Sprache des Drucks = aktuelle Oberflächensprache (Allergen-Labels übersetzt, Gerichtnamen
+   deutsch).
+4. Zahlen/Datum über `formatDate` (Regel 11), Neu-Rendern bei Sprachwechsel.
+
+**Abnahme**
+- [ ] Drei Testgerichte: A ungeprüft, B geprüft mit Spuren Schalenfrucht, C geprüft mit Milch.
+      Filter „Milch" → B passt, C nicht, A nie. Filter „Schalenfrüchte" → C passt, B unter „nur
+      Spuren", A nie. Testdaten danach entfernen.
+- [ ] Druckvorschau A4 quer lesbar, enthält das ungeprüfte Gericht nicht, Stand-Zeile stimmt.
+- [ ] 390 px: Matrix im eigenen Container scrollbar, Seite ohne Querscroll; 1366 px ohne Scroll bei
+      14 Spalten.
+- [ ] EN-Oberfläche: Spaltenköpfe englisch, Gerichtnamen deutsch.
+
+**Commit:** `Gerichte: Allergenmatrix mit Gast-Filter und Druck`
+
+---
+
+# Paket 73 – Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt
+
+**Abhängigkeit:** Paket 71 (unabhängig von 72; Reihenfolge laut Nutzer nach 72).
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – liest überwiegend vorhandene Daten.
+
+**Ziel:** Zu jedem Gericht stehen ein bis drei passende Weine mit Verkaufssatz; am Wein sieht man,
+zu welchen Gerichten er empfohlen wird.
+
+**Dateien:** `js/dishEditor.js`, `js/dishes.js`, `js/products.js` (nur Detailansicht, gezielt per
+`grep`), `js/dataQuality.js`, i18n, `sw.js`.
+
+**Schritte**
+1. Editor: Abschnitt „Weinbegleitung" – Auswahl aus `getAllProducts()` gefiltert auf `Wein`/
+   `Schaumwein`, Suche, je Treffer `food_pairing` und `sweetness`/`body` als Entscheidungshilfe,
+   Reihenfolge änderbar, Notiz je Wein (warum es passt). **Kein automatischer Vorschlag** aus
+   `food_pairing` – die Auswahl trifft ein Mensch.
+2. Detail Gericht: Wein mit `quick_pitch`, `serving_temp`, Herkunft; Klick öffnet das Produkt.
+   Fehlt die `product_id` im Katalog: „nicht mehr im Sortiment" statt eines Fehlers.
+3. Produktdetail eines Weins: „Empfohlen zu: <Gerichte>", nur mit `canSee("dishes")` und nur
+   aktive Gerichte.
+4. `dataQuality.js`: Gerichte mit Weinbegleitung auf ein gelöschtes Produkt als Befund.
+
+**Abnahme**
+- [ ] Testgericht mit zwei Weinen: Detail zeigt beide in gewählter Reihenfolge; Wein-Detail zeigt
+      das Gericht; Bar-Konto ohne Gerichte-Modul sieht den Abschnitt nicht.
+- [ ] Gin lässt sich nicht auswählen (UI) und nicht speichern (Trigger aus Paket 70).
+- [ ] Produkt umbenannt → Zuordnung bleibt (ID). Testdaten danach entfernen.
+- [ ] Screenshots 390 px und 1366 px.
+
+**Commit:** `Gerichte: Weinbegleitung aus dem Weinkatalog`
+
+---
+
+# Paket 74 – Gerichte erfassen: Import aus den Küchenlisten
+
+**Abhängigkeit:** Paket 70 (sinnvoll nach 71). **Wartet auf Daten:** Speisekarten bzw. Buffetplan und
+Allergenlisten von WGR und Tellerwerk (Excel, PDF oder Foto) vom Nutzer.
+**Modell:** Opus 5.5, hoher Denkaufwand – Datenimport mit haftungsrelevanten Allergenangaben.
+
+**Ziel:** Die echten Gerichte stehen in `dishes`, die Allergenangaben genau so, wie die Küche sie
+geliefert hat.
+
+**Dateien:** keine im Repo außer ggf. diesem Plan (Abweichungen notieren); Skript im Scratchpad,
+das die `insert`-Statements erzeugt (Regel 7: Massenänderung per Skript).
+
+**Schritte**
+1. Listen sichten, Zuordnung Spalte → Feld und Allergen-Bezeichnung → Schlüssel aus
+   `js/declarations.js` als Tabelle dem Nutzer zur Bestätigung vorlegen. Mehrdeutiges (z. B.
+   „Nüsse" ohne Art, „Gluten" ohne Getreide) nicht auflösen, sondern als Rückfrage sammeln.
+2. Skript erzeugt `insert … on conflict (name) do nothing`; `departments` je Liste, Kategorie aus
+   der Liste. **Prüfvermerk bleibt leer** – die Küche/Leitung prüft in der App und setzt ihn.
+3. Weinbegleitung nur, wenn der Nutzer sie liefert; Produkt-IDs per `execute_sql` nachschlagen
+   (`select id, name from products where name ilike '%…%'`), nie raten.
+4. Gegenprobe: `select count(*)` je Abteilung = Zeilen der Listen; Stichprobe von fünf Gerichten
+   Feld für Feld gegen die Vorlage.
+
+**Abnahme**
+- [ ] Anzahl je Abteilung stimmt mit den Listen überein.
+- [ ] Kein importiertes Gericht trägt einen Prüfvermerk.
+- [ ] Jede offene Unklarheit steht als Liste beim Nutzer, nichts wurde geschätzt.
+
+**Commit:** keiner nötig (nur DB); Plan-Status mit `Gerichte: Import WGR/Tellerwerk` committen.
+
+---
+
 ## Nachprüfung der offenen Abnahmepunkte (03.10.2026)
 
 Geprüft wurde lesend: SQL gegen die Datenbank, Code, `schema.sql`, `sw.js` und ein Browserdurchlauf
@@ -3901,10 +4201,11 @@ Reihenfolge offen, erst nach Runde 4 entscheiden:
   eigene Runde oder gar nicht, aber nicht nebenbei.
 - **Bildfragen im Quiz** als eigenes Thema, sobald genug Rezepte ein Bild haben (aus Paket 31).
 - ~~Datentrennung je Abteilung~~ → eingeplant als Runde 10 (Pakete 64–69, 08.10.2026).
-- **Funktionen für WGR und Tellerwerk** – Anforderungen stehen aus. Kandidaten aus der Planung
-  (Annahmen, keine Vorgaben): Allergen-/Deklarationsmatrix für Gerichte, Temperatur-/HACCP-Protokoll,
-  Buffet-Mengenplanung, 86-Liste, Weinbegleitung. Gerichte passen vermutlich nicht in `recipes`
-  (Cocktail-Schema mit ABV, nicht geprüft) und wären eine neue Datenart.
+- ~~Funktionen für WGR und Tellerwerk~~ → eingeplant als Runde 11 (Pakete 70–74, 08.10.2026):
+  Gerichte als eigene Datenart `dishes`, Allergenmatrix, Weinbegleitung.
+- **86-Liste** (was ist heute aus/knapp, je Abteilung) – bei Runde 11 nicht gewählt.
+- **Buffet-Mengenplanung** – bei Runde 11 nicht gewählt; braucht Portionsfaktoren je Gericht/Gast
+  von der Küche, die nicht geschätzt werden dürfen (Regel 6).
 - **Wissen – Ausbau** (nach Runde 9, nur auf Wunsch): Lesestatus-Auswertung für die Leitung (nur
   Aggregate, Muster `quiz_team_overview()`); Quizfragen je Artikel; Lernpfade (z. B. Onboarding
   Service) mit Pflichtartikeln; englische Zweitfassung der Artikel; Bilder im Fließtext.
