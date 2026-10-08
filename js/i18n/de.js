@@ -1413,6 +1413,7 @@ export const de = {
   "ui.abteilungsschluessel_ungueltig": "Schlüssel: 2–32 Zeichen, Kleinbuchstaben, Zahlen und Unterstrich, mit einem Buchstaben beginnen.",
   "ui.abteilungsschluessel_vergeben": "Dieser Schlüssel ist bereits vergeben.",
   "ui.abteilung_konnte_nicht_angelegt_werden": "Abteilung konnte nicht angelegt werden:",
+  "ui.eintrag_nicht_mehr_vorhanden": "Der Eintrag ist nicht mehr vorhanden oder nicht mehr freigegeben. Die Liste wurde neu geladen.",
   "ui.abteilung_angelegt": "angelegt",
   "ui.abteilung_konnte_nicht_geaendert_werden": "Abteilung konnte nicht geändert werden: ",
   "ui.noch_ein_tag": "noch 1 Tag",

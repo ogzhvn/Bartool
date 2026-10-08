@@ -127,6 +127,30 @@ function toDepartmentColumns(item, cache) {
   return columns;
 }
 
+// Speichern eines Betriebseintrags: bestehender Eintrag (id im Cache) per
+// update, neuer per upsert. Ein upsert beim Bearbeiten legte eine
+// inzwischen gelöschte Zeile aus einem veralteten Cache wieder an – dann mit
+// der Abteilung des Bearbeitenden als Eigentümer. Trifft das update keine
+// Zeile (gelöscht oder nicht mehr freigegeben), gibt es einen Fehler, und
+// der Cache wird neu geladen.
+async function writeOperationsRecord(table, record, cache, refresh) {
+  const supabase = getSupabaseClient();
+  const bestehend = record.id ? cache.some((eintrag) => eintrag.id === record.id) : false;
+  if (!bestehend) {
+    const { data, error } = await supabase.from(table).upsert(record).select();
+    if (error) throw error;
+    return data?.[0] ?? null;
+  }
+  const { id, ...felder } = record;
+  const { data, error } = await supabase.from(table).update(felder).eq("id", id).select();
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    await refresh();
+    throw new Error(t("ui.eintrag_nicht_mehr_vorhanden"));
+  }
+  return data[0];
+}
+
 // Offline-Puffer der Betriebsdaten gehört genau einem Konto. Auf einem
 // geteilten Tablet sähe das nächste Konto sonst offline die Einträge des
 // vorigen – an RLS vorbei. Rezepte, Produkte, Quiz und Wissen sind für alle
@@ -652,9 +676,7 @@ export function loadPreparations() {
 
 export async function savePreparation(prep) {
   if (isOffline()) throw offlineWriteError();
-  const supabase = getSupabaseClient();
-  const { error } = await supabase.from("preparations").upsert(toPreparationRecord(prep));
-  if (error) throw error;
+  await writeOperationsRecord("preparations", toPreparationRecord(prep), preparationsCache, refreshPreparations);
   await refreshPreparations();
 }
 
@@ -755,9 +777,7 @@ export function loadEvents() {
 
 export async function saveEvent(ev) {
   if (isOffline()) throw offlineWriteError();
-  const supabase = getSupabaseClient();
-  const { error } = await supabase.from("events").upsert(toEventRecord(ev));
-  if (error) throw error;
+  await writeOperationsRecord("events", toEventRecord(ev), eventsCache, refreshEvents);
   await refreshEvents();
 }
 
@@ -950,9 +970,7 @@ export function loadLosses() {
 
 export async function saveLoss(loss) {
   if (isOffline()) throw offlineWriteError();
-  const supabase = getSupabaseClient();
-  const { error } = await supabase.from("losses").upsert(toLossRecord(loss));
-  if (error) throw error;
+  await writeOperationsRecord("losses", toLossRecord(loss), lossesCache, refreshLosses);
   await refreshLosses();
 }
 
@@ -1244,7 +1262,6 @@ export function onInventoryCountsChanged(callback) {
 
 export async function saveInventoryCount(count) {
   if (isOffline()) throw offlineWriteError();
-  const supabase = getSupabaseClient();
   const record = {
     counted_on: count.countedOn,
     title: count.title || null,
@@ -1254,8 +1271,7 @@ export async function saveInventoryCount(count) {
   if (count.id) record.id = count.id;
   if (count.createdBy) record.created_by = count.createdBy;
   Object.assign(record, toDepartmentColumns(count, countsCache));
-  const { data, error } = await supabase.from("inventory_counts").upsert(record).select().single();
-  if (error) throw error;
+  const data = await writeOperationsRecord("inventory_counts", record, countsCache, refreshInventoryCounts);
   await refreshInventoryCounts();
   return fromCountRow(data);
 }

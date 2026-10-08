@@ -2277,6 +2277,29 @@ exception
   when duplicate_object then null;
 end $$;
 
+-- Paket 69: Ansätze, Events und Inventurzählungen fehlten bis 08.10.2026 in der
+-- Publication – die Clients abonnierten sie, bekamen aber keine Änderungen.
+do $$
+begin
+  alter publication supabase_realtime add table public.preparations;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.events;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.inventory_counts;
+exception
+  when duplicate_object then null;
+end $$;
+
 -- ---------------------------------------------------------------------
 -- Schulungen & Wissen (Paket 53)
 -- ---------------------------------------------------------------------
