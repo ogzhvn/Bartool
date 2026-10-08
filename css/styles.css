@@ -5188,3 +5188,29 @@ p.knowledge-nav-title {
 .knowledge-more-item:active {
   background: var(--bg-elevated-2);
 }
+
+/* ── Wissen: Mehrfachauswahl ───────────────────────────── */
+.knowledge-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.knowledge-bulk .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+}
+
+.knowledge-bulk-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.knowledge-row.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--bg-elevated);
+}

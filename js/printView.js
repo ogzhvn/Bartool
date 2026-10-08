@@ -15,8 +15,8 @@ import { resolveImageUrl } from "./photos.js";
 
 const printAreaEl = document.getElementById("print-area");
 
-function printBlocks(title, blocksHtml) {
-  printAreaEl.innerHTML = `<h1>${escapeHtml(title)}</h1>${blocksHtml}`;
+function printBlocks(title, blocksHtml, withTitle = true) {
+  printAreaEl.innerHTML = `${withTitle ? `<h1>${escapeHtml(title)}</h1>` : ""}${blocksHtml}`;
   document.body.classList.add("printing");
 
   const cleanUp = () => {
@@ -91,7 +91,7 @@ function knowledgeBlockHtml(block) {
 
 // Wissensartikel (Paket 54). Der Text kommt aus Nutzereingaben und wird
 // deshalb vollständig escaped; die Blöcke stammen aus parseSectionText().
-export function printKnowledge(doc) {
+function knowledgeDocHtml(doc) {
   const sections = doc.sections
     .map((section) => {
       const body = section.blocks.map(knowledgeBlockHtml).join("");
@@ -101,14 +101,29 @@ export function printKnowledge(doc) {
   const sources = doc.sources.length
     ? `<h2>${escapeHtml(doc.sourcesTitle)}</h2><ul>${doc.sources.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`
     : "";
-  printBlocks(
-    doc.title,
+  return (
     `<p class="meta">${escapeHtml([doc.category, doc.departmentsText].filter(Boolean).join(" · "))}</p>` +
-      (doc.summary ? `<p><strong>${escapeHtml(doc.summary)}</strong></p>` : "") +
-      sections +
-      sources +
-      (doc.stand ? `<p class="meta">${escapeHtml(doc.stand)}</p>` : "")
+    (doc.summary ? `<p><strong>${escapeHtml(doc.summary)}</strong></p>` : "") +
+    sections +
+    sources +
+    (doc.stand ? `<p class="meta">${escapeHtml(doc.stand)}</p>` : "")
   );
+}
+
+export function printKnowledge(doc) {
+  printBlocks(doc.title, knowledgeDocHtml(doc));
+}
+
+// Mehrere Artikel in einem Druckauftrag, jeder auf einer neuen Seite.
+export function printKnowledgeMany(docs) {
+  if (docs.length === 0) return;
+  const html = docs
+    .map(
+      (doc, i) =>
+        `<div${i > 0 ? ' style="break-before:page;page-break-before:always"' : ""}><h1>${escapeHtml(doc.title)}</h1>${knowledgeDocHtml(doc)}</div>`
+    )
+    .join("");
+  printBlocks("", html, false);
 }
 
 // ---------------------------------------------------------------------

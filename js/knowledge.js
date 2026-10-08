@@ -2,6 +2,7 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { can, myDepartment } from "./auth.js";
 import {
   deleteKnowledge,
+  saveKnowledge,
   loadKnowledge,
   loadKnowledgeReads,
   markKnowledgeRead,
@@ -16,7 +17,7 @@ import {
   isKnowledgeEditorOpen,
   openKnowledgeEditor,
 } from "./knowledgeEditor.js";
-import { printKnowledge } from "./printView.js";
+import { printKnowledge, printKnowledgeMany } from "./printView.js";
 import { openFeedback } from "./feedback.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
@@ -99,6 +100,12 @@ let departments = [];
 // Ansicht (Paket 62): ohne Suche und Kategorie die Themenübersicht, mit
 // Kategorie deren Liste, mit Suchtext die Treffer aus allen Kategorien.
 let activeCategory = "";
+// Sonderwert für activeCategory: Kachel "Alle" zeigt alle Artikel in einer Liste.
+const CATEGORY_ALL = "\u0000alle";
+// Mehrfachauswahl (Drucken, Veröffentlichen, Löschen) in der Artikelliste.
+let selecting = false;
+const selectedIds = new Set();
+let bulkEl = null;
 // Scrollposition der Liste beim Öffnen eines Artikels, für "Zurück".
 let listScrollTop = null;
 let departmentFilter = null;
@@ -203,7 +210,7 @@ function visibleArticles() {
   const query = searchQuery();
   const onlyUnread = unreadEl.checked;
   return filteredArticles().filter((article) => {
-    if (!query && article.category !== activeCategory) return false;
+    if (!query && activeCategory !== CATEGORY_ALL && article.category !== activeCategory) return false;
     if (!matchesSearch(article, query)) return false;
     if (onlyUnread && !isUnread(article)) return false;
     return true;
@@ -470,8 +477,9 @@ function renderTopics() {
   const articles = filteredArticles();
   const onlyUnread = unreadEl.checked;
   topicsEl.textContent = "";
-  presentCategories(articles).forEach((category) => {
-    const inCategory = articles.filter((a) => a.category === category);
+  const tiles = presentCategories(articles).map((category) => [category, category, articles.filter((a) => a.category === category)]);
+  if (articles.length > 0) tiles.push([CATEGORY_ALL, t("ui.wissen_alle_artikel"), articles]);
+  tiles.forEach(([category, name, inCategory]) => {
     const published = inCategory.filter((a) => a.published);
     const read = published.filter((a) => readState(a) === "gelesen").length;
     if (onlyUnread && !published.some(isUnread)) return;
@@ -485,7 +493,7 @@ function renderTopics() {
     const drafts = inCategory.length - published.length;
     if (drafts > 0) count.push(t("ui.wissen_entwuerfe_n", { n: drafts }));
     tile.append(
-      el("span", "knowledge-topic-name", category),
+      el("span", "knowledge-topic-name", name),
       el("span", "knowledge-topic-count", count.join(" · "))
     );
     if (published.length > 0) {
@@ -530,7 +538,7 @@ function renderNav(mode, count) {
   if (mode !== "category") return;
   const label = t("ui.wissen_alle_themen");
   navEl.appendChild(backButton("overview", label, label));
-  const title = el("h3", "knowledge-nav-title", activeCategory);
+  const title = el("h3", "knowledge-nav-title", activeCategory === CATEGORY_ALL ? t("ui.wissen_alle_artikel") : activeCategory);
   title.appendChild(el("span", "knowledge-nav-count", ` · ${count}`));
   navEl.appendChild(title);
 }
@@ -557,6 +565,14 @@ function renderRow(article, withCategory) {
   if (article.level) meta.push(t(`ui.wissen_level_${article.level}`));
   if (meta.length) main.appendChild(el("span", "knowledge-row-meta", meta.join(" · ")));
   if (article.summary) main.appendChild(el("span", "knowledge-row-summary", article.summary));
+  if (selecting) {
+    const checked = selectedIds.has(article.id);
+    row.classList.toggle("selected", checked);
+    row.setAttribute("aria-pressed", String(checked));
+    row.prepend(iconEl(checked ? "ph-check-square" : "ph-square"));
+    row.append(main, statusBadgeShort(article));
+    return row;
+  }
   row.append(main, statusBadgeShort(article), iconEl("ph-caret-right knowledge-row-caret"));
   return row;
 }
@@ -578,9 +594,10 @@ function currentMode() {
 
 function renderBrowse() {
   // Kategorie verschwunden (gelöscht/umbenannt): zurück zur Übersicht.
-  if (activeCategory && !loadKnowledge().some((a) => a.category === activeCategory)) activeCategory = "";
+  if (activeCategory && activeCategory !== CATEGORY_ALL && !loadKnowledge().some((a) => a.category === activeCategory)) activeCategory = "";
   const mode = currentMode();
   renderFilterState();
+  if (mode === "overview") endSelection();
   topicsEl.hidden = mode !== "overview";
   listEl.hidden = mode === "overview";
   listEl.textContent = "";
@@ -588,17 +605,24 @@ function renderBrowse() {
   if (mode === "overview") {
     renderNav(mode, 0);
     renderTopics();
+    renderBulk([]);
     return;
   }
   const shown = visibleArticles();
   renderNav(mode, shown.length);
+  // Auswahl auf sichtbare Artikel beschränken (Filter, Suche, Realtime).
+  const shownIds = new Set(shown.map((a) => a.id));
+  [...selectedIds].forEach((id) => !shownIds.has(id) && selectedIds.delete(id));
+  renderBulk(shown);
   if (shown.length === 0) {
     listEl.appendChild(
       el("p", "empty-note", loadKnowledge().length === 0 ? t("ui.wissen_leer") : t("ui.wissen_keine_treffer"))
     );
     return;
   }
-  shown.forEach((article) => listEl.appendChild(renderRow(article, mode === "search")));
+  shown.forEach((article) =>
+    listEl.appendChild(renderRow(article, mode === "search" || activeCategory === CATEGORY_ALL))
+  );
 }
 
 function resetFilters() {
@@ -731,6 +755,7 @@ function iconButton(action, icon, label) {
 // Wohin "Zurück" führt: Suchtreffer, Kategorie oder Übersicht.
 function backLabel() {
   if (searchQuery()) return t("ui.wissen_suchergebnisse");
+  if (activeCategory === CATEGORY_ALL) return t("ui.wissen_alle_artikel");
   return activeCategory || t("ui.wissen_alle_themen");
 }
 
@@ -970,10 +995,8 @@ function handleSuggest() {
   if (article) openFeedback({ kind: "knowledge", refId: article.id, refTitle: article.title });
 }
 
-function handlePrint() {
-  const article = loadKnowledge().find((a) => a.id === openArticleId);
-  if (!article) return;
-  printKnowledge({
+function printDoc(article) {
+  return {
     title: article.title,
     category: article.category,
     departmentsText: departmentsText(article),
@@ -985,7 +1008,130 @@ function handlePrint() {
         : "",
     sourcesTitle: t("ui.wissen_quellen"),
     sources: article.sources.map((src) => [src?.label, src?.url, src?.note].filter(Boolean).join(" – ")),
-  });
+  };
+}
+
+function handlePrint() {
+  const article = loadKnowledge().find((a) => a.id === openArticleId);
+  if (article) printKnowledge(printDoc(article));
+}
+
+// ---------------------------------------------------------------------
+// Mehrfachauswahl
+// ---------------------------------------------------------------------
+
+function selectedArticles() {
+  return loadKnowledge().filter((a) => selectedIds.has(a.id));
+}
+
+function endSelection() {
+  selecting = false;
+  selectedIds.clear();
+}
+
+function toggleSelected(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  renderBrowse();
+}
+
+function bulkButton(action, icon, label, className = "btn-secondary") {
+  const button = el("button", className);
+  button.type = "button";
+  button.dataset.action = action;
+  button.append(iconEl(icon), el("span", null, label));
+  return button;
+}
+
+// Leiste über der Liste: "Auswählen" bzw. bei aktiver Auswahl die Sammelaktionen.
+function renderBulk(shown) {
+  if (!bulkEl) return;
+  bulkEl.textContent = "";
+  bulkEl.hidden = shown.length === 0;
+  if (shown.length === 0) return;
+  if (!selecting) {
+    bulkEl.appendChild(bulkButton("select", "ph-check-square", t("ui.wissen_auswaehlen")));
+    return;
+  }
+  const picked = selectedArticles();
+  const allSelected = picked.length === shown.length;
+  bulkEl.append(
+    bulkButton("select-all", allSelected ? "ph-square" : "ph-check-square", allSelected ? t("ui.wissen_alle_abwaehlen") : t("ui.wissen_alle_auswaehlen")),
+    el("span", "knowledge-bulk-count", t("ui.wissen_n_ausgewaehlt", { n: picked.length }))
+  );
+  const print = bulkButton("print", "ph-printer", t("ui.drucken"));
+  print.disabled = picked.length === 0;
+  bulkEl.appendChild(print);
+  if (can("knowledge.write")) {
+    const publish = bulkButton("publish", "ph-eye", t("ui.wissen_veroeffentlichen"));
+    publish.disabled = !picked.some((a) => !a.published);
+    const remove = bulkButton("delete", "ph-trash", t("ui.loeschen"), "btn-secondary knowledge-delete");
+    remove.disabled = picked.length === 0;
+    bulkEl.append(publish, remove);
+  }
+  bulkEl.appendChild(bulkButton("done", "ph-x", t("ui.wissen_auswahl_beenden")));
+}
+
+function bulkReport(failed, ok) {
+  if (failed.length === 0) return;
+  alert(t("ui.wissen_sammel_fehler", { ok, failed: failed.length }) + "\n\n" + failed.map((f) => `${f.title}: ${f.message}`).join("\n"));
+}
+
+async function bulkPublish() {
+  const drafts = selectedArticles().filter((a) => !a.published);
+  if (drafts.length === 0 || !can("knowledge.write")) return;
+  if (!confirm(t("ui.wissen_sammel_veroeffentlichen_bestaetigen", { n: drafts.length }))) return;
+  const failed = [];
+  for (const article of drafts) {
+    try {
+      await saveKnowledge({ ...article, published: true });
+    } catch (error) {
+      failed.push({ title: article.title, message: error?.message || "" });
+    }
+  }
+  bulkReport(failed, drafts.length - failed.length);
+  renderBrowse();
+}
+
+async function bulkDelete() {
+  const picked = selectedArticles();
+  if (picked.length === 0 || !can("knowledge.write")) return;
+  if (!confirm(t("ui.wissen_sammel_loeschen_bestaetigen", { n: picked.length }))) return;
+  const failed = [];
+  for (const article of picked) {
+    try {
+      await deleteKnowledge(article.id);
+      selectedIds.delete(article.id);
+      if (article.imagePath) await deleteKnowledgePhoto(article.imagePath).catch(() => {});
+    } catch (error) {
+      failed.push({ title: article.title, message: error?.message || "" });
+    }
+  }
+  bulkReport(failed, picked.length - failed.length);
+  renderBrowse();
+}
+
+function handleBulk(e) {
+  const button = e.target.closest("button[data-action]");
+  if (!button || button.disabled) return;
+  const action = button.dataset.action;
+  if (action === "select") selecting = true;
+  else if (action === "done") endSelection();
+  else if (action === "select-all") {
+    const shown = visibleArticles();
+    if (selectedIds.size === shown.length) selectedIds.clear();
+    else shown.forEach((a) => selectedIds.add(a.id));
+  } else if (action === "print") {
+    printKnowledgeMany(selectedArticles().map(printDoc));
+    return;
+  } else if (action === "publish") {
+    bulkPublish();
+    return;
+  } else if (action === "delete") {
+    bulkDelete();
+    return;
+  }
+  renderBrowse();
 }
 
 export function initKnowledge() {
@@ -1005,23 +1151,31 @@ export function initKnowledge() {
     levelFilter = levelEl.value;
     renderBrowse();
   });
+  bulkEl = el("div", "knowledge-bulk");
+  bulkEl.hidden = true;
+  listEl.before(bulkEl);
+  bulkEl.addEventListener("click", handleBulk);
   filterToggleEl.addEventListener("click", () => setFiltersOpen(filterPanelEl.hidden));
   filterResetEl.addEventListener("click", resetFilters);
   topicsEl.addEventListener("click", (e) => {
     const tile = e.target.closest(".knowledge-topic");
     if (!tile) return;
     activeCategory = tile.dataset.category;
+    endSelection();
     renderBrowse();
     if (navEl.getBoundingClientRect().top < 0) navEl.scrollIntoView?.({ block: "start" });
   });
   navEl.addEventListener("click", (e) => {
     if (!e.target.closest('button[data-action="overview"]')) return;
     activeCategory = "";
+    endSelection();
     renderBrowse();
   });
   listEl.addEventListener("click", (e) => {
     const row = e.target.closest(".knowledge-row");
-    if (row) openArticle(row.dataset.id);
+    if (!row) return;
+    if (selecting) toggleSelected(row.dataset.id);
+    else openArticle(row.dataset.id);
   });
   detailEl.addEventListener("click", (e) => {
     const button = e.target.closest("button[data-action]");
