@@ -56,6 +56,7 @@ on conflict (key) do update
 insert into public.permissions (key, label_key, group_key, sort) values
   ('recipes.write',       'perm.recipes.write',       'inhalte',    10),
   ('products.write',      'perm.products.write',      'inhalte',    20),
+  ('dishes.write',        'perm.dishes.write',        'inhalte',    25),
   ('requests.review',     'perm.requests.review',     'inhalte',    30),
   ('quiz.manage',         'perm.quiz.manage',         'inhalte',    40),
   ('knowledge.write',     'perm.knowledge.write',     'inhalte',    50),
@@ -2494,6 +2495,264 @@ select d.key, 'knowledge'
   from public.departments d
  where d.key in ('bar', 'wgr', 'tellerwerk')
    and not exists (select 1 from public.department_modules dm where dm.module_key = 'knowledge')
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------
+-- Gerichte (Paket 70)
+-- ---------------------------------------------------------------------
+-- Eigene Datenart für WGR und Tellerwerk, nicht in recipes (Bar-Felder,
+-- Produkt-Matching). Lesen für alle Angemeldeten, Schreiben nur mit
+-- dishes.write (admin, barchef über die Gesamtzuweisung oben). Live per
+-- Migrationen dishes_schluessel_recht_paket70, dishes_tabelle_paket70,
+-- dishes_policies_modul_paket70.
+--
+-- Deklarationsschlüssel: Allergene nach LMIV Anhang II (konsolidiert
+-- 01.04.2025), Zusatzstoffe nach § 5 Abs. 1 LMZDV (Nr. 1–9, 11, 12; Nr. 4 als
+-- 4a–c). Fundstellen und Stand stehen in js/declarations.js.
+-- Liste identisch zu js/declarations.js halten: die Oberfläche bietet nur an,
+-- was hier steht, und die DB weist alles andere ab.
+create or replace function private.declaration_keys_ok(p_kind text, p_keys text[])
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select p_keys is not null
+     and array_position(p_keys, null) is null
+     and case p_kind
+       when 'allergen' then p_keys <@ array[
+         'gluten', 'gluten_weizen', 'gluten_dinkel', 'gluten_khorasan', 'gluten_roggen',
+         'gluten_gerste', 'gluten_hafer', 'gluten_hybride',
+         'crustaceans', 'eggs', 'fish', 'peanuts', 'soy', 'milk',
+         'nuts', 'nuts_mandel', 'nuts_haselnuss', 'nuts_walnuss', 'nuts_cashew', 'nuts_pekan',
+         'nuts_para', 'nuts_pistazie', 'nuts_macadamia',
+         'celery', 'mustard', 'sesame', 'sulphites', 'lupin', 'molluscs'
+       ]::text[]
+       when 'additive' then p_keys <@ array[
+         'farbstoff', 'konservierungsstoff', 'antioxidationsmittel', 'nitritpoekelsalz', 'nitrat',
+         'nitritpoekelsalz_nitrat', 'geschmacksverstaerker', 'geschwaerzt', 'gewachst', 'phosphat',
+         'suessungsmittel', 'phenylalanin', 'abfuehrend'
+       ]::text[]
+       else false
+     end;
+$$;
+
+-- Eindeutig und sortiert. Die Hauptgruppe fällt weg, sobald eine Art
+-- derselben Gruppe da ist (Unterschlüssel = <hauptgruppe>_<art>). Bleibt
+-- 'gluten' oder 'nuts' allein stehen, fehlt die Art.
+create or replace function private.allergens_normalize(p text[])
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select case when p is null then null else coalesce((
+    select array_agg(distinct k order by k)
+      from unnest(p) as u (k)
+     where k is null
+        or not (k in ('gluten', 'nuts') and exists (
+             select 1 from unnest(p) as s (sub) where sub like k || '\_%'))
+  ), '{}'::text[]) end;
+$$;
+
+-- components: [{name, note?}], Freitext ohne Produkt-Matching.
+create or replace function private.dish_components_ok(p jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(p) = 'array'
+     and not exists (
+       select 1 from jsonb_array_elements(p) as e (c)
+        where jsonb_typeof(e.c) <> 'object'
+           or coalesce(btrim(e.c ->> 'name'), '') = ''
+     );
+$$;
+
+create table if not exists public.dishes (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  -- Frei, z. B. Vorspeise, Hauptgang, Dessert, Buffet.
+  category text,
+  description text,
+  components jsonb not null default '[]'::jsonb,
+  -- Leer = alle Abteilungen. Nur Filter, kein Zugriffsschutz.
+  departments text[] not null default '{}',
+  allergens text[] not null default '{}',
+  -- Spuren, freiwillige Angabe.
+  traces text[] not null default '{}',
+  additives text[] not null default '{}',
+  -- Prüfvermerk. Beide Werte setzt nur der Trigger (Serverzeit, auth.uid()).
+  allergens_checked_at timestamptz,
+  allergens_checked_by uuid references auth.users (id) on delete set null,
+  -- [{product_id, note?}], nur Wein und Schaumwein. Über die id statt über
+  -- den Namen, damit eine Umbenennung im Katalog die Zuordnung nicht still bricht.
+  wine_pairings jsonb not null default '[]'::jsonb,
+  -- false = nicht auf der Karte, bleibt erhalten.
+  active boolean not null default true,
+  sort int not null default 0,
+  created_by uuid default auth.uid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint dishes_name_nicht_leer check (btrim(name) <> ''),
+  constraint dishes_components_ok check (private.dish_components_ok(components)),
+  constraint dishes_wine_pairings_array check (jsonb_typeof(wine_pairings) = 'array'),
+  constraint dishes_allergens_ok check (private.declaration_keys_ok('allergen', allergens)),
+  constraint dishes_traces_ok check (private.declaration_keys_ok('allergen', traces)),
+  constraint dishes_additives_ok check (private.declaration_keys_ok('additive', additives))
+);
+
+create index if not exists dishes_checked_by_idx on public.dishes (allergens_checked_by);
+create index if not exists dishes_created_by_idx on public.dishes (created_by);
+
+-- Ein Trigger für alles, was der Client nicht selbst bestimmen darf:
+--   - Schlüssel normalisieren, departments gegen public.departments prüfen
+--     (Arrays haben keinen Fremdschlüssel).
+--   - Prüfvermerk: Ein neuer Wert in allergens_checked_at (beim Anlegen nicht
+--     null, beim Ändern nicht null und anders als vorher) heißt „jetzt
+--     geprüft“. Der Server schreibt dann now() und auth.uid(). Ohne Konto
+--     (SQL-Editor, Service-Role) und bei Gluten/Schalenfrüchten ohne Art wird
+--     der Vermerk abgelehnt. Ändern sich allergens, traces oder additives ohne
+--     neuen Vermerk, oder setzt der Client ihn auf null, wird er gelöscht.
+--     Sonst bleibt der alte Vermerk, auch wenn der Client nur
+--     allergens_checked_by verändert.
+--   - wine_pairings: nur bei Änderung prüfen (siehe js/storage.js).
+--   - created_by/created_at fest, updated_at = Serverzeit.
+create or replace function private.dishes_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_neu boolean;
+  v_bad text;
+  v_e jsonb;
+begin
+  new.allergens := private.allergens_normalize(new.allergens);
+  new.traces := private.allergens_normalize(new.traces);
+  new.additives := case when new.additives is null then null else coalesce(
+    (select array_agg(distinct k order by k) from unnest(new.additives) as u (k)), '{}'::text[]) end;
+
+  select coalesce(array_agg(distinct k order by k), '{}'::text[]) into new.departments
+    from unnest(new.departments) as u (k);
+  select k into v_bad from unnest(new.departments) as u (k)
+   where k is null or not exists (select 1 from public.departments d where d.key = k) limit 1;
+  if found then
+    raise exception 'Unbekannte Abteilung in departments: %', coalesce(v_bad, 'null');
+  end if;
+
+  if tg_op = 'INSERT' then
+    v_neu := new.allergens_checked_at is not null;
+    if v_uid is not null then new.created_by := v_uid; end if;
+    new.created_at := now();
+  else
+    v_neu := new.allergens_checked_at is not null
+             and new.allergens_checked_at is distinct from old.allergens_checked_at;
+    new.created_by := old.created_by;
+    new.created_at := old.created_at;
+  end if;
+
+  if v_neu then
+    if v_uid is null then
+      raise exception 'Prüfvermerk nur durch ein angemeldetes Konto.';
+    end if;
+    if new.allergens && array['gluten', 'nuts']::text[] then
+      raise exception 'Prüfvermerk nicht möglich: Getreide- bzw. Schalenfruchtart fehlt.';
+    end if;
+    new.allergens_checked_at := now();
+    new.allergens_checked_by := v_uid;
+  elsif tg_op = 'INSERT' or new.allergens_checked_at is null
+        or new.allergens is distinct from old.allergens
+        or new.traces is distinct from old.traces
+        or new.additives is distinct from old.additives then
+    new.allergens_checked_at := null;
+    new.allergens_checked_by := null;
+  else
+    new.allergens_checked_at := old.allergens_checked_at;
+    new.allergens_checked_by := old.allergens_checked_by;
+  end if;
+
+  if tg_op = 'INSERT' or new.wine_pairings is distinct from old.wine_pairings then
+    if jsonb_typeof(new.wine_pairings) = 'array' then
+      for v_e in select e from jsonb_array_elements(new.wine_pairings) as a (e) loop
+        if jsonb_typeof(v_e) <> 'object'
+           or jsonb_typeof(v_e -> 'product_id') is distinct from 'string'
+           or (v_e ? 'note' and jsonb_typeof(v_e -> 'note') not in ('string', 'null'))
+           or not exists (select 1 from public.products p
+                           where p.id::text = v_e ->> 'product_id'
+                             and p.group_name in ('Wein', 'Schaumwein')) then
+          raise exception 'Weinbegleitung: % ist kein Wein oder Schaumwein aus dem Katalog.', v_e;
+        end if;
+      end loop;
+      if (select count(*) from jsonb_array_elements(new.wine_pairings))
+         <> (select count(distinct e ->> 'product_id') from jsonb_array_elements(new.wine_pairings) as a (e)) then
+        raise exception 'Weinbegleitung: Wein doppelt zugeordnet.';
+      end if;
+    end if;
+  end if;
+
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function private.dishes_guard() from public;
+
+drop trigger if exists dishes_guard on public.dishes;
+create trigger dishes_guard
+  before insert or update on public.dishes
+  for each row execute function private.dishes_guard();
+
+drop trigger if exists dishes_audit on public.dishes;
+create trigger dishes_audit
+  after insert or update or delete on public.dishes
+  for each row execute function public.log_audit();
+
+alter table public.dishes enable row level security;
+
+drop policy if exists "dishes: lesen" on public.dishes;
+create policy "dishes: lesen"
+  on public.dishes for select to authenticated
+  using (true);
+
+drop policy if exists "dishes: dishes.write legt an" on public.dishes;
+create policy "dishes: dishes.write legt an"
+  on public.dishes for insert to authenticated
+  with check (private.has_permission('dishes.write'));
+
+drop policy if exists "dishes: dishes.write aendert" on public.dishes;
+create policy "dishes: dishes.write aendert"
+  on public.dishes for update to authenticated
+  using (private.has_permission('dishes.write'))
+  with check (private.has_permission('dishes.write'));
+
+drop policy if exists "dishes: dishes.write loescht" on public.dishes;
+create policy "dishes: dishes.write loescht"
+  on public.dishes for delete to authenticated
+  using (private.has_permission('dishes.write'));
+
+grant select, insert, update, delete on public.dishes to authenticated;
+revoke all on public.dishes from anon;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.dishes;
+exception
+  when duplicate_object then null;
+end $$;
+
+-- Modul "Gerichte" für WGR und Tellerwerk, nicht für Bar (im Admin
+-- zuschaltbar). Live einmalig per Migration (dishes_policies_modul_paket70).
+-- Hier nur, solange noch keine Abteilung einen "dishes"-Eintrag hat, sonst
+-- schaltet ein erneuter Lauf abgewählte Module wieder ein (Muster Paket 53).
+insert into public.department_modules (department_key, module_key)
+select d.key, 'dishes'
+  from public.departments d
+ where d.key in ('wgr', 'tellerwerk')
+   and not exists (select 1 from public.department_modules dm where dm.module_key = 'dishes')
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------

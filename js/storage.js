@@ -12,6 +12,7 @@ const CHECKLIST_TEMPLATES_UPDATED_EVENT = "bartool:checklist-templates-updated";
 const CHECKLIST_RUNS_UPDATED_EVENT = "bartool:checklist-runs-updated";
 const QUIZ_QUESTIONS_UPDATED_EVENT = "bartool:quiz-questions-updated";
 const KNOWLEDGE_UPDATED_EVENT = "bartool:knowledge-updated";
+const DISHES_UPDATED_EVENT = "bartool:dishes-updated";
 
 let recipesCache = [];
 let productsCache = [];
@@ -24,6 +25,7 @@ let checklistRunsCache = [];
 let quizQuestionsCache = [];
 let knowledgeCache = [];
 let knowledgeReadsCache = new Map();
+let dishesCache = [];
 let recipesChannel = null;
 let productsChannel = null;
 let preparationsChannel = null;
@@ -34,6 +36,7 @@ let checklistTemplatesChannel = null;
 let checklistRunsChannel = null;
 let quizQuestionsChannel = null;
 let knowledgeChannel = null;
+let dishesChannel = null;
 
 // ---------------------------------------------------------------------
 // Offline-Puffer
@@ -55,6 +58,7 @@ const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
 const QUIZ_QUESTIONS_CACHE_KEY = "bartool:quiz-questions";
 const KNOWLEDGE_CACHE_KEY = "bartool:knowledge";
+const DISHES_CACHE_KEY = "bartool:dishes";
 
 function readCache(key) {
   try {
@@ -1652,6 +1656,143 @@ export async function markKnowledgeRead(articleId) {
 
 export function onKnowledgeChanged(callback) {
   window.addEventListener(KNOWLEDGE_UPDATED_EVENT, callback);
+}
+
+// ---------------------------------------------------------------------
+// Gerichte (Tabelle "dishes", Paket 70)
+//
+// Muster der Rezepte. Lesen dürfen alle Angemeldeten, schreiben nur Konten
+// mit dishes.write (RLS). Der Offline-Puffer ist nicht an ein Konto
+// gebunden, weil alle Konten dasselbe lesen.
+//
+// Was die Datenbank selbst durchsetzt (Trigger private.dishes_guard):
+//   - Allergen- und Zusatzstoffschlüssel nur aus js/declarations.js. Die
+//     Arrays kommen eindeutig und sortiert zurück. Die Hauptgruppe fällt
+//     weg, sobald eine Art derselben Gruppe gesetzt ist.
+//   - Prüfvermerk: Zeit und Konto setzt der Server. Der Client meldet nur
+//     „jetzt geprüft“ (checkAllergens: true). Ändern sich allergens, traces
+//     oder additives ohne neuen Vermerk, löscht der Server den Vermerk. Fehlt
+//     bei Gluten oder Schalenfrüchten die Art, lehnt er den Vermerk ab.
+//   - wine_pairings: nur Produkte der Gruppen Wein und Schaumwein, keine
+//     doppelten. Geprüft wird nur, wenn sich die Liste ändert. Ein später
+//     gelöschtes Produkt kann deshalb stehen bleiben, die Anzeige muss das
+//     abfangen (Paket 73).
+// ---------------------------------------------------------------------
+
+export function fromDishRow(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    category: row.category ?? "",
+    description: row.description ?? "",
+    components: Array.isArray(row.components) ? row.components : [],
+    departments: Array.isArray(row.departments) ? row.departments : [],
+    allergens: Array.isArray(row.allergens) ? row.allergens : [],
+    traces: Array.isArray(row.traces) ? row.traces : [],
+    additives: Array.isArray(row.additives) ? row.additives : [],
+    allergensCheckedAt: row.allergens_checked_at ?? null,
+    allergensCheckedBy: row.allergens_checked_by ?? null,
+    winePairings: Array.isArray(row.wine_pairings) ? row.wine_pairings : [],
+    active: row.active !== false,
+    sort: Number(row.sort) || 0,
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+  };
+}
+
+// Den Prüfvermerk schickt nur, wer ihn ausdrücklich setzt. Jeder andere Wert
+// wird nicht mitgeschickt, der Server behält oder löscht ihn selbst.
+// created_by, created_at und updated_at setzt ebenfalls der Server.
+function toDishRecord(dish) {
+  const record = {
+    name: (dish.name ?? "").trim(),
+    category: dish.category?.trim() || null,
+    description: dish.description?.trim() || null,
+    components: Array.isArray(dish.components) ? dish.components : [],
+    departments: Array.isArray(dish.departments) ? dish.departments : [],
+    allergens: Array.isArray(dish.allergens) ? dish.allergens : [],
+    traces: Array.isArray(dish.traces) ? dish.traces : [],
+    additives: Array.isArray(dish.additives) ? dish.additives : [],
+    wine_pairings: Array.isArray(dish.winePairings) ? dish.winePairings : [],
+    active: dish.active !== false,
+    sort: Number(dish.sort) || 0,
+  };
+  if (dish.checkAllergens === true) record.allergens_checked_at = new Date().toISOString();
+  if (dish.clearAllergenCheck === true) record.allergens_checked_at = null;
+  return record;
+}
+
+async function refreshDishes() {
+  const supabase = getSupabaseClient();
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase
+      .from("dishes")
+      .select("*")
+      .order("category")
+      .order("sort")
+      .order("name"));
+  } catch (err) {
+    error = err;
+  }
+  if (!error) {
+    dishesCache = (data ?? []).map(fromDishRow);
+    writeCache(DISHES_CACHE_KEY, dishesCache);
+  } else {
+    const buffered = readCache(DISHES_CACHE_KEY);
+    if (buffered) dishesCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(DISHES_UPDATED_EVENT));
+}
+
+export async function initDishesSync() {
+  const buffered = readCache(DISHES_CACHE_KEY);
+  if (buffered) {
+    dishesCache = buffered;
+    window.dispatchEvent(new CustomEvent(DISHES_UPDATED_EVENT));
+  }
+  await refreshDishes();
+  const supabase = getSupabaseClient();
+  if (dishesChannel) supabase.removeChannel(dishesChannel);
+  dishesChannel = supabase
+    .channel("public:dishes")
+    .on("postgres_changes", { event: "*", schema: "public", table: "dishes" }, refreshDishes)
+    .subscribe();
+}
+
+export function loadDishes() {
+  return dishesCache;
+}
+
+// Ohne id wird ein neues Gericht angelegt, sonst über die id aktualisiert (der
+// Name ist änderbar). Beim Bearbeiten update statt upsert, Befund aus Paket
+// 66/68. Gibt das gespeicherte Gericht so zurück, wie der Server es abgelegt
+// hat, also mit normalisierten Schlüsseln und dem tatsächlichen Prüfvermerk.
+export async function saveDish(dish) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const record = toDishRecord(dish);
+  const query = dish.id
+    ? supabase.from("dishes").update(record).eq("id", dish.id)
+    : supabase.from("dishes").insert(record);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  await refreshDishes();
+  return fromDishRow(data);
+}
+
+export async function deleteDish(id) {
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("dishes").delete().eq("id", id);
+  if (error) throw error;
+  await refreshDishes();
+}
+
+export function onDishesChanged(callback) {
+  window.addEventListener(DISHES_UPDATED_EVENT, callback);
 }
 
 // ---------------------------------------------------------------------

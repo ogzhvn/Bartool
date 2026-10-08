@@ -27,6 +27,7 @@ export const PERMISSIONS = [
   // Inhalte
   { key: "recipes.write", group: "inhalte", sort: 10, policy: "recipes, storage/bilder (rezepte/)" },
   { key: "products.write", group: "inhalte", sort: 20, policy: "products, product_prices, storage/bilder (produkte/)" },
+  { key: "dishes.write", group: "inhalte", sort: 25, policy: "dishes" },
   { key: "requests.review", group: "inhalte", sort: 30, policy: "change_requests" },
   { key: "quiz.manage", group: "inhalte", sort: 40, policy: "quiz_questions, quiz_attempts" },
   { key: "knowledge.write", group: "inhalte", sort: 50, policy: "knowledge_articles, storage/bilder (wissen/)" },

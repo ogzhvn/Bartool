@@ -490,7 +490,7 @@ Reihenfolge: **70 → 71 → 72 → 73**. **74** sobald die Küchenlisten vorlie
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 70 | Datenmodell Gerichte, Deklarationsschlüssel, Recht, Modul-Registrierung | offen | Opus 5.5, hoher Denkaufwand |
+| 70 | Datenmodell Gerichte, Deklarationsschlüssel, Recht, Modul-Registrierung | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand |
 | 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -4005,15 +4005,68 @@ Statement; nach einem Timeout zuerst per `execute_sql` prüfen, was angekommen i
 
 **Abnahme** (per `execute_sql` mit `set local role authenticated` + `request.jwt.claims` je Konto,
 danach Rollback; Löschen über den `USING`-Ausdruck prüfen, nicht mit echtem `delete`)
-- [ ] Unbekannter Allergen- oder Zusatzstoffschlüssel und unbekannte Abteilung werden abgewiesen.
-- [ ] Vermerk setzen → `checked_by` = eigenes Konto, `checked_at` = Serverzeit, auch wenn der Client
+- [x] Unbekannter Allergen- oder Zusatzstoffschlüssel und unbekannte Abteilung werden abgewiesen.
+      _(✓ 08.10.2026: Migrationen `dishes_schluessel_recht_paket70`, `dishes_tabelle_paket70`,
+      `dishes_policies_modul_paket70`, keine hing. `eier`, `koffein`, `nuts_kokos` und Abteilung
+      `kueche` wurden abgewiesen.)_
+- [x] Vermerk setzen → `checked_by` = eigenes Konto, `checked_at` = Serverzeit, auch wenn der Client
       andere Werte schickt. Danach `allergens` ändern → Vermerk `null`. Allergene + neuer Vermerk in
-      einem Statement → Vermerk bleibt.
-- [ ] `wine_pairings` mit Gin-Produkt bzw. unbekannter `product_id` → abgewiesen.
-- [ ] `claude-test-wgr` (barkeeper, ohne `dishes.write`): liest, schreibt nicht. Admin: beides.
-- [ ] Rechte-Matrix zeigt „Gerichte pflegen", Abteilungs-Matrix zeigt „Gerichte" bei WGR und
-      Tellerwerk angehakt, bei Bar nicht.
-- [ ] Fundstelle und Stand der Schlüsselliste stehen in `js/declarations.js`.
+      einem Statement → Vermerk bleibt. _(✓ 08.10.2026: Ein Insert mit fremdem `checked_by` und
+      `created_by` sowie Datum 2001 wurde zu Admin-Konto und `now()`. Nur `checked_by` zu fälschen
+      wirkt nicht. Eine reine Umsortierung lässt den Vermerk stehen. Wer `additives` ändert, löscht
+      den Vermerk. Ein Vermerk bei „gluten“ ohne Art wird abgewiesen.)_
+- [x] `wine_pairings` mit Gin-Produkt bzw. unbekannter `product_id` → abgewiesen. _(✓ 08.10.2026:
+      Abgewiesen werden auch Wermut und doppelte Zuordnungen. Wein + Schaumwein mit `note` wird
+      angenommen.)_
+- [x] `claude-test-wgr` (barkeeper, ohne `dishes.write`): liest, schreibt nicht. Admin: beides.
+      _(✓ 08.10.2026: WGR liest 1 Zeile, ein Insert läuft in die RLS-Sperre, ein Update trifft
+      0 Zeilen, der Delete-`USING`-Ausdruck ergibt `false`. Beim Admin gehen Insert und Update, der
+      Delete-`USING`-Ausdruck ergibt `true`. `audit_log` schreibt mit, alles zurückgerollt, `dishes`
+      ist leer.)_
+- [x] Rechte-Matrix zeigt „Gerichte pflegen", Abteilungs-Matrix zeigt „Gerichte" bei WGR und
+      Tellerwerk angehakt, bei Bar nicht. _(✓ 08.10.2026: im Browser mit `claude-test`, Oberfläche EN
+      („Maintain dishes“ bei Barchef angehakt, „Dishes“ Bar 0 / WGR 1 / Tellerwerk 1).)_
+- [x] Fundstelle und Stand der Schlüsselliste stehen in `js/declarations.js`.
+- [x] `get_advisors` (Security) ohne neue Befunde. _(✓ 08.10.2026: dieselben 8 + 1 Warnungen wie vor
+      der Migration.)_
+
+**Umsetzungsnotizen (08.10.2026)**
+- **Recht nachgeschlagen:** LMIV Anhang II, konsolidiert 01.04.2025. Die 14 Gruppen stimmen mit der
+  Planung überein. Getreide: Weizen (wie Dinkel und Khorasan-Weizen), Roggen, Gerste, Hafer,
+  Hybridstämme. Schalenfrüchte: 8 Arten. Die **ZZulV ist seit 2021 aufgehoben**, Rechtsgrundlage
+  ist jetzt **§ 5 Abs. 1 LMZDV**. Für die Bereitstellung gilt § 4 Abs. 3 LMIDV (Karte, Fußnote,
+  Aushang). Fundstellen und Stand stehen in `js/declarations.js`.
+- **Mit dem Nutzer entschieden:** Zusatzstoffe nach § 5 Abs. 1 Nr. 1–9, 11, 12, Nr. 4 als 4a–c,
+  ohne Tafelsüßen, Koffein und Chinin. Labels in üblicher Schreibweise („Sulfite“, „Cashewnüsse“)
+  statt „Sulphite“/„Kaschunüsse“ aus dem DE-Text. Die Hauptgruppe allein (`gluten`, `nuts`) ist
+  speicherbar, für Importe alter Listen. **Einen Prüfvermerk lehnt die DB dann ab**, und die UI
+  (Paket 71) zeigt „Art fehlt“. Für Hybridstämme gibt es einen eigenen Unterschlüssel
+  `gluten_hybride`, damit sie prüfbar bleiben.
+- Schlüssel: 14 Hauptgruppen mit englischem Schlüssel (`gluten`, `crustaceans` … `molluscs`),
+  Unterschlüssel `<gruppe>_<art>`. `private.allergens_normalize()` entfernt die Hauptgruppe,
+  sobald eine Art gesetzt ist. „Hauptgruppe steht allein“ heißt deshalb immer „Art fehlt“.
+- Prüfvermerk über den Trigger: Der Client schickt `allergens_checked_at` mit beliebigem neuem Wert
+  (`saveDish({ …, checkAllergens: true })`). Ohne `auth.uid()`, also im SQL-Editor oder per
+  Service-Role, wird der Vermerk abgelehnt. Claude kann ihn damit auch technisch nicht setzen.
+  Ein Vermerk bei leeren `allergens` ist erlaubt, das ist die Aussage „geprüft, keine der 14“.
+- `created_by`/`created_at` setzt der Trigger und hält sie fest. `updated_at` setzt auch der
+  `dishes_guard`, ein eigener `set_updated_at`-Trigger fehlt deshalb.
+- `components` wird per Constraint geprüft: Array aus Objekten mit nicht-leerem `name`.
+- `wine_pairings` wird nur bei Änderung geprüft. Ein später gelöschtes oder umgruppiertes Produkt
+  blockiert sonst jede Allergenänderung am Gericht. Die Anzeige in Paket 73 muss tote IDs abfangen.
+- **Zahlenkorrektur zur Planung:** Wein + Schaumwein sind 92 Produkte (76 + 16), alle mit
+  `food_pairing`. Die „108“ enthielt die Gruppe „Wermut & Aperitif-Wein“ (16), die nicht
+  zuordenbar ist.
+- Recht `dishes.write` mit sort 25 (nach Produkte). Live ausdrücklich für `admin` + `barchef`
+  vergeben: Die Gesamtzuweisung in `schema.sql` läuft nur bei einer Neuinstallation.
+  `stellv_barchef` bekommt das Recht nicht, wie geplant.
+- Modul `dishes` mit sort 15 (zwischen Rezepte und Produkte). Kein Tab, kein `initDishesSync()` in
+  `main.js`: Beides kommt mit der UI in Paket 71, Muster Paket 53.
+- `restore_row()` kennt nur `recipes`/`products`. Wiederherstellen von Gerichten aus dem Audit-Log
+  ist damit nicht möglich. Das Protokoll schreibt trotzdem mit.
+- `sw.js`: Cache auf v118, `js/declarations.js` in der Precache-Liste.
+- Im Browser-Test meldete die Konsole nur, dass der Realtime-WebSocket fehlschlägt (500 beim
+  Handshake). Vermutlich liegt das am Proxy der Testumgebung, nicht geprüft.
 
 **Commit:** `Gerichte: Datenmodell, Deklarationsschlüssel, Recht dishes.write`
 

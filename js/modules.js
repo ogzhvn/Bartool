@@ -40,6 +40,7 @@ export const MODULES = [
   { key: "buildable", group: "betrieb", sort: 70, labelKey: "ui.was_kann_ich_bauen" },
   // Bibliothek
   { key: "recipes", group: "bibliothek", sort: 10, labelKey: "ui.rezepte" },
+  { key: "dishes", group: "bibliothek", sort: 15, labelKey: "ui.gerichte" },
   { key: "products", group: "bibliothek", sort: 20, labelKey: "ui.produkte" },
   { key: "quiz", group: "bibliothek", sort: 30, labelKey: "ui.quiz" },
   { key: "knowledge", group: "bibliothek", sort: 40, labelKey: "ui.wissen" },
