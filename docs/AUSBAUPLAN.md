@@ -323,6 +323,51 @@ Tellerwerk), nicht nur für die Bar.
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
+### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
+
+Bestandsaufnahme per Screenshot (Chromium, 390 px Handy und 1366 px Desktop, Testaccount) über alle
+Tabs. Ziel ist **Politur, kein Redesign**: Dark Theme, Farbwelt Schwarz/Gold, Schrift Inter, Icons
+Phosphor und das Layout-Grundgerüst (Header, Sidebar/Drawer, Tab-Panels) bleiben (CLAUDE.md Regel 4).
+
+**Vorarbeit (08.10.2026, Commit `9b47b43`):** Mobile-Grundlage in `css/styles.css` (Tap-Highlight
+aus, `touch-action: manipulation`, `user-select: none` auf Bedienelementen, Eingabefelder auf Touch
+16 px gegen iOS-Zoom, `overscroll-behavior-y: none`, `100dvh`-Fallbacks, `prefers-reduced-motion`),
+Tokens `--success`, `--ease-out`, `--dur-press`, `--dur-hover`. Hover für `.btn-*`, `.tool-card`,
+`.today-item` und Eingabefelder nur noch unter `@media (hover: hover) and (pointer: fine)`, dazu
+`:active`-Druckfeedback. Startseite: Werkzeuge auf dem Handy als 2er-Raster ohne Beschreibung.
+Batching/Verdünnung/Kalkulation: „Einfügen" neben der Rezeptauswahl (`.recipe-load-row`),
+Zutatenzeile ≤ 480 px mit ×-Knopf neben Menge/Einheit bzw. ABV, Ergebnisleiste umbrechend.
+Singular „1 offener Punkt". **Diese Muster in allen Paketen der Runde weiterverwenden**, nicht neu
+erfinden.
+
+**Entscheidungen (08.10.2026, mit dem Nutzer abgestimmt)**
+- **`color-scheme: dark`** setzen und Datumsfelder an die übrigen Eingabefelder angleichen (Paket 57).
+  Das US-Format `mm/dd/yyyy` in den Screenshots kommt vom englischen Test-Chromium; auf deutschen
+  Geräten zeigt der Browser `tt.mm.jjjj` – kein eigenes Datumsformat bauen.
+- **Wissen-Kategorien werden zusammengelegt** (Paket 61, vor Paket 62): Claude schlägt die
+  Zuordnung vor, der Nutzer bestätigt sie **vor** dem `UPDATE`.
+- **Wissen bekommt eine Themenübersicht als Einstieg** (Paket 62): Kacheln je Kategorie mit Anzahl
+  und Gelesen-Fortschritt, Tippen öffnet eine kompakte Liste; Suche bleibt oben, die übrigen Filter
+  in einen einklappbaren Bereich.
+- Jedes Paket: vorher/nachher-Screenshots auf 390 px und 1366 px (Playwright gegen
+  `python3 -m http.server 8000`, Login mit dem Testaccount aus `.claude/local/testaccount.md`),
+  Service-Worker-Cache in `sw.js` hochzählen, neue Texte über i18n in **beiden** Sprachdateien.
+- Was nur auf einem echten Handy prüfbar ist (iOS-Zoom, Tap-Verzögerung, Safe-Area), im Abschluss
+  ausdrücklich als „auf Gerät prüfen" melden, nicht als erledigt.
+- **Reihenfolge:** 57 zuerst (Querschnitt, wirkt auf alle Tabs). Danach 58, 59, 60, 63 in beliebiger
+  Reihenfolge; **61 vor 62**. Paket 56 (Inhalte) arbeitet nach Paket 61 mit der bereinigten
+  Kategorienliste.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 57 | Querschnitt: Header, native Felder, Hover, Abstände | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 60 | Bibliothek: Rezepte, Produkte, Quiz | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 61 | Wissen: Kategorien bereinigen (Daten) | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | offen | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
+| 63 | Verwaltung: Admin-Unterseiten | offen | Sonnet 5.5, mittlerer Denkaufwand |
+
 ---
 
 # Paket 1 – PWA installierbar + App-Shell offline
@@ -3132,6 +3177,215 @@ Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu 
 - **Fachliche Strenge bleibt unverändert:** Jede Aussage muss auf eine abgerufene Quelle rückführbar
   sein, nichts aus dem Gedächtnis, Hausstandards nicht erfinden (Regel 6). Was nicht im Text steht,
   gehört in den Abschlussbericht an den Nutzer: eine Liste Aussage → Quelle → Fundstelle/Wortlaut.
+
+---
+
+# Paket 57 – Querschnitt: Header, native Felder, Hover, Abstände
+
+**Abhängigkeit:** Vorarbeit Runde 10 (`9b47b43`).
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – CSS-Arbeit an vielen Stellen, aber nach festem Muster.
+
+**Ziel:** Was auf allen Tabs gleich stört, einmal zentral beheben.
+
+**Dateien:** `css/styles.css` (gezielt per `grep -n`), `sw.js`.
+
+**Befunde (Screenshots 08.10.2026)**
+- Header auf dem Handy: lange Tab-Namen brechen auf 2–3 Zeilen um und laufen aus dem 56-px-Header
+  („Verdünnung & ABV", „Mise en Place", „Schwund & Bruch", „Kann ich bauen?").
+- Native Datumsfelder (`input[type="date"]`, `datetime-local`) sind klein, hell und ohne
+  Rahmen/Höhe der übrigen Felder; Zahlen-Spinner und Scrollbalken hell.
+- Checkboxen sind auf Touch zu klein (z. B. Kartenkalkulation, Übergabe, „Nur ungelesen").
+- Rund 35 weitere `:hover`-Regeln sind nicht auf `(hover: hover) and (pointer: fine)` begrenzt und
+  bleiben auf Touch nach dem Tippen hängen.
+- Fußzeile „BARTOOL" kostet auf jedem Tab viel leeren Platz.
+- Abstände: Ein `label` direkt nach einem Feld klebt am Feld darüber (Zuckersirup „Zucker-Teile",
+  Schwund „Menge"), weil manche Felder nicht in `.field-row` liegen.
+
+**Schritte**
+1. `.app-title-tab`: eine Zeile, `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`,
+   `min-width: 0` auf den Flex-Eltern.
+2. `:root { color-scheme: dark; }`. Datumsfelder in die Eingabefeld-Regel aufnehmen (Höhe 44 px,
+   Rahmen, Hintergrund, `font-variant-numeric: tabular-nums`).
+3. Checkboxen/Radios: mindestens 20 px, Trefferfläche über das Label ≥ 44 px.
+4. Alle ungegatterten `:hover`-Regeln in `@media (hover: hover) and (pointer: fine)` verschieben;
+   wo Touch-Feedback fehlt, `:active` ergänzen.
+5. Fußzeile kompakter (geringeres Padding auf ≤ 599 px).
+6. Einheitlicher Abstand zwischen aufeinanderfolgenden Labels/Feldern außerhalb von `.field-row`.
+
+**Abnahme**
+- [ ] Kein Header-Titel umbricht auf 390 px (alle Tabs durchgeklickt).
+- [ ] Datumsfelder sehen aus wie die übrigen Felder; Picker dunkel.
+- [ ] `grep -n ':hover' css/styles.css` zeigt nur noch Regeln innerhalb der Hover-Media-Query (oder
+      begründete Ausnahmen im Kommentar).
+- [ ] Vorher/nachher-Screenshots aller Tabs auf 390 px ohne neue Überläufe; Cache-Version erhöht.
+
+---
+
+# Paket 58 – Rechner: Superjuice, Zuckersirup, Kalkulation, Karte
+
+**Abhängigkeit:** Paket 57.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Ziel:** Die Rechner, die in der Vorarbeit nicht dran waren, auf den Stand von Batching bringen.
+
+**Dateien:** `js/superjuice.js`, `js/syrup.js`, `js/calculation.js`, `js/menuCosting.js`,
+`index.html` (nur die jeweiligen `<section>`), `css/styles.css`, i18n-Dateien, `sw.js`.
+
+**Befunde**
+- Superjuice: Ergebnisse zeigen `0.00 g` mit Punkt → `formatDecimal` aus `js/i18n.js` (Regel 11).
+  Zwei lange Ergebnisblöcke untereinander; Ergebnisse kompakter (Säuren nebeneinander).
+- Zuckersirup: deaktivierte Felder „Zucker-Teile"/„Wasser-Teile" sehen aus wie leere Felder;
+  Ergebnis-Box hat eine leere Zeile über „Zucker benötigt".
+- Kalkulation: Zutatenzeile auf ≤ 700 px – ×-Knopf auf volle Zellbreite gezogen, Kosten stehen
+  allein; Label „Ziel-Wareneinsatzquote (%)" bricht um und verschiebt das Feld gegenüber „MwSt.".
+- Kartenkalkulation: „Alle auswählen / Auswahl aufheben / Als Excel exportieren" als drei
+  volle Zeilen; Suchfeld nicht volle Breite; Hinweis zur Datenbasis als langer Fließtext.
+
+**Abnahme**
+- [ ] Keine Zahl im UI mit falschem Dezimaltrennzeichen (DE und EN gegengeprüft).
+- [ ] Alle vier Rechner auf 390 px ohne Überlauf, ×-Knöpfe quadratisch, Labels in einer Zeile
+      bündig mit dem Nachbarfeld.
+- [ ] Rechenergebnisse unverändert (je ein Beispiel vorher/nachher gleich).
+
+---
+
+# Paket 59 – Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?"
+
+**Abhängigkeit:** Paket 57.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/preparations.js`, `js/events.js`, `js/shiftLog.js`, `js/checklists.js`,
+`js/inventory.js`, `js/losses.js`, `js/buildable.js`, zugehörige `<section>`s in `index.html`,
+`css/styles.css`, i18n-Dateien, `sw.js`.
+
+**Befunde**
+- Events: Zeile „Drinkauswahl" kaputt – Rezept-Select, „Anteil %" und ×-Knopf verteilen sich auf
+  zwei Zeilen mit leerer Fläche; sehr langes Formular (Name … Notiz) ohne Gruppierung.
+- Mise en Place: vier Aktionsknöpfe je Karte in zwei Reihen („Verbraucht", „Bearbeiten",
+  „Etikett", „Löschen"); „noch 6 Tag(e)" – Singular/Plural sauber trennen.
+- Schwund & Bruch: Auswertungstabelle „Grund / Buchungen / Wert" schlecht ausgerichtet;
+  Filter (Gründe-Select, Produktfilter) nicht volle Breite.
+- „Was kann ich bauen?": Suchfeld nicht volle Breite.
+- Checklisten: deaktivierte Knöpfe („Liste öffnen", „Verlauf drucken") kaum von aktiven zu
+  unterscheiden.
+- Leere Zustände („Noch keine Zählung angelegt" usw.) als nackter Text – einheitlich gestalten.
+
+**Abnahme**
+- [ ] Events-Drinkauswahl auf 390 px in einer sauberen Zeile pro Rezept.
+- [ ] Alle sieben Tabs auf 390 px und 1366 px ohne Überlauf; leere Zustände einheitlich.
+- [ ] Speichern/Löschen in jedem Tab einmal durchgespielt (Testaccount, Testdaten danach löschen).
+
+---
+
+# Paket 60 – Bibliothek: Rezepte, Produkte, Quiz
+
+**Abhängigkeit:** Paket 57.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/recipes.js`, `js/products.js` (beide nur abschnittsweise), `js/quiz.js`,
+`js/quizStats.js`, zugehörige `<section>`s, `css/styles.css`, i18n-Dateien, `sw.js`.
+
+**Befunde**
+- Rezepte und Produkte wurden in der Bestandsaufnahme **nicht** erfasst (Tab-Klick im Skript lief
+  ins Leere) – zuerst Screenshots von Liste, Detail und Bearbeiten auf 390/1366 px machen.
+- Quiz: Themen-Select zeigt „Bier (35 Fragen))" mit doppelter Klammer; Select läuft rechts über
+  den Rand; Ranglisten-Tabelle auf 390 px gequetscht (Name abgeschnitten, Spaltenköpfe kollidieren).
+
+**Abnahme**
+- [ ] Doppelte Klammer behoben (Ursache im Code, nicht im Text).
+- [ ] Rezepte/Produkte/Quiz auf 390 px und 1366 px ohne Überlauf; Rangliste lesbar.
+
+---
+
+# Paket 61 – Wissen: Kategorien bereinigen (Daten)
+
+**Abhängigkeit:** keine (vor Paket 62 und vor Fortsetzung von Paket 56).
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand – kleine Datenänderung mit Abstimmung.
+
+**Ziel:** Eine überschneidungsfreie Kategorienliste, bevor die Themenübersicht darauf aufbaut.
+
+**Dateien:** `js/knowledge.js` (`KNOWLEDGE_CATEGORIES`, Kommentar ab Zeile ~37), DB-Tabelle
+`knowledge_articles` per `execute_sql`, ggf. `js/quizGenerator.js`/Quiz-Themen nur lesen, falls sie
+dieselben Namen nutzen.
+
+**Ausgangslage (08.10.2026, 102 Artikel, alle Entwurf außer 1):** Lernkarten-Themenkatalog aus
+Paket 56 (u. a. Gastgeberrolle & Kommunikation, Serviceablauf & Servierarten, Gastraum/Mise en place
+& Eindecken, Speisen- & Menükunde, Ernährungsformen/Allergene & Kennzeichnung, Warenkunde Wein,
+Warenkunde Spirituosen, Warenwirtschaft & Lager, Hygiene & Lebensmittelrecht, Arbeitssicherheit/
+Gesundheit & Nachhaltigkeit, Recht & Betriebsorganisation) **plus** die älteren Startkategorien
+„Service & Abläufe" (9), „Hygiene & Sicherheit" (6), „Haus & Outlets" (1), „Sonstiges" (1).
+
+**Schritte**
+1. Per SQL je Altkategorie Titel und Summary der Artikel lesen (gezielt, nicht den ganzen Inhalt).
+2. Pro Artikel eine Zielkategorie aus dem Themenkatalog vorschlagen, als Tabelle an den Nutzer.
+   **Erst nach Bestätigung** `UPDATE knowledge_articles SET category = … WHERE id = …` (ein
+   Statement pro Zielkategorie, per Skript erzeugt).
+3. Altkategorien aus `KNOWLEDGE_CATEGORIES` entfernen, sofern leer; Kommentar anpassen.
+4. In Paket 56 vermerken, dass nur noch die bereinigte Liste gilt.
+
+**Abnahme**
+- [ ] `select category, count(*) from knowledge_articles group by 1` zeigt nur Kategorien aus der Liste.
+- [ ] Nutzerbestätigung der Zuordnung im Commit-Text erwähnt.
+
+---
+
+# Paket 62 – Wissen: Themenübersicht, kompakte Liste, Detailkopf
+
+**Abhängigkeit:** Paket 57, Paket 61.
+**Modell:** Opus 5.5, hoher Denkaufwand – Umbau der Navigation innerhalb des Moduls.
+
+**Ziel:** Wissen ist auf dem Handy in zwei Tipps beim gesuchten Artikel, statt 28.500 px Scrollweg.
+
+**Dateien:** `js/knowledge.js`, `<section id="knowledge">` in `index.html`, `css/styles.css`
+(Block `.knowledge-*`), i18n-Dateien, `sw.js`. Editor (`.knowledge-editor`) nicht umbauen.
+
+**Befunde (08.10.2026)**
+- Liste: Suche, drei Selects, Checkbox und 15 Kategorie-Chips füllen auf 390 px den ganzen ersten
+  Bildschirm; danach 102 große Karten (Kategorie-Zeile, Entwurf-Badge, Titel, 3–4 Zeilen Summary).
+- Detail auf dem Handy: vier volle Knopfzeilen („Zurück zur Liste", „Drucken", „Bearbeiten",
+  „Löschen") vor dem Inhalt; Metadaten (Gilt für, Ausbildungsberufe, Jahr, Level) als Fließtext.
+
+**Schritte**
+1. **Einstieg = Themenübersicht:** Kacheln je Kategorie (Name, Anzahl, Fortschritt „x von y
+   gelesen"), Reihenfolge aus `KNOWLEDGE_CATEGORIES`. Tippen öffnet die Liste der Kategorie.
+2. **Liste kompakt:** Zeile mit Titel, Level, Status (neu/gelesen/aktualisiert, Entwurf nur für
+   `knowledge.write`); Summary höchstens 2 Zeilen oder weg. Zurück zur Übersicht oben.
+3. **Suche bleibt immer sichtbar** und durchsucht alle Kategorien (Treffer als kompakte Liste).
+4. **Filter einklappbar:** Abteilung, Ausbildungsjahr, Level, „Nur ungelesen" hinter einem
+   „Filter"-Knopf mit Zähler aktiver Filter. Kategorie-Chips entfallen (ersetzt durch Übersicht).
+5. **Detailkopf:** „Zurück" als Icon-Link oben links, Drucken/Bearbeiten als Icon-Knöpfe in einer
+   Zeile, „Löschen" nur im Bearbeiten-Bereich bzw. im Überlauf; Metadaten als kleine Tags.
+6. Zustand (Kategorie, Filter, offener Artikel) bei Tab-Wechsel und `onLanguageChanged()` erhalten;
+   Deep-Link-Verhalten aus Paket 54/55 nicht brechen.
+
+**Abnahme**
+- [ ] 390 px: erster Bildschirm zeigt Suche + mindestens 4 Themenkacheln.
+- [ ] Artikel in ≤ 2 Tipps erreichbar; Zurück führt in die richtige Liste.
+- [ ] Gelesen-Markieren, Entwürfe nur mit Recht, Drucken und Bearbeiten funktionieren wie vorher.
+- [ ] Keine Nutzereingabe per `innerHTML` (grep), i18n in beiden Sprachen.
+
+---
+
+# Paket 63 – Verwaltung: Admin-Unterseiten
+
+**Abhängigkeit:** Paket 57.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/adminPanel.js`, `js/adminSections.js`, `js/adminUsers.js`, `js/adminRoles.js`,
+`js/adminReports.js`, `js/adminTable.js`, `js/quizTable.js`, `js/auditLog.js`,
+`js/changeRequests.js`, `js/dataQuality.js` (je nur betroffene Stellen), `css/styles.css`, `sw.js`.
+
+**Schritte**
+1. Bestandsaufnahme: alle Admin-Unterseiten (Berichte, Benutzer, Rollen, Abteilungen, Anträge,
+   Quiz-Fragen, Katalog, Datenqualität, Audit) auf 1366 px und 390 px fotografieren. Admin wird
+   überwiegend am Desktop genutzt – Desktop hat Vorrang, Handy muss bedienbar sein.
+2. Befunde priorisiert auflisten, nur die mit klarem Nutzen beheben (Tabellen-Überlauf,
+   Knopf-Zeilen, Abstände); große Umbauten als neues Paket vorschlagen statt sofort bauen.
+
+**Abnahme**
+- [ ] Jede Admin-Unterseite auf 390 px ohne horizontalen Seiten-Überlauf (Tabellen scrollen in
+      ihrem Container).
+- [ ] Bearbeiten/Speichern einer Zeile in Katalog- und Quiz-Tabelle durchgespielt.
 
 ---
 
