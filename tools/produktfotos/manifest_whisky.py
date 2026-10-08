@@ -1,0 +1,32 @@
+M="https://www.masterofmalt.com"
+B="https://cdn11.bigcommerce.com/s-e8lbekfe7c/images/stencil/1024w/attribute_rule_images/"
+# slug, produktname, uuid, seite, bild, konfidenz, notiz
+R=[
+("ardbeg-10","Ardbeg 10 Jahre","e1e38eff-5ac3-4c1b-a9d6-2a920e8d614a","",B+"33963_source_1790334322.jpg","hoch",""),
+("bulleit-bourbon","Bulleit Bourbon","4f624b88-8151-47da-8dd9-bfb1fb8778de","",B+"30657_source_1782903049.jpg","hoch",""),
+("canadian-club","Canadian Club Whisky","b0951da7-fec5-4d9e-916b-584646ff1a76",M+"/whiskies/canadian-club-whisky/",B+"31230_source_1791393071.jpg","hoch",""),
+("chivas-regal-12","Chivas Regal 12","652d50df-6539-4df5-922d-c8a815dd3bda","",B+"33501_source_1789860055.jpg","hoch",""),
+("dalwhinnie-15","Dalwhinnie 15 Jahre","ebc6c123-19ea-45cb-86e9-c15c4834cade","",B+"33447_source_1790168501.jpg","hoch",""),
+("eagle-rare-10","Eagle Rare 10 Jahre","a00e0eb6-62ef-4174-89b4-a79eb4ea0fac",M+"/whiskies/eagle-rare/eagle-rare-10-year-old-whisky/",B+"31845_source_1789406458.jpg","hoch",""),
+("glenfiddich-12","Glenfiddich 12","385e56fc-0e1e-4fa1-a6c3-032f779c90f9","",B+"33057_source_1791369038.jpg","hoch",""),
+("glenkinchie-12","Glenkinchie 12","67126294-fe27-49b7-897e-d14374d39f21","",B+"33024_source_1791286846.jpg","hoch",""),
+("glenmorangie-12","Glenmorangie 12","b5dc6420-bdfe-4919-b0c9-9271d1dbdebe","",B+"59636_source_1791113473.jpg","mittel","MoM '12 Year Old The Original', 40 %"),
+("glenmorangie-nectar-dor","Glenmorangie Nectar d'Or","ad095097-de90-4a9d-b62c-f7f2506535c7","",B+"2068_source_1772799034.jpg","hoch",""),
+("glenmorangie-quinta-ruban-14","Glenmorangie Quinta Ruban","0da32937-7ce3-4064-bd46-a9ee474f4b50",M+"/whiskies/glenmorangie/glenmorangie-the-quinta-ruban-14-year-old-whisky/",B+"4851_source_1790935301.jpg","hoch",""),
+("glenmorangie-signet","Glenmorangie Signet","01ef1c60-aa68-42f1-b552-9963a395359a",M+"/whiskies/glenmorangie-signet-whisky/",B+"32985_source_1779290464.jpg","hoch",""),
+("jameson","Jameson Irish Whiskey","ae1d8361-8c79-477c-8e63-8ecab0d7fbec",M+"/whiskies/john-jameson-and-son/jamesons-irish-whiskey/",B+"31144_source_1790586664.jpg","hoch",""),
+("jim-beam-rye","Jim Beam Rye","3c83129d-065c-43e2-ad9b-739250169c81",M+"/whiskies/jim-beam/jim-beam-rye-whiskey/",B+"37062_source_1770747084.jpg","hoch",""),
+("johnnie-walker-black","Johnnie Walker Black Label","98da4147-0029-41c8-a9ad-7b188f4d4232",M+"/whiskies/johnnie-walker-black-label-12-year-old-whisky/",B+"31953_source_1791208258.jpg","hoch",""),
+("johnnie-walker-blue","Johnnie Walker Blue Label","39f0e8ee-0241-4fc0-934b-9a911f3f4fe5",M+"/whiskies/johnnie-walker/johnnie-walker-blue-label-whisky/",B+"31936_source_1790320251.jpg","hoch",""),
+("johnnie-walker-red","Johnnie Walker Red Label","11ce6ded-28bb-4a9b-8857-afef0c1f1bb1",M+"/whiskies/johnnie-walker-red-label-whisky/",B+"31967_source_1790856099.jpg","hoch",""),
+("knockando-12","Knockando 12","74be853e-9b7f-4d87-95fd-7d8d6cc89ba3",M+"/whiskies/knockando/knockando-12-year-old-whisky/",B+"14853_source_1790621462.jpg","hoch",""),
+("lagavulin-16","Lagavulin 16 Jahre","3997b750-ffa9-4150-86d7-fa17685d6ec6",M+"/whiskies/lagavulin/lagavulin-16-year-old-whisky/",B+"31899_source_1791449450.jpg","hoch",""),
+("laphroaig-10","Laphroaig 10 Jahre","b26f8140-ecec-4d7b-90e1-e3a3fbe1d066",M+"/whiskies/laphroaig-10-year-old-whisky/",B+"31884_source_1791208258.jpg","hoch",""),
+("makers-mark","Maker's Mark","0448dbda-4ae9-49d9-bf0f-f83fa014a001",M+"/whiskies/makers-mark-whiskey/",B+"31271_source_1784809255.jpg","hoch",""),
+("oban-14","Oban 14 Jahre","cddd11c0-56a3-4bb1-a505-46a50e14f15c",M+"/whiskies/oban-14-year-old-whisky/",B+"31582_source_1787674851.jpg","hoch",""),
+("redbreast-12","Redbreast 12","be1db17f-48a5-4408-a6ee-9ef4b27e4883",M+"/whiskies/redbreast/redbreast-12-year-old-whiskey/",B+"56274_source_1790778682.jpg","hoch",""),
+("sazerac-rye","Sazerac Rye","7fa1e128-57b9-4fe4-8efc-da2192e807e7",M+"/whiskies/sazerac/sazerac-straight-rye-whiskey/",B+"30619_source_1791021053.jpg","hoch",""),
+("stork-smoky-rye","Stork Smoky Rye","24356995-9e43-4d86-894c-ae478c202ee3","https://shop.stork-club-whiskey.com/","https://shop.stork-club-whiskey.com/cdn/shop/files/SWD_Flasche2024_Smoky_Rye_VS_www_1080x.jpg?v=1782291080","hoch","Herstellershop; Produktseite nicht abgerufen"),
+("yamazaki-nas","Suntory Yamazaki","30584ee8-9e04-4449-8f47-e7baae5b05be",M+"/whiskies/yamazaki/the-yamazaki-single-malt-whisky-distillers-reserve-whisky/",B+"29968_source_1787325650.jpg","mittel","MoM 'Distiller's Reserve' (NAS, 43 %)"),
+("talisker-10","Talisker 10 Jahre","14ca0938-fb3b-4641-b977-0c645ac0cef4",M+"/whiskies/talisker/talisker-10-year-old-whisky/",B+"31517_source_1790604783.jpg","hoch","MoM 45,8 % passt zu DB"),
+]
