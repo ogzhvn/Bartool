@@ -364,7 +364,7 @@ erfinden.
 | 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 61 | Wissen: Kategorien bereinigen (Daten) | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 61 | Wissen: Kategorien bereinigen (Daten) | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | offen | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
 | 63 | Verwaltung: Admin-Unterseiten | offen | Sonnet 5.5, mittlerer Denkaufwand |
 
@@ -3131,6 +3131,11 @@ Suchtreffers.
 
 **Commit:** `Wissen: Inhalte <Thema> (Entwurf/Freigabe)`
 
+**Kategorien (Paket 61, 08.10.2026):** Es gilt nur noch die bereinigte Liste `KNOWLEDGE_CATEGORIES`
+in `js/knowledge.js`. Die Startkategorien „Service & Abläufe“, „Hygiene & Sicherheit“, „Haus &
+Outlets“ und die Dubletten „Wein & Schaumwein“, „Spirituosen“, „Getränkekunde“, „Produktwissen“
+gibt es nicht mehr; neue Entwürfe gehören in eine Kategorie aus dieser Liste.
+
 **Lernkarten (07.10.2026):** Migration `knowledge_lernkarten_paket56` ergänzt `slug`, `berufe`
 (fg/frv/hofa, leer = alle), `lernfeld`, `pruefung`, `jahr`, `level`, `tags`. 55 Lernkarten (Jahr 1,
 Basis, je ein Abschnitt „Kurz erklärt") als Entwurf importiert, Abgleich per md5 gegen die JSON.
@@ -3400,8 +3405,15 @@ Gesundheit & Nachhaltigkeit, Recht & Betriebsorganisation) **plus** die älteren
 4. In Paket 56 vermerken, dass nur noch die bereinigte Liste gilt.
 
 **Abnahme**
-- [ ] `select category, count(*) from knowledge_articles group by 1` zeigt nur Kategorien aus der Liste.
-- [ ] Nutzerbestätigung der Zuordnung im Commit-Text erwähnt.
+- [x] `select category, count(*) from knowledge_articles group by 1` zeigt nur Kategorien aus der Liste.
+- [x] Nutzerbestätigung der Zuordnung im Commit-Text erwähnt.
+
+**Umsetzung (08.10.2026):** 16 Artikel auf Katalog-Kategorien verteilt (Nutzer hat die Zuordnung
+bestätigt). Dazu entfernt: die vier Dubletten ohne Artikel. **Offen:** „Sonstiges“ enthält noch das
+veröffentlichte Testartikel `ZZ-Paket55 Suchtest` (`0acbdd74-b2dd-4c77-ac6b-224d3825e5f9`), das der
+Nutzer löschen lassen wollte. `DELETE` auf `knowledge_articles` hängt über den Supabase-MCP
+reproduzierbar (60 s Timeout, Zeile unverändert; `UPDATE` läuft). Löschen daher über den Editor im
+Tool (`knowledge.write`) oder anders; danach „Sonstiges“ aus der Liste nehmen.
 
 ---
 

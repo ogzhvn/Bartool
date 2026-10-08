@@ -35,10 +35,14 @@ import { formatDate, onLanguageChanged, t } from "./i18n.js";
 // deshalb per DOM-Erzeugung und textContent gesetzt, nie als HTML.
 
 // Feste Kategorien in Anzeigereihenfolge. Die Namen bleiben deutsch
-// (Fachinhalt, Regel 11). Zuerst die Kategorien des Lernkarten-Themenkatalogs
-// (Paket 56, Reihenfolge laut Themenliste), dahinter die älteren Kategorien
-// der Schulungsartikel. Kategorien, die nur in den Daten vorkommen, hängen
-// hinten an.
+// (Fachinhalt, Regel 11). Bereinigte, überschneidungsfreie Liste (Paket 61):
+// die Kategorien des Lernkarten-Themenkatalogs (Paket 56, Reihenfolge laut
+// Themenliste) plus ein paar noch leere Fachkategorien. Die älteren
+// Startkategorien („Service & Abläufe“, „Hygiene & Sicherheit“, „Haus &
+// Outlets“) sowie die Dubletten „Wein & Schaumwein“, „Spirituosen“,
+// „Getränkekunde“ und „Produktwissen“ sind entfernt. „Sonstiges“ bleibt, bis
+// der Testartikel daraus gelöscht ist. Kategorien, die nur in den Daten
+// vorkommen, hängen hinten an.
 export const KNOWLEDGE_CATEGORIES = [
   "Gastgeberrolle & Kommunikation",
   "Serviceablauf & Servierarten",
@@ -48,9 +52,7 @@ export const KNOWLEDGE_CATEGORIES = [
   "Alkoholfreie Getränke",
   "Kaffee & Tee",
   "Bier",
-  "Wein & Schaumwein",
   "Warenkunde Wein",
-  "Spirituosen",
   "Warenkunde Spirituosen",
   "Bar & Mixology",
   "Warenwirtschaft & Lager",
@@ -60,11 +62,6 @@ export const KNOWLEDGE_CATEGORIES = [
   "Recht & Betriebsorganisation",
   "Veranstaltungen & Bankett",
   "Team, Führung & Ausbildung",
-  "Produktwissen",
-  "Service & Abläufe",
-  "Getränkekunde",
-  "Hygiene & Sicherheit",
-  "Haus & Outlets",
   "Sonstiges",
 ];
 
