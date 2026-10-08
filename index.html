@@ -245,74 +245,169 @@
       <div class="tool-grid-head">
         <h3 data-i18n="ui.deine_werkzeuge">Deine Werkzeuge</h3>
         <div class="tool-grid-actions">
-          <button type="button" class="btn-secondary" id="home-tiles-edit">
+          <button type="button" class="btn-secondary" data-tiles-edit>
             <i class="ph ph-pencil-simple" aria-hidden="true"></i>
             <span data-i18n="ui.kacheln_anpassen">Anpassen</span>
           </button>
-          <button type="button" class="btn-secondary" id="home-tiles-reset" hidden>
+          <button type="button" class="btn-secondary" data-tiles-reset hidden>
             <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i>
             <span data-i18n="ui.kacheln_standard">Standard wiederherstellen</span>
           </button>
-          <button type="button" class="btn-primary" id="home-tiles-done" hidden>
+          <button type="button" class="btn-primary" data-tiles-done hidden>
             <i class="ph ph-check" aria-hidden="true"></i>
             <span data-i18n="ui.kacheln_fertig">Fertig</span>
           </button>
         </div>
       </div>
-      <p class="hint" id="home-tiles-hint" hidden data-i18n="ui.kacheln_hinweis">Kachel gedrückt halten und ziehen, um sie zu verschieben. Mit der Tastatur: Kachel auswählen, Pfeiltasten verschieben, Entf blendet aus.</p>
+      <p class="hint" data-tiles-hint hidden data-i18n="ui.kacheln_hinweis">Kachel gedrückt halten und ziehen, um sie zu verschieben. Mit der Tastatur: Kachel auswählen, Pfeiltasten verschieben, Entf blendet aus.</p>
       <div class="tool-grid" id="home-tool-grid">
-        <button type="button" class="tool-card" data-tab="batching" data-module="batching">
+        <button type="button" class="tool-card" data-tab="batching" data-tile-group="rechner" data-module="batching">
           <i class="ph ph-flask tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.batching">Batching</span>
           <span class="tool-card-desc" data-i18n="ui.rezepte_auf_mehr_portionen_oder_ein_ziel_41d6">Rezepte auf mehr Portionen oder ein Ziel-Volumen hochrechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="recipes" data-module="recipes">
+        <button type="button" class="tool-card" data-tab="recipes" data-tile-group="bibliothek" data-module="recipes">
           <i class="ph ph-book-open tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.rezepte">Rezepte</span>
           <span class="tool-card-desc" data-i18n="ui.rezeptbuch_durchsuchen_klassiker_65ce">Rezeptbuch durchsuchen: Klassiker, Hausrezepte und eigene</span>
         </button>
-        <button type="button" class="tool-card" data-tab="products" data-module="products">
+        <button type="button" class="tool-card" data-tab="products" data-tile-group="bibliothek" data-module="products">
           <i class="ph ph-wine tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.produkte">Produkte</span>
           <span class="tool-card-desc" data-i18n="ui.getraenke_und_zutatenkatalog_der_bar">Getränke- und Zutatenkatalog der Bar</span>
         </button>
-        <button type="button" class="tool-card" data-tab="knowledge" data-module="knowledge">
+        <button type="button" class="tool-card" data-tab="knowledge" data-tile-group="bibliothek" data-module="knowledge">
           <i class="ph ph-graduation-cap tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.wissen">Wissen</span>
           <span class="tool-card-desc" data-i18n="ui.wissen_kachel">Schulungen, Standards und Hintergrundwissen für alle Outlets</span>
         </button>
-        <button type="button" class="tool-card" data-tab="superjuice" data-module="superjuice">
+        <button type="button" class="tool-card" data-tab="superjuice" data-tile-group="rechner" data-module="superjuice">
           <i class="ph ph-orange-slice tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.superjuice">Superjuice</span>
           <span class="tool-card-desc" data-i18n="ui.saeuremengen_fuer_superjuice_aus_6fa7">Säuremengen für Superjuice aus Schalengewicht berechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="syrup" data-module="syrup">
+        <button type="button" class="tool-card" data-tab="syrup" data-tile-group="rechner" data-module="syrup">
           <i class="ph ph-drop-half tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.zuckersirup">Zuckersirup</span>
           <span class="tool-card-desc" data-i18n="ui.zuckermenge_fuer_ein_zucker_wasser_0368">Zuckermenge für ein Zucker:Wasser-Verhältnis berechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="dilution" data-module="dilution">
+        <button type="button" class="tool-card" data-tab="dilution" data-tile-group="rechner" data-module="dilution">
           <i class="ph ph-drop tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.verduennung_und_abv">Verdünnung &amp; ABV</span>
           <span class="tool-card-desc" data-i18n="ui.alkoholgehalt_vor_und_nach_verduennung_94b1">Alkoholgehalt vor und nach Verdünnung durch Eis berechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="calculation" data-module="calculation">
+        <button type="button" class="tool-card" data-tab="calculation" data-tile-group="rechner" data-module="calculation">
           <i class="ph ph-currency-eur tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.kalkulation">Kalkulation</span>
           <span class="tool-card-desc" data-i18n="ui.wareneinsatz_und_verkaufspreis_eines_f6ff">Wareneinsatz und Verkaufspreis eines Rezepts berechnen</span>
         </button>
-        <button type="button" class="tool-card" data-tab="admin" data-perm-any="">
+        <button type="button" class="tool-card" data-tab="admin" data-tile-group="verwaltung" data-perm-any="">
           <i class="ph ph-key tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.admin">Admin</span>
           <span class="tool-card-desc" data-i18n="ui.mitarbeiterkonten_anlegen_und_rollen_2ea8">Mitarbeiterkonten anlegen und Rollen verwalten</span>
         </button>
+        <button type="button" class="tool-card" data-tab="menu-costing" data-tile-group="rechner" data-tile-default="hidden" data-module="menu-costing">
+          <i class="ph ph-list-checks tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.karte">Karte</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_karte">Getränkekarte mit Wareneinsatz und Verkaufspreisen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="preparations" data-tile-group="betrieb" data-tile-default="hidden" data-module="preparations">
+          <i class="ph ph-timer tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.mise_en_place">Mise en Place</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_mise_en_place">Ansätze und Vorbereitungen mit Haltbarkeit im Blick</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="events" data-tile-group="betrieb" data-tile-default="hidden" data-module="events">
+          <i class="ph ph-calendar-star tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.events">Events</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_events">Bankette und Veranstaltungen mit Drinkauswahl planen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="shift-log" data-tile-group="betrieb" data-tile-default="hidden" data-module="shift-log">
+          <i class="ph ph-notebook tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.uebergabe">Übergabe</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_uebergabe">Schichtübergabe mit offenen Punkten</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="checklists" data-tile-group="betrieb" data-tile-default="hidden" data-module="checklists">
+          <i class="ph ph-check-square-offset tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.checklisten">Checklisten</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_checklisten">Tägliche Checklisten abarbeiten</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="inventory" data-tile-group="betrieb" data-tile-default="hidden" data-module="inventory">
+          <i class="ph ph-clipboard-text tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.inventur">Inventur</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_inventur">Bestände zählen und Inventuren erfassen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="losses" data-tile-group="betrieb" data-tile-default="hidden" data-module="losses">
+          <i class="ph ph-warning tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.schwund_und_bruch">Schwund &amp; Bruch</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_schwund">Schwund, Bruch und Verkostungen erfassen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="buildable" data-tile-group="betrieb" data-tile-default="hidden" data-module="buildable">
+          <i class="ph ph-martini tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.was_kann_ich_bauen">Was kann ich bauen?</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_was_kann_ich_bauen">Welche Drinks mit dem aktuellen Bestand gehen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="quiz" data-tile-group="bibliothek" data-tile-default="hidden" data-module="quiz">
+          <i class="ph ph-brain tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.quiz">Quiz</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_quiz">Barwissen spielerisch abfragen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-reports" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="reports.view">
+          <i class="ph ph-chart-line tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.reporting">Reporting</span>
+          <span class="tool-card-desc" data-i18n="ui.wareneinsatz_betrieb_und_team_auf_einen_blick">Wareneinsatz, Betrieb und Team auf einen Blick</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-users" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="users.manage">
+          <i class="ph ph-users tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.konten">Konten</span>
+          <span class="tool-card-desc" data-i18n="ui.konten_anlegen_rollen_setzen_passwoerter_b71a">Konten anlegen, Rollen setzen, Passwörter zurücksetzen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-roles" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="roles.manage">
+          <i class="ph ph-shield-check tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</span>
+          <span class="tool-card-desc" data-i18n="ui.je_rolle_festlegen_welche_rechte_gelten_f7a2">Je Rolle festlegen, welche Rechte gelten</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-departments" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="roles.manage">
+          <i class="ph ph-buildings tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.abteilungen">Abteilungen</span>
+          <span class="tool-card-desc" data-i18n="ui.je_abteilung_festlegen_welche_module_sichtbar_sind">Je Abteilung festlegen, welche Module sichtbar sind</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-requests" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="requests.review">
+          <i class="ph ph-git-pull-request tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</span>
+          <span class="tool-card-desc" data-i18n="ui.aenderungsvorschlaege_aus_dem_team_6ab3">Änderungsvorschläge aus dem Team annehmen oder ablehnen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-feedback" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="feedback.review">
+          <i class="ph ph-chat-centered-text tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.feedback">Feedback</span>
+          <span class="tool-card-desc" data-i18n="ui.kachel_desc_feedback">Rückmeldungen aus dem Team sichten</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-quiz" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="quiz.manage">
+          <i class="ph ph-brain tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.quiz_fragen">Quiz-Fragen</span>
+          <span class="tool-card-desc" data-i18n="ui.eigene_fragen_pflegen_und_das_team_4d19">Eigene Fragen pflegen und das Team auswerten</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-catalog" data-tile-group="verwaltung" data-tile-default="hidden" data-perm-any="products.write,recipes.write">
+          <i class="ph ph-table tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.katalogtabelle">Katalogtabelle</span>
+          <span class="tool-card-desc" data-i18n="ui.alle_eintraege_als_tabelle_pflegen_5f2b">Alle Einträge als Tabelle nebeneinander sehen und pflegen</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-data" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="data.manage">
+          <i class="ph ph-list-magnifying-glass tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.datenqualitaet">Datenqualität</span>
+          <span class="tool-card-desc" data-i18n="ui.welche_angaben_fehlen_noch_im_katalog_c0f5">Welche Angaben fehlen noch im Katalog</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="admin-audit" data-tile-group="verwaltung" data-tile-default="hidden" data-perm="audit.view">
+          <i class="ph ph-clock-counter-clockwise tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.aenderungsverlauf">Änderungsverlauf</span>
+          <span class="tool-card-desc" data-i18n="ui.wer_hat_wann_was_geaendert_d3b8">Wer hat wann was geändert – mit Wiederherstellen</span>
+        </button>
       </div>
-      <div id="home-tiles-add-wrap" hidden>
+      <div data-tiles-add-wrap hidden>
         <h3 data-i18n="ui.werkzeug_hinzufuegen">Werkzeug hinzufügen</h3>
-        <div id="home-tiles-add" class="shortcut-list"></div>
-        <p class="hint" id="home-tiles-add-empty" data-i18n="ui.werkzeug_hinzufuegen_leer">Alle Werkzeuge sind sichtbar.</p>
+        <div class="tool-add-list" data-tiles-add></div>
+        <p class="hint" data-tiles-add-empty data-i18n="ui.werkzeug_hinzufuegen_leer">Alle Werkzeuge sind sichtbar.</p>
       </div>
-      <p id="home-tiles-live" class="tool-grid-live" aria-live="polite"></p>
+      <p class="tool-grid-live" data-tiles-live aria-live="polite"></p>
     </section>
 
     <!-- BATCHING -->
@@ -1791,7 +1886,31 @@
     <section id="admin" class="tab-panel" data-perm-any="">
       <h2 data-i18n="ui.admin">Admin</h2>
       <p class="hint" data-i18n="ui.der_adminbereich_ist_in_unterpunkte_a1f7">Der Adminbereich ist in Unterpunkte aufgeteilt. Über die Kacheln hier oder das Untermenü in der Seitenleiste geht es direkt hin.</p>
+      <div class="tool-grid-head">
+        <h3 data-i18n="ui.admin_bereiche">Bereiche</h3>
+        <div class="tool-grid-actions">
+          <button type="button" class="btn-secondary" data-tiles-edit>
+            <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_anpassen">Anpassen</span>
+          </button>
+          <button type="button" class="btn-secondary" data-tiles-reset hidden>
+            <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_standard">Standard wiederherstellen</span>
+          </button>
+          <button type="button" class="btn-primary" data-tiles-done hidden>
+            <i class="ph ph-check" aria-hidden="true"></i>
+            <span data-i18n="ui.kacheln_fertig">Fertig</span>
+          </button>
+        </div>
+      </div>
+      <p class="hint" data-tiles-hint hidden data-i18n="ui.kacheln_hinweis">Kachel gedrückt halten und ziehen, um sie zu verschieben. Mit der Tastatur: Kachel auswählen, Pfeiltasten verschieben, Entf blendet aus.</p>
       <div id="admin-overview-cards" class="tool-grid"></div>
+      <div data-tiles-add-wrap hidden>
+        <h3 data-i18n="ui.bereich_hinzufuegen">Bereich hinzufügen</h3>
+        <div class="tool-add-list" data-tiles-add></div>
+        <p class="hint" data-tiles-add-empty data-i18n="ui.alle_bereiche_sichtbar">Alle Bereiche sind sichtbar.</p>
+      </div>
+      <p class="tool-grid-live" data-tiles-live aria-live="polite"></p>
     </section>
 
     <!-- ADMIN – Reporting: Betrieb & Team (js/adminReports.js) -->

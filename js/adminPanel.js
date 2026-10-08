@@ -4,6 +4,7 @@ import { getAllRecipes } from "./recipeLibrary.js";
 import { switchTab } from "./tabs.js";
 import { onLanguageChanged, t } from "./i18n.js";
 import { can, canAny } from "./auth.js";
+import { initTileGrid } from "./tileGrid.js";
 
 // Übersicht des Adminbereichs (Sub-Tab "admin", Paket 34).
 //
@@ -24,6 +25,7 @@ const CARDS = [
   { tab: "admin-roles", perm: "roles.manage", icon: "ph-shield-check", titleKey: "ui.rollen_und_rechte", descKey: "ui.je_rolle_festlegen_welche_rechte_gelten_f7a2" },
   { tab: "admin-departments", perm: "roles.manage", icon: "ph-buildings", titleKey: "ui.abteilungen", descKey: "ui.je_abteilung_festlegen_welche_module_sichtbar_sind" },
   { tab: "admin-requests", perm: "requests.review", icon: "ph-git-pull-request", titleKey: "ui.offene_vorschlaege", descKey: "ui.aenderungsvorschlaege_aus_dem_team_6ab3" },
+  { tab: "admin-feedback", perm: "feedback.review", icon: "ph-chat-centered-text", titleKey: "ui.feedback", descKey: "ui.kachel_desc_feedback" },
   { tab: "admin-quiz", perm: "quiz.manage", icon: "ph-brain", titleKey: "ui.quiz_fragen", descKey: "ui.eigene_fragen_pflegen_und_das_team_4d19" },
   { tab: "admin-catalog", perm: ["products.write", "recipes.write"], icon: "ph-table", titleKey: "ui.katalogtabelle", descKey: "ui.alle_eintraege_als_tabelle_pflegen_5f2b" },
   { tab: "admin-data", perm: "data.manage", icon: "ph-list-magnifying-glass", titleKey: "ui.datenqualitaet", descKey: "ui.welche_angaben_fehlen_noch_im_katalog_c0f5" },
@@ -69,38 +71,71 @@ function kennzahlText(tab, wert) {
   return "";
 }
 
-function render(kennzahlen = {}) {
+// Die Kacheln entstehen einmal und bleiben bestehen: Reihenfolge und
+// Ausblenden (js/tileGrid.js) hängen an den Elementen. Neu gesetzt werden nur
+// Texte und Kennzahlen. Ohne Recht bleibt eine Kachel per hidden gesperrt.
+let kennzahlenStand = {};
+
+function baueKacheln() {
   if (!cardsEl) return;
-  cardsEl.innerHTML = "";
-  CARDS.filter((card) => (Array.isArray(card.perm) ? canAny(card.perm) : can(card.perm))).forEach((card) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "tool-card";
+  cardsEl.replaceChildren(
+    ...CARDS.map((card) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tool-card";
+      btn.dataset.tab = card.tab;
+      btn.hidden = !(Array.isArray(card.perm) ? canAny(card.perm) : can(card.perm));
 
-    const icon = document.createElement("i");
-    icon.className = `ph ${card.icon} tool-card-icon`;
-    icon.setAttribute("aria-hidden", "true");
+      const icon = document.createElement("i");
+      icon.className = `ph ${card.icon} tool-card-icon`;
+      icon.setAttribute("aria-hidden", "true");
 
-    const title = document.createElement("span");
-    title.className = "tool-card-title";
-    title.textContent = t(card.titleKey);
+      const title = document.createElement("span");
+      title.className = "tool-card-title";
 
-    const desc = document.createElement("span");
-    desc.className = "tool-card-desc";
-    const zahl = kennzahlText(card.tab, kennzahlen[card.tab]);
-    desc.textContent = zahl ? `${zahl} · ${t(card.descKey)}` : t(card.descKey);
+      const desc = document.createElement("span");
+      desc.className = "tool-card-desc";
 
-    btn.append(icon, title, desc);
-    btn.addEventListener("click", () => switchTab(card.tab));
-    cardsEl.appendChild(btn);
+      btn.append(icon, title, desc);
+      return btn;
+    })
+  );
+}
+
+function render() {
+  if (!cardsEl) return;
+  CARDS.forEach((card) => {
+    const btn = cardsEl.querySelector(`.tool-card[data-tab="${card.tab}"]`);
+    if (!btn) return;
+    btn.querySelector(".tool-card-title").textContent = t(card.titleKey);
+    const zahl = kennzahlText(card.tab, kennzahlenStand[card.tab]);
+    btn.querySelector(".tool-card-desc").textContent = zahl ? `${zahl} · ${t(card.descKey)}` : t(card.descKey);
   });
 }
 
-export async function initAdminPanel() {
-  // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist. Die Kennzahlen
-  // werden dabei frisch geholt – der Adminbereich ist keine Dauerschleife.
-  onLanguageChanged(() => ladeKennzahlen().then(render));
-
+async function aktualisiereKennzahlen() {
+  kennzahlenStand = await ladeKennzahlen();
   render();
-  render(await ladeKennzahlen());
+}
+
+export async function initAdminPanel() {
+  // Sprachwechsel: Texte sofort neu (die Kachel-Logik liest die Titel direkt
+  // danach für ihre Beschriftungen), Kennzahlen frisch hinterher – der
+  // Adminbereich ist keine Dauerschleife.
+  onLanguageChanged(() => {
+    render();
+    aktualisiereKennzahlen();
+  });
+
+  baueKacheln();
+  render();
+  if (cardsEl) {
+    initTileGrid({
+      root: document.getElementById("admin"),
+      grid: cardsEl,
+      prefKey: "adminTiles",
+      onOpen: switchTab,
+    });
+  }
+  await aktualisiereKennzahlen();
 }

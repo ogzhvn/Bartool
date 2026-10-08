@@ -2157,7 +2157,7 @@ on conflict do nothing;
 -- Self-Update-Recht auf profiles wäre ein Eskalationsrisiko. Hier darf jedes
 -- Konto nur die eigene Zeile sehen und schreiben – auch Admins.
 -- home_tiles: {"order": ["batching", …], "hidden": ["dilution", …]},
--- Schlüssel = data-tab der Kachel (js/home.js).
+-- Schlüssel = data-tab der Kachel (js/home.js, js/tileGrid.js).
 create table if not exists public.user_preferences (
   user_id uuid primary key default auth.uid() references auth.users (id) on delete cascade,
   home_tiles jsonb not null default '{}'::jsonb,
@@ -2165,6 +2165,21 @@ create table if not exists public.user_preferences (
   constraint user_preferences_home_tiles_object check (jsonb_typeof(home_tiles) = 'object'),
   constraint user_preferences_home_tiles_size check (pg_column_size(home_tiles) <= 8192)
 );
+
+-- admin_tiles: dasselbe Format für die Kacheln der Admin-Übersicht
+-- (js/adminPanel.js). Nachträglich ergänzt, daher als eigene Spalte.
+alter table public.user_preferences
+  add column if not exists admin_tiles jsonb not null default '{}'::jsonb;
+
+do $$
+begin
+  alter table public.user_preferences
+    add constraint user_preferences_admin_tiles_object check (jsonb_typeof(admin_tiles) = 'object');
+  alter table public.user_preferences
+    add constraint user_preferences_admin_tiles_size check (pg_column_size(admin_tiles) <= 8192);
+exception
+  when duplicate_object then null;
+end $$;
 
 -- updated_at ist immer Serverzeit (Muster knowledge_reads).
 create or replace function private.user_preferences_set_updated_at()

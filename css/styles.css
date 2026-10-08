@@ -2023,6 +2023,17 @@ select {
   transition: box-shadow var(--dur-hover) var(--ease-out);
 }
 
+/* „Hinzufügen“-Liste, nach Seitenleisten-Gruppe sortiert. */
+.tool-add-group {
+  margin: 0.8rem 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.tool-add-group:first-child {
+  margin-top: 0;
+}
+
 /* Nur für Screenreader (Positionsansagen beim Verschieben). */
 .tool-grid-live {
   position: absolute;

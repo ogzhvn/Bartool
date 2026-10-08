@@ -1446,8 +1446,9 @@ export function onKnowledgeChanged(callback) {
 // Persönliche Einstellungen (Tabelle "user_preferences" in Supabase)
 //
 // Eine Zeile je Konto, nur für das eigene Konto les- und schreibbar (RLS).
-// Aktuell nur home_tiles: Reihenfolge und ausgeblendete Kacheln der
-// Startseite ({ order: [...], hidden: [...] }, Schlüssel = data-tab).
+// home_tiles / admin_tiles: Reihenfolge und ausgeblendete Kacheln der
+// Startseite bzw. Admin-Übersicht ({ order: [...], hidden: [...] },
+// Schlüssel = data-tab, siehe js/tileGrid.js).
 //
 // Anders als die Kataloge darf hier auch offline gespeichert werden: die
 // Änderung landet sofort im Puffer (Feld pending) und geht beim nächsten
@@ -1459,16 +1460,22 @@ export function onKnowledgeChanged(callback) {
 const USER_PREFERENCES_UPDATED_EVENT = "bartool:user-preferences-updated";
 const USER_PREFERENCES_CACHE_PREFIX = "bartool:user-preferences:";
 
-let userPreferencesCache = { homeTiles: {} };
+const EMPTY_USER_PREFERENCES = { homeTiles: {}, adminTiles: {} };
+
+let userPreferencesCache = EMPTY_USER_PREFERENCES;
 let userPreferencesUserId = null;
 let userPreferencesPending = false;
 let userPreferencesWrite = Promise.resolve();
 let userPreferencesOnlineHooked = false;
 
+function tileObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
 function normalizeUserPreferences(prefs) {
-  const homeTiles = prefs?.homeTiles;
   return {
-    homeTiles: homeTiles && typeof homeTiles === "object" && !Array.isArray(homeTiles) ? homeTiles : {},
+    homeTiles: tileObject(prefs?.homeTiles),
+    adminTiles: tileObject(prefs?.adminTiles),
   };
 }
 
@@ -1499,13 +1506,16 @@ async function refreshUserPreferences() {
   try {
     const { data, error } = await supabase
       .from("user_preferences")
-      .select("home_tiles")
+      .select("home_tiles, admin_tiles")
       .eq("user_id", userPreferencesUserId)
       .maybeSingle();
     if (error) throw error;
     // Während des Ladens lokal geändert: der lokale Stand ist neuer.
     if (userPreferencesPending) return;
-    userPreferencesCache = normalizeUserPreferences({ homeTiles: data?.home_tiles });
+    userPreferencesCache = normalizeUserPreferences({
+      homeTiles: data?.home_tiles,
+      adminTiles: data?.admin_tiles,
+    });
     writeUserPreferencesCache();
   } catch {
     // Kein Netz: Puffer behalten.
@@ -1523,7 +1533,10 @@ function flushUserPreferences() {
     try {
       const { error } = await supabase
         .from("user_preferences")
-        .upsert({ user_id: userPreferencesUserId, home_tiles: snapshot.homeTiles }, { onConflict: "user_id" });
+        .upsert(
+          { user_id: userPreferencesUserId, home_tiles: snapshot.homeTiles, admin_tiles: snapshot.adminTiles },
+          { onConflict: "user_id" }
+        );
       if (error) throw error;
       // Nur abhaken, wenn in der Zwischenzeit nichts Neueres kam.
       if (userPreferencesCache === snapshot) {
@@ -1547,7 +1560,7 @@ export async function initUserPreferencesSync() {
     userId = null;
   }
   userPreferencesUserId = userId;
-  userPreferencesCache = { homeTiles: {} };
+  userPreferencesCache = EMPTY_USER_PREFERENCES;
   userPreferencesPending = false;
   if (!userId) {
     window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT));
