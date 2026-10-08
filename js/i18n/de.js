@@ -387,6 +387,8 @@ export const de = {
   "ui.frage_konnte_nicht_gespeichert_werden": "Frage konnte nicht gespeichert werden: ",
   "ui.frage_speichern": "Frage speichern",
   "ui.fragen": "Fragen)",
+  "ui.quiz_thema_option_eine": "{topic} ({count} Frage)",
+  "ui.quiz_thema_option_viele": "{topic} ({count} Fragen)",
   "ui.fragen_beantwortet": "Fragen beantwortet",
   "ui.fragen_konnten_nicht_geladen_werden": "Fragen konnten nicht geladen werden: ",
   "ui.fragen_richtig": "Fragen richtig ·",

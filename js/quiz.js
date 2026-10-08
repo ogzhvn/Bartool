@@ -437,6 +437,7 @@ export function createLeaderboard(container, { limit = 10 } = {}) {
   function kopfZelle(key, scope = "col") {
     const th = document.createElement("th");
     th.scope = scope;
+    th.className = "quiz-lb-num";
     if (!RANGLISTE_SORTIERUNGEN.includes(key)) {
       th.textContent = t(SORTIER_LABEL[key] ?? key);
       return th;
@@ -624,7 +625,10 @@ function renderTopics(pool) {
   const anhaengen = (ziel, thema) => {
     const option = document.createElement("option");
     option.value = thema.topic;
-    option.textContent = `${thema.topic} (${thema.count} ${t("ui.fragen")})`;
+    option.textContent = t(thema.count === 1 ? "ui.quiz_thema_option_eine" : "ui.quiz_thema_option_viele", {
+      topic: thema.topic,
+      count: formatDecimal(thema.count, 0),
+    });
     ziel.appendChild(option);
   };
 

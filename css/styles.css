@@ -884,10 +884,10 @@ select {
 
 /* Label/Feld-Paare, die nicht in einer .field-row liegen, kleben sonst
    aneinander (z. B. Zuckersirup "Wassermenge", Schwund "Produkt"). */
-:where(.tab-panel, form) > label:not(.seg-opt, .menu-pick, .radio-label, .prep-toggle, .knowledge-unread-toggle) + label,
-:where(.tab-panel, form) > label + .field-row,
-:where(.tab-panel, form) > label + datalist ~ .field-row,
-:where(.tab-panel, form) > .field-row + label {
+:where(.tab-panel, form, .recipe-edit-main) > label:not(.seg-opt, .menu-pick, .radio-label, .prep-toggle, .knowledge-unread-toggle) + label,
+:where(.tab-panel, form, .recipe-edit-main) > label + .field-row,
+:where(.tab-panel, form, .recipe-edit-main) > label + datalist ~ .field-row,
+:where(.tab-panel, form, .recipe-edit-main) > .field-row + label {
   margin-top: 1rem;
 }
 
@@ -1331,10 +1331,17 @@ select {
 /* Die Alkohol-Spalte wird nur im Flaschen-Modus des Batchings gebraucht.
    Sie steht immer im Markup, damit eingetragene Werte beim Moduswechsel
    nicht verloren gehen – sie wird nur ein- und ausgeblendet.
-   Bewusst auf #batch-ingredients begrenzt: der Verdünnungs-Rechner hat eine
-   eigene Zutatenliste, in der das ABV-Feld immer sichtbar bleiben muss. */
-#batch-ingredients:not(.show-abv) .ing-abv {
+   Standardmäßig versteckt (auch im Rezept-Editor, der denselben Editor nutzt,
+   sonst rutschen ABV-Feld und ×-Knopf in eigene Zeilen). Sichtbar nur im
+   Flaschen-Modus des Batchings; der Verdünnungs-Rechner hat eine eigene
+   Zutatenliste (.dil-list), in der das ABV-Feld immer sichtbar bleibt. */
+.ingredient-row .ing-abv {
   display: none;
+}
+
+.dil-list .ingredient-row .ing-abv,
+#batch-ingredients.show-abv .ingredient-row .ing-abv {
+  display: block;
 }
 
 #batch-ingredients.show-abv .ingredient-row {
@@ -2100,6 +2107,40 @@ select {
 
   .export-bar .btn-secondary {
     width: 100%;
+  }
+}
+
+/* Rezepte/Produkte: Zähler oben, „Alle“/„Aufheben“ und Excel/Word paarweise,
+   Drucken darunter – statt fünf vollbreiter Knöpfe, die den ersten Bildschirm
+   füllen. */
+@media (max-width: 899px) {
+  :is(#recipes, #products) .export-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  :is(#recipes, #products) .export-bar .export-count {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  :is(#recipes, #products) .export-bar .btn-secondary:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* „Als Excel exportieren" bleibt einzeilig in der halben Breite */
+  :is(#recipes, #products) .export-bar .btn-secondary {
+    justify-content: center;
+    padding-inline: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 599px) {
+  /* Kategorie-Filter unter dem Suchfeld über die volle Breite, nicht halb */
+  :is(#recipes, #products) .field-row > select {
+    flex: 1 1 100%;
   }
 }
 
@@ -3146,6 +3187,8 @@ input[type="datetime-local"] {
    versteckten input, weil der native Datei-Knopf nicht gestaltbar ist. */
 .import-label {
   display: inline-flex;
+  flex: none;
+  flex-direction: row;
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
@@ -4097,7 +4140,7 @@ input[type="datetime-local"] {
   color: var(--text-muted);
 }
 
-@media (max-width: 430px) {
+@media (max-width: 480px) {
   .quiz-lb-table {
     font-size: 0.82rem;
   }
@@ -4107,9 +4150,55 @@ input[type="datetime-local"] {
     padding: 0.45rem 0.2rem;
   }
 
-  .quiz-lb-num {
-    width: 3.6rem;
+  .quiz-lb-table th {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    vertical-align: bottom;
   }
+
+  /* Spaltenbreiten nach Kopftext: „Beantwortet" braucht mehr als „Quote %",
+     dafür bekommt der Name den Rest und wird bei Bedarf zweizeilig statt
+     abgeschnitten. */
+  .quiz-lb-rank {
+    width: 1.8rem;
+  }
+
+  .quiz-lb-table th:nth-child(3) {
+    width: 4.9rem;
+  }
+
+  .quiz-lb-table th:nth-child(4) {
+    width: 3.7rem;
+  }
+
+  .quiz-lb-table th:nth-child(5) {
+    width: 4.2rem;
+  }
+
+  .quiz-lb-table th.quiz-lb-num,
+  .quiz-lb-table td.quiz-lb-num {
+    padding-left: 0.5rem;
+  }
+
+  .quiz-lb-name span:first-child {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/* Thema/Schwierigkeit: Selects dürfen nie breiter als die Spalte werden
+   (die längste Option bestimmt sonst die Breite und schiebt über den Rand). */
+#quiz .field-row > label {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+#quiz .field-row select {
+  width: 100%;
+  min-width: 0;
 }
 
 /* ---------------------------------------------------------------

@@ -386,6 +386,8 @@ export const en = {
   "ui.frage_konnte_nicht_gespeichert_werden": "Could not save the question: ",
   "ui.frage_speichern": "Save question",
   "ui.fragen": "questions)",
+  "ui.quiz_thema_option_eine": "{topic} ({count} question)",
+  "ui.quiz_thema_option_viele": "{topic} ({count} questions)",
   "ui.fragen_beantwortet": "questions answered",
   "ui.fragen_konnten_nicht_geladen_werden": "Could not load the questions: ",
   "ui.fragen_richtig": "questions correct ·",

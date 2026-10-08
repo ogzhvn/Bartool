@@ -363,7 +363,7 @@ erfinden.
 | 57 | Querschnitt: Header, native Felder, Hover, Abstände | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 60 | Bibliothek: Rezepte, Produkte, Quiz | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 60 | Bibliothek: Rezepte, Produkte, Quiz | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 61 | Wissen: Kategorien bereinigen (Daten) | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | offen | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
 | 63 | Verwaltung: Admin-Unterseiten | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -3340,8 +3340,36 @@ Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu 
   den Rand; Ranglisten-Tabelle auf 390 px gequetscht (Name abgeschnitten, Spaltenköpfe kollidieren).
 
 **Abnahme**
-- [ ] Doppelte Klammer behoben (Ursache im Code, nicht im Text).
-- [ ] Rezepte/Produkte/Quiz auf 390 px und 1366 px ohne Überlauf; Rangliste lesbar.
+- [x] Doppelte Klammer behoben (Ursache im Code, nicht im Text): `ui.fragen` trägt die schließende Klammer
+      mit (wird auch in `adminReports.js` so verwendet), `quiz.js` hängte eine zweite an. Die Themen-Optionen
+      laufen jetzt über `ui.quiz_thema_option_eine` / `_viele` (`{topic} ({count} Frage|Fragen)`, Zahl über
+      `formatDecimal`), Singular „Bitters (1 Frage)“ inklusive; `ui.fragen` bleibt unverändert für Admin.
+- [x] Rezepte/Produkte/Quiz auf 390 px und 1366 px ohne Überlauf (Liste, Detail, Bearbeiten; DE und EN);
+      Rangliste lesbar. Befunde und Ursachen:
+      - Quiz-Select lief über den Rand: die längste Option bestimmte die Breite → `#quiz .field-row` Labels
+        `min-width: 0`, Selects `width: 100%`.
+      - Rangliste 390 px: die Spaltenköpfe hatten nie die Klasse `quiz-lb-num` (rechtsbündig war im CSS
+        vorgesehen, fehlte im JS) und die Breiten waren für „Beantwortet“ zu klein. Jetzt Kopf rechtsbündig,
+        Breiten je Spalte, Name zweizeilig statt abgeschnitten.
+      - Rezept-Editor: Zutatenzeile zerfiel (ABV-Feld und ×-Knopf in eigenen Zeilen, auch am Desktop), weil
+        `.ing-abv` nur im Batching ausgeblendet wurde. Jetzt standardmäßig ausgeblendet, sichtbar nur im
+        Flaschen-Modus (`#batch-ingredients.show-abv`) und in der Verdünnung (`.dil-list`).
+      - Produkt-Editor: Abstände zwischen Label/Feld-Paaren fehlten (Label klebte am Feld darüber), weil die
+        Spacing-Regel nur `form`/`.tab-panel` kannte → `.recipe-edit-main` ergänzt (wirkt auch im Rezept-Editor).
+      - Export-Leiste Rezepte/Produkte: auf dem Handy fünf vollbreite Knöpfe → Zähler, Alle/Aufheben und
+        Excel/Word paarweise, Drucken darunter; Kategorie-Filter volle Breite.
+      - „Aus Excel importieren“ (Produkte): Symbol stand über dem Text, weil die globale `label`-Regel
+        `flex-direction: column` setzt → `.import-label` mit `flex-direction: row`.
+- [x] Speichern/Löschen in Rezepten und Produkten mit `ZZ-Test Paket60 …` durchgespielt (390 px), per SQL
+      gegengeprüft (0 Reste). Rezept-/Produktdaten nicht angefasst.
+- Hinweis: Ein Klick auf „Rezepte“/„Produkte“ in der Navigation klappt zuerst nur die Unterkategorien auf, erst
+  der zweite Klick navigiert (gewolltes Verhalten in `tabs.js`) – das war der „ins Leere“-Befund im Skript;
+  Tests navigieren über `location.hash`.
+- Nicht angefasst (Paket 63/Daten): `adminReports.js` zeigt „1 Fragen)“ im Teambereich (singular fehlt).
+  Im Testaccount-Bestand liegen alte `ZZ-Test`-Reste vom 03.10.2026 (Rezept „ZZ-Test Rezept“, Produkte
+  „ZZ-Test Produkt“, „… B“, „… C“) – bewusst nicht gelöscht, da nicht aus dieser Session.
+- Cache-Version `bartool-v91`. Vorher/nachher-Screenshots 390 px und 1366 px.
+- Auf Gerät prüfen: Rangliste und Export-Leiste bei 360 px, Zutatenzeile im Rezept-Editor auf echtem Handy.
 
 ---
 
