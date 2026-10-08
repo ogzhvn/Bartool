@@ -74,7 +74,7 @@ export const KNOWLEDGE_BERUFE = [
   { key: "hofa", label: "Hotelfachmann/-frau" },
 ];
 const KNOWLEDGE_JAHRE = [1, 2, 3];
-const KNOWLEDGE_LEVELS = ["basis", "aufbau"];
+const KNOWLEDGE_LEVELS = ["basis", "aufbau", "fortgeschritten", "experte"];
 
 const FILTER_OWN = "own";
 const FILTER_ALL = "all";

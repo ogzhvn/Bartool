@@ -43,7 +43,7 @@ const photoRemoveBtn = document.getElementById("knowledge-ed-photo-remove");
 
 // Erlaubte Werte spiegeln die CHECK-Constraints von knowledge_articles.
 const JAHRE = [1, 2, 3];
-const LEVELS = ["basis", "aufbau"];
+const LEVELS = ["basis", "aufbau", "fortgeschritten", "experte"];
 
 let options = { categories: [], getDepartments: () => [], berufe: [], safeHttpUrl: () => null, onClose: () => {} };
 let state = null; // null = Editor zu

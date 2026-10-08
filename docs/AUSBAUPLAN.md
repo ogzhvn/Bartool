@@ -3095,6 +3095,12 @@ gezeigt, wenn sie wörtlich den ersten Abschnitt einleitet. Offen: 41 Karten ohn
 veröffentlichbar); die Karten folgen nicht dem Aufbau der Schreibregeln oben (Lernkarten-Format,
 3–5 Sätze). Metadaten sind im Formular nicht pflegbar, nur per SQL/Import.
 
+**Level/Jahr neu eingeordnet (08.10.2026):** Level jetzt basis | aufbau | fortgeschritten | experte
+(Migration `knowledge_level_vier_stufen`). Vorher stand jede kategorisierte Karte auf Jahr 1/Basis,
+deshalb filterten die Filter nichts. Einordnung (Einschätzung, nicht amtlich): Jahr 1 = Basis (43),
+Jahr 2 = Aufbau (21), Jahr 3 = Fortgeschritten (6) / Experte (1: Hotelsterne). Bei Jahr 3 entfällt
+`fg` in `berufe` (2-jährige Ausbildung). Offen: „ZZ-Paket55 Suchtest" ist ein Testartikel ohne Einordnung.
+
 **Schreibregeln (07.10.2026)**
 
 Vorgabe des Nutzers. Zielgruppe: alle Mitarbeitenden in Bar, WGR und Tellerwerk – auch Azubis und

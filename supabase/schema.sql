@@ -1964,7 +1964,7 @@ create table if not exists public.knowledge_articles (
   lernfeld int[] not null default '{}',    -- KMK-Lernfelder 1-13
   pruefung text[] not null default '{}',   -- Prüfungsbereich-Codes
   jahr smallint check (jahr between 1 and 3),
-  level text check (level in ('basis', 'aufbau')),
+  level text check (level in ('basis', 'aufbau', 'fortgeschritten', 'experte')),
   tags text[] not null default '{}',
   constraint knowledge_articles_sections_array check (jsonb_typeof(sections) = 'array'),
   constraint knowledge_articles_sources_array check (jsonb_typeof(sources) = 'array'),
@@ -1988,6 +1988,11 @@ create index if not exists knowledge_articles_berufe_idx
   on public.knowledge_articles using gin (berufe);
 create index if not exists knowledge_articles_tags_idx
   on public.knowledge_articles using gin (tags);
+
+-- Level in vier Stufen (Migration knowledge_level_vier_stufen); für Bestandsdatenbanken.
+alter table public.knowledge_articles drop constraint if exists knowledge_articles_level_check;
+alter table public.knowledge_articles add constraint knowledge_articles_level_check
+  check (level in ('basis', 'aufbau', 'fortgeschritten', 'experte'));
 
 alter table public.knowledge_articles enable row level security;
 

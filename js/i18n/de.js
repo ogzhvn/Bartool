@@ -1112,6 +1112,8 @@ export const de = {
   "ui.wissen_level_alle": "Alle Level",
   "ui.wissen_level_basis": "Basis",
   "ui.wissen_level_aufbau": "Aufbau",
+  "ui.wissen_level_fortgeschritten": "Fortgeschritten",
+  "ui.wissen_level_experte": "Experte",
   "ui.wissen_lernkarte_fuer": "Für: {list}",
   "ui.wissen_leer": "Noch keine Artikel.",
   "ui.wissen_keine_treffer": "Keine Artikel für diese Auswahl.",
