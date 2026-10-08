@@ -17,6 +17,7 @@ import {
   openKnowledgeEditor,
 } from "./knowledgeEditor.js";
 import { printKnowledge } from "./printView.js";
+import { openFeedback } from "./feedback.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
 
 // Wissen – Schulungsartikel für alle Outlets (Paket 54).
@@ -741,6 +742,7 @@ function renderDetailBar() {
   bar.appendChild(backButton("back", label, `${t("ui.wissen_zurueck")}: ${label}`));
   const tools = el("div", "knowledge-detail-tools");
   tools.appendChild(iconButton("print", "ph-printer", t("ui.drucken")));
+  tools.appendChild(iconButton("suggest", "ph-chat-circle-text", t("ui.feedback_aenderung_vorschlagen")));
   if (can("knowledge.write")) {
     const edit = iconButton("edit", "ph-pencil-simple", t("ui.bearbeiten"));
     edit.dataset.perm = "knowledge.write";
@@ -963,6 +965,11 @@ async function handleMarkRead() {
   }
 }
 
+function handleSuggest() {
+  const article = loadKnowledge().find((a) => a.id === openArticleId);
+  if (article) openFeedback({ kind: "knowledge", refId: article.id, refTitle: article.title });
+}
+
 function handlePrint() {
   const article = loadKnowledge().find((a) => a.id === openArticleId);
   if (!article) return;
@@ -1032,6 +1039,7 @@ export function initKnowledge() {
       if (article) startEditing(article);
     } else if (action === "delete") handleDelete();
     else if (action === "print") handlePrint();
+    else if (action === "suggest") handleSuggest();
   });
   // Überlaufmenü schließt bei Klick daneben und mit Escape.
   document.addEventListener("click", (e) => {

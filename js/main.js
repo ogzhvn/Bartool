@@ -22,6 +22,7 @@ import { initAdminSections, ADMIN_AREA_PERMISSIONS } from "./adminSections.js";
 import { initQuickSearch } from "./quickSearch.js";
 import { initHeaderMenu } from "./headerMenu.js";
 import { initMyChangeRequests } from "./changeRequests.js";
+import { initFeedback } from "./feedback.js";
 import {
   initRecipeSync,
   initProductSync,
@@ -219,6 +220,7 @@ async function bootstrapAppOnce() {
   initQuickSearch();
   initHeaderMenu();
   initMyChangeRequests();
+  initFeedback();
   startSessionTimeoutWatch();
   await syncsReady;
 }

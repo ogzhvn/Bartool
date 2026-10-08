@@ -7,6 +7,7 @@ import { initAdminDepartments } from "./adminDepartments.js";
 import { initAdminQuiz } from "./adminQuiz.js";
 import { initAdminTable } from "./adminTable.js";
 import { initChangeRequestsAdmin } from "./changeRequests.js";
+import { initFeedbackAdmin } from "./feedback.js";
 import { initDataQuality } from "./dataQuality.js";
 import { initAuditLog } from "./auditLog.js";
 
@@ -32,6 +33,7 @@ const SECTIONS = {
   "admin-roles": { init: initAdminRoles, perm: "roles.manage" },
   "admin-departments": { init: initAdminDepartments, perm: "roles.manage" },
   "admin-requests": { init: initChangeRequestsAdmin, perm: "requests.review" },
+  "admin-feedback": { init: initFeedbackAdmin, perm: "feedback.review" },
   "admin-quiz": { init: initAdminQuiz, perm: "quiz.manage" },
   // Zwei Rechte, weil die Tabelle beide Kataloge zeigt: wer nur Produkte
   // pflegen darf, soll trotzdem hinein und die Rezepte lesen können.

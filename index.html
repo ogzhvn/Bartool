@@ -34,6 +34,7 @@
         </button>
         <div id="user-menu-popover" class="user-menu-popover" hidden>
           <button type="button" id="change-password-nav-btn" class="user-menu-item" data-i18n="ui.passwort_aendern"><i class="ph ph-lock-key" aria-hidden="true"></i>Passwort ändern</button>
+          <button type="button" id="feedback-nav-btn" class="user-menu-item" data-i18n="ui.feedback_geben"><i class="ph ph-chat-circle-text" aria-hidden="true"></i>Feedback geben</button>
           <button type="button" id="logout-btn" class="user-menu-item" data-i18n="ui.abmelden"><i class="ph ph-sign-out" aria-hidden="true"></i>Abmelden</button>
         </div>
       </div>
@@ -89,6 +90,25 @@
       </div>
     </form>
   </section>
+
+  <!-- FEEDBACK (js/feedback.js): allgemein oder als Änderungsvorschlag zu einem Wissensartikel -->
+  <div id="feedback-modal-overlay" class="modal-overlay" hidden>
+    <form id="feedback-modal-form" class="auth-form modal-box" role="dialog" aria-modal="true" aria-labelledby="feedback-modal-heading" novalidate>
+      <h2 id="feedback-modal-heading" data-i18n="ui.feedback_geben">Feedback geben</h2>
+      <p id="feedback-modal-ref" class="hint" hidden></p>
+      <label>
+        <span data-i18n="ui.feedback_nachricht">Deine Nachricht</span>
+        <textarea id="feedback-modal-message" rows="6" required></textarea>
+      </label>
+      <p id="feedback-modal-counter" class="hint"></p>
+      <div id="feedback-modal-error" class="error-note" role="alert" hidden></div>
+      <div class="actions">
+        <button type="button" id="feedback-modal-cancel" class="btn-secondary" data-i18n="ui.abbrechen">Abbrechen</button>
+        <button type="submit" id="feedback-modal-submit" class="btn-primary" data-i18n="ui.feedback_senden">Senden</button>
+      </div>
+    </form>
+  </div>
+  <p id="feedback-toast" class="offline-banner" role="status" hidden></p>
 
   <!-- PASSWORT ÄNDERN (jederzeit über den Header erreichbar) -->
   <div id="password-modal-overlay" class="modal-overlay" hidden>
@@ -178,6 +198,7 @@
             <button class="tab-btn subnav-btn" data-tab="admin-roles" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.rollen_und_rechte">Rollen &amp; Rechte</button>
             <button class="tab-btn subnav-btn" data-tab="admin-departments" data-perm="roles.manage" role="tab" aria-selected="false" data-i18n="ui.abteilungen">Abteilungen</button>
             <button class="tab-btn subnav-btn" data-tab="admin-requests" data-perm="requests.review" role="tab" aria-selected="false" data-i18n="ui.offene_vorschlaege">Offene Vorschläge</button>
+            <button class="tab-btn subnav-btn" data-tab="admin-feedback" data-perm="feedback.review" role="tab" aria-selected="false" data-i18n="ui.feedback">Feedback</button>
             <button class="tab-btn subnav-btn" data-tab="admin-quiz" data-perm="quiz.manage" role="tab" aria-selected="false" data-i18n="ui.quiz_fragen">Quiz-Fragen</button>
             <button class="tab-btn subnav-btn" data-tab="admin-catalog" data-perm-any="products.write,recipes.write" role="tab" aria-selected="false" data-i18n="ui.katalogtabelle">Katalogtabelle</button>
             <button class="tab-btn subnav-btn" data-tab="admin-data" data-perm="data.manage" role="tab" aria-selected="false" data-i18n="ui.datenqualitaet">Datenqualität</button>
@@ -1922,6 +1943,22 @@
       <h2 data-i18n="ui.offene_vorschlaege">Offene Vorschläge</h2>
       <p class="hint" data-i18n="ui.aenderungsvorschlaege_von_mitarbeitenden_c39d">Änderungsvorschläge von Mitarbeitenden zu Rezepten und Produkten. Annehmen übernimmt den Vorschlag direkt, Ablehnen kann mit einem Kommentar begründet werden.</p>
       <div id="change-requests-list"></div>
+    </section>
+
+    <!-- ADMIN – Feedback und Änderungsvorschläge zu Wissen (js/feedback.js) -->
+    <section id="admin-feedback" class="tab-panel" data-perm="feedback.review">
+      <h2 data-i18n="ui.feedback">Feedback</h2>
+      <p class="hint" data-i18n="ui.feedback_admin_hinweis">Allgemeines Feedback und Änderungsvorschläge zu Wissensartikeln von allen Konten.</p>
+      <label>
+        <span data-i18n="ui.feedback_filter">Anzeigen</span>
+        <select id="feedback-filter">
+          <option value="open" data-i18n="ui.feedback_status_offen">Offen</option>
+          <option value="done" data-i18n="ui.feedback_status_erledigt">Erledigt</option>
+          <option value="rejected" data-i18n="ui.abgelehnt">Abgelehnt</option>
+          <option value="all" data-i18n="ui.feedback_filter_alle">Alle</option>
+        </select>
+      </label>
+      <div id="feedback-list"></div>
     </section>
 
     <!-- ADMIN – Quiz-Fragen und Team-Übersicht (js/adminQuiz.js) -->

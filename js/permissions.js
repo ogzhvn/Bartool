@@ -30,6 +30,7 @@ export const PERMISSIONS = [
   { key: "requests.review", group: "inhalte", sort: 30, policy: "change_requests" },
   { key: "quiz.manage", group: "inhalte", sort: 40, policy: "quiz_questions, quiz_attempts" },
   { key: "knowledge.write", group: "inhalte", sort: 50, policy: "knowledge_articles, storage/bilder (wissen/)" },
+  { key: "feedback.review", group: "inhalte", sort: 60, policy: "feedback" },
   // Betrieb
   { key: "inventory.manage", group: "betrieb", sort: 10, policy: "inventory_counts, inventory_items" },
   { key: "preparations.manage", group: "betrieb", sort: 20, policy: "preparations" },

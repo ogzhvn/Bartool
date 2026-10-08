@@ -59,6 +59,7 @@ insert into public.permissions (key, label_key, group_key, sort) values
   ('requests.review',     'perm.requests.review',     'inhalte',    30),
   ('quiz.manage',         'perm.quiz.manage',         'inhalte',    40),
   ('knowledge.write',     'perm.knowledge.write',     'inhalte',    50),
+  ('feedback.review',     'perm.feedback.review',     'inhalte',    60),
   ('inventory.manage',    'perm.inventory.manage',    'betrieb',    10),
   ('preparations.manage', 'perm.preparations.manage', 'betrieb',    20),
   ('events.manage',       'perm.events.manage',       'betrieb',    30),
@@ -93,7 +94,7 @@ select 'stellv_barchef', key from public.permissions
 where key in ('recipes.write', 'products.write', 'requests.review',
               'knowledge.write', 'inventory.manage', 'preparations.manage', 'events.manage',
               'checklists.manage', 'shiftlog.manage', 'losses.manage',
-              'reports.view', 'audit.view')
+              'reports.view', 'audit.view', 'feedback.review')
 on conflict do nothing;
 
 create table if not exists public.profiles (
@@ -1308,6 +1309,50 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- ---------------------------------------------------------------------
+-- Feedback: allgemeine Rückmeldungen und Änderungsvorschläge zu Wissensartikeln
+-- ---------------------------------------------------------------------
+-- kind 'general' = freies Feedback, 'knowledge' = Vorschlag zu einem Artikel
+-- (ref_id/ref_title). Kein FK auf knowledge_articles: der Vorschlag soll auch
+-- nach dem Löschen oder Umbenennen des Artikels lesbar bleiben.
+
+create table if not exists public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('general', 'knowledge')),
+  ref_id uuid,
+  ref_title text,
+  message text not null check (char_length(message) between 3 and 2000),
+  status text not null default 'open' check (status in ('open', 'done', 'rejected')),
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  handled_by uuid references public.profiles (id) on delete set null,
+  handled_at timestamptz,
+  admin_comment text
+);
+
+alter table public.feedback enable row level security;
+
+drop policy if exists "feedback: eigener insert" on public.feedback;
+create policy "feedback: eigener insert"
+  on public.feedback for insert
+  with check (created_by = auth.uid() and status = 'open');
+
+drop policy if exists "feedback: eigene oder feedback.review" on public.feedback;
+create policy "feedback: eigene oder feedback.review"
+  on public.feedback for select
+  using (created_by = auth.uid() or private.has_permission('feedback.review'));
+
+drop policy if exists "feedback: feedback.review entscheidet" on public.feedback;
+create policy "feedback: feedback.review entscheidet"
+  on public.feedback for update
+  using (private.has_permission('feedback.review'))
+  with check (private.has_permission('feedback.review'));
+
+drop policy if exists "feedback: feedback.review loescht" on public.feedback;
+create policy "feedback: feedback.review loescht"
+  on public.feedback for delete
+  using (private.has_permission('feedback.review'));
 
 -- ---------------------------------------------------------------------
 -- Quiz (Paket 26)
