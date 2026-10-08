@@ -402,7 +402,7 @@
             </select>
           </label>
         </div>
-        <div class="field-row">
+        <div class="field-row field-row-pair">
           <label data-i18n="ui.menge_ml">
             Menge (ml)
             <input type="number" id="prep-size" min="0" step="10" placeholder="z. B. 1000" data-i18n-placeholder="ui.z_b_1000" />
@@ -477,7 +477,13 @@
             <input type="date" id="event-date" />
           </label>
         </div>
-        <div class="field-row">
+        <label data-i18n="ui.notiz">
+          Notiz
+          <input type="text" id="event-notes" placeholder="optional, z. B. Aperitif ab 18 Uhr auf der Terrasse" data-i18n-placeholder="ui.optional_z_b_aperitif_ab_18_uhr_auf_der_4ee1" />
+        </label>
+
+        <h3 data-i18n="ui.gaeste_und_verbrauch">Gäste &amp; Verbrauch</h3>
+        <div class="field-row field-row-pair">
           <label data-i18n="ui.gaeste">
             Gäste
             <input type="number" id="event-guests" min="0" step="1" placeholder="z. B. 80" data-i18n-placeholder="ui.z_b_80" />
@@ -487,7 +493,7 @@
             <input type="number" id="event-duration" min="0" step="0.5" placeholder="z. B. 4" data-i18n-placeholder="ui.z_b_4" />
           </label>
         </div>
-        <div class="field-row">
+        <div class="field-row field-row-pair">
           <label data-i18n="ui.drinks_pro_gast">
             Drinks pro Gast
             <input type="number" id="event-drinks-per-guest" min="0" step="0.1" />
@@ -497,14 +503,10 @@
             <input type="number" id="event-buffer" min="0" step="5" value="10" />
           </label>
         </div>
-        <div class="field-row">
+        <div class="field-row field-row-pair">
           <label data-i18n="ui.eis_kg_pro_drink">
             Eis (kg pro Drink)
             <input type="number" id="event-ice" min="0" step="0.05" />
-          </label>
-          <label data-i18n="ui.notiz">
-            Notiz
-            <input type="text" id="event-notes" placeholder="optional, z. B. Aperitif ab 18 Uhr auf der Terrasse" data-i18n-placeholder="ui.optional_z_b_aperitif_ab_18_uhr_auf_der_4ee1" />
           </label>
         </div>
         <p class="hint" data-i18n="ui.drinks_pro_gast_und_eis_pro_drink_sind_09c9">Drinks pro Gast und Eis pro Drink sind Faustwerte – bitte an euren Betrieb anpassen. Vorbelegt: 2 Drinks in der ersten Stunde und 1 je weiterer Stunde, 0,35 kg Eis pro Drink. Wird „Drinks pro Gast“ von Hand geändert, bleibt der Wert stehen.</p>
@@ -725,7 +727,7 @@
         <datalist id="loss-product-options"></datalist>
         <p id="loss-product-warning" class="empty-note" hidden></p>
 
-        <div class="field-row">
+        <div class="field-row field-row-pair">
           <label data-i18n="ui.menge">
             Menge
             <input type="number" id="loss-amount" min="0" step="0.1" inputmode="decimal" />

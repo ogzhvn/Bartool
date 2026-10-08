@@ -99,7 +99,7 @@ function setStatus(text, warnung = false) {
 function renderCountList() {
   const zaehlungen = loadInventoryCounts();
   if (zaehlungen.length === 0) {
-    listEl.innerHTML = `<p class="empty-note">${t("ui.noch_keine_zaehlung_angelegt")}</p>`;
+    listEl.innerHTML = `<p class="empty-state">${t("ui.noch_keine_zaehlung_angelegt")}</p>`;
     return;
   }
   listEl.innerHTML = zaehlungen
@@ -185,7 +185,7 @@ function renderItems() {
     return `<h4 class="prep-group">${escapeHtml(gruppe)} (${liste.length})</h4>${zeilen}`;
   });
 
-  itemsEl.innerHTML = bloecke.join("") || `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
+  itemsEl.innerHTML = bloecke.join("") || `<p class="empty-state">${t("ui.keine_produkte_gefunden")}</p>`;
 }
 
 function setQuantity(name, wert) {

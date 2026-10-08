@@ -917,6 +917,34 @@ select {
   flex: none;
 }
 
+/* Zwei kurze Felder (Mengen, Zahlen) bleiben auch auf dem Handy nebeneinander;
+   ein einzelnes Feld in so einer Zeile belegt nur die halbe Breite. */
+.field-row-pair {
+  flex-wrap: nowrap;
+}
+
+.field-row-pair > label {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.field-row-pair > label:only-child {
+  flex: 0 1 calc(50% - 0.4rem);
+}
+
+.field-row-pair input,
+.field-row-pair select {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Suchfelder allein in einer Zeile: volle Breite, am Desktop begrenzt */
+#build-search,
+#inv-search {
+  flex: 1 1 100%;
+  max-width: 32rem;
+}
+
 /* ── Rezeptfotos (Aufbau/Garnitur) ─────────── */
 
 .photo-field {
@@ -1046,9 +1074,14 @@ select {
   background: var(--bg-elevated-2);
 }
 
+/* Deaktiviert: gestrichelter Rahmen, kein Gold – auf den ersten Blick von
+   aktiven Knöpfen zu unterscheiden, nicht nur blasser. */
 .btn-primary:disabled,
 .btn-secondary:disabled {
-  opacity: 0.45;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+  opacity: 0.6;
   cursor: default;
 }
 
@@ -1481,6 +1514,18 @@ select {
 .empty-note {
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* Leerer Zustand einer Liste („Noch keine …“): ruhige Fläche statt nacktem Text.
+   .empty-note bleibt für Hinweise innerhalb von Ergebnissen. */
+.empty-state {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* ── Rechner-Karten (Superjuice, Zuckersirup) ───────────── */
@@ -2806,6 +2851,131 @@ select {
 
 .prep-toggle input[type="checkbox"] {
   margin: 0;
+}
+
+/* Aktionsleiste einer Ansatz-Karte: zwei Textknöpfe teilen sich die Breite,
+   Etikett und Löschen sind quadratische Symbolknöpfe – alles in einer Reihe. */
+.btn-icon {
+  flex: none;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  font-size: 1.15rem;
+}
+
+.btn-icon.prep-delete {
+  color: var(--danger);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-icon.prep-delete:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+}
+
+@media (max-width: 599px) {
+  .prep-actions {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .prep-actions .btn-secondary:not(.btn-icon) {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Events: Drinkauswahl ───────────────────────────────── */
+
+.ingredient-row.event-mix-row {
+  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 44px;
+  grid-template-areas: none;
+}
+
+.event-mix-row select {
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.event-mix-row .remove-btn {
+  width: 44px;
+  padding: 0;
+}
+
+.event-mix-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 599px) {
+  /* Rezept, Anteil und × in einer Zeile; die Drinkzahl steht klein darunter */
+  .ingredient-row.event-mix-row {
+    grid-template-columns: minmax(0, 1fr) 6.5rem 44px;
+  }
+
+  .ingredient-row.event-mix-row .event-mix-recipe { grid-column: 1; grid-row: 1; }
+  .ingredient-row.event-mix-row .event-mix-share { grid-column: 2; grid-row: 1; }
+  .ingredient-row.event-mix-row .remove-btn { grid-area: auto; grid-column: 3; grid-row: 1; }
+  .ingredient-row.event-mix-row .event-mix-count { grid-column: 1 / 3; grid-row: 2; }
+
+  .event-mix-count:empty {
+    display: none;
+  }
+}
+
+/* ── Schwund & Bruch: Filter und Auswertung ─────────────── */
+
+#loss-filter-reason {
+  flex: 1 1 11rem;
+}
+
+#loss-filter-product {
+  flex: 2 1 14rem;
+}
+
+#loss-summary table,
+#build-result table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+#loss-summary :is(th, td),
+#build-result :is(th, td) {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+#loss-summary thead th,
+#build-result thead th {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Zahlen rechtsbündig, damit Beträge untereinander lesbar sind */
+#loss-summary :is(th, td):not(:first-child) {
+  text-align: right;
+}
+
+#loss-summary tfoot th {
+  border-top: 1px solid var(--border-strong);
+  border-bottom: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+#loss-summary td .prep-status {
+  display: block;
 }
 
 /* Datums- und Zeitfelder: Picker, Spinner und Scrollbalken folgen über

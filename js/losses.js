@@ -357,7 +357,7 @@ function renderSummary(losses) {
     </div>
     ${
       ohneWert > 0
-        ? `<p class="empty-note">${ohneWert} ${t("ui.buchung_en_ohne_wert_fehlender_f5ed")}</p>`
+        ? `<p class="empty-note">${ohneWert === 1 ? t("ui.eine_buchung_ohne_wert_hinweis") : `${ohneWert} ${t("ui.buchung_en_ohne_wert_fehlender_f5ed")}`}</p>`
         : ""
     }`;
 }
@@ -378,7 +378,7 @@ function renderList() {
           )
         )
         .join("")
-    : `<p class="empty-note">${escapeHtml(t("ui.keine_buchungen_in_den_letzten_30_tagen"))}</p>`;
+    : `<p class="empty-state">${escapeHtml(t("ui.keine_buchungen_in_den_letzten_30_tagen"))}</p>`;
 }
 
 function renderFilter() {

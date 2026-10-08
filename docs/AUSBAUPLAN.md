@@ -362,7 +362,7 @@ erfinden.
 |---|---|---|---|
 | 57 | Querschnitt: Header, native Felder, Hover, Abstände | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 61 | Wissen: Kategorien bereinigen (Daten) | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | offen | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
@@ -3294,9 +3294,34 @@ Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu 
 - Leere Zustände („Noch keine Zählung angelegt" usw.) als nackter Text – einheitlich gestalten.
 
 **Abnahme**
-- [ ] Events-Drinkauswahl auf 390 px in einer sauberen Zeile pro Rezept.
-- [ ] Alle sieben Tabs auf 390 px und 1366 px ohne Überlauf; leere Zustände einheitlich.
-- [ ] Speichern/Löschen in jedem Tab einmal durchgespielt (Testaccount, Testdaten danach löschen).
+- [x] Events-Drinkauswahl auf 390 px in einer sauberen Zeile pro Rezept: Rezept · Anteil % · ×-Knopf (44 × 44 px),
+      die errechnete Drinkzahl steht klein darunter (`.event-mix-row`). Formular gruppiert: „Veranstaltung“
+      (Name · Datum, Notiz), „Gäste & Verbrauch“ (Gäste · Dauer, Drinks pro Gast · Puffer, Eis), „Drinkauswahl“.
+      Kurze Zahlenfelder bleiben auf dem Handy nebeneinander (`.field-row-pair`, auch Menge · Alkoholgehalt in
+      Mise en Place und Menge · Einheit in Schwund).
+- [x] Alle sieben Tabs auf 390 px und 1366 px ohne Überlauf (Playwright, leer und mit Testdaten, DE und EN);
+      leere Zustände einheitlich als gestrichelte Fläche (`.empty-state`), `.empty-note` bleibt für Hinweise
+      innerhalb von Ergebnissen. Deaktivierte Knöpfe: gestrichelter Rahmen, kein Gold, `opacity: 0.6`
+      (global für `.btn-primary`/`.btn-secondary`).
+- [x] Speichern/Löschen in jedem Tab durchgespielt (Testaccount): Ansatz anlegen/„Verbraucht“/löschen, Event
+      speichern/löschen, Übergabe, Checklisten-Vorlage + Lauf + Messwert, Schwund-Buchung, Inventur-Zählung
+      (371 Produkte) mit Auswertung, Bestellvorschlag und „Was kann ich bauen?“. Alle `ZZ-Test`-Daten danach
+      gelöscht und per SQL gegengeprüft (0 Reste). Der Ansatz „a“ im Testaccount war schon vorher da und bleibt.
+- [x] Mise en Place: vier Knöpfe in einer Reihe („Verbraucht“, „Bearbeiten“ als Text, Etikett und Löschen als
+      44-px-Symbolknöpfe mit `title`/`aria-label`). Singular/Plural getrennt: „noch 1 Tag“ / „noch 6 Tage“,
+      „seit 1 Tag abgelaufen“ / „… 2 Tagen …“ (Mise en Place und Übergabe), „1 Buchung ohne Wert“.
+- [x] Schwund: Auswertungstabelle mit Kopfzeile, Zahlen rechtsbündig, Summenzeile abgesetzt („(1 ohne Wert)“
+      unter dem Betrag); Gründe-Select und Produktfilter teilen sich die Zeile bzw. füllen die Breite.
+      „Was kann ich bauen?“ und Inventur: Suchfeld volle Breite (max. 32 rem).
+- Vorhandene Fehler nebenbei behoben: (1) in `js/preparations.js` verglich die Ablaufprüfung die
+  Übersetzungsfunktion `t` statt der Resttage – die Gruppen „Abgelaufen“ und „Läuft bald ab“ blieben immer
+  leer; (2) die Rezept-Auswahl im Event-Planer wurde nach dem Sync nicht neu befüllt (leer bei erstem Start
+  ohne Cache; `bartool:sync-done` füllt sie jetzt); (3) „angesetzt“ und die Spalte „fehlt“ in „Was kann ich bauen?“
+  standen fest auf Deutsch (jetzt i18n). Checklisten-Messwertzeile: Mindestbreite des Namens 8 rem statt 11 rem,
+  damit die Einheit nicht allein in einer Zeile steht.
+- Cache-Version `bartool-v90`. Vorher/nachher-Screenshots 390 px und 1366 px aller sieben Tabs.
+- Auf Gerät prüfen: Aktionsleiste der Ansatz-Karten (Touch-Größen, Umbruch bei 360 px), Events-Drinkzeile und
+  Inventur-Stepper auf echtem Handy.
 
 ---
 

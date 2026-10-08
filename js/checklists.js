@@ -289,7 +289,7 @@ function itemZeileHtml(item, eintrag, gesperrt) {
     const zeigeNotiz = ausserhalb || notiz.trim() !== "";
     return `
       <div class="menu-pick${ausserhalb ? " menu-pick-missing" : ""}" style="flex-wrap: wrap">
-        <span style="flex: 1 1 11rem; min-width: 11rem">${itemLabelHtml(item)}${itemZusatz(item)}</span>
+        <span style="flex: 1 1 8rem; min-width: 8rem">${itemLabelHtml(item)}${itemZusatz(item)}</span>
         <input
           type="text"
           inputmode="decimal"
@@ -425,7 +425,7 @@ function renderLauf() {
   }
   const run = findeLauf(offenerLauf.templateId, offenerLauf.datum);
   if (!run) {
-    runEl.innerHTML = `<p class="empty-note">${escapeHtml(
+    runEl.innerHTML = `<p class="empty-state">${escapeHtml(
       t("ui.fuer_am_ist_noch_nichts_eingetragen", {
         name: localizedText(template, "name"),
         datum: formatDatum(offenerLauf.datum),
@@ -578,7 +578,7 @@ function renderVerlauf() {
   const laeufe = verlaufLaeufe();
   historyEl.innerHTML = laeufe.length
     ? laeufe.map(verlaufHtml).join("")
-    : `<p class="empty-note">${t("ui.noch_keine_liste_ausgefuellt")}</p>`;
+    : `<p class="empty-state">${t("ui.noch_keine_liste_ausgefuellt")}</p>`;
   printHistoryBtn.disabled = laeufe.length === 0;
 }
 
@@ -765,7 +765,7 @@ function renderVorlagenListe() {
   const vorlagen = [...loadChecklistTemplates()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
   templateListEl.innerHTML = vorlagen.length
     ? vorlagen.map(vorlageHtml).join("")
-    : `<p class="empty-note">${escapeHtml(t("ui.noch_keine_vorlage_angelegt"))}</p>`;
+    : `<p class="empty-state">${escapeHtml(t("ui.noch_keine_vorlage_angelegt"))}</p>`;
 }
 
 // ---------------------------------------------------------------------

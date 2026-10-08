@@ -141,8 +141,8 @@ function render() {
   if (!stand) {
     resultEl.innerHTML =
       loadInventoryCounts().length === 0
-        ? `<p class="empty-note">${t("ui.es_gibt_noch_keine_inventur_lege_im_tab_b07d")}</p>`
-        : `<p class="empty-note">${t("ui.noch_kein_zaehlstand_geladen")}</p>`;
+        ? `<p class="empty-state">${t("ui.es_gibt_noch_keine_inventur_lege_im_tab_b07d")}</p>`
+        : `<p class="empty-state">${t("ui.noch_kein_zaehlstand_geladen")}</p>`;
     return;
   }
 
@@ -153,7 +153,7 @@ function render() {
   ).length;
 
   if (gezaehltePositionen === 0) {
-    resultEl.innerHTML = `<p class="empty-note">${t("ui.in_dieser_zaehlung_ist_noch_nichts_erfasst_974c")}</p>`;
+    resultEl.innerHTML = `<p class="empty-state">${t("ui.in_dieser_zaehlung_ist_noch_nichts_erfasst_974c")}</p>`;
     return;
   }
 
@@ -181,7 +181,7 @@ function render() {
     ${
       machbar.length > 0
         ? `<div class="shortcut-list">${rezeptChips(machbar)}</div>`
-        : `<p class="empty-note">${t("ui.kein_drink_in_dieser_auswahl_vollstaendig_e221")}</p>`
+        : `<p class="empty-state">${t("ui.kein_drink_in_dieser_auswahl_vollstaendig_e221")}</p>`
     }`;
 
   const eineFehltBlock = `
@@ -190,7 +190,7 @@ function render() {
       eineFehlt.length > 0
         ? `<div class="table-scroll">
              <table>
-               <thead><tr><th>${t("ui.drink")}</th><th>fehlt</th></tr></thead>
+               <thead><tr><th>${t("ui.drink")}</th><th>${t("ui.spalte_fehlt")}</th></tr></thead>
                <tbody>
                  ${eineFehlt
                    .map(
@@ -204,7 +204,7 @@ function render() {
                </tbody>
              </table>
            </div>`
-        : `<p class="empty-note">${t("ui.kein_drink_dem_genau_eine_zutat_fehlt")}</p>`
+        : `<p class="empty-state">${t("ui.kein_drink_dem_genau_eine_zutat_fehlt")}</p>`
     }`;
 
   const unklarBlock = `
@@ -213,7 +213,7 @@ function render() {
     })</h3>
     ${
       a.unklareZutaten.length === 0
-        ? `<p class="empty-note">${t("ui.alle_zutaten_des_rezeptbuchs_sind_einem_24f9")}</p>`
+        ? `<p class="empty-state">${t("ui.alle_zutaten_des_rezeptbuchs_sind_einem_24f9")}</p>`
         : `<p class="hint">${t("ui.diese_zutaten_haben_keinen_treffer_im_9298")}</p>
            <div class="table-scroll">
              <table>

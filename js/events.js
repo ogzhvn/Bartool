@@ -289,7 +289,7 @@ function zeileHtml(zellen) {
 
 function ergebnisHtml(ev, plan) {
   if (plan.totalDrinks === 0 || plan.drinks.length === 0) {
-    return `<p class="empty-note">${t("ui.gaeste_drinks_pro_gast_und_mindestens_ein_97f6")}</p>`;
+    return `<p class="empty-state">${t("ui.gaeste_drinks_pro_gast_und_mindestens_ein_97f6")}</p>`;
   }
 
   const drinkZeilen = plan.drinks
@@ -486,7 +486,7 @@ function renderList() {
   const events = sortiereEvents(loadEvents());
   listEl.innerHTML = events.length
     ? events.map(eventHtml).join("")
-    : `<p class="empty-note">${t("ui.noch_keine_events_gespeichert")}</p>`;
+    : `<p class="empty-state">${t("ui.noch_keine_events_gespeichert")}</p>`;
 }
 
 async function handleSubmit(e) {
@@ -506,6 +506,12 @@ async function handleSubmit(e) {
   }
 }
 
+function refreshRecipeSelects() {
+  mixEl.querySelectorAll(".event-mix-recipe").forEach((sel) => {
+    sel.innerHTML = recipeOptionsHtml(sel.value);
+  });
+}
+
 export function initEvents() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
@@ -513,11 +519,12 @@ export function initEvents() {
     render();
     // Die Rezept-Auswahl je Zeile wird neu befüllt: der erste Eintrag ist
     // eine Beschriftung ("Rezept wählen"), keine Rezeptdaten.
-    mixEl.querySelectorAll(".event-mix-recipe").forEach((sel) => {
-      sel.innerHTML = recipeOptionsHtml(sel.value);
-    });
+    refreshRecipeSelects();
     applyTranslations(formEl);
   });
+
+  // Beim ersten Start ohne Cache ist die Rezeptliste erst nach dem Sync da.
+  window.addEventListener("bartool:sync-done", refreshRecipeSelects);
 
   resetForm();
   renderList();

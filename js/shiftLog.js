@@ -87,10 +87,10 @@ function ansatzText({ prep, tage }) {
   const art = typLabel(prep.prepType);
   const frist =
     tage < 0
-      ? `${t("ui.seit")} ${Math.abs(tage)} ${t("ui.tag_en_abgelaufen")}`
+      ? t(tage === -1 ? "ui.seit_einem_tag_abgelaufen" : "ui.seit_tagen_abgelaufen", { tage: Math.abs(tage) })
       : tage === 0
         ? t("ui.laeuft_heute_ab")
-        : `${t("ui.laeuft_in")} ${tage} ${t("ui.tag_en_ab")}`;
+        : t(tage === 1 ? "ui.laeuft_in_einem_tag_ab" : "ui.laeuft_in_tagen_ab", { tage });
   return `${prep.label} (${art}) – ${frist}`;
 }
 
@@ -313,7 +313,7 @@ function renderList() {
   const logs = sichtbareLogs(loadShiftLogs());
   listEl.innerHTML = logs.length
     ? logs.map(logHtml).join("")
-    : `<p class="empty-note">${t("ui.noch_keine_uebergabe_geschrieben")}</p>`;
+    : `<p class="empty-state">${t("ui.noch_keine_uebergabe_geschrieben")}</p>`;
 }
 
 // Abhaken schreibt Name und Zeitpunkt mit – ohne die anderen Punkte

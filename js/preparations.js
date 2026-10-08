@@ -99,15 +99,15 @@ function eintragHtml(prep) {
   let status = "";
   if (verbraucht) status = t("ui.verbraucht_klein");
   else if (tage === null) status = t("ui.ohne_datum");
-  else if (tage < 0) status = `${t("ui.seit")} ${Math.abs(tage)} ${t("ui.tag_en_abgelaufen")}`;
+  else if (tage < 0) status = t(tage === -1 ? "ui.seit_einem_tag_abgelaufen" : "ui.seit_tagen_abgelaufen", { tage: Math.abs(tage) });
   else if (tage === 0) status = t("ui.laeuft_heute_ab");
-  else status = t("ui.noch_tage", { tage });
+  else status = t(tage === 1 ? "ui.noch_ein_tag" : "ui.noch_tage", { tage });
 
   const details = [
     prep.batchSizeMl ? `${formatNumberLocal(prep.batchSizeMl)} ml` : "",
     prep.abv !== "" && prep.abv != null ? `${formatNumberLocal(prep.abv)} % ABV` : "",
     prep.location,
-    `angesetzt ${formatDate(prep.madeAt)}`,
+    t("ui.angesetzt_datum", { datum: formatDate(prep.madeAt) }),
     `${t("ui.haltbar_bis_08c8")} ${formatDate(prep.expiresAt)}`,
   ].filter(Boolean);
 
@@ -122,13 +122,13 @@ function eintragHtml(prep) {
       </div>
       <p class="prep-meta">${escapeHtml(typLabel(prep.prepType))} · ${escapeHtml(details.join(" · "))}</p>
       ${prep.notes ? `<p class="prep-meta">${escapeHtml(prep.notes)}</p>` : ""}
-      <div class="actions">
+      <div class="actions prep-actions">
         ${verbraucht
           ? `<button type="button" class="btn-secondary prep-reactivate">${t("ui.wieder_aktiv")}</button>`
           : `<button type="button" class="btn-secondary prep-done-btn">${t("ui.verbraucht")}</button>
              <button type="button" class="btn-secondary prep-edit">${t("ui.bearbeiten")}</button>`}
-        <button type="button" class="btn-secondary prep-label-btn">${t("ui.etikett")}</button>
-        ${can("preparations.manage") ? `<button type="button" class="btn-secondary prep-delete">${t("ui.loeschen")}</button>` : ""}
+        <button type="button" class="btn-secondary btn-icon prep-label-btn" title="${t("ui.etikett")}" aria-label="${t("ui.etikett")}"><i class="ph ph-tag" aria-hidden="true"></i></button>
+        ${can("preparations.manage") ? `<button type="button" class="btn-secondary btn-icon prep-delete" title="${t("ui.loeschen")}" aria-label="${t("ui.loeschen")}"><i class="ph ph-trash" aria-hidden="true"></i></button>` : ""}
       </div>
     </div>`;
 }
@@ -137,7 +137,7 @@ function gruppeHtml(titel, eintraege, leerText) {
   if (eintraege.length === 0 && !leerText) return "";
   return `
     <h4 class="prep-group">${escapeHtml(titel)} (${eintraege.length})</h4>
-    ${eintraege.length === 0 ? `<p class="empty-note">${escapeHtml(leerText)}</p>` : eintraege.map(eintragHtml).join("")}
+    ${eintraege.length === 0 ? `<p class="empty-state">${escapeHtml(leerText)}</p>` : eintraege.map(eintragHtml).join("")}
   `;
 }
 
@@ -148,11 +148,11 @@ function render() {
 
   const abgelaufen = aktiv.filter((p) => {
     const tage = tageBis(p.expiresAt);
-    return t !== null && t < 0;
+    return tage !== null && tage < 0;
   });
   const bald = aktiv.filter((p) => {
     const tage = tageBis(p.expiresAt);
-    return t !== null && t >= 0 && t <= WARNUNG_TAGE;
+    return tage !== null && tage >= 0 && tage <= WARNUNG_TAGE;
   });
   const laufend = aktiv.filter((p) => !abgelaufen.includes(p) && !bald.includes(p));
 
