@@ -2,6 +2,7 @@ import { saveProduct, deleteProduct, onProductsChanged } from "./storage.js";
 import { escapeHtml } from "./utils.js";
 import { exportProductsToExcel, exportProductsToWord } from "./productExport.js";
 import { printProducts } from "./printView.js";
+import { renderTopicTiles, renderTopicNav } from "./topicTiles.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
@@ -156,6 +157,13 @@ const listEl = document.getElementById("product-list");
 const searchEl = document.getElementById("product-search");
 const groupFilterEl = document.getElementById("product-group-filter");
 const categoryTreeEl = document.getElementById("product-category-tree");
+const topicsEl = document.getElementById("product-topics");
+const navEl = document.getElementById("product-nav");
+const exportBarEl = document.querySelector("#products-list-view .export-bar");
+
+// Kachel "Alle": Liste ohne Oberkategorie. Ohne Filter, Suche und diesen
+// Schalter zeigt der Tab die Kachelübersicht (wie Wissen).
+let showAll = false;
 const groupOptionsEl = document.getElementById("product-group-options");
 const subgroupOptionsEl = document.getElementById("product-subgroup-options");
 const sidebarListEl = document.getElementById("product-sidebar-list");
@@ -721,8 +729,46 @@ function renderProductItem(product) {
   return item;
 }
 
+function renderTopics() {
+  const all = getAllProducts();
+  const tiles = OBERKATEGORIEN.map((ok) => ({
+    key: ok.name,
+    name: ok.name,
+    count: t("ui.produkte_n", { n: all.filter((p) => ok.groups.includes(p.group)).length }),
+  })).filter((tile) => !tile.count.startsWith("0 "));
+  if (all.length > 0) tiles.push({ key: "", name: t("ui.alle_kachel"), count: t("ui.produkte_n", { n: all.length }) });
+  renderTopicTiles(topicsEl, tiles, (key) => {
+    showAll = key === "";
+    activeOberkategorie = OBERKATEGORIEN.find((ok) => ok.name === key) ?? null;
+    activeWeinTyp = null;
+    groupFilterEl.value = "";
+    updateGroupFilterVisibility();
+    populateGroupFilter();
+    renderSidebarCategoryTree();
+    renderBrowseList();
+    if (navEl.getBoundingClientRect().top < 0) navEl.scrollIntoView?.({ block: "start" });
+  }, t("ui.keine_produkte_gefunden"));
+}
+
 function renderBrowseList() {
+  const overview =
+    !searchEl.value.trim() && !activeOberkategorie && !activeWeinTyp && !groupFilterEl.value && !showAll;
+  topicsEl.hidden = !overview;
+  navEl.hidden = overview;
+  exportBarEl.hidden = overview;
+  listEl.hidden = overview;
+  if (overview) {
+    groupFilterEl.hidden = true;
+    renderTopics();
+    updateExportBar();
+    return;
+  }
+  updateGroupFilterVisibility();
   const products = currentFilteredProducts();
+  renderTopicNav(navEl, activeWeinTyp?.name ?? activeOberkategorie?.name ?? t("ui.alle_kachel"), products.length, () => {
+    searchEl.value = "";
+    resetCategoryFilters();
+  });
 
   if (products.length === 0) {
     listEl.innerHTML = `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
@@ -844,6 +890,7 @@ function populatePairsWithOptions() {
 // "Produkte" direkt angeklickt wird (Sidebar-Button oder Start-Kachel), statt
 // über einen Unterpunkt im Kategorie-Baum.
 function resetCategoryFilters() {
+  showAll = false;
   activeOberkategorie = null;
   activeWeinTyp = null;
   groupFilterEl.value = "";
@@ -866,6 +913,7 @@ export function openProductForEdit(name) {
 // zu einem Produkt in der Leseansicht.
 export function focusProduct(name) {
   showListView();
+  showAll = false;
   activeOberkategorie = null;
   activeWeinTyp = null;
   groupFilterEl.value = "";

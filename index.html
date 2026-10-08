@@ -1104,10 +1104,13 @@
 
         <div class="field-row no-print">
           <input type="text" id="recipe-search" placeholder="Rezepte oder Zutaten durchsuchen…" data-i18n-placeholder="ui.rezepte_oder_zutaten_durchsuchen" />
-          <select id="recipe-category-filter">
+          <select id="recipe-category-filter" hidden>
             <option value="" data-i18n="ui.alle_kategorien">Alle Kategorien</option>
           </select>
         </div>
+
+        <div id="recipe-nav" class="knowledge-nav" hidden></div>
+        <div id="recipe-topics" class="knowledge-topics"></div>
 
         <div class="export-bar">
           <span id="recipe-selected-count" class="export-count" data-i18n="ui.0_ausgewaehlt">0 ausgewählt</span>
@@ -1270,10 +1273,13 @@
 
         <div class="field-row no-print">
           <input type="text" id="product-search" placeholder="Produkte durchsuchen…" data-i18n-placeholder="ui.produkte_durchsuchen" />
-          <select id="product-group-filter">
+          <select id="product-group-filter" hidden>
             <option value="" data-i18n="ui.alle_kategorien">Alle Kategorien</option>
           </select>
         </div>
+
+        <div id="product-nav" class="knowledge-nav" hidden></div>
+        <div id="product-topics" class="knowledge-topics"></div>
 
         <div class="export-bar">
           <span id="product-selected-count" class="export-count" data-i18n="ui.0_ausgewaehlt">0 ausgewählt</span>

@@ -7,6 +7,7 @@ import { exportRecipesToExcel, exportRecipesToWord } from "./recipeExport.js";
 import { allergensForRecipe, allergenLabel } from "./allergens.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { printRecipes } from "./printView.js";
+import { renderTopicTiles, renderTopicNav } from "./topicTiles.js";
 import { can } from "./auth.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
@@ -40,6 +41,13 @@ const categoryEl = document.getElementById("recipe-category");
 const categoryOptionsEl = document.getElementById("recipe-category-options");
 const categoryFilterEl = document.getElementById("recipe-category-filter");
 const categoryTreeEl = document.getElementById("recipe-category-tree");
+const topicsEl = document.getElementById("recipe-topics");
+const navEl = document.getElementById("recipe-nav");
+const exportBarEl = document.querySelector("#recipes-list-view .export-bar");
+
+// Kachel "Alle": Liste ohne Kategorie-Filter. Ohne Filter, Suche und diesen
+// Schalter zeigt der Tab die Kachelübersicht (wie Wissen).
+let showAll = false;
 const basePortionsEl = document.getElementById("recipe-base-portions");
 const methodEl = document.getElementById("recipe-method");
 const glassEl = document.getElementById("recipe-glass");
@@ -560,8 +568,40 @@ function renderRecipeItem(recipe) {
   return item;
 }
 
+function renderTopics() {
+  const all = getAllRecipes();
+  const tiles = sortedCategories().map((category) => ({
+    key: category,
+    name: category,
+    count: t("ui.rezepte_n", { n: all.filter((r) => r.category === category).length }),
+  }));
+  if (all.length > 0) tiles.push({ key: "", name: t("ui.alle_kachel"), count: t("ui.rezepte_n", { n: all.length }) });
+  renderTopicTiles(topicsEl, tiles, (key) => {
+    showAll = key === "";
+    categoryFilterEl.value = key;
+    renderSidebarCategoryTree();
+    renderBrowseList();
+    if (navEl.getBoundingClientRect().top < 0) navEl.scrollIntoView?.({ block: "start" });
+  }, t("ui.keine_rezepte_gefunden"));
+}
+
 function renderBrowseList() {
+  const overview = !searchEl.value.trim() && !categoryFilterEl.value && !showAll;
+  topicsEl.hidden = !overview;
+  navEl.hidden = overview;
+  exportBarEl.hidden = overview;
+  listEl.hidden = overview;
+  categoryFilterEl.hidden = overview;
+  if (overview) {
+    renderTopics();
+    updateExportBar();
+    return;
+  }
   const recipes = currentFilteredRecipes();
+  renderTopicNav(navEl, categoryFilterEl.value || t("ui.alle_kachel"), recipes.length, () => {
+    searchEl.value = "";
+    resetCategoryFilter();
+  });
 
   if (recipes.length === 0) {
     listEl.innerHTML = `<p class="empty-note">${t("ui.keine_rezepte_gefunden")}</p>`;
@@ -648,6 +688,7 @@ function renderSidebarCategoryTree() {
 // direkt angeklickt wird (Sidebar-Button oder Start-Kachel), statt über einen
 // Unterpunkt im Kategorie-Baum.
 function resetCategoryFilter() {
+  showAll = false;
   categoryFilterEl.value = "";
   renderSidebarCategoryTree();
   renderBrowseList();
