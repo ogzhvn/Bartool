@@ -13,6 +13,7 @@ import { initInventory } from "./inventory.js";
 import { initBuildable } from "./buildable.js";
 import { initQuiz } from "./quiz.js";
 import { initKnowledge } from "./knowledge.js";
+import { initDishes } from "./dishes.js";
 import { initEvents } from "./events.js";
 import { initShiftLog } from "./shiftLog.js";
 import { initLosses } from "./losses.js";
@@ -35,6 +36,7 @@ import {
   initChecklistRunSync,
   initQuizQuestionSync,
   initKnowledgeSync,
+  initDishesSync,
   initUserPreferencesSync,
   initDepartmentSync,
   claimOperationsCache,
@@ -198,6 +200,7 @@ async function bootstrapAppOnce() {
     initChecklistRunSync(),
     initQuizQuestionSync(),
     initKnowledgeSync(),
+    initDishesSync(),
     initUserPreferencesSync(),
     initPriceHistorySync(),
     initDepartmentSync(),
@@ -220,6 +223,7 @@ async function bootstrapAppOnce() {
   initBuildable();
   initQuiz();
   initKnowledge();
+  initDishes();
   initEvents();
   initShiftLog();
   initLosses();

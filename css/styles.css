@@ -5482,3 +5482,99 @@ p.knowledge-nav-title {
   box-shadow: inset 3px 0 0 var(--accent);
   background: var(--bg-elevated);
 }
+
+/* Gerichte (Paket 71) */
+.dish-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.15rem 0;
+}
+
+.dish-chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.dish-chip-warn {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.dish-status {
+  align-self: flex-start;
+}
+
+.dish-unchecked-note {
+  margin: 0.4rem 0 0;
+  color: var(--danger);
+}
+
+.dish-none {
+  margin: 0;
+}
+
+.dish-components {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.dish-ed-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.dish-ed-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 100%;
+}
+
+.dish-ed-subtypes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--border-strong);
+}
+
+.dish-ed-chip {
+  min-height: 44px;
+  max-width: 100%;
+  text-align: left;
+}
+
+.dish-ed-component {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dish-ed-component input[type="text"] {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.dish-ed-component .btn-icon {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.dish-ed-check .hint {
+  margin: 0.2rem 0 0;
+}

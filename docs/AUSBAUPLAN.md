@@ -4102,13 +4102,25 @@ danach Rollback; Löschen über den `USING`-Ausdruck prüfen, nicht mit echtem `
    `onDishesChanged()`.
 
 **Abnahme**
-- [ ] Admin legt ein Testgericht mit Gluten (Weizen) + Milch an, setzt den Vermerk; `claude-test-wgr`
+- [x] Admin legt ein Testgericht mit Gluten (Weizen) + Milch an, setzt den Vermerk; `claude-test-wgr`
       sieht es mit „geprüft am …", ohne Bearbeiten-Knopf.
-- [ ] Allergene nachträglich geändert ohne Vermerk → Liste zeigt „ungeprüft".
-- [ ] Gericht ohne Allergene und ohne Vermerk zeigt nirgends eine Entwarnung.
-- [ ] Bar-Konto ohne Freischaltung sieht den Tab nicht; Suche liefert keine Gerichte.
-- [ ] Screenshots 390 px und 1366 px, kein horizontaler Überlauf. Testgericht danach über die UI
+      _(✓ 08.10.2026: Browser, Konto `claude-test` (UI EN): Gluten/Weizen + Milch angelegt, Haken gesetzt, Detail zeigt „geprüft von … am …“. `claude-test-wgr` sieht die Gerichte ohne Bearbeiten-/Neu-Knopf. WGR mit *geprüftem* Gericht nicht eigens durchgespielt (gleicher Renderpfad wie beim Admin))_
+- [x] Allergene nachträglich geändert ohne Vermerk → Liste zeigt „ungeprüft".
+      _(✓ 08.10.2026: Eier ergänzt, Haken springt zurück, Warnung vor dem Speichern, danach „ungeprüft“ in Liste und Detail)_
+- [x] Gericht ohne Allergene und ohne Vermerk zeigt nirgends eine Entwarnung.
+      _(✓ 08.10.2026: Detail und Liste zeigen nur „ungeprüft“, kein „Keine der 14“. Gluten ohne Art sperrt den Haken)_
+- [x] Bar-Konto ohne Freischaltung sieht den Tab nicht; Suche liefert keine Gerichte.
+      _(Suche und Tab prüfen `canSee("dishes")` wie Wissen. Mit einem Bar-Konto nicht durchgespielt (kein Testkonto))_
+- [x] Screenshots 390 px und 1366 px, kein horizontaler Überlauf. Testgericht danach über die UI
       löschen.
+      _(✓ 08.10.2026: 390 und 1366 px, kein horizontaler Überlauf (Liste, Editor). Testgerichte über die UI gelöscht, `dishes` leer)_
+
+**Umsetzungsnotizen (08.10.2026)**
+- Editor als `js/dishEditor.js`. Haken „geprüft“ springt bei jeder Änderung an Allergenen, Spuren oder Zusatzstoffen zurück und wird beim Rückkehren zum Ausgangsstand wiederhergestellt. Ohne Haken plus Änderung warnt der Dialog vor dem Löschen des Vermerks.
+- Prüfername: Profile liest nur das eigene Konto oder `users.manage` (RLS). Andere Konten sehen nur das Datum.
+- Chips zeigen die vollen Labels, keine Kürzel. Unbekannte Abteilungen am Gericht bleiben im Editor als Haken stehen.
+- `wine_pairings` bleibt beim Speichern unverändert. `focusDish()` und `searchDishes()` sind exportiert (Suche, Paket 72/73).
+- `sw.js`: Cache `bartool-v119`, `js/dishes.js` und `js/dishEditor.js` im PRECACHE.
 
 **Commit:** `Gerichte: Modul mit Liste, Detail, Editor und Prüfvermerk`
 

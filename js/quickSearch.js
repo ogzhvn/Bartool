@@ -4,6 +4,7 @@ import { focusRecipe } from "./recipes.js";
 import { focusProduct } from "./products.js";
 import { focusKnowledge } from "./knowledge.js";
 import { loadKnowledge } from "./storage.js";
+import { focusDish, searchDishes } from "./dishes.js";
 import { switchTab } from "./tabs.js";
 import { closeMobileNav } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
@@ -85,8 +86,12 @@ function sucheTreffer(suchbegriff) {
     suchbegriff
   ).slice(0, MAX_PRO_GRUPPE);
 
+  // Gerichte: nur mit Modulfreigabe (searchDishes prüft canSee("dishes")).
+  const gerichte = sortiereNachRelevanz(searchDishes(suchbegriff, passt), suchbegriff).slice(0, MAX_PRO_GRUPPE);
+
   // Nur in Module springen, die die Abteilung sieht (Paket 51).
   return {
+    gerichte,
     rezepte: canSee("recipes") ? rezepte : [],
     produkte: canSee("products") ? produkte : [],
     wissen: canSee("knowledge") ? wissen : [],
@@ -118,8 +123,8 @@ function render() {
     return;
   }
 
-  const { rezepte, produkte, wissen } = sucheTreffer(suchbegriff);
-  treffer = [...rezepte, ...produkte, ...wissen];
+  const { rezepte, produkte, gerichte, wissen } = sucheTreffer(suchbegriff);
+  treffer = [...rezepte, ...produkte, ...gerichte, ...wissen];
 
   if (treffer.length === 0) {
     markiert = -1;
@@ -136,6 +141,10 @@ function render() {
   if (produkte.length > 0) {
     html += `<h4 class="quick-search-group">${t("ui.produkte")}</h4>`;
     html += produkte.map((e) => zeileHtml(e, index++)).join("");
+  }
+  if (gerichte.length > 0) {
+    html += `<h4 class="quick-search-group">${t("ui.gerichte")}</h4>`;
+    html += gerichte.map((e) => zeileHtml(e, index++)).join("");
   }
   if (wissen.length > 0) {
     html += `<h4 class="quick-search-group">${t("ui.wissen")}</h4>`;
@@ -166,6 +175,8 @@ function auswaehlen(index) {
   if (eintrag.art === "recipe") {
     switchTab("recipes");
     focusRecipe(eintrag.name);
+  } else if (eintrag.art === "dish") {
+    focusDish(eintrag.id);
   } else if (eintrag.art === "knowledge") {
     focusKnowledge(eintrag.id);
   } else {

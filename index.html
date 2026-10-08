@@ -181,6 +181,7 @@
           <div id="recipe-category-tree" class="sidebar-subnav" data-module="recipes"></div>
           <button class="tab-btn" data-tab="products" data-module="products" role="tab" aria-selected="false" data-i18n="ui.produkte"><i class="ph ph-wine" aria-hidden="true"></i>Produkte</button>
           <div id="product-category-tree" class="sidebar-subnav" data-module="products"></div>
+          <button class="tab-btn" data-tab="dishes" data-module="dishes" role="tab" aria-selected="false" data-i18n="ui.gerichte"><i class="ph ph-fork-knife" aria-hidden="true"></i>Gerichte</button>
           <button class="tab-btn" data-tab="knowledge" data-module="knowledge" role="tab" aria-selected="false" data-i18n="ui.wissen"><i class="ph ph-graduation-cap" aria-hidden="true"></i>Wissen</button>
           <div id="knowledge-category-tree" class="sidebar-subnav" data-module="knowledge"></div>
           <button class="tab-btn" data-tab="quiz" data-module="quiz" role="tab" aria-selected="false" data-i18n="ui.quiz"><i class="ph ph-brain" aria-hidden="true"></i>Quiz</button>
@@ -275,6 +276,11 @@
           <i class="ph ph-wine tool-card-icon" aria-hidden="true"></i>
           <span class="tool-card-title" data-i18n="ui.produkte">Produkte</span>
           <span class="tool-card-desc" data-i18n="ui.getraenke_und_zutatenkatalog_der_bar">Getränke- und Zutatenkatalog der Bar</span>
+        </button>
+        <button type="button" class="tool-card" data-tab="dishes" data-tile-group="bibliothek" data-module="dishes">
+          <i class="ph ph-fork-knife tool-card-icon" aria-hidden="true"></i>
+          <span class="tool-card-title" data-i18n="ui.gerichte">Gerichte</span>
+          <span class="tool-card-desc" data-i18n="ui.gerichte_kachel">Gerichte mit Komponenten, Allergenen und Zusatzstoffen</span>
         </button>
         <button type="button" class="tool-card" data-tab="knowledge" data-tile-group="bibliothek" data-module="knowledge">
           <i class="ph ph-graduation-cap tool-card-icon" aria-hidden="true"></i>
@@ -1107,6 +1113,39 @@
           <button type="button" id="quiz-again" class="btn-primary" data-i18n="ui.neue_runde">Neue Runde</button>
         </div>
       </div>
+    </section>
+
+    <!-- GERICHTE -->
+    <section id="dishes" class="tab-panel" data-module="dishes">
+      <h2 data-i18n="ui.gerichte">Gerichte</h2>
+
+      <div id="dishes-list-view">
+        <p class="hint" data-i18n="ui.gerichte_hinweis">Gerichte mit Komponenten, Allergenen und Zusatzstoffen. Angaben gelten nur mit Prüfvermerk der Küche.</p>
+        <div class="knowledge-searchbar">
+          <input type="text" id="dishes-search" placeholder="Gericht, Kategorie oder Komponente suchen…" data-i18n-placeholder="ui.gerichte_suche_placeholder" data-i18n-aria-label="ui.gerichte_suche_placeholder" aria-label="Gericht, Kategorie oder Komponente suchen…" autocomplete="off" enterkeyhint="search" />
+          <button type="button" id="dishes-new" class="btn-primary btn-icon" data-perm="dishes.write" hidden title="Neues Gericht" aria-label="Neues Gericht" data-i18n-title="ui.gerichte_neu" data-i18n-aria-label="ui.gerichte_neu"><i class="ph ph-plus" aria-hidden="true"></i></button>
+        </div>
+        <div class="field-row knowledge-filters">
+          <label>
+            <span data-i18n="ui.abteilung">Abteilung</span>
+            <select id="dishes-department"></select>
+          </label>
+          <label>
+            <span data-i18n="ui.kategorie">Kategorie</span>
+            <select id="dishes-category"></select>
+          </label>
+          <label class="knowledge-unread-toggle">
+            <input type="checkbox" id="dishes-inactive" />
+            <span data-i18n="ui.gerichte_inaktive">Auch inaktive zeigen</span>
+          </label>
+        </div>
+        <div id="dishes-list" class="knowledge-list"></div>
+      </div>
+
+      <article id="dishes-detail" class="knowledge-detail" hidden></article>
+
+      <!-- Editor: Sichtbarkeit steuert js/dishEditor.js über can("dishes.write"), nicht data-perm. -->
+      <form id="dishes-editor" class="knowledge-editor" hidden novalidate></form>
     </section>
 
     <!-- WISSEN -->
