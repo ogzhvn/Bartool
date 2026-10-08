@@ -202,10 +202,27 @@ kleine Migrationen aufgeteilt (Tabelle / Policies+Grants / Funktion+Trigger) lie
 jede sofort. Nach einem Timeout immer erst per `execute_sql` prüfen, ob etwas
 angekommen ist, dann klein aufgeteilt neu anwenden.
 
+Befund aus Paket 64 (08.10.2026): Gemeinsamer Nenner aller Hänger war ein
+**`drop …` bzw. `delete`** im Statement – auch `drop policy if exists` und ein
+`delete` in einem `do`-Block mit abschließendem `raise` (Rollback). Ohne diese
+Schlüsselwörter liefen auch acht Statements in einer Migration sofort. Deshalb:
+Policies per `alter policy … rename to` / `alter policy … using/with check`
+umbauen statt drop+create; in Abnahme-Blöcken Löschrechte über den
+`USING`-Ausdruck der Policy prüfen statt mit echtem `delete`. `schema.sql`
+behält das Muster `drop … if exists` + `create` (läuft im SQL-Editor).
+
 ## Testaccount (Supabase Auth)
-Für Login-/Feature-Tests existiert ein Admin-Testaccount in der Supabase-
-Instanz (Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen
+Für Login-/Feature-Tests existieren zwei Testkonten in der Supabase-Instanz
+(Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen
 verwenden, nur zum Durchklicken des Tools.
+
+Zweites Konto (Paket 64, ohne `betrieb.alle_abteilungen`, zum Testen der
+Datentrennung im Betrieb): Benutzername `claude-test-wgr`, E-Mail
+`claude-test-wgr@bartool.local`, Rolle `barkeeper`, Abteilung `wgr`. Passwort
+ebenfalls nur in `.claude/local/testaccount.md`; neu setzen wie unten mit der
+E-Mail dieses Kontos.
+
+Admin-Konto:
 
 - Benutzername: `claude-test`
 - E-Mail: `claude-testaccount@bartool.local`

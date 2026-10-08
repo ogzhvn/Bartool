@@ -38,6 +38,14 @@ export const PERMISSIONS = [
   { key: "checklists.manage", group: "betrieb", sort: 40, policy: "checklist_templates, checklist_runs" },
   { key: "shiftlog.manage", group: "betrieb", sort: 50, policy: "shift_logs" },
   { key: "losses.manage", group: "betrieb", sort: 60, policy: "losses" },
+  {
+    key: "betrieb.alle_abteilungen",
+    group: "betrieb",
+    sort: 70,
+    // Paket 64: ohne dieses Recht kommen nur Betriebsdaten an, die für die
+    // eigene Abteilung freigegeben sind (private.dept_visible()).
+    policy: "preparations, events, shift_logs, checklist_*, inventory_*, losses (department/visible_to)",
+  },
   // Auswertung
   { key: "reports.view", group: "auswertung", sort: 10, policy: "quiz_team_overview(), quiz_topic_heatmap()" },
   { key: "audit.view", group: "auswertung", sort: 20, policy: "audit_log" },

@@ -66,6 +66,7 @@ insert into public.permissions (key, label_key, group_key, sort) values
   ('checklists.manage',   'perm.checklists.manage',   'betrieb',    40),
   ('shiftlog.manage',     'perm.shiftlog.manage',     'betrieb',    50),
   ('losses.manage',       'perm.losses.manage',       'betrieb',    60),
+  ('betrieb.alle_abteilungen', 'perm.betrieb.alle_abteilungen', 'betrieb', 70),
   ('reports.view',        'perm.reports.view',        'auswertung', 10),
   ('audit.view',          'perm.audit.view',          'auswertung', 20),
   ('audit.restore',       'perm.audit.restore',       'auswertung', 30),
@@ -86,7 +87,8 @@ select 'admin', key from public.permissions
 on conflict do nothing;
 
 insert into public.role_permissions (role_key, permission_key)
-select 'barchef', key from public.permissions where key <> 'roles.manage'
+select 'barchef', key from public.permissions
+ where key not in ('roles.manage', 'betrieb.alle_abteilungen')
 on conflict do nothing;
 
 insert into public.role_permissions (role_key, permission_key)
@@ -441,11 +443,11 @@ grant execute on function public.set_my_language(text) to authenticated;
 -- Abteilungen und sichtbare Module (Paket 50)
 -- ---------------------------------------------------------------------
 -- Zweite Achse neben der Rolle: die Rolle regelt Schreibrechte und
--- Verwaltung, die Abteilung nur, welche Module in der Navigation stehen.
--- Das ist Kosmetik, kein Zugriffsschutz – gelesen wird weiter über die
--- Policies der jeweiligen Tabellen. Eine Abteilung pro Konto, Rang 100 sieht
--- immer alles (im Client, js/auth.js canSee()). Labels bleiben wie bei den
--- Rollen unübersetzt.
+-- Verwaltung, die Abteilung, welche Module in der Navigation stehen. Die
+-- Modul-Matrix ist Kosmetik, kein Zugriffsschutz. Echte Datentrennung gibt es
+-- seit Paket 64 nur für die Betriebstabellen (Abschnitt "Datentrennung im
+-- Betrieb" unten). Eine Abteilung pro Konto, Rang 100 sieht immer alles (im
+-- Client, js/auth.js canSee()). Labels bleiben wie bei den Rollen unübersetzt.
 
 create table if not exists public.departments (
   key text primary key,
@@ -522,6 +524,172 @@ select d.key, m.key
  where (d.key = 'bar' or m.key in ('recipes', 'products', 'quiz'))
    and not exists (select 1 from public.department_modules dm where dm.department_key = d.key)
 on conflict do nothing;
+
+-- ---------------------------------------------------------------------
+-- Datentrennung im Betrieb (Paket 64)
+-- ---------------------------------------------------------------------
+-- preparations, events, shift_logs, checklist_templates, inventory_counts
+-- und losses tragen zwei Spalten: department (Eigentümer-Abteilung) und
+-- visible_to (sichtbar für, enthält immer department). checklist_runs und
+-- inventory_items erben die Sichtbarkeit über den Elterneintrag. Nicht
+-- freigegebene Zeilen kommen per RLS gar nicht beim Client an.
+-- Sehen = mitarbeiten; Sichtbarkeit ändern und löschen nur die
+-- Eigentümer-Abteilung. Alles sieht nur betrieb.alle_abteilungen.
+-- RLS prüft Array-Überlappung, damit ein Konto später mehreren Abteilungen
+-- angehören kann; heute liefert my_departments() genau ein Element.
+
+create or replace function private.my_departments()
+returns text[]
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce(
+    (select array[p.department] from public.profiles p where p.id = auth.uid()),
+    '{}'::text[]);
+$$;
+
+create or replace function private.sees_all_departments()
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select private.has_permission('betrieb.alle_abteilungen');
+$$;
+
+create or replace function private.dept_visible(p text[])
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select private.sees_all_departments() or p && private.my_departments();
+$$;
+
+-- Eindeutig, sortiert, Eigentümer immer drin. Arrays haben keinen
+-- Fremdschlüssel, deshalb wird jeder Key gegen departments geprüft.
+create or replace function private.normalize_dept_keys(p text[], p_owner text)
+returns text[]
+language plpgsql
+security definer
+set search_path = ''
+stable
+as $$
+declare
+  v text[];
+  v_unknown text;
+begin
+  select coalesce(array_agg(distinct k order by k), '{}'::text[]) into v
+    from unnest(coalesce(p, '{}'::text[]) || p_owner) k
+   where k is not null;
+  select k into v_unknown from unnest(v) k
+   where not exists (select 1 from public.departments d where d.key = k) limit 1;
+  if v_unknown is not null then
+    raise exception 'Unbekannte Abteilung in visible_to: %', v_unknown;
+  end if;
+  return v;
+end;
+$$;
+
+-- Ohne auth.uid() (Service-Role, SQL-Editor, Migration) gilt der Aufruf als
+-- privilegiert: department bleibt, wie übergeben. Sonst legt man immer für
+-- die eigene Abteilung an, egal was der Client schickt.
+-- Verglichen wird visible_to als Menge nach der Normalisierung: wer den
+-- Eigentümer weglässt, ändert nichts, weil er wieder ergänzt wird.
+create or replace function private.betrieb_dept_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_all boolean := auth.uid() is null or private.sees_all_departments();
+  v_mine text[] := private.my_departments();
+begin
+  if tg_op = 'INSERT' then
+    if not v_all then
+      new.department := v_mine[1];
+      if new.department is null then
+        raise exception 'Konto ohne Abteilung kann keine Betriebsdaten anlegen.';
+      end if;
+    end if;
+  else
+    if new.department is distinct from old.department and not v_all then
+      raise exception 'Eigentümer-Abteilung darf nur mit betrieb.alle_abteilungen geändert werden.';
+    end if;
+  end if;
+
+  new.visible_to := private.normalize_dept_keys(new.visible_to, new.department);
+
+  if tg_op = 'UPDATE'
+     and not (new.visible_to @> old.visible_to and old.visible_to @> new.visible_to)
+     and not (v_all or old.department = any(v_mine)) then
+    raise exception 'Sichtbarkeit ändern darf nur die Eigentümer-Abteilung.';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.my_departments() from public;
+revoke all on function private.sees_all_departments() from public;
+revoke all on function private.dept_visible(text[]) from public;
+revoke all on function private.normalize_dept_keys(text[], text) from public;
+revoke all on function private.betrieb_dept_guard() from public;
+grant execute on function private.my_departments() to authenticated;
+grant execute on function private.sees_all_departments() to authenticated;
+grant execute on function private.dept_visible(text[]) to authenticated;
+
+insert into public.role_permissions (role_key, permission_key)
+values ('admin', 'betrieb.alle_abteilungen')
+on conflict do nothing;
+
+-- Standard-Freigaben je Modul × Abteilung (gepflegt in Paket 69). Ohne Zeile
+-- ist beim Anlegen nur die eigene Abteilung vorausgewählt.
+create table if not exists public.department_defaults (
+  module_key text not null,
+  department_key text not null references public.departments (key)
+    on update cascade on delete cascade,
+  visible_to text[] not null,
+  primary key (module_key, department_key)
+);
+
+alter table public.department_defaults enable row level security;
+
+grant select, insert, update, delete on public.department_defaults to authenticated;
+
+drop policy if exists "department_defaults: authenticated read" on public.department_defaults;
+create policy "department_defaults: authenticated read"
+  on public.department_defaults for select to authenticated
+  using (true);
+
+drop policy if exists "department_defaults: roles.manage write" on public.department_defaults;
+create policy "department_defaults: roles.manage write"
+  on public.department_defaults for all to authenticated
+  using (private.has_permission('roles.manage'))
+  with check (private.has_permission('roles.manage'));
+
+create or replace function private.department_defaults_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  new.visible_to := private.normalize_dept_keys(new.visible_to, new.department_key);
+  return new;
+end;
+$$;
+
+revoke all on function private.department_defaults_guard() from public;
+
+drop trigger if exists department_defaults_guard on public.department_defaults;
+create trigger department_defaults_guard
+  before insert or update on public.department_defaults
+  for each row execute function private.department_defaults_guard();
 
 -- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen
@@ -776,30 +944,54 @@ create trigger preparations_set_updated_at
   before update on public.preparations
   for each row execute function public.set_updated_at();
 
+-- Abteilung (Paket 64). Default '{bar}' nur, damit der Bestand beim
+-- Hinzufügen der Spalte der Bar gehört; danach '{}', sonst landete ein
+-- Eintrag einer anderen Abteilung ohne ausdrückliche Auswahl auch bei der Bar.
+-- Die eigene Abteilung ergänzt der Trigger.
+alter table public.preparations
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.preparations alter column visible_to set default '{}';
+
+create index if not exists preparations_visible_to_idx on public.preparations using gin (visible_to);
+
+drop trigger if exists preparations_dept_guard on public.preparations;
+create trigger preparations_dept_guard
+  before insert or update on public.preparations
+  for each row execute function private.betrieb_dept_guard();
+
 -- Ansätze macht das ganze Team, nicht nur Admins: lesen, anlegen und
 -- ändern darf jeder eingeloggte Nutzer. Löschen bleibt Admin-Sache,
 -- damit nichts unbemerkt aus der Übersicht verschwindet.
+-- Seit Paket 64 nur innerhalb der freigegebenen Abteilungen; löschen nur die
+-- Eigentümer-Abteilung.
 drop policy if exists "preparations: any authenticated user can read" on public.preparations;
-create policy "preparations: any authenticated user can read"
-  on public.preparations for select
-  using (auth.role() = 'authenticated');
-
 drop policy if exists "preparations: any authenticated user can insert" on public.preparations;
-create policy "preparations: any authenticated user can insert"
-  on public.preparations for insert
-  with check (auth.role() = 'authenticated');
-
 drop policy if exists "preparations: any authenticated user can update" on public.preparations;
-create policy "preparations: any authenticated user can update"
-  on public.preparations for update
-  using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+
+drop policy if exists "preparations: abteilung liest" on public.preparations;
+create policy "preparations: abteilung liest"
+  on public.preparations for select to authenticated
+  using (private.dept_visible(visible_to));
+
+drop policy if exists "preparations: abteilung legt an" on public.preparations;
+create policy "preparations: abteilung legt an"
+  on public.preparations for insert to authenticated
+  with check (private.dept_visible(visible_to));
+
+drop policy if exists "preparations: abteilung aendert" on public.preparations;
+create policy "preparations: abteilung aendert"
+  on public.preparations for update to authenticated
+  using (private.dept_visible(visible_to))
+  with check (private.dept_visible(visible_to));
 
 drop policy if exists "preparations: admin deletes" on public.preparations;
 drop policy if exists "preparations: preparations.manage loescht" on public.preparations;
 create policy "preparations: preparations.manage loescht"
-  on public.preparations for delete
-  using (private.has_permission('preparations.manage'));
+  on public.preparations for delete to authenticated
+  using (private.has_permission('preparations.manage')
+         and (private.sees_all_departments() or department = any(private.my_departments())));
 
 -- ---------------------------------------------------------------------
 -- Event-/Bankett-Planer
@@ -831,30 +1023,54 @@ create trigger events_set_updated_at
   before update on public.events
   for each row execute function public.set_updated_at();
 
+-- Abteilung (Paket 64). Default '{bar}' nur, damit der Bestand beim
+-- Hinzufügen der Spalte der Bar gehört; danach '{}', sonst landete ein
+-- Eintrag einer anderen Abteilung ohne ausdrückliche Auswahl auch bei der Bar.
+-- Die eigene Abteilung ergänzt der Trigger.
+alter table public.events
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.events alter column visible_to set default '{}';
+
+create index if not exists events_visible_to_idx on public.events using gin (visible_to);
+
+drop trigger if exists events_dept_guard on public.events;
+create trigger events_dept_guard
+  before insert or update on public.events
+  for each row execute function private.betrieb_dept_guard();
+
 -- Gleiches Muster wie bei den Ansätzen: Events plant das ganze Team.
 -- Lesen, anlegen und ändern darf jeder eingeloggte Nutzer, löschen bleibt
 -- Admin-Sache, damit keine Planung unbemerkt verschwindet.
+-- Seit Paket 64 nur innerhalb der freigegebenen Abteilungen; löschen nur die
+-- Eigentümer-Abteilung.
 drop policy if exists "events: any authenticated user can read" on public.events;
-create policy "events: any authenticated user can read"
-  on public.events for select
-  using (auth.role() = 'authenticated');
-
 drop policy if exists "events: any authenticated user can insert" on public.events;
-create policy "events: any authenticated user can insert"
-  on public.events for insert
-  with check (auth.role() = 'authenticated');
-
 drop policy if exists "events: any authenticated user can update" on public.events;
-create policy "events: any authenticated user can update"
-  on public.events for update
-  using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+
+drop policy if exists "events: abteilung liest" on public.events;
+create policy "events: abteilung liest"
+  on public.events for select to authenticated
+  using (private.dept_visible(visible_to));
+
+drop policy if exists "events: abteilung legt an" on public.events;
+create policy "events: abteilung legt an"
+  on public.events for insert to authenticated
+  with check (private.dept_visible(visible_to));
+
+drop policy if exists "events: abteilung aendert" on public.events;
+create policy "events: abteilung aendert"
+  on public.events for update to authenticated
+  using (private.dept_visible(visible_to))
+  with check (private.dept_visible(visible_to));
 
 drop policy if exists "events: admin deletes" on public.events;
 drop policy if exists "events: events.manage loescht" on public.events;
 create policy "events: events.manage loescht"
-  on public.events for delete
-  using (private.has_permission('events.manage'));
+  on public.events for delete to authenticated
+  using (private.has_permission('events.manage')
+         and (private.sees_all_departments() or department = any(private.my_departments())));
 
 -- ---------------------------------------------------------------------
 -- Schichtübergabe / Barbuch
@@ -882,30 +1098,54 @@ create trigger shift_logs_set_updated_at
   before update on public.shift_logs
   for each row execute function public.set_updated_at();
 
+-- Abteilung (Paket 64). Default '{bar}' nur, damit der Bestand beim
+-- Hinzufügen der Spalte der Bar gehört; danach '{}', sonst landete ein
+-- Eintrag einer anderen Abteilung ohne ausdrückliche Auswahl auch bei der Bar.
+-- Die eigene Abteilung ergänzt der Trigger.
+alter table public.shift_logs
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.shift_logs alter column visible_to set default '{}';
+
+create index if not exists shift_logs_visible_to_idx on public.shift_logs using gin (visible_to);
+
+drop trigger if exists shift_logs_dept_guard on public.shift_logs;
+create trigger shift_logs_dept_guard
+  before insert or update on public.shift_logs
+  for each row execute function private.betrieb_dept_guard();
+
 -- Wie bei den Ansätzen: die Übergabe schreibt das ganze Team. Lesen,
 -- anlegen und ändern (Punkte abhaken) darf jeder eingeloggte Nutzer,
 -- löschen bleibt Admin-Sache, damit nichts unbemerkt verschwindet.
+-- Seit Paket 64 nur innerhalb der freigegebenen Abteilungen; löschen nur die
+-- Eigentümer-Abteilung.
 drop policy if exists "shift_logs: any authenticated user can read" on public.shift_logs;
-create policy "shift_logs: any authenticated user can read"
-  on public.shift_logs for select
-  using (auth.role() = 'authenticated');
-
 drop policy if exists "shift_logs: any authenticated user can insert" on public.shift_logs;
-create policy "shift_logs: any authenticated user can insert"
-  on public.shift_logs for insert
-  with check (auth.role() = 'authenticated');
-
 drop policy if exists "shift_logs: any authenticated user can update" on public.shift_logs;
-create policy "shift_logs: any authenticated user can update"
-  on public.shift_logs for update
-  using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+
+drop policy if exists "shift_logs: abteilung liest" on public.shift_logs;
+create policy "shift_logs: abteilung liest"
+  on public.shift_logs for select to authenticated
+  using (private.dept_visible(visible_to));
+
+drop policy if exists "shift_logs: abteilung legt an" on public.shift_logs;
+create policy "shift_logs: abteilung legt an"
+  on public.shift_logs for insert to authenticated
+  with check (private.dept_visible(visible_to));
+
+drop policy if exists "shift_logs: abteilung aendert" on public.shift_logs;
+create policy "shift_logs: abteilung aendert"
+  on public.shift_logs for update to authenticated
+  using (private.dept_visible(visible_to))
+  with check (private.dept_visible(visible_to));
 
 drop policy if exists "shift_logs: admin deletes" on public.shift_logs;
 drop policy if exists "shift_logs: shiftlog.manage loescht" on public.shift_logs;
 create policy "shift_logs: shiftlog.manage loescht"
-  on public.shift_logs for delete
-  using (private.has_permission('shiftlog.manage'));
+  on public.shift_logs for delete to authenticated
+  using (private.has_permission('shiftlog.manage')
+         and (private.sees_all_departments() or department = any(private.my_departments())));
 
 -- ---------------------------------------------------------------------
 -- Checklisten Opening/Closing + Nachweisdokumentation
@@ -935,19 +1175,45 @@ create trigger checklist_templates_set_updated_at
   before update on public.checklist_templates
   for each row execute function public.set_updated_at();
 
+-- Abteilung (Paket 64), Muster preparations.
+alter table public.checklist_templates
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.checklist_templates alter column visible_to set default '{}';
+
+create index if not exists checklist_templates_visible_to_idx on public.checklist_templates using gin (visible_to);
+
+drop trigger if exists checklist_templates_dept_guard on public.checklist_templates;
+create trigger checklist_templates_dept_guard
+  before insert or update on public.checklist_templates
+  for each row execute function private.betrieb_dept_guard();
+
 -- Vorlagen sind die Regel, nach der gearbeitet wird: lesen alle, pflegen
--- nur Admins (Muster recipes/products).
+-- nur checklists.manage (Muster recipes/products). Seit Paket 64 je
+-- Abteilung: anlegen und löschen in der eigenen, ändern auch in einer für die
+-- eigene Abteilung freigegebenen Vorlage.
 drop policy if exists "checklist_templates: any authenticated user can read" on public.checklist_templates;
-create policy "checklist_templates: any authenticated user can read"
-  on public.checklist_templates for select
-  using (auth.role() = 'authenticated');
+drop policy if exists "checklist_templates: abteilung liest" on public.checklist_templates;
+create policy "checklist_templates: abteilung liest"
+  on public.checklist_templates for select to authenticated
+  using (private.dept_visible(visible_to));
 
 drop policy if exists "checklist_templates: admin write" on public.checklist_templates;
 drop policy if exists "checklist_templates: checklists.manage schreibt" on public.checklist_templates;
-create policy "checklist_templates: checklists.manage schreibt"
-  on public.checklist_templates for all
-  using (private.has_permission('checklists.manage'))
-  with check (private.has_permission('checklists.manage'));
+drop policy if exists "checklist_templates: checklists.manage eigene abteilung" on public.checklist_templates;
+create policy "checklist_templates: checklists.manage eigene abteilung"
+  on public.checklist_templates for all to authenticated
+  using (private.has_permission('checklists.manage')
+         and (private.sees_all_departments() or department = any(private.my_departments())))
+  with check (private.has_permission('checklists.manage')
+              and (private.sees_all_departments() or department = any(private.my_departments())));
+
+drop policy if exists "checklist_templates: checklists.manage aendert freigegebene" on public.checklist_templates;
+create policy "checklist_templates: checklists.manage aendert freigegebene"
+  on public.checklist_templates for update to authenticated
+  using (private.has_permission('checklists.manage') and private.dept_visible(visible_to))
+  with check (private.has_permission('checklists.manage') and private.dept_visible(visible_to));
 
 create table if not exists public.checklist_runs (
   id uuid primary key default gen_random_uuid(),
@@ -976,29 +1242,41 @@ create trigger checklist_runs_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- Abgehakt wird von der ganzen Schicht: lesen, anlegen und ändern darf
--- jeder eingeloggte Nutzer, löschen bleibt Admin-Sache, damit kein
--- Nachweis unbemerkt verschwindet (Muster preparations/shift_logs).
+-- jeder, der die Vorlage sieht (Paket 64: Sichtbarkeit erbt der Lauf von der
+-- Vorlage). Eine für mehrere Abteilungen freigegebene Vorlage ergibt pro Tag
+-- einen gemeinsamen Lauf. Löschen nur mit checklists.manage in der
+-- Eigentümer-Abteilung der Vorlage, damit kein Nachweis unbemerkt verschwindet.
 drop policy if exists "checklist_runs: any authenticated user can read" on public.checklist_runs;
-create policy "checklist_runs: any authenticated user can read"
-  on public.checklist_runs for select
-  using (auth.role() = 'authenticated');
+drop policy if exists "checklist_runs: abteilung liest" on public.checklist_runs;
+create policy "checklist_runs: abteilung liest"
+  on public.checklist_runs for select to authenticated
+  using (exists (select 1 from public.checklist_templates t
+                  where t.id = checklist_runs.template_id and private.dept_visible(t.visible_to)));
 
 drop policy if exists "checklist_runs: any authenticated user can insert" on public.checklist_runs;
-create policy "checklist_runs: any authenticated user can insert"
-  on public.checklist_runs for insert
-  with check (auth.role() = 'authenticated');
+drop policy if exists "checklist_runs: abteilung legt an" on public.checklist_runs;
+create policy "checklist_runs: abteilung legt an"
+  on public.checklist_runs for insert to authenticated
+  with check (exists (select 1 from public.checklist_templates t
+                  where t.id = checklist_runs.template_id and private.dept_visible(t.visible_to)));
 
 drop policy if exists "checklist_runs: any authenticated user can update" on public.checklist_runs;
-create policy "checklist_runs: any authenticated user can update"
-  on public.checklist_runs for update
-  using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+drop policy if exists "checklist_runs: abteilung aendert" on public.checklist_runs;
+create policy "checklist_runs: abteilung aendert"
+  on public.checklist_runs for update to authenticated
+  using (exists (select 1 from public.checklist_templates t
+                  where t.id = checklist_runs.template_id and private.dept_visible(t.visible_to)))
+  with check (exists (select 1 from public.checklist_templates t
+                  where t.id = checklist_runs.template_id and private.dept_visible(t.visible_to)));
 
 drop policy if exists "checklist_runs: admin deletes" on public.checklist_runs;
 drop policy if exists "checklist_runs: checklists.manage loescht" on public.checklist_runs;
 create policy "checklist_runs: checklists.manage loescht"
-  on public.checklist_runs for delete
-  using (private.has_permission('checklists.manage'));
+  on public.checklist_runs for delete to authenticated
+  using (private.has_permission('checklists.manage')
+         and exists (select 1 from public.checklist_templates t
+                      where t.id = checklist_runs.template_id
+                        and (private.sees_all_departments() or t.department = any(private.my_departments()))));
 
 -- ---------------------------------------------------------------------
 -- Einkaufspreis-Historie
@@ -1091,43 +1369,67 @@ create trigger inventory_items_set_updated_at
   before update on public.inventory_items
   for each row execute function public.set_updated_at();
 
--- Gezählt wird im Team: lesen, anlegen und ändern für alle Angemeldeten,
--- löschen nur Admin.
+-- Abteilung (Paket 64), Muster preparations.
+alter table public.inventory_counts
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.inventory_counts alter column visible_to set default '{}';
+
+create index if not exists inventory_counts_visible_to_idx on public.inventory_counts using gin (visible_to);
+
+drop trigger if exists inventory_counts_dept_guard on public.inventory_counts;
+create trigger inventory_counts_dept_guard
+  before insert or update on public.inventory_counts
+  for each row execute function private.betrieb_dept_guard();
+
+-- Gezählt wird im Team: lesen, anlegen und ändern für alle, die die
+-- Inventur sehen (Paket 64; Positionen erben die Sichtbarkeit der Zählung),
+-- löschen nur inventory.manage in der Eigentümer-Abteilung.
 drop policy if exists "inventory_counts: read" on public.inventory_counts;
-create policy "inventory_counts: read" on public.inventory_counts for select
-  using (auth.role() = 'authenticated');
+create policy "inventory_counts: read" on public.inventory_counts for select to authenticated
+  using (private.dept_visible(visible_to));
 
 drop policy if exists "inventory_counts: insert" on public.inventory_counts;
-create policy "inventory_counts: insert" on public.inventory_counts for insert
-  with check (auth.role() = 'authenticated');
+create policy "inventory_counts: insert" on public.inventory_counts for insert to authenticated
+  with check (private.dept_visible(visible_to));
 
 drop policy if exists "inventory_counts: update" on public.inventory_counts;
-create policy "inventory_counts: update" on public.inventory_counts for update
-  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "inventory_counts: update" on public.inventory_counts for update to authenticated
+  using (private.dept_visible(visible_to)) with check (private.dept_visible(visible_to));
 
 drop policy if exists "inventory_counts: admin deletes" on public.inventory_counts;
 drop policy if exists "inventory_counts: inventory.manage loescht" on public.inventory_counts;
 create policy "inventory_counts: inventory.manage loescht"
-  on public.inventory_counts for delete
-  using (private.has_permission('inventory.manage'));
+  on public.inventory_counts for delete to authenticated
+  using (private.has_permission('inventory.manage')
+         and (private.sees_all_departments() or department = any(private.my_departments())));
 
 drop policy if exists "inventory_items: read" on public.inventory_items;
-create policy "inventory_items: read" on public.inventory_items for select
-  using (auth.role() = 'authenticated');
+create policy "inventory_items: read" on public.inventory_items for select to authenticated
+  using (exists (select 1 from public.inventory_counts c
+                  where c.id = inventory_items.count_id and private.dept_visible(c.visible_to)));
 
 drop policy if exists "inventory_items: insert" on public.inventory_items;
-create policy "inventory_items: insert" on public.inventory_items for insert
-  with check (auth.role() = 'authenticated');
+create policy "inventory_items: insert" on public.inventory_items for insert to authenticated
+  with check (exists (select 1 from public.inventory_counts c
+                  where c.id = inventory_items.count_id and private.dept_visible(c.visible_to)));
 
 drop policy if exists "inventory_items: update" on public.inventory_items;
-create policy "inventory_items: update" on public.inventory_items for update
-  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "inventory_items: update" on public.inventory_items for update to authenticated
+  using (exists (select 1 from public.inventory_counts c
+                  where c.id = inventory_items.count_id and private.dept_visible(c.visible_to)))
+  with check (exists (select 1 from public.inventory_counts c
+                  where c.id = inventory_items.count_id and private.dept_visible(c.visible_to)));
 
 drop policy if exists "inventory_items: admin deletes" on public.inventory_items;
 drop policy if exists "inventory_items: inventory.manage loescht" on public.inventory_items;
 create policy "inventory_items: inventory.manage loescht"
-  on public.inventory_items for delete
-  using (private.has_permission('inventory.manage'));
+  on public.inventory_items for delete to authenticated
+  using (private.has_permission('inventory.manage')
+         and exists (select 1 from public.inventory_counts c
+                      where c.id = inventory_items.count_id
+                        and (private.sees_all_departments() or c.department = any(private.my_departments()))));
 
 -- ---------------------------------------------------------------------
 
@@ -1874,32 +2176,53 @@ create trigger losses_set_updated_at
   before update on public.losses
   for each row execute function public.set_updated_at();
 
--- Jeder Eingeloggte bucht seine eigenen Verluste und sieht alle Buchungen -
--- sonst waere die Summe je Grund sinnlos. Korrigieren und loeschen darf nur,
--- wer den Eintrag geschrieben hat, oder ein Admin: eine Buchung ist ein
--- Nachweis und darf nicht von Dritten stillschweigend verschwinden.
+-- Abteilung (Paket 64), Muster preparations.
+alter table public.losses
+  add column if not exists department text not null default 'bar'
+    references public.departments (key) on update cascade,
+  add column if not exists visible_to text[] not null default '{bar}';
+alter table public.losses alter column visible_to set default '{}';
+
+create index if not exists losses_visible_to_idx on public.losses using gin (visible_to);
+
+drop trigger if exists losses_dept_guard on public.losses;
+create trigger losses_dept_guard
+  before insert or update on public.losses
+  for each row execute function private.betrieb_dept_guard();
+
+-- Jeder Eingeloggte bucht seine eigenen Verluste und sieht alle Buchungen
+-- der freigegebenen Abteilungen (Paket 64) - sonst waere die Summe je Grund
+-- sinnlos. Korrigieren darf nur, wer den Eintrag geschrieben hat, oder
+-- losses.manage; loeschen zusaetzlich nur in der Eigentuemer-Abteilung: eine
+-- Buchung ist ein Nachweis und darf nicht von Dritten stillschweigend
+-- verschwinden.
 drop policy if exists "losses: any authenticated user can read" on public.losses;
-create policy "losses: any authenticated user can read"
-  on public.losses for select
-  using (auth.role() = 'authenticated');
+drop policy if exists "losses: abteilung liest" on public.losses;
+create policy "losses: abteilung liest"
+  on public.losses for select to authenticated
+  using (private.dept_visible(visible_to));
 
 drop policy if exists "losses: any authenticated user can insert" on public.losses;
-create policy "losses: any authenticated user can insert"
-  on public.losses for insert
-  with check (auth.role() = 'authenticated' and recorded_by = auth.uid());
+drop policy if exists "losses: eigene buchung in der abteilung" on public.losses;
+create policy "losses: eigene buchung in der abteilung"
+  on public.losses for insert to authenticated
+  with check (recorded_by = auth.uid() and private.dept_visible(visible_to));
 
 drop policy if exists "losses: own entry or admin updates" on public.losses;
 drop policy if exists "losses: eigene oder losses.manage aendert" on public.losses;
 create policy "losses: eigene oder losses.manage aendert"
-  on public.losses for update
-  using (recorded_by = auth.uid() or private.has_permission('losses.manage'))
-  with check (recorded_by = auth.uid() or private.has_permission('losses.manage'));
+  on public.losses for update to authenticated
+  using ((recorded_by = auth.uid() or private.has_permission('losses.manage'))
+         and private.dept_visible(visible_to))
+  with check ((recorded_by = auth.uid() or private.has_permission('losses.manage'))
+              and private.dept_visible(visible_to));
 
 drop policy if exists "losses: own entry or admin deletes" on public.losses;
 drop policy if exists "losses: eigene oder losses.manage loescht" on public.losses;
 create policy "losses: eigene oder losses.manage loescht"
-  on public.losses for delete
-  using (recorded_by = auth.uid() or private.has_permission('losses.manage'));
+  on public.losses for delete to authenticated
+  using ((recorded_by = auth.uid() or private.has_permission('losses.manage'))
+         and (private.sees_all_departments() or department = any(private.my_departments())));
 
 -- ---------------------------------------------------------------------
 -- Realtime: Änderungen live an alle eingeloggten Clients pushen

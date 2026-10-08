@@ -416,7 +416,7 @@ und `tellerwerk` in der Modul-Matrix erst nach Paket 69 einschalten, und nur nac
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 64 | Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben | offen | Opus 5.5, hoher Denkaufwand |
+| 64 | Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand |
 | 65 | Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren | offen | Opus 5.5, mittlerer Denkaufwand (sechs Datenarten + sicherheitsrelevanter Cache, Grenzfall → teureres Modell) |
 | 66 | Übergabe + Mise en Place | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 67 | Checklisten | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -3597,14 +3597,38 @@ alles wie vorher, weil alle Bestandszeilen der Bar gehören.
 
 **Abnahme** (per `execute_sql` mit `set local role authenticated` +
 `set local request.jwt.claims` je Konto, danach `rollback`)
-- [ ] Konto `wgr`: sieht 0 Bestandszeilen in allen acht Tabellen; Konto `bar` und Admin sehen alle.
-- [ ] Insert durch `wgr` mit `department = 'bar'` landet als `wgr`, `visible_to` enthält `wgr`.
-- [ ] Bar-Zeile mit `visible_to = '{bar,wgr}'`: `wgr` sieht und ändert Inhalt, kann aber
+- [x] Konto `wgr`: sieht 0 Bestandszeilen in allen acht Tabellen; Konto `bar` und Admin sehen alle.
+- [x] Insert durch `wgr` mit `department = 'bar'` landet als `wgr`, `visible_to` enthält `wgr`.
+- [x] Bar-Zeile mit `visible_to = '{bar,wgr}'`: `wgr` sieht und ändert Inhalt, kann aber
       `visible_to` nicht ändern und die Zeile nicht löschen.
-- [ ] Lauf zu einer nur für die Bar sichtbaren Checklistenvorlage ist für `wgr` unsichtbar und nicht
+- [x] Lauf zu einer nur für die Bar sichtbaren Checklistenvorlage ist für `wgr` unsichtbar und nicht
       anlegbar; dasselbe für Inventurpositionen.
-- [ ] Unbekannter Abteilungs-Key in `visible_to` wird abgewiesen.
-- [ ] App als Bar-Konto durchgeklickt: Startseite „Heute anstehend", alle Betriebsmodule unverändert.
+- [x] Unbekannter Abteilungs-Key in `visible_to` wird abgewiesen.
+- [x] App als Bar-Konto durchgeklickt: Startseite „Heute anstehend", alle Betriebsmodule unverändert.
+
+**Umsetzung (08.10.2026) – Abweichungen und Ergebnisse**
+- `visible_to` hat nach dem Backfill den Default `'{}'` statt `'{bar}'`: mit `'{bar}'` wäre jeder
+  Eintrag einer anderen Abteilung ohne ausdrückliche Auswahl auch bei der Bar gelandet. Der Trigger
+  ergänzt immer die Eigentümer-Abteilung. `department` behält Default `'bar'` (wirkt nur für
+  Konten mit `betrieb.alle_abteilungen` und Service-Role; alle anderen bekommen die eigene).
+- Ohne `auth.uid()` (Service-Role, SQL-Editor, Migration) gilt der Trigger als privilegiert.
+- Zusatzfunktion `private.normalize_dept_keys(text[], owner)` (eindeutig, sortiert, Keys gegen
+  `departments` geprüft); nutzt auch der Trigger `private.department_defaults_guard()`.
+- `visible_to` wird als Menge verglichen: wer den Eigentümer weglässt, ändert nichts.
+- `checklist_templates`: die bisherige `for all`-Policy hätte mit `checklists.manage` alle
+  Vorlagen lesbar gemacht. Jetzt `checklists.manage eigene abteilung` (for all, nur
+  Eigentümer-Abteilung) + `checklists.manage aendert freigegebene` (update, sichtbare).
+- Policies jetzt `to authenticated` und umbenannt (`abteilung liest/legt an/aendert`).
+- Migrationen: 22 kleine Teile `p64a1`–`p64c8`; Policies per `alter policy` statt drop+create,
+  weil Statements mit `drop`/`delete` über den MCP hängen (CLAUDE.md, „Große Texte").
+- `schema.sql` zweimal hintereinander gegen lokales Postgres 16 (Supabase-Stubs) fehlerfrei;
+  Policies und Funktionen md5-gleich mit der Live-DB. `get_advisors` (security): keine neuen
+  Befunde. Barchef-Startbelegung in `schema.sql` schließt das neue Recht aus.
+- Abnahme per `do`-Block mit Fixtures je Konto und `raise` am Ende (Rollback): alle Punkte erfüllt;
+  Löschen über den `USING`-Ausdruck mit temporär vergebenem `preparations.manage` geprüft (wgr:
+  fremde geteilte Zeile 0, eigene 1). App per Playwright als `claude-test` und `claude-test-wgr`
+  durchgeklickt: Bar unverändert (Übergabe + „Heute anstehend"), WGR leer, keine Fehler außer
+  dem vorbestehenden 403 auf `quiz_question_difficulty` für Konten ohne `reports.view`.
 
 **Commit:** `Abteilungen: Datentrennung im Betrieb per RLS (department, visible_to)`
 
