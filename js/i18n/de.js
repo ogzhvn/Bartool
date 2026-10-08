@@ -1094,6 +1094,7 @@ export const de = {
   "ui.wirklich_loeschen_b7a7": "\" wirklich löschen?",
   "ui.wirklich_loeschen_d6ad": ") wirklich löschen?",
   "ui.wissen": "Wissen",
+  "ui.daten_laden_prozent": "Daten laden … {pct} %",
   "ui.wissen_kachel": "Schulungen, Standards und Hintergrundwissen für alle Outlets",
   "ui.wissen_hinweis": "Schulungen und Hintergrundwissen für alle Outlets: Produkte, Serviceabläufe, Standards. Artikel lesen und als gelesen markieren.",
   "ui.wissen_suche_placeholder": "Titel oder Text suchen…",

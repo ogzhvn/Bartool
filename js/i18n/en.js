@@ -1093,6 +1093,7 @@ export const en = {
   "ui.wirklich_loeschen_b7a7": "\" really be deleted?",
   "ui.wirklich_loeschen_d6ad": ") really be deleted?",
   "ui.wissen": "Knowledge",
+  "ui.daten_laden_prozent": "Loading data … {pct} %",
   "ui.wissen_kachel": "Training, standards and background knowledge for all outlets",
   "ui.wissen_hinweis": "Training and background knowledge for all outlets: products, service procedures, standards. Read articles and mark them as read.",
   "ui.wissen_suche_placeholder": "Search title or text…",

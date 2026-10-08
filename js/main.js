@@ -49,7 +49,7 @@ import {
   completeFirstLogin,
 } from "./auth.js";
 import { loadRoles, roleLabel } from "./roles.js";
-import { t, initI18n, onLanguageChanged } from "./i18n.js";
+import { t, formatDecimal, initI18n, onLanguageChanged } from "./i18n.js";
 import { initLanguageSwitcher, applyProfileLanguage } from "./language.js";
 
 // Auto-Logout am Tresen-Tablet: Gerät ist öffentlich zugänglich, nach
@@ -146,12 +146,35 @@ function startSessionTimeoutWatch() {
   }, 60 * 1000);
 }
 
+// Zeigt, wie viele Sync-Aufträge schon fertig sind. Blockiert nichts: die
+// Anzeige sitzt fest unten rechts und verschwindet, sobald alle Syncs durch sind.
+function showBootProgress(tasks) {
+  const box = document.getElementById("boot-progress");
+  const bar = box.querySelector(".boot-progress-bar");
+  const label = box.querySelector(".boot-progress-label");
+  let done = 0;
+  const render = () => {
+    const pct = Math.round((done / tasks.length) * 100);
+    bar.style.width = `${pct}%`;
+    box.setAttribute("aria-valuenow", String(pct));
+    label.textContent = t("ui.daten_laden_prozent", { pct: formatDecimal(pct, 0) });
+  };
+  box.hidden = false;
+  render();
+  const stopLanguageWatch = onLanguageChanged(render);
+  return Promise.all(tasks.map((task) => task.finally(() => { done += 1; render(); })))
+    .finally(() => {
+      stopLanguageWatch();
+      box.hidden = true;
+    });
+}
+
 async function bootstrapAppOnce() {
   if (appInitialized) return;
   appInitialized = true;
   // Syncs laufen parallel, ohne die UI zu blockieren: jedes Modul rendert
   // sofort mit dem Offline-Puffer und aktualisiert sich über on*Changed().
-  const syncsReady = Promise.all([
+  const syncsReady = showBootProgress([
     initRecipeSync(),
     initProductSync(),
     initPreparationSync(),
