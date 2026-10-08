@@ -491,9 +491,9 @@ Reihenfolge: **70 → 71 → 72 → 73**. **74** sobald die Küchenlisten vorlie
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 70 | Datenmodell Gerichte, Deklarationsschlüssel, Recht, Modul-Registrierung | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand |
-| 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
+| 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
+| 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 74 | Gerichte erfassen: Import aus den Küchenlisten | teilweise (08.10.2026): Tellerwerk-Karte importiert, Allergene und WGR offen | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
 
 ---
@@ -4295,7 +4295,7 @@ angelegt, Layout-Grundgerüst (Regel 4) nicht ohne Rückfrage ändern.
 **Datenlücken** (stehen an den jeweiligen Zeilen): `Stork Smoky Rye`, `Chapeau Secco`, `Northman Calm Sea`,
 fünf Liköre ohne `abv_value`, drei Tee-Produkte `verified` ohne Herkunftsland, Rum ⌀ `story` unter 300.
 
-**Kleinkram:** `js/dilution.js` Zeile 197 enthält den festen Text „Bitte selbst eintragen.“ außerhalb von
+**Kleinkram (erledigt 08.10.2026, Schlüssel `ui.bitte_selbst_eintragen`, Cache v122):** `js/dilution.js` Zeile 197 enthält den festen Text „Bitte selbst eintragen.“ außerhalb von
 `t()` (Regel 11).
 
 ---

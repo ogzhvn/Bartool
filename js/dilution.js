@@ -194,7 +194,7 @@ function handleLoadRecipe() {
     hinweise.push(`${t("ui.ohne_volumen_und_deshalb_nicht_uebernommen")} ${uebersprungen.join(", ")}.`);
   }
   if (ohneAbv.length > 0) {
-    hinweise.push(`${t("ui.kein_alkoholgehalt_im_produktkatalog_e717")} ${ohneAbv.join(", ")}. Bitte selbst eintragen.`);
+    hinweise.push(`${t("ui.kein_alkoholgehalt_im_produktkatalog_e717")} ${ohneAbv.join(", ")}. ${t("ui.bitte_selbst_eintragen")}`);
   }
   recipeNoteEl.hidden = hinweise.length === 0;
   recipeNoteEl.textContent = hinweise.join(" ");

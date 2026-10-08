@@ -490,6 +490,7 @@ export const de = {
   "ui.kategorie_herkunft": "Kategorie & Herkunft",
   "ui.kategorie_und_herkunft": "Kategorie & Herkunft",
   "ui.kein_alkoholgehalt_im_produktkatalog_e717": "Kein Alkoholgehalt im Produktkatalog gefunden für:",
+  "ui.bitte_selbst_eintragen": "Bitte selbst eintragen.",
   "ui.kein_ansatz_laeuft_in_den_naechsten_drei_d7bb": "Kein Ansatz läuft in den nächsten drei Tagen ab, und nichts ist im gewählten Zeitraum überfällig.",
   "ui.kein_bestellbedarf_oder_es_fehlen_noch_82e5": "Kein Bestellbedarf – oder es fehlen noch Soll-Bestände.",
   "ui.kein_drink_dem_genau_eine_zutat_fehlt": "Kein Drink, dem genau eine Zutat fehlt.",

@@ -489,6 +489,7 @@ export const en = {
   "ui.kategorie_herkunft": "Category & origin",
   "ui.kategorie_und_herkunft": "Category & origin",
   "ui.kein_alkoholgehalt_im_produktkatalog_e717": "No alcohol content found in the product catalogue for:",
+  "ui.bitte_selbst_eintragen": "Please enter it yourself.",
   "ui.kein_ansatz_laeuft_in_den_naechsten_drei_d7bb": "No prep expires within the next three days, and nothing is overdue in the selected period.",
   "ui.kein_bestellbedarf_oder_es_fehlen_noch_82e5": "Nothing to reorder – or par levels are still missing.",
   "ui.kein_drink_dem_genau_eine_zutat_fehlt": "No drink is missing exactly one ingredient.",
