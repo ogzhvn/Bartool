@@ -149,7 +149,9 @@ function startSessionTimeoutWatch() {
 async function bootstrapAppOnce() {
   if (appInitialized) return;
   appInitialized = true;
-  await Promise.all([
+  // Syncs laufen parallel, ohne die UI zu blockieren: jedes Modul rendert
+  // sofort mit dem Offline-Puffer und aktualisiert sich über on*Changed().
+  const syncsReady = Promise.all([
     initRecipeSync(),
     initProductSync(),
     initPreparationSync(),
@@ -190,6 +192,7 @@ async function bootstrapAppOnce() {
   initHeaderMenu();
   initMyChangeRequests();
   startSessionTimeoutWatch();
+  await syncsReady;
 }
 
 // Kopfzeile "Name · Rolle" – eigene Funktion, damit sie beim Sprachwechsel
