@@ -7,7 +7,15 @@ import {
   saveChecklistRun,
   deleteChecklistRun,
   onChecklistRunsChanged,
+  onDepartmentsChanged,
 } from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  canChangeVisibility,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
 import { printChecklistRuns } from "./printView.js";
@@ -165,6 +173,40 @@ const templateItemsEl = document.getElementById("checklist-template-items");
 const addTemplateItemBtn = document.getElementById("checklist-template-add-item");
 const cancelTemplateBtn = document.getElementById("checklist-template-cancel");
 const templateListEl = document.getElementById("checklist-template-list");
+const templateDeptEl = document.getElementById("checklist-template-departments");
+const templateDeptFilterEl = document.getElementById("checklist-template-dept");
+const templateDeptFilterWrapEl = document.getElementById("checklist-template-dept-wrap");
+const historyDeptFilterEl = document.getElementById("checklist-history-dept");
+const historyDeptFilterWrapEl = document.getElementById("checklist-history-dept-wrap");
+
+// Abteilungsauswahl im Vorlagenformular. Bei einer fremden Vorlage (andere
+// Eigentümer-Abteilung, ohne betrieb.alle_abteilungen) nur das Badge; die
+// Freigabe wird dann nicht mitgeschickt. Läufe erben die Sichtbarkeit der
+// Vorlage (RLS), sie haben keine eigene Freigabe.
+let deptPicker = null;
+let deptRecord = null;
+
+function renderDeptField(record = null, value = record) {
+  deptRecord = record;
+  if (record && !canChangeVisibility(record)) {
+    deptPicker = null;
+    templateDeptEl.replaceChildren(departmentBadge(record));
+    return;
+  }
+  deptPicker = createDepartmentPicker({ moduleKey: "checklists", value });
+  templateDeptEl.replaceChildren(deptPicker.element);
+}
+
+function refreshDeptField() {
+  if (templateFormEl.hidden) return;
+  const value = deptPicker ? { ...(deptRecord ?? {}), visibleTo: deptPicker.getValue() } : deptRecord;
+  renderDeptField(deptRecord, value);
+}
+
+function fillDeptFilters() {
+  fillDepartmentFilter(templateDeptFilterEl, templateDeptFilterWrapEl);
+  fillDepartmentFilter(historyDeptFilterEl, historyDeptFilterWrapEl);
+}
 
 // Welcher Lauf gerade offen ist: Vorlage + Datum, nicht die Lauf-id – der
 // Lauf kann von einem anderen Gerät angelegt worden sein.
@@ -545,9 +587,10 @@ function druckLauf(template, run) {
 }
 
 function verlaufLaeufe() {
+  const filter = historyDeptFilterEl.value;
   return letzteLaeufe(loadChecklistRuns())
     .map((run) => ({ run, template: vorlageZu(run.templateId) }))
-    .filter((e) => e.template);
+    .filter((e) => e.template && matchesDepartment(e.template, filter));
 }
 
 function verlaufHtml({ template, run }) {
@@ -565,6 +608,7 @@ function verlaufHtml({ template, run }) {
         )}</strong>
         <span class="prep-status">${escapeHtml(zustand)}</span>
       </div>
+      ${departmentBadge(template).outerHTML}
       <p class="prep-meta">${status.erledigt} ${t("ui.von")} ${status.gesamt} ${t("ui.erledigt_klein")}${
         status.abweichungen.length > 0 ? ` · ${status.abweichungen.length} ${t("ui.abweichung_en")}` : ""
       }</p>
@@ -692,6 +736,7 @@ function oeffneVorlagenFormular(template = null) {
   templateNameEnEl.value = template?.nameEn ?? "";
   templateKindEl.value = template?.kind ?? "sonstiges";
   templateActiveEl.checked = template ? template.active !== false : true;
+  renderDeptField(template);
   const items = template?.items ?? [];
   if (items.length) items.forEach((item) => templateItemRow(item));
   else templateItemRow();
@@ -704,6 +749,9 @@ function schliesseVorlagenFormular() {
   newTemplateBtn.hidden = false;
   templateFormEl.reset();
   templateItemsEl.innerHTML = "";
+  deptPicker = null;
+  deptRecord = null;
+  templateDeptEl.replaceChildren();
 }
 
 async function speichereVorlage(e) {
@@ -726,6 +774,7 @@ async function speichereVorlage(e) {
     items,
     active: templateActiveEl.checked,
   };
+  if (deptPicker) template.visibleTo = deptPicker.getValue();
   try {
     await saveChecklistTemplate(template);
     schliesseVorlagenFormular();
@@ -750,6 +799,7 @@ function vorlageHtml(template) {
         }</span>
       </div>
       <p class="prep-meta">${escapeHtml(beschreibung)}</p>
+      ${departmentBadge(template).outerHTML}
       <div class="actions no-print">
         <button type="button" class="btn-secondary checklist-template-edit">${t("ui.bearbeiten")}</button>
         <button type="button" class="btn-secondary checklist-template-delete">${t("ui.loeschen")}</button>
@@ -762,7 +812,10 @@ function renderVorlagenListe() {
     templateListEl.innerHTML = "";
     return;
   }
-  const vorlagen = [...loadChecklistTemplates()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
+  const filter = templateDeptFilterEl.value;
+  const vorlagen = loadChecklistTemplates()
+    .filter((v) => matchesDepartment(v, filter))
+    .sort((a, b) => a.name.localeCompare(b.name, getLocale()));
   templateListEl.innerHTML = vorlagen.length
     ? vorlagen.map(vorlageHtml).join("")
     : `<p class="empty-state">${escapeHtml(t("ui.noch_keine_vorlage_angelegt"))}</p>`;
@@ -780,9 +833,19 @@ function renderAlles() {
 export function initChecklists() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    fillDeptFilters();
+    refreshDeptField();
     renderAlles();
     renderLauf();
   });
+  onDepartmentsChanged(() => {
+    fillDeptFilters();
+    refreshDeptField();
+    renderAlles();
+  });
+  templateDeptFilterEl.addEventListener("change", renderVorlagenListe);
+  historyDeptFilterEl.addEventListener("change", renderVerlauf);
+  fillDeptFilters();
 
   dateEl.value = heuteInput();
   schliesseVorlagenFormular();

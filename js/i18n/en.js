@@ -1396,6 +1396,7 @@ export const en = {
   "ui.abteilung_anlegen": "Create department",
   "ui.alle_abteilungen": "All departments",
   "ui.sichtbar_fuer": "Visible to",
+  "ui.checkliste_abteilungen_hinweis": "All departments with access fill in the same daily run.",
   "ui.freigabe_aendern": "Change visibility",
   "ui.je_abteilung_festlegen_welche_module_sichtbar_sind": "Set which modules each department sees",
   "ui.je_abteilung_festlegen_welche_module_in_der_navigation_stehen": "Set which modules appear in the navigation per department. This only controls the view, not access; the administrator always sees everything.",

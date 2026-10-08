@@ -768,6 +768,12 @@
       <div class="actions no-print">
         <button type="button" id="checklist-print-history" class="btn-secondary" data-i18n="ui.verlauf_drucken">Verlauf drucken</button>
       </div>
+      <div class="prep-options no-print">
+        <label class="prep-toggle" id="checklist-history-dept-wrap" hidden>
+          <span data-i18n="ui.abteilung">Abteilung</span>
+          <select id="checklist-history-dept"></select>
+        </label>
+      </div>
       <div id="checklist-history"></div>
 
       <div id="checklist-admin" data-perm="checklists.manage" hidden>
@@ -807,6 +813,12 @@
             Aktiv – steht dem Team zur Auswahl
           </label>
 
+          <div class="dept-field">
+            <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+            <div id="checklist-template-departments"></div>
+            <p class="hint" data-i18n="ui.checkliste_abteilungen_hinweis">Alle Abteilungen mit Freigabe füllen denselben Tageslauf aus.</p>
+          </div>
+
           <h3 data-i18n="ui.punkte">Punkte</h3>
           <div id="checklist-template-items"></div>
           <div class="actions">
@@ -819,6 +831,12 @@
           </div>
         </form>
 
+        <div class="prep-options no-print">
+          <label class="prep-toggle" id="checklist-template-dept-wrap" hidden>
+            <span data-i18n="ui.abteilung">Abteilung</span>
+            <select id="checklist-template-dept"></select>
+          </label>
+        </div>
         <div id="checklist-template-list"></div>
       </div>
     </section>

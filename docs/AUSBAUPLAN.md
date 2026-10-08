@@ -3757,10 +3757,21 @@ i18n, `sw.js`.
 3. Filter „Abteilung" in der Vorlagen- und Laufübersicht.
 
 **Abnahme**
-- [ ] Bar-Vorlage ist für `wgr` weder sichtbar noch ausfüllbar; nach Freigabe für WGR füllen beide
+- [x] Bar-Vorlage ist für `wgr` weder sichtbar noch ausfüllbar; nach Freigabe für WGR füllen beide
       denselben Tageslauf aus.
-- [ ] „Heute anstehend" zeigt nur sichtbare Checklisten.
-- [ ] Screenshots 390 px und 1366 px.
+- [x] „Heute anstehend" zeigt nur sichtbare Checklisten.
+- [x] Screenshots 390 px und 1366 px.
+
+**Umsetzung (08.10.2026)**
+- Vorlagenformular: Picker (`moduleKey: "checklists"`) mit Hinweis, dass Abteilungen mit Freigabe
+  denselben Tageslauf teilen; bei fremder Vorlage nur Badge, `visibleTo` wird nicht mitgesendet.
+- Badge in Vorlagenliste und Verlauf; zwei Filter „Abteilung" (Verlauf, Vorlagenliste).
+- Läufe haben keine eigene Freigabe, sie erben per RLS von der Vorlage. „Heute anstehend"
+  (`home.js`) liest nur die RLS-gefilterten Vorlagen – keine Änderung nötig.
+- Playwright: Bar-only-Vorlage unsichtbar für `wgr`; nach Freigabe sieht `wgr` dieselbe Vorlage und
+  den von Bar abgehakten Lauf. 1366 px (Bar) und 390 px (wgr) geprüft. Testdaten über die UI gelöscht.
+- Testkonten-Passwörter neu gesetzt (Datei `.claude/local/testaccount.md` fehlte).
+- sw.js: `bartool-v114`.
 
 **Commit:** `Checklisten: Sichtbarkeit je Abteilung`
 
