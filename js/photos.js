@@ -150,3 +150,40 @@ export async function resolveImageUrl(path) {
     return null;
   }
 }
+
+// Zeigt ein Foto groß über der Seite. Schließt per Klick irgendwo (Bild,
+// Hintergrund, Kreuz) oder Escape; stellt den Fokus danach wieder her.
+export function openPhotoLightbox(url, alt = "") {
+  if (!url || document.querySelector(".photo-lightbox")) return;
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement("div");
+  overlay.className = "photo-lightbox";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", alt);
+
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = alt;
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "photo-lightbox-close";
+  close.setAttribute("aria-label", "×");
+  close.innerHTML = '<i class="ph ph-x" aria-hidden="true"></i>';
+
+  overlay.append(img, close);
+
+  const shut = () => {
+    document.removeEventListener("keydown", onKey);
+    overlay.remove();
+    if (previousFocus && previousFocus.focus) previousFocus.focus();
+  };
+  const onKey = (e) => {
+    if (e.key === "Escape") shut();
+  };
+  overlay.addEventListener("click", shut);
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(overlay);
+  close.focus();
+}

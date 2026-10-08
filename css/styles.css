@@ -3364,6 +3364,73 @@ input[type="datetime-local"] {
   object-fit: contain;
 }
 
+/* Mit Foto füllt das Bild die Kachel bis zum oberen, unteren und linken
+   Rand; der Name steht mittig daneben. */
+.recipe-item summary:has(.product-thumb.has-photo) {
+  padding: 0 1rem 0 0;
+  min-height: 116px;
+}
+
+.recipe-item-title:has(.product-thumb.has-photo) {
+  align-self: stretch;
+  align-items: stretch;
+  gap: 0.9rem;
+}
+
+.recipe-item-title:has(.product-thumb.has-photo) .product-thumb {
+  width: 92px;
+  height: auto;
+  border-radius: 0;
+  padding: 4px 6px;
+}
+
+.recipe-item-title:has(.product-thumb.has-photo) .product-name,
+.recipe-item-title:has(.product-thumb.has-photo) .product-select-checkbox {
+  align-self: center;
+}
+
+.product-photo-large {
+  cursor: zoom-in;
+}
+
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 8, 10, 0.88);
+  cursor: zoom-out;
+}
+
+.photo-lightbox img {
+  max-width: 94vw;
+  max-height: 92vh;
+  object-fit: contain;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 55%, var(--border-strong), var(--bg-elevated) 75%);
+}
+
+.photo-lightbox-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
 .product-thumb i {
   font-size: 1.1rem;
   color: var(--text-muted);
@@ -4579,7 +4646,7 @@ input[type="datetime-local"] {
 .catalog-cell-input-long {
   position: relative;
   z-index: 4;
-  min-height: 96px;
+  min-height: 116px;
   white-space: pre-wrap;
   resize: vertical;
   box-shadow: var(--shadow-pop);

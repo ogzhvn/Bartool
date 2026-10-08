@@ -12,7 +12,7 @@ import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 import { getLocale, onLanguageChanged, t } from "./i18n.js";
-import { uploadProductPhoto, deleteProductPhoto, resolveImageUrl } from "./photos.js";
+import { uploadProductPhoto, deleteProductPhoto, resolveImageUrl, openPhotoLightbox } from "./photos.js";
 
 // Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
 // Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
@@ -633,7 +633,7 @@ function renderProductItem(product) {
       <span class="recipe-item-title">
         ${bar.selecting ? `<input type="checkbox" class="product-select-checkbox" ${bar.selected.has(product.name) ? "checked" : ""} />` : ""}
         <span class="product-thumb"><i class="ph ph-wine" aria-hidden="true"></i></span>
-        ${escapeHtml(product.name)}
+        <span class="product-name">${escapeHtml(product.name)}</span>
       </span>
       <button type="button" class="fav-btn${isFavorite("product", product.name) ? " is-fav" : ""}" title="${t("ui.favorit")}" aria-label="${t("ui.als_favorit_merken")}"><i class="${isFavorite("product", product.name) ? "ph-fill" : "ph"} ph-star" aria-hidden="true"></i></button>
     </summary>
@@ -670,11 +670,13 @@ function renderProductItem(product) {
         thumbImg.alt = "";
         thumbImg.loading = "lazy";
         thumbWrap.appendChild(thumbImg);
+        thumbWrap.classList.add("has-photo");
       }
       const largeImg = item.querySelector(".product-photo-large");
       if (largeImg) {
         largeImg.src = url;
         largeImg.hidden = false;
+        largeImg.addEventListener("click", () => openPhotoLightbox(url, product.name));
       }
     });
   }
