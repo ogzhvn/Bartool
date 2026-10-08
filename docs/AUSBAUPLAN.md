@@ -370,7 +370,7 @@ erfinden.
 
 ---
 
-### Runde 10 – Datentrennung je Abteilung im Betrieb (geplant am 08.10.2026)
+### Runde 10 – Datentrennung je Abteilung im Betrieb (geplant am 08.10.2026, erledigt am 08.10.2026)
 
 Mise en Place, Übergabe, Checklisten, Inventur, Schwund und Events sollen auch für WGR und
 Tellerwerk nutzbar werden, ohne dass die Abteilungen einander in die Daten schreiben. Beim Anlegen
@@ -418,10 +418,10 @@ und `tellerwerk` in der Modul-Matrix erst nach Paket 69 einschalten, und nur nac
 |---|---|---|---|
 | 64 | Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand |
 | 65 | Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren | erledigt (08.10.2026) | Opus 5.5, mittlerer Denkaufwand (sechs Datenarten + sicherheitsrelevanter Cache, Grenzfall → teureres Modell) |
-| 66 | Übergabe + Mise en Place | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 67 | Checklisten | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 68 | Inventur, Schwund, Events, „Was kann ich bauen?", Auswertung | offen | Sonnet 5.5, mittlerer Denkaufwand |
-| 69 | Admin: Standard-Freigaben, Module für WGR/Tellerwerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 66 | Übergabe + Mise en Place | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
+| 67 | Checklisten | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
+| 68 | Inventur, Schwund, Events, „Was kann ich bauen?", Auswertung | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
+| 69 | Admin: Standard-Freigaben, Module für WGR/Tellerwerk | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 
 ---
 
@@ -3837,9 +3837,30 @@ i18n, `sw.js`.
 3. Runde 10 im Ausbauplan auf „erledigt" setzen.
 
 **Abnahme**
-- [ ] Standard „Übergabe: Bar → auch WGR" gesetzt → neues Übergabeformular der Bar hat WGR
+- [x] Standard „Übergabe: Bar → auch WGR" gesetzt → neues Übergabeformular der Bar hat WGR
       vorausgewählt, abwählbar.
-- [ ] Ohne `roles.manage` kein Schreiben in `department_defaults` (RLS).
+- [x] Ohne `roles.manage` kein Schreiben in `department_defaults` (RLS).
+
+**Umsetzung (08.10.2026)**
+- Abschnitt „Standard-Freigabe" in jeder Abteilungskarte: je Betriebsmodul mit Picker
+  (`preparations`, `events`, `shift-log`, `checklists`, `inventory`, `losses`; „Was kann ich bauen?"
+  legt nichts an) Chips der übrigen Abteilungen. Gespeichert mit dem Karten-„Speichern": `upsert`
+  bei Auswahl, Zeile löschen bei leerer Auswahl, nur geänderte Module. Danach lädt
+  `reloadDepartments()` (neu in `storage.js`) den Picker-Cache sofort, ohne auf Realtime zu warten.
+- Modul-Matrix (Nutzer-Entscheidung): `wgr` und `tellerwerk` haben jetzt Mise en Place, Events,
+  Übergabe, Checklisten, Inventur, Schwund; „Was kann ich bauen?" bleibt aus.
+- Standard-Freigaben bleiben leer (Testvorgabe über die UI wieder entfernt) – Pflege durch den Admin.
+- **Befund aus 66/68 behoben:** `preparations`, `events`, `inventory_counts` per Migration in
+  `supabase_realtime` (+ `schema.sql`). `savePreparation`, `saveEvent`, `saveLoss` und
+  `saveInventoryCount` nutzen beim Bearbeiten (id im Cache) `update` statt `upsert`; trifft das keine
+  Zeile, gibt es eine Fehlermeldung und die Liste lädt neu. Übergaben und Checklisten unverändert.
+- Playwright: Admin 1366 px und 390 px (kein Überlauf); Bar-Formular „Neue Übergabe" mit WGR
+  vorausgewählt und abwählbar, nach Entfernen nur Bar. `wgr`: Navigation zeigt die sechs Module,
+  `buildable` nicht; `insert` in `department_defaults` → RLS-Fehler, `update`/`delete` → 0 Zeilen.
+  Veralteter Cache: Speichern eines gelöschten Ansatzes → Fehlermeldung, keine Zeile neu angelegt.
+- Nicht geprüft: Live-Ankunft der Realtime-Ereignisse der drei Tabellen – der WebSocket-Handshake
+  scheitert in der Testumgebung (HTTP 500 über den Proxy). Im Echtbetrieb auf zwei Geräten prüfen.
+- sw.js: `bartool-v116` (Befund-Fix, eigener Commit), `bartool-v117`.
 
 **Commit:** `Admin: Standard-Freigaben je Abteilung`
 

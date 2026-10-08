@@ -273,6 +273,12 @@ export async function initDepartmentSync() {
     .subscribe();
 }
 
+// Nach Änderungen im Adminbereich sofort neu laden, nicht erst auf das
+// Realtime-Ereignis warten.
+export function reloadDepartments() {
+  return refreshDepartments();
+}
+
 export function loadDepartments() {
   return departmentsCache;
 }

@@ -1414,6 +1414,8 @@ export const de = {
   "ui.abteilungsschluessel_vergeben": "Dieser Schlüssel ist bereits vergeben.",
   "ui.abteilung_konnte_nicht_angelegt_werden": "Abteilung konnte nicht angelegt werden:",
   "ui.eintrag_nicht_mehr_vorhanden": "Der Eintrag ist nicht mehr vorhanden oder nicht mehr freigegeben. Die Liste wurde neu geladen.",
+  "ui.standard_freigabe": "Standard-Freigabe",
+  "ui.standard_freigabe_hinweis": "Beim Anlegen in diesen Modulen sind die gewählten Abteilungen zusätzlich vorausgewählt und lassen sich im Formular abwählen.",
   "ui.abteilung_angelegt": "angelegt",
   "ui.abteilung_konnte_nicht_geaendert_werden": "Abteilung konnte nicht geändert werden: ",
   "ui.noch_ein_tag": "noch 1 Tag",

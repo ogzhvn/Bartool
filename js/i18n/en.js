@@ -1413,6 +1413,8 @@ export const en = {
   "ui.abteilungsschluessel_vergeben": "This key is already taken.",
   "ui.abteilung_konnte_nicht_angelegt_werden": "Department could not be created:",
   "ui.eintrag_nicht_mehr_vorhanden": "This entry no longer exists or is no longer shared with you. The list has been reloaded.",
+  "ui.standard_freigabe": "Default sharing",
+  "ui.standard_freigabe_hinweis": "When creating entries in these modules, the selected departments are preselected in addition and can be deselected in the form.",
   "ui.abteilung_angelegt": "created",
   "ui.abteilung_konnte_nicht_geaendert_werden": "Department could not be changed: ",
   "ui.noch_ein_tag": "1 day left",
