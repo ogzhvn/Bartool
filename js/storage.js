@@ -1261,8 +1261,12 @@ export async function setQuizQuestionsActive(ids, active) {
   if (!ids.length) return;
   if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
-  const { error } = await supabase.from("quiz_questions").update({ active }).in("id", ids);
-  if (error) throw error;
+  // Die IDs stehen in der URL (`id=in.(…)`): ab ein paar Hundert reißt die
+  // Längengrenze, deshalb in Blöcken.
+  for (let i = 0; i < ids.length; i += 100) {
+    const { error } = await supabase.from("quiz_questions").update({ active }).in("id", ids.slice(i, i + 100));
+    if (error) throw error;
+  }
 }
 
 export async function reloadQuizQuestions() {
