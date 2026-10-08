@@ -83,6 +83,185 @@ function offlineWriteError() {
 }
 
 // ---------------------------------------------------------------------
+// Betriebsdaten je Abteilung (Paket 64/65)
+//
+// Ansätze, Events, Übergaben, Schwund, Checklistenvorlagen und
+// Inventurzählungen tragen department (Eigentümer) und visible_to (sichtbar
+// für). Durchgesetzt wird beides in der Datenbank: der Trigger
+// private.betrieb_dept_guard setzt die Eigentümer-Abteilung und ergänzt sie
+// in visible_to, RLS liefert nur Freigegebenes aus.
+//
+// Gesendet wird deshalb nur, was sich wirklich ändert:
+//   - department nur beim Anlegen und nur, wenn der Aufrufer eine angibt
+//     (wirkt nur mit betrieb.alle_abteilungen). Beim upsert eines
+//     bestehenden Eintrags würde der Insert-Zweig des Triggers sonst die
+//     eigene Abteilung einsetzen und der Update-Zweig das als Wechsel des
+//     Eigentümers abweisen.
+//   - visible_to nur, wenn die Menge vom zuletzt geladenen Stand abweicht.
+//     Module reichen beim Abhaken oder Statuswechsel den ganzen Eintrag
+//     durch; ohne diesen Vergleich bekäme eine Abteilung, die nur mitsehen
+//     darf, einen Fehler, sobald der Eigentümer die Freigabe inzwischen
+//     geändert hat.
+// ---------------------------------------------------------------------
+
+function fromDepartmentColumns(row) {
+  return {
+    department: row.department ?? null,
+    visibleTo: Array.isArray(row.visible_to) ? row.visible_to : [],
+  };
+}
+
+function sameKeys(a, b) {
+  const links = new Set(a ?? []);
+  const rechts = new Set(b ?? []);
+  return links.size === rechts.size && [...links].every((key) => rechts.has(key));
+}
+
+function toDepartmentColumns(item, cache) {
+  const vorher = item.id ? cache.find((eintrag) => eintrag.id === item.id) : null;
+  const columns = {};
+  if (!vorher && item.department) columns.department = item.department;
+  if (Array.isArray(item.visibleTo) && !(vorher && sameKeys(vorher.visibleTo, item.visibleTo))) {
+    columns.visible_to = [...new Set(item.visibleTo)];
+  }
+  return columns;
+}
+
+// Offline-Puffer der Betriebsdaten gehört genau einem Konto. Auf einem
+// geteilten Tablet sähe das nächste Konto sonst offline die Einträge des
+// vorigen – an RLS vorbei. Rezepte, Produkte, Quiz und Wissen sind für alle
+// gleich und bleiben stehen; die Nutzereinstellungen sind ohnehin je Konto
+// abgelegt.
+const CACHE_OWNER_KEY = "bartool:cache-owner";
+export const INVENTORY_DRAFT_PREFIX = "bartool:inventory-draft:";
+const OPERATIONS_CACHE_KEYS = [
+  "bartool:preparations",
+  "bartool:events",
+  "bartool:shift-logs",
+  "bartool:losses",
+  "bartool:checklist-templates",
+  "bartool:checklist-runs",
+  "bartool:inventory-counts",
+];
+
+export function clearOperationsCache() {
+  try {
+    OPERATIONS_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
+    const entwuerfe = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(INVENTORY_DRAFT_PREFIX)) entwuerfe.push(key);
+    }
+    entwuerfe.forEach((key) => localStorage.removeItem(key));
+    localStorage.removeItem(CACHE_OWNER_KEY);
+  } catch {
+    // Kein Zugriff auf localStorage heißt auch: nichts gepuffert.
+  }
+}
+
+// Muss vor den init*Sync()-Aufrufen laufen, die zuerst den Puffer rendern.
+// Ein Puffer ohne Eigentümer (Stand vor Paket 65) gilt als fremd.
+export function claimOperationsCache(userId) {
+  try {
+    if (localStorage.getItem(CACHE_OWNER_KEY) === userId) return;
+    clearOperationsCache();
+    localStorage.setItem(CACHE_OWNER_KEY, userId);
+  } catch {
+    // siehe clearOperationsCache()
+  }
+}
+
+export function operationsCacheOwner() {
+  try {
+    return localStorage.getItem(CACHE_OWNER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Abteilungen und Standard-Freigaben (Tabellen "departments" und
+// "department_defaults")
+//
+// Beide sind klein und für alle angemeldeten Konten lesbar. Gebraucht für
+// die Abteilungsauswahl beim Anlegen (js/departmentPicker.js); die Labels
+// bleiben unübersetzt wie in der Datenbank.
+// ---------------------------------------------------------------------
+
+const DEPARTMENTS_UPDATED_EVENT = "bartool:departments-updated";
+const DEPARTMENTS_CACHE_KEY = "bartool:departments";
+const DEPARTMENT_DEFAULTS_CACHE_KEY = "bartool:department-defaults";
+
+let departmentsCache = [];
+let departmentDefaultsCache = [];
+let departmentsChannel = null;
+
+async function refreshDepartments() {
+  const supabase = getSupabaseClient();
+  let antworten = null;
+  try {
+    antworten = await Promise.all([
+      supabase.from("departments").select("key, label, sort").order("sort", { ascending: true }),
+      supabase.from("department_defaults").select("module_key, department_key, visible_to"),
+    ]);
+  } catch {
+    antworten = null;
+  }
+  const [abteilungen, vorgaben] = antworten ?? [{ error: true }, { error: true }];
+  if (!abteilungen.error) {
+    departmentsCache = (abteilungen.data ?? []).map((row) => ({
+      key: row.key,
+      label: row.label ?? row.key,
+      sort: row.sort ?? 0,
+    }));
+    writeCache(DEPARTMENTS_CACHE_KEY, departmentsCache);
+  } else {
+    const buffered = readCache(DEPARTMENTS_CACHE_KEY);
+    if (buffered) departmentsCache = buffered;
+  }
+  if (!vorgaben.error) {
+    departmentDefaultsCache = (vorgaben.data ?? []).map((row) => ({
+      moduleKey: row.module_key,
+      departmentKey: row.department_key,
+      visibleTo: Array.isArray(row.visible_to) ? row.visible_to : [],
+    }));
+    writeCache(DEPARTMENT_DEFAULTS_CACHE_KEY, departmentDefaultsCache);
+  } else {
+    const buffered = readCache(DEPARTMENT_DEFAULTS_CACHE_KEY);
+    if (buffered) departmentDefaultsCache = buffered;
+  }
+  window.dispatchEvent(new CustomEvent(DEPARTMENTS_UPDATED_EVENT));
+}
+
+export async function initDepartmentSync() {
+  const abteilungen = readCache(DEPARTMENTS_CACHE_KEY);
+  const vorgaben = readCache(DEPARTMENT_DEFAULTS_CACHE_KEY);
+  if (abteilungen) departmentsCache = abteilungen;
+  if (vorgaben) departmentDefaultsCache = vorgaben;
+  if (abteilungen || vorgaben) window.dispatchEvent(new CustomEvent(DEPARTMENTS_UPDATED_EVENT));
+  await refreshDepartments();
+  const supabase = getSupabaseClient();
+  if (departmentsChannel) supabase.removeChannel(departmentsChannel);
+  departmentsChannel = supabase
+    .channel("public:departments")
+    .on("postgres_changes", { event: "*", schema: "public", table: "departments" }, refreshDepartments)
+    .on("postgres_changes", { event: "*", schema: "public", table: "department_defaults" }, refreshDepartments)
+    .subscribe();
+}
+
+export function loadDepartments() {
+  return departmentsCache;
+}
+
+export function loadDepartmentDefaults() {
+  return departmentDefaultsCache;
+}
+
+export function onDepartmentsChanged(callback) {
+  window.addEventListener(DEPARTMENTS_UPDATED_EVENT, callback);
+}
+
+// ---------------------------------------------------------------------
 // Rezepte (Tabelle "recipes" in Supabase)
 // ---------------------------------------------------------------------
 
@@ -412,7 +591,7 @@ function toPreparationRecord(prep) {
   };
   if (prep.id) record.id = prep.id;
   if (prep.madeBy) record.made_by = prep.madeBy;
-  return record;
+  return { ...record, ...toDepartmentColumns(prep, preparationsCache) };
 }
 
 function fromPreparationRow(row) {
@@ -429,6 +608,7 @@ function fromPreparationRow(row) {
     expiresAt: row.expires_at ?? null,
     status: row.status ?? "aktiv",
     notes: row.notes ?? "",
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -514,7 +694,7 @@ function toEventRecord(ev) {
   };
   if (ev.id) record.id = ev.id;
   if (ev.createdBy) record.created_by = ev.createdBy;
-  return record;
+  return { ...record, ...toDepartmentColumns(ev, eventsCache) };
 }
 
 function fromEventRow(row) {
@@ -531,6 +711,7 @@ function fromEventRow(row) {
     notes: row.notes ?? "",
     createdBy: row.created_by ?? null,
     createdAt: row.created_at ?? null,
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -610,7 +791,7 @@ function toShiftLogRecord(log) {
   };
   if (log.id) record.id = log.id;
   if (log.createdBy) record.created_by = log.createdBy;
-  return record;
+  return { ...record, ...toDepartmentColumns(log, shiftLogsCache) };
 }
 
 function fromShiftLogRow(row) {
@@ -623,6 +804,7 @@ function fromShiftLogRow(row) {
     createdBy: row.created_by ?? null,
     createdAt: row.created_at ?? null,
     updatedAt: row.updated_at ?? null,
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -710,7 +892,7 @@ function toLossRecord(loss) {
   };
   if (loss.id) record.id = loss.id;
   if (loss.recordedBy) record.recorded_by = loss.recordedBy;
-  return record;
+  return { ...record, ...toDepartmentColumns(loss, lossesCache) };
 }
 
 function fromLossRow(row) {
@@ -724,6 +906,7 @@ function fromLossRow(row) {
     recordedBy: row.recorded_by ?? null,
     occurredAt: row.occurred_at ?? null,
     createdAt: row.created_at ?? null,
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -810,7 +993,7 @@ function toChecklistTemplateRecord(template) {
     active: template.active !== false,
   };
   if (template.id) record.id = template.id;
-  return record;
+  return { ...record, ...toDepartmentColumns(template, checklistTemplatesCache) };
 }
 
 function fromChecklistTemplateRow(row) {
@@ -822,6 +1005,7 @@ function fromChecklistTemplateRow(row) {
     items: Array.isArray(row.items) ? row.items : [],
     active: row.active !== false,
     updatedAt: row.updated_at ?? null,
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -1005,6 +1189,7 @@ function fromCountRow(row) {
     createdBy: row.created_by ?? null,
     note: row.note ?? "",
     createdAt: row.created_at,
+    ...fromDepartmentColumns(row),
   };
 }
 
@@ -1068,6 +1253,7 @@ export async function saveInventoryCount(count) {
   };
   if (count.id) record.id = count.id;
   if (count.createdBy) record.created_by = count.createdBy;
+  Object.assign(record, toDepartmentColumns(count, countsCache));
   const { data, error } = await supabase.from("inventory_counts").upsert(record).select().single();
   if (error) throw error;
   await refreshInventoryCounts();

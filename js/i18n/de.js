@@ -1396,6 +1396,7 @@ export const de = {
   "ui.abteilungen": "Abteilungen",
   "ui.abteilung_anlegen": "Abteilung anlegen",
   "ui.alle_abteilungen": "Alle Abteilungen",
+  "ui.sichtbar_fuer": "Sichtbar für",
   "ui.je_abteilung_festlegen_welche_module_sichtbar_sind": "Je Abteilung festlegen, welche Module sichtbar sind",
   "ui.je_abteilung_festlegen_welche_module_in_der_navigation_stehen": "Je Abteilung festlegen, welche Module in der Navigation stehen. Das ist nur die Ansicht, kein Zugriffsschutz; der Administrator sieht immer alles.",
   "ui.keine_abteilungen_gefunden": "Keine Abteilungen gefunden.",

@@ -417,7 +417,7 @@ und `tellerwerk` in der Modul-Matrix erst nach Paket 69 einschalten, und nur nac
 | # | Paket | Status | Modell |
 |---|---|---|---|
 | 64 | Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand |
-| 65 | Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren | offen | Opus 5.5, mittlerer Denkaufwand (sechs Datenarten + sicherheitsrelevanter Cache, Grenzfall → teureres Modell) |
+| 65 | Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren | erledigt (08.10.2026) | Opus 5.5, mittlerer Denkaufwand (sechs Datenarten + sicherheitsrelevanter Cache, Grenzfall → teureres Modell) |
 | 66 | Übergabe + Mise en Place | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 67 | Checklisten | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 68 | Inventur, Schwund, Events, „Was kann ich bauen?", Auswertung | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -3665,10 +3665,31 @@ gemeinsamen Auswahl-Baustein, und kein Konto sieht offline die Betriebsdaten ein
 6. Service-Worker-Cache hochzählen.
 
 **Abnahme**
-- [ ] Bar-Konto: alle Betriebsmodule laden und speichern wie vorher.
-- [ ] Abmelden, als `claude-test-wgr` anmelden, Netz aus (Playwright offline): keine Bar-Einträge
+- [x] Bar-Konto: alle Betriebsmodule laden und speichern wie vorher.
+- [x] Abmelden, als `claude-test-wgr` anmelden, Netz aus (Playwright offline): keine Bar-Einträge
       im Cache bzw. in der Oberfläche.
-- [ ] Realtime: Bar legt eine Übergabe an, das parallel angemeldete `wgr`-Konto bekommt sie nicht.
+- [x] Realtime: Bar legt eine Übergabe an, das parallel angemeldete `wgr`-Konto bekommt sie nicht.
+
+**Umsetzung (08.10.2026) – Abweichungen und Ergebnisse**
+- `fromRow` liefert `department`/`visibleTo`. Gesendet wird `department` nur beim Anlegen (und nur
+  mit Angabe), `visible_to` nur, wenn die Menge vom Cache-Stand abweicht. Grund: `upsert` ist
+  `insert … on conflict do update`; der Insert-Zweig des Triggers setzt bei Konten ohne
+  `betrieb.alle_abteilungen` die eigene Abteilung, ein mitgeschicktes `department` würde damit im
+  Update als Eigentümerwechsel abgewiesen. Module reichen beim Abhaken den ganzen Eintrag durch –
+  das bleibt so unproblematisch.
+- `inventory-counts` ist zusätzlich zu den sechs genannten Schlüsseln im Betriebs-Cache (die
+  Tabelle hat seit Paket 64 ebenfalls `department`). Präfix der Inventur-Entwürfe liegt jetzt als
+  `INVENTORY_DRAFT_PREFIX` in `storage.js`.
+- Geleert wird in `signOut()` (vor dem Netzaufruf), bei jedem Sitzungsende in `main.js` vor dem
+  Reload (abgelaufen, anderer Tab) und beim Start, wenn `bartool:cache-owner` fehlt oder fremd ist.
+  Meldet sich in derselben Seite ein anderes Konto an (zweiter Tab), wird geleert und neu geladen.
+- `initDepartmentSync()` / `loadDepartments()` / `loadDepartmentDefaults()` / `onDepartmentsChanged()`
+  laden `departments` + `department_defaults` mit Offline-Puffer (nicht kontobezogen).
+- `departmentPicker.js` ist noch nirgends eingebunden (Pakete 66–68); per Playwright getestet:
+  Bar → `[bar]` gesperrt, WGR → `[wgr]` gesperrt, Badge „Bar · Wintergartenrestaurant".
+- Realtime: INSERT einer Bar-Übergabe kam beim `wgr`-Konto nicht an (0 Frames), dieselbe mit
+  `{bar,wgr}` schon. DELETE-Ereignisse nicht gesondert geprüft (tragen nur die id; der Client lädt
+  danach ohnehin per RLS neu).
 
 **Commit:** `Abteilungen: Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren`
 

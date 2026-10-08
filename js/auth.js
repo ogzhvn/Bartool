@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "./supabaseClient.js";
 import { functionErrorMessage } from "./utils.js";
 import { ALWAYS_VISIBLE_MODULES } from "./modules.js";
+import { clearOperationsCache } from "./storage.js";
 
 let currentSession = null;
 let currentProfile = null;
@@ -107,7 +108,10 @@ export async function signIn(username, password) {
   });
 }
 
+// Der Offline-Puffer der Betriebsdaten geht vor dem Abmelden weg (Paket 65):
+// schlägt signOut() ohne Netz fehl, ist er trotzdem leer.
 export async function signOut() {
+  clearOperationsCache();
   const supabase = getSupabaseClient();
   return supabase.auth.signOut();
 }
@@ -193,6 +197,18 @@ export function canSee(moduleKey) {
 
 export function myDepartment() {
   return currentProfile?.department ?? null;
+}
+
+// Abteilungen des Kontos als Liste – heute genau eine, die Datenbank prüft
+// aber schon auf Überlappung (private.my_departments(), Paket 64).
+export function myDepartments() {
+  const department = myDepartment();
+  return department ? [department] : [];
+}
+
+// Sieht Betriebsdaten aller Abteilungen (Recht betrieb.alle_abteilungen).
+export function seesAllDepartments() {
+  return can("betrieb.alle_abteilungen");
 }
 
 // Bleibt erhalten und bedeutet jetzt "oberste Ebene" statt "Rolle heißt

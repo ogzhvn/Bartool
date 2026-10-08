@@ -36,6 +36,9 @@ import {
   initQuizQuestionSync,
   initKnowledgeSync,
   initUserPreferencesSync,
+  initDepartmentSync,
+  claimOperationsCache,
+  clearOperationsCache,
 } from "./storage.js";
 import { initPriceHistorySync } from "./priceHistory.js";
 import {
@@ -79,6 +82,8 @@ const passwordModalError = document.getElementById("password-modal-error");
 const passwordModalCancelBtn = document.getElementById("password-modal-cancel");
 
 let appInitialized = false;
+// Konto, mit dem die Caches dieser Seite gefüllt wurden (Paket 65).
+let bootUserId = null;
 let currentAuthState = { session: null, profile: null };
 let lastActivityAt = Date.now();
 let sessionTimeoutIntervalId = null;
@@ -195,6 +200,7 @@ async function bootstrapAppOnce() {
     initKnowledgeSync(),
     initUserPreferencesSync(),
     initPriceHistorySync(),
+    initDepartmentSync(),
   ]);
   // Muss vor initTabs() stehen: initTabs() schaltet direkt auf den Start-Tab,
   // und ist das per Deep-Link ein Admin-Unterpunkt, soll er dabei schon laden.
@@ -242,8 +248,11 @@ async function handleAuthState({ session, profile }) {
   currentAuthState = { session, profile };
   if (!session) {
     // Nach einem Logout wird neu geladen statt den App-Zustand (Caches,
-    // offene Formulare) manuell zurückzusetzen.
+    // offene Formulare) manuell zurückzusetzen. Der Offline-Puffer der
+    // Betriebsdaten geht vorher weg – auch wenn die Sitzung nicht über den
+    // Abmelden-Knopf endete (abgelaufen, in einem anderen Tab abgemeldet).
     if (appInitialized) {
+      clearOperationsCache();
       location.reload();
       return;
     }
@@ -252,6 +261,14 @@ async function handleAuthState({ session, profile }) {
     appShell.hidden = true;
     headerUser.hidden = true;
     navToggle.hidden = true;
+    return;
+  }
+
+  // Anderes Konto in derselben Seite (z. B. in einem zweiten Tab angemeldet):
+  // Speicher-Caches gehören noch dem alten Konto, also leeren und neu laden.
+  if (appInitialized && session.user.id !== bootUserId) {
+    clearOperationsCache();
+    location.reload();
     return;
   }
 
@@ -275,6 +292,12 @@ async function handleAuthState({ session, profile }) {
   renderHeaderUser();
   applyProfileLanguage(profile);
   applyRoleVisibility();
+  // Vor den Syncs: die rendern zuerst den Offline-Puffer, und der darf nur
+  // vom selben Konto stammen.
+  if (!appInitialized) {
+    claimOperationsCache(session.user.id);
+    bootUserId = session.user.id;
+  }
   await bootstrapAppOnce();
 }
 

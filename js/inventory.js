@@ -6,6 +6,7 @@ import {
   loadInventoryItems,
   saveInventoryItems,
   isOffline,
+  INVENTORY_DRAFT_PREFIX,
 } from "./storage.js";
 import { getAllProducts } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
@@ -57,8 +58,10 @@ let stand = {};
 // Namen mit noch nicht hochgeladenen Änderungen.
 let offen = new Set();
 
+// Präfix liegt in storage.js, weil clearOperationsCache() die Entwürfe beim
+// Abmelden und beim Kontowechsel mit wegräumt.
 function draftKey(id) {
-  return `bartool:inventory-draft:${id}`;
+  return `${INVENTORY_DRAFT_PREFIX}${id}`;
 }
 
 function readDraft(id) {
