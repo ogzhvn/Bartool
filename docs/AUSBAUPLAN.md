@@ -4154,13 +4154,24 @@ aktuelle, gedruckte Matrix.
 4. Zahlen/Datum über `formatDate` (Regel 11), Neu-Rendern bei Sprachwechsel.
 
 **Abnahme**
-- [ ] Drei Testgerichte: A ungeprüft, B geprüft mit Spuren Schalenfrucht, C geprüft mit Milch.
+- [x] Drei Testgerichte: A ungeprüft, B geprüft mit Spuren Schalenfrucht, C geprüft mit Milch.
       Filter „Milch" → B passt, C nicht, A nie. Filter „Schalenfrüchte" → C passt, B unter „nur
       Spuren", A nie. Testdaten danach entfernen.
-- [ ] Druckvorschau A4 quer lesbar, enthält das ungeprüfte Gericht nicht, Stand-Zeile stimmt.
-- [ ] 390 px: Matrix im eigenen Container scrollbar, Seite ohne Querscroll; 1366 px ohne Scroll bei
+      _(✓ 08.10.2026: Browser, Konto `claude-test`, EN-UI. Milch → nur B unter „Passend“, C ausgeschlossen, A als „1 dish unchecked“. Nüsse → C passend, B unter „Traces only“, A nie. Testgerichte per SQL angelegt (Trigger braucht `auth.uid()`, daher `set_config` mit JWT-Claims), per UI gelöscht – SQL-`delete` hängt, siehe CLAUDE.md)_
+- [x] Druckvorschau A4 quer lesbar, enthält das ungeprüfte Gericht nicht, Stand-Zeile stimmt.
+      _(✓ Druckinhalt geprüft (A nicht enthalten, Stand = ältester Vermerk, Legende, Hinweis); `@page { size: A4 landscape }` wird temporär gesetzt. Echte Druckvorschau nicht gesehen – `window.print` im Test ersetzt)_
+- [x] 390 px: Matrix im eigenen Container scrollbar, Seite ohne Querscroll; 1366 px ohne Scroll bei
       14 Spalten.
-- [ ] EN-Oberfläche: Spaltenköpfe englisch, Gerichtnamen deutsch.
+      _(✓ 390 px: Seite 390/390, Matrix scrollt im eigenen Container. 1366 px: Tabelle 1006/1006, kein Scroll; Matrix-Ansicht hebt dafür `max-width` von `main` auf, Muster wie bei den Edit-Views)_
+- [x] EN-Oberfläche: Spaltenköpfe englisch, Gerichtnamen deutsch.
+      _(✓ EN: Spaltenköpfe englisch, Gerichtnamen deutsch)_
+
+**Umsetzungsnotizen (08.10.2026)**
+- `js/dishMatrix.js` (Matrix, Gast-Filter, Auswertung), Umschalter Liste | Matrix in `js/dishes.js`; Matrix zeigt nur aktive Gerichte, respektiert Abteilung/Kategorie/Suche.
+- Ungeprüft: Zeile mit „ungeprüft – Küche fragen“ über alle Spalten; im Filter nur Zahl. Zelle: Arten als Text, „●“ ohne Art, Spuren kursiv.
+- Druck `printDishMatrix()` in `js/printView.js`: nur geprüfte, Zusatzstoffe als § 5 LMZDV-Nummer mit Legende der verwendeten.
+- Spaltenköpfe brechen mitten im Wort bei schmalen Spalten (z. B. „Crustac-eans“); rein kosmetisch.
+- `sw.js`: Cache `bartool-v120`, `js/dishMatrix.js` im PRECACHE.
 
 **Commit:** `Gerichte: Allergenmatrix mit Gast-Filter und Druck`
 

@@ -305,3 +305,61 @@ export function printChecklistRuns(laeufe, titel = t("ui.checklisten_nachweis"))
 
   printBlocks(laeufe.length === 1 ? laeufe[0].titel : titel, bloecke);
 }
+
+// ---------------------------------------------------------------------
+// Allergenmatrix (Paket 72)
+//
+// Nur geprüfte Gerichte, A4 quer. Der Aufrufer (js/dishMatrix.js) liefert die
+// Zeilen fertig aufbereitet; Gerichtnamen bleiben deutsch, Spaltenköpfe und
+// Legende kommen in der Oberflächensprache. Die Seitenausrichtung setzt ein
+// temporäres @page, weil sie sich nicht per Klasse umschalten lässt.
+// ---------------------------------------------------------------------
+
+export function printDishMatrix({ scopeLabel, printedAt, stand, groups, rows, legend }) {
+  if (!rows || rows.length === 0) return;
+  const codeOf = new Map(legend.map((l) => [l.key, l.code]));
+
+  const head = [t("ui.gerichte_matrix_gericht"), ...groups, t("ui.gerichte_zusatzstoffe")]
+    .map((h) => `<th>${escapeHtml(h)}</th>`)
+    .join("");
+  const body = rows
+    .map((row) => {
+      const cells = row.cells
+        .map((cell) => {
+          const contains = cell.contains.length ? `<strong>${escapeHtml(cell.contains.join(", "))}</strong>` : "";
+          const traces = cell.traces.length
+            ? `<em>${escapeHtml(t("ui.gerichte_matrix_spuren"))} ${escapeHtml(cell.traces.join(", "))}</em>`
+            : "";
+          return `<td>${contains}${contains && traces ? "<br>" : ""}${traces}</td>`;
+        })
+        .join("");
+      const additives = row.additives.map((key) => escapeHtml(codeOf.get(key) ?? "")).join(", ");
+      return `<tr><th>${escapeHtml(row.name)}</th>${cells}<td>${additives}</td></tr>`;
+    })
+    .join("");
+  const legendHtml = legend.length
+    ? `<p class="meta"><strong>${escapeHtml(t("ui.gerichte_zusatzstoffe"))}:</strong> ${legend
+        .map((l) => `${escapeHtml(l.code)} = ${escapeHtml(l.label)}`)
+        .join("; ")}</p>`
+    : "";
+
+  const html = `
+    <p class="meta"><strong>${escapeHtml(t("ui.abteilung"))}:</strong> ${escapeHtml(scopeLabel)} · ${escapeHtml(
+      t("ui.gerichte_matrix_gedruckt", { date: printedAt })
+    )}</p>
+    <table class="dish-matrix-print"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+    ${legendHtml}
+    <p class="meta">${escapeHtml(t("ui.gerichte_matrix_fuss", { date: stand }))}</p>
+    <p class="meta">${escapeHtml(t("ui.gerichte_matrix_fuss_hinweis"))}</p>`;
+
+  const pageStyle = document.createElement("style");
+  pageStyle.textContent = "@page { size: A4 landscape; margin: 10mm; }";
+  document.head.appendChild(pageStyle);
+  printBlocks(t("ui.gerichte_matrix_titel"), html);
+  const removeStyle = () => {
+    pageStyle.remove();
+    window.removeEventListener("afterprint", removeStyle);
+  };
+  window.addEventListener("afterprint", removeStyle);
+  setTimeout(removeStyle, 3000);
+}

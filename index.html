@@ -1125,6 +1125,10 @@
           <input type="text" id="dishes-search" placeholder="Gericht, Kategorie oder Komponente suchen…" data-i18n-placeholder="ui.gerichte_suche_placeholder" data-i18n-aria-label="ui.gerichte_suche_placeholder" aria-label="Gericht, Kategorie oder Komponente suchen…" autocomplete="off" enterkeyhint="search" />
           <button type="button" id="dishes-new" class="btn-primary btn-icon" data-perm="dishes.write" hidden title="Neues Gericht" aria-label="Neues Gericht" data-i18n-title="ui.gerichte_neu" data-i18n-aria-label="ui.gerichte_neu"><i class="ph ph-plus" aria-hidden="true"></i></button>
         </div>
+        <div class="dish-mode" role="group" data-i18n-aria-label="ui.gerichte_ansicht" aria-label="Ansicht">
+          <button type="button" id="dishes-mode-list" class="subnav-btn active" aria-pressed="true" data-i18n="ui.gerichte_ansicht_liste">Liste</button>
+          <button type="button" id="dishes-mode-matrix" class="subnav-btn" aria-pressed="false" data-i18n="ui.gerichte_ansicht_matrix">Matrix</button>
+        </div>
         <div class="field-row knowledge-filters">
           <label>
             <span data-i18n="ui.abteilung">Abteilung</span>
@@ -1134,12 +1138,23 @@
             <span data-i18n="ui.kategorie">Kategorie</span>
             <select id="dishes-category"></select>
           </label>
-          <label class="knowledge-unread-toggle">
+          <label class="knowledge-unread-toggle" id="dishes-inactive-label">
             <input type="checkbox" id="dishes-inactive" />
             <span data-i18n="ui.gerichte_inaktive">Auch inaktive zeigen</span>
           </label>
         </div>
         <div id="dishes-list" class="knowledge-list"></div>
+        <div id="dishes-matrix-view" hidden>
+          <div class="dish-guest">
+            <p class="hint" data-i18n="ui.gerichte_matrix_gast">Gast verträgt nicht:</p>
+            <div id="dishes-guest-chips" class="dish-guest-chips"></div>
+            <button type="button" id="dishes-guest-clear" class="btn-secondary" hidden data-i18n="ui.gerichte_matrix_zuruecksetzen">Auswahl zurücksetzen</button>
+          </div>
+          <div class="dish-matrix-actions">
+            <button type="button" id="dishes-matrix-print" class="btn-secondary"><i class="ph ph-printer" aria-hidden="true"></i> <span data-i18n="ui.gerichte_matrix_drucken">Matrix drucken (A4 quer)</span></button>
+          </div>
+          <div id="dishes-matrix-result"></div>
+        </div>
       </div>
 
       <article id="dishes-detail" class="knowledge-detail" hidden></article>

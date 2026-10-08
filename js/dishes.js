@@ -4,6 +4,7 @@ import { deleteDish, loadDepartments, loadDishes, onDepartmentsChanged, onDishes
 import { declarationLabel, missingSubtypes } from "./declarations.js";
 import { switchTab } from "./tabs.js";
 import { confirmDiscardDishEditor, initDishEditor, isDishEditorOpen, openDishEditor } from "./dishEditor.js";
+import { initDishMatrix, renderMatrix } from "./dishMatrix.js";
 import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
 
 // Gerichte (Paket 71): Liste, Filter, Detail. Pflege steckt in js/dishEditor.js
@@ -30,6 +31,13 @@ const listEl = document.getElementById("dishes-list");
 const listViewEl = document.getElementById("dishes-list-view");
 const detailEl = document.getElementById("dishes-detail");
 const newBtn = document.getElementById("dishes-new");
+const matrixViewEl = document.getElementById("dishes-matrix-view");
+const modeListBtn = document.getElementById("dishes-mode-list");
+const modeMatrixBtn = document.getElementById("dishes-mode-matrix");
+const inactiveLabelEl = document.getElementById("dishes-inactive-label");
+
+// Ansicht in der Liste: "list" oder "matrix" (Paket 72).
+let viewMode = "list";
 
 let departmentFilter = null;
 let categoryFilter = "";
@@ -78,12 +86,13 @@ function matchesSearch(dish, term) {
 }
 
 function visibleDishes() {
+  const matrix = viewMode === "matrix";
   const term = searchEl.value.trim().toLowerCase();
   const cmp = collator();
   return loadDishes()
     .filter(
       (d) =>
-        (inactiveEl.checked || d.active) &&
+        (matrix ? d.active : inactiveEl.checked || d.active) &&
         matchesDepartment(d) &&
         (!categoryFilter || d.category === categoryFilter) &&
         matchesSearch(d, term)
@@ -180,7 +189,31 @@ function dishRow(dish) {
   return row;
 }
 
+function setMode(mode) {
+  viewMode = mode;
+  const matrix = mode === "matrix";
+  listEl.hidden = matrix;
+  matrixViewEl.hidden = !matrix;
+  // Die Matrix zeigt nur aktive Gerichte.
+  inactiveLabelEl.hidden = matrix;
+  modeListBtn.classList.toggle("active", !matrix);
+  modeMatrixBtn.classList.toggle("active", matrix);
+  modeListBtn.setAttribute("aria-pressed", String(!matrix));
+  modeMatrixBtn.setAttribute("aria-pressed", String(matrix));
+  renderList();
+}
+
+function scopeLabel() {
+  if (departmentFilter === FILTER_ALL || !departmentFilter) return t("ui.gerichte_alle_abteilungen");
+  const key = departmentFilter === FILTER_OWN ? myDepartment() : departmentFilter;
+  return key ? departmentLabel(key) : t("ui.gerichte_alle_abteilungen");
+}
+
 function renderList() {
+  if (viewMode === "matrix") {
+    renderMatrix();
+    return;
+  }
   listEl.textContent = "";
   const dishes = visibleDishes();
   if (dishes.length === 0) {
@@ -386,6 +419,9 @@ export function focusDish(id) {
 
 export function initDishes() {
   if (!listEl) return;
+  initDishMatrix({ getContext: () => ({ dishes: visibleDishes(), scopeLabel: scopeLabel() }) });
+  modeListBtn.addEventListener("click", () => setMode("list"));
+  modeMatrixBtn.addEventListener("click", () => setMode("matrix"));
   searchEl.addEventListener("input", renderList);
   inactiveEl.addEventListener("change", renderList);
   departmentEl.addEventListener("change", () => {
