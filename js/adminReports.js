@@ -8,6 +8,7 @@ import { preisWarnungen } from "./menuCosting.js";
 import { auswertung } from "./ordering.js";
 import { typLabel } from "./preparations.js";
 import { summeJeGrund } from "./losses.js";
+import { fillDepartmentFilter } from "./departmentPicker.js";
 import {
   loadPreparations,
   onPreparationsChanged,
@@ -24,6 +25,8 @@ import {
   onChecklistRunsChanged,
   loadShiftLogs,
   onShiftLogsChanged,
+  loadDepartments,
+  onDepartmentsChanged,
 } from "./storage.js";
 import { aktiveVorlagen, laufStatus } from "./checklists.js";
 import { offenePunkte, shiftLabel } from "./shiftLog.js";
@@ -52,6 +55,8 @@ const gridEl = document.getElementById("report-grid");
 const gridBetriebEl = document.getElementById("report-grid-betrieb");
 const gridDataEl = document.getElementById("report-grid-data");
 const exportBtn = document.getElementById("report-export-btn");
+const lossDeptEl = document.getElementById("report-loss-dept");
+const lossDeptWrapEl = document.getElementById("report-loss-dept-wrap");
 const periodButtons = [...document.querySelectorAll(".report-period-btn")];
 
 const PERIOD_KEY = "bartool:report-period-days";
@@ -351,7 +356,11 @@ function renderAnsaetzeKachel() {
 
 // ── Kachel (d): Verluste nach Grund ──────────────────────────────────────
 function renderVerlusteKachel() {
-  const alle = loadLosses();
+  // Nach Eigentümer-Abteilung gefiltert (department), nicht nach visibleTo:
+  // eine freigegebene Buchung gehört genau einer Abteilung und zählt nur dort.
+  // Ohne Filter ist jede Buchung genau einmal enthalten (eine Zeile je Buchung).
+  const abteilung = lossDeptEl.value;
+  const alle = loadLosses().filter((l) => !abteilung || l.department === abteilung);
   if (alle.length === 0) {
     return tile(t("ui.verluste_nach_grund_b706"), `<p class="empty-note">${t("ui.noch_keine_verluste_erfasst")}</p>`, "losses");
   }
@@ -383,7 +392,25 @@ function renderVerlusteKachel() {
     })
     .join("");
 
-  return tile(`${t("ui.verluste_nach_grund")}${periodDays} ${t("ui.tage")}`, zeilen, "losses");
+  // Ohne Filter: Summe je Eigentümer-Abteilung darunter, damit die Teile die
+  // Gesamtsumme ergeben.
+  let jeAbteilung = "";
+  const abteilungen = loadDepartments();
+  if (!abteilung && abteilungen.length > 1) {
+    const keys = [...new Set([...abteilungen.map((d) => d.key), ...imZeitraum.map((l) => l.department)])];
+    const teile = keys
+      .map((key) => {
+        const eigene = imZeitraum.filter((l) => l.department === key);
+        if (eigene.length === 0) return "";
+        const wert = summeJeGrund(eigene).reduce((s, [, d]) => s + d.wert, 0);
+        const label = abteilungen.find((d) => d.key === key)?.label ?? key ?? "–";
+        return `${escapeHtml(label)}: ${formatEuro(wert)} (${eigene.length})`;
+      })
+      .filter(Boolean);
+    jeAbteilung = `<p class="report-tile-hint">${teile.join(" · ")}</p>`;
+  }
+
+  return tile(`${t("ui.verluste_nach_grund")}${periodDays} ${t("ui.tage")}`, zeilen + jeAbteilung, "losses");
 }
 
 // ── Kachel (e): Preissprünge seit der letzten Kalkulation ───────────────
@@ -924,7 +951,10 @@ function anKlickWeiterleiten(grid) {
 
 export function initAdminReports() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
-  onLanguageChanged(renderAll);
+  onLanguageChanged(() => {
+    fillDepartmentFilter(lossDeptEl, lossDeptWrapEl);
+    renderAll();
+  });
   // Die Hakeliste baut ihr Markup selbst und muss deshalb mit (Regel 11).
   // Ohne geladene Zeilen bleibt sie unangetastet.
   onLanguageChanged(() => {
@@ -934,7 +964,13 @@ export function initAdminReports() {
   if (teamLeaderboardEl) teamLeaderboard = createLeaderboard(teamLeaderboardEl);
 
   setzeAktivenPeriodenButton();
+  fillDepartmentFilter(lossDeptEl, lossDeptWrapEl);
   renderAll();
+  lossDeptEl.addEventListener("change", renderAll);
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(lossDeptEl, lossDeptWrapEl);
+    renderAll();
+  });
 
   periodButtons.forEach((btn) => {
     btn.addEventListener("click", () => {

@@ -1,5 +1,11 @@
 import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
-import { loadLosses, saveLoss, deleteLoss, onLossesChanged } from "./storage.js";
+import { loadLosses, saveLoss, deleteLoss, onLossesChanged, onDepartmentsChanged } from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { getAllProducts, getProduct } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
 import { ingredientCost } from "./costing.js";
@@ -161,6 +167,9 @@ const filterReasonEl = document.getElementById("loss-filter-reason");
 const filterProductEl = document.getElementById("loss-filter-product");
 const summaryEl = document.getElementById("loss-summary");
 const listEl = document.getElementById("loss-list");
+const deptEl = document.getElementById("loss-departments");
+const deptFilterEl = document.getElementById("loss-dept-filter");
+const deptFilterWrapEl = document.getElementById("loss-dept-filter-wrap");
 
 let gewaehlterGrund = GRUENDE[0];
 
@@ -254,6 +263,15 @@ function aktualisiereVorschau() {
   previewEl.textContent = wert === null ? `${t("ui.kein_wert")} ${hinweis}.` : `${t("ui.wert_785b")} ${formatEuro(wert)}`;
 }
 
+// Abteilungsauswahl im Formular. Schwund-Einträge haben kein Bearbeiten; die
+// Auswahl bleibt nach dem Buchen stehen (wie Grund und Datum).
+let deptPicker = null;
+
+function renderDeptPicker(value = null) {
+  deptPicker = createDepartmentPicker({ moduleKey: "losses", value });
+  deptEl.replaceChildren(deptPicker.element);
+}
+
 async function handleSubmit(e) {
   e.preventDefault();
   const name = productEl.value.trim();
@@ -280,6 +298,7 @@ async function handleSubmit(e) {
       reason: gewaehlterGrund,
       note: noteEl.value.trim(),
       recordedBy: nutzer.id,
+      visibleTo: deptPicker ? deptPicker.getValue() : undefined,
       occurredAt: zeitpunktAusDatum(dateEl.value),
     });
     // Grund und Datum bleiben stehen: nach einem Bruch kommt oft der nächste.
@@ -299,9 +318,12 @@ async function handleSubmit(e) {
 function gefilterte() {
   const grund = filterReasonEl.value;
   const suche = filterProductEl.value.trim().toLowerCase();
+  const abteilung = deptFilterEl.value;
   return sichtbareVerluste(loadLosses()).filter(
     (l) =>
-      (!grund || l.reason === grund) && (!suche || String(l.productName).toLowerCase().includes(suche))
+      (!grund || l.reason === grund) &&
+      (!suche || String(l.productName).toLowerCase().includes(suche)) &&
+      matchesDepartment(l, abteilung)
   );
 }
 
@@ -322,6 +344,7 @@ function eintragHtml(loss, produkt, darfLoeschen) {
         formatZeitpunkt(loss.occurredAt)
       )}</p>
       ${loss.note ? `<p class="prep-meta">${escapeHtml(loss.note)}</p>` : ""}
+      ${departmentBadge(loss).outerHTML}
       ${
         darfLoeschen
           ? `<div class="actions no-print"><button type="button" class="btn-secondary loss-delete">${t("ui.loeschen")}</button></div>`
@@ -392,6 +415,8 @@ function renderFilter() {
 export function initLosses() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    renderDeptPicker({ visibleTo: deptPicker.getValue() });
     renderGruende();
     renderFilter();
     unitEl.innerHTML = EINHEITEN.map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(einheitLabel(e))}</option>`).join("");
@@ -399,6 +424,8 @@ export function initLosses() {
     renderList();
   });
 
+  renderDeptPicker();
+  fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
   renderGruende();
   renderProduktListe();
   renderFilter();
@@ -408,6 +435,12 @@ export function initLosses() {
   renderList();
 
   onLossesChanged(renderList);
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    renderDeptPicker({ visibleTo: deptPicker.getValue() });
+    renderList();
+  });
+  deptFilterEl.addEventListener("change", renderList);
   onProductsChanged(() => {
     renderProduktListe();
     aktualisiereVorschau();

@@ -3793,10 +3793,30 @@ i18n, `sw.js`.
    nicht doppelt zählen.
 
 **Abnahme**
-- [ ] Bar-Inventur für `wgr` unsichtbar; nach Freigabe sieht und zählt `wgr` mit.
-- [ ] Schwund-Eintrag von `wgr` erscheint für die Bar nur, wenn freigegeben; Auswertung je Abteilung
+- [x] Bar-Inventur für `wgr` unsichtbar; nach Freigabe sieht und zählt `wgr` mit.
+- [x] Schwund-Eintrag von `wgr` erscheint für die Bar nur, wenn freigegeben; Auswertung je Abteilung
       stimmt mit `select department, sum(...) from losses group by 1` überein.
-- [ ] Screenshots 390 px und 1366 px.
+- [x] Screenshots 390 px und 1366 px.
+
+**Umsetzung (08.10.2026)**
+- Inventur: `prompt()` für „Neue Zählung" durch ein Formular (Bezeichnung + Picker, `moduleKey: "inventory"`)
+  ersetzt; Badge in Liste und Zählansicht, Filter „Abteilung", „Freigabe ändern" je Zählung (wie Übergabe).
+- Schwund: Picker im Buchungsformular (Auswahl bleibt nach dem Buchen stehen), Badge, Filter. Kein
+  „Freigabe ändern" – Schwund-Updates erlaubt die RLS nur dem Autor/Admin.
+- Events: Picker im Formular, beim Bearbeiten fremder Events nur Badge ohne `visibleTo`; Badge + Filter.
+- „Was kann ich bauen?": Abteilung im Zählungs-Select.
+- Admin-Reporting: Auswahl „Schwund: Abteilung (Eigentümer)" filtert `department` (nicht `visibleTo`);
+  ohne Filter steht unter der Kachel die Summe je Eigentümer-Abteilung. Gegenprobe
+  `select department, count(*) from losses group by 1` = Kachel (bar 2, wgr 2; Euro-Werte 0, da Testprodukte ohne Preis).
+- Test: Admin sieht über `betrieb.alle_abteilungen` immer alles; die Unsichtbarkeit wurde mit `wgr` geprüft
+  (Bar-only-Zählung unsichtbar, nach Freigabe sichtbar und zählbar; Schwund/Event von `wgr` bei Bar sichtbar).
+  Ein reiner Bar-Barkeeper existiert als Testkonto nicht.
+- sw.js: `bartool-v115`.
+- **Befund (nicht behoben):** `supabase_realtime` enthält nur change_requests, checklist_*, knowledge_articles,
+  losses, product_prices, products, recipes, shift_logs. Es fehlen `preparations`, `events`, `inventory_counts`
+  (die Clients abonnieren sie trotzdem → keine Live-Updates). `savePreparation`, `saveEvent`, `saveLoss` und
+  `saveInventoryCount` nutzen alle `upsert` auch beim Bearbeiten; ein veralteter Cache kann gelöschte Zeilen
+  wieder anlegen. Vorschlag: Tabellen in die Publication, beim Bearbeiten `update`.
 
 **Commit:** `Inventur, Schwund und Events: Sichtbarkeit je Abteilung`
 

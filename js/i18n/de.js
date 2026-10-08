@@ -1395,6 +1395,7 @@ export const de = {
   "ui.abteilung": "Abteilung",
   "ui.abteilungen": "Abteilungen",
   "ui.abteilung_anlegen": "Abteilung anlegen",
+  "ui.schwund_abteilung_eigentuemer": "Schwund: Abteilung (Eigentümer)",
   "ui.alle_abteilungen": "Alle Abteilungen",
   "ui.sichtbar_fuer": "Sichtbar für",
   "ui.checkliste_abteilungen_hinweis": "Alle Abteilungen mit Freigabe füllen denselben Tageslauf aus.",

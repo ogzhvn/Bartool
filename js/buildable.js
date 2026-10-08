@@ -1,4 +1,10 @@
-import { loadInventoryCounts, loadInventoryItems, onInventoryCountsChanged } from "./storage.js";
+import {
+  loadInventoryCounts,
+  loadInventoryItems,
+  onInventoryCountsChanged,
+  onDepartmentsChanged,
+} from "./storage.js";
+import { departmentBadge } from "./departmentPicker.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { getAllProducts } from "./productLibrary.js";
 import { productForIngredient } from "./costing.js";
@@ -129,7 +135,7 @@ function renderCountSelect() {
       (z) =>
         `<option value="${escapeHtml(z.id)}"${z.id === gewaehlteId ? " selected" : ""}>${escapeHtml(
           z.title || t("ui.inventur")
-        )} · ${formatDate(z.countedOn)} · ${z.status === "abgeschlossen" ? "abgeschlossen" : "offen"}</option>`
+        )} · ${escapeHtml(departmentBadge(z).textContent)} · ${formatDate(z.countedOn)} · ${z.status === "abgeschlossen" ? "abgeschlossen" : "offen"}</option>`
     )
     .join("");
 }
@@ -323,6 +329,7 @@ export function initBuildable() {
   if (panelEl?.classList.contains("active")) ladeWennNoetig();
 
   onInventoryCountsChanged(renderCountSelect);
+  onDepartmentsChanged(renderCountSelect);
   // Neue Produkte oder Rezepte ändern die Zuordnung, deshalb neu bewerten.
   onProductsChanged(() => {
     if (stand) render();

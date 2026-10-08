@@ -666,6 +666,11 @@
         </div>
         <p id="event-share-sum" class="hint"></p>
 
+        <div class="dept-field">
+          <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+          <div id="event-departments"></div>
+        </div>
+
         <div class="actions">
           <button type="submit" id="event-submit" class="btn-primary" data-i18n="ui.event_speichern">Event speichern</button>
           <button type="button" id="event-cancel" class="btn-secondary" hidden data-i18n="ui.abbrechen">Abbrechen</button>
@@ -676,6 +681,12 @@
       <div id="event-result"></div>
 
       <h3 data-i18n="ui.gespeicherte_events">Gespeicherte Events</h3>
+      <div class="prep-options no-print" id="event-dept-filter-wrap" hidden>
+        <label class="prep-toggle">
+          <span data-i18n="ui.abteilung">Abteilung</span>
+          <select id="event-dept-filter"></select>
+        </label>
+      </div>
       <div id="event-list"></div>
     </section>
 
@@ -850,6 +861,24 @@
         <div class="actions">
           <button type="button" id="inv-new-count" class="btn-primary" data-i18n="ui.neue_zaehlung"><i class="ph ph-plus" aria-hidden="true"></i> Neue Zählung</button>
         </div>
+        <form id="inv-new-form" hidden>
+          <label for="inv-new-title" data-i18n="ui.bezeichnung_der_zaehlung">Bezeichnung der Zählung</label>
+          <input type="text" id="inv-new-title" required />
+          <div class="dept-field">
+            <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+            <div id="inv-new-departments"></div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn-primary" data-i18n="ui.speichern">Speichern</button>
+            <button type="button" id="inv-new-cancel" class="btn-secondary" data-i18n="ui.abbrechen">Abbrechen</button>
+          </div>
+        </form>
+        <div class="prep-options no-print" id="inv-dept-filter-wrap" hidden>
+          <label class="prep-toggle">
+            <span data-i18n="ui.abteilung">Abteilung</span>
+            <select id="inv-dept-filter"></select>
+          </label>
+        </div>
         <div id="inv-count-list"></div>
       </div>
 
@@ -858,6 +887,7 @@
           <button type="button" id="inv-back" class="btn-secondary" data-i18n="ui.zurueck_zur_uebersicht"><i class="ph ph-arrow-left" aria-hidden="true"></i> Zurück zur Übersicht</button>
         </div>
         <h3 id="inv-current-title" data-i18n="ui.zaehlung">Zählung</h3>
+        <div id="inv-current-dept"></div>
         <p id="inv-progress" class="prep-meta"></p>
         <p id="inv-status" class="empty-note" hidden></p>
 
@@ -931,6 +961,11 @@
           </label>
         </div>
 
+        <div class="dept-field">
+          <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+          <div id="loss-departments"></div>
+        </div>
+
         <p id="loss-value-preview" class="prep-meta"></p>
 
         <div class="actions">
@@ -942,6 +977,12 @@
       <div class="field-row">
         <select id="loss-filter-reason" aria-label="Nach Grund filtern" data-i18n-aria-label="ui.nach_grund_filtern"></select>
         <input type="text" id="loss-filter-product" placeholder="Produkt filtern…" aria-label="Nach Produkt filtern" data-i18n-placeholder="ui.produkt_filtern" data-i18n-aria-label="ui.nach_produkt_filtern" />
+      </div>
+      <div class="prep-options no-print" id="loss-dept-filter-wrap" hidden>
+        <label class="prep-toggle">
+          <span data-i18n="ui.abteilung">Abteilung</span>
+          <select id="loss-dept-filter"></select>
+        </label>
       </div>
       <div id="loss-summary"></div>
       <div id="loss-list"></div>
@@ -1959,6 +2000,13 @@
         <button type="button" class="report-period-btn" data-days="30" data-i18n="ui.30_tage">30 Tage</button>
         <button type="button" class="report-period-btn" data-days="90" data-i18n="ui.90_tage">90 Tage</button>
         <button type="button" class="report-period-btn" data-days="365" data-i18n="ui.365_tage">365 Tage</button>
+      </div>
+
+      <div class="prep-options no-print" id="report-loss-dept-wrap" hidden>
+        <label class="prep-toggle">
+          <span data-i18n="ui.schwund_abteilung_eigentuemer">Schwund: Abteilung (Eigentümer)</span>
+          <select id="report-loss-dept"></select>
+        </label>
       </div>
 
       <div class="actions no-print">

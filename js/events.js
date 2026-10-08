@@ -1,4 +1,11 @@
-import { loadEvents, saveEvent, deleteEvent, onEventsChanged } from "./storage.js";
+import { loadEvents, saveEvent, deleteEvent, onEventsChanged, onDepartmentsChanged } from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  canChangeVisibility,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { getAllRecipes, getRecipe } from "./recipeLibrary.js";
 import { getProduct } from "./productLibrary.js";
 import { UNIT_TO_ML, UNIT_LABELS } from "./units.js";
@@ -234,6 +241,32 @@ function readMix() {
     .filter((z) => z.recipeName);
 }
 
+const deptEl = document.getElementById("event-departments");
+const deptFilterEl = document.getElementById("event-dept-filter");
+const deptFilterWrapEl = document.getElementById("event-dept-filter-wrap");
+
+// Abteilungsauswahl im Formular. Beim Bearbeiten eines fremden Events
+// (andere Eigentümer-Abteilung, ohne betrieb.alle_abteilungen) nur das
+// Badge; die Freigabe wird dann nicht mitgeschickt.
+let deptPicker = null;
+let deptRecord = null;
+
+function renderDeptField(record = null, value = record) {
+  deptRecord = record;
+  if (record && !canChangeVisibility(record)) {
+    deptPicker = null;
+    deptEl.replaceChildren(departmentBadge(record));
+    return;
+  }
+  deptPicker = createDepartmentPicker({ moduleKey: "events", value });
+  deptEl.replaceChildren(deptPicker.element);
+}
+
+function refreshDeptField() {
+  const value = deptPicker ? { ...(deptRecord ?? {}), visibleTo: deptPicker.getValue() } : deptRecord;
+  renderDeptField(deptRecord, value);
+}
+
 function readForm() {
   return {
     id: formEl.dataset.editId || "",
@@ -260,6 +293,7 @@ function resetForm() {
   addMixRow();
   submitBtn.textContent = t("ui.event_speichern");
   cancelBtn.hidden = true;
+  renderDeptField();
   render();
 }
 
@@ -279,6 +313,7 @@ function loadIntoForm(ev) {
   mix.forEach(addMixRow);
   submitBtn.textContent = t("ui.aenderungen_speichern");
   cancelBtn.hidden = false;
+  renderDeptField(ev);
   render();
   nameEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -463,6 +498,7 @@ function eventHtml(ev) {
         <span class="prep-status">${escapeHtml(datum)}</span>
       </div>
       <div class="prep-meta">${escapeHtml(details.join(" · "))}</div>
+      ${departmentBadge(ev).outerHTML}
       <div class="actions no-print">
         <button type="button" class="btn-secondary event-open">${t("ui.laden")}</button>
         ${can("events.manage") ? `<button type="button" class="btn-secondary event-delete">${t("ui.loeschen")}</button>` : ""}
@@ -483,7 +519,8 @@ function sortiereEvents(events) {
 }
 
 function renderList() {
-  const events = sortiereEvents(loadEvents());
+  const filter = deptFilterEl.value;
+  const events = sortiereEvents(loadEvents().filter((ev) => matchesDepartment(ev, filter)));
   listEl.innerHTML = events.length
     ? events.map(eventHtml).join("")
     : `<p class="empty-state">${t("ui.noch_keine_events_gespeichert")}</p>`;
@@ -498,6 +535,7 @@ async function handleSubmit(e) {
   }
   const nutzer = getCurrentUser();
   if (nutzer && !ev.id) ev.createdBy = nutzer.id;
+  if (deptPicker) ev.visibleTo = deptPicker.getValue();
   try {
     await saveEvent(ev);
     resetForm();
@@ -515,6 +553,8 @@ function refreshRecipeSelects() {
 export function initEvents() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    refreshDeptField();
     renderList();
     render();
     // Die Rezept-Auswahl je Zeile wird neu befüllt: der erste Eintrag ist
@@ -526,9 +566,16 @@ export function initEvents() {
   // Beim ersten Start ohne Cache ist die Rezeptliste erst nach dem Sync da.
   window.addEventListener("bartool:sync-done", refreshRecipeSelects);
 
+  fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
   resetForm();
   renderList();
   onEventsChanged(renderList);
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    refreshDeptField();
+    renderList();
+  });
+  deptFilterEl.addEventListener("change", renderList);
 
   formEl.addEventListener("submit", handleSubmit);
   cancelBtn.addEventListener("click", resetForm);

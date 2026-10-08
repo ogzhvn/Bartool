@@ -3,6 +3,7 @@ import {
   saveInventoryCount,
   deleteInventoryCount,
   onInventoryCountsChanged,
+  onDepartmentsChanged,
   loadInventoryItems,
   saveInventoryItems,
   isOffline,
@@ -10,6 +11,13 @@ import {
 } from "./storage.js";
 import { getAllProducts } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  canChangeVisibility,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { can, getCurrentUser } from "./auth.js";
 import { switchTab } from "./tabs.js";
 import { openBuildableForCount } from "./buildable.js";
@@ -36,6 +44,13 @@ const newBtn = document.getElementById("inv-new-count");
 const countViewEl = document.getElementById("inv-count-view");
 const overviewEl = document.getElementById("inv-overview");
 const titleEl = document.getElementById("inv-current-title");
+const currentDeptEl = document.getElementById("inv-current-dept");
+const newFormEl = document.getElementById("inv-new-form");
+const newTitleEl = document.getElementById("inv-new-title");
+const newDeptEl = document.getElementById("inv-new-departments");
+const newCancelBtn = document.getElementById("inv-new-cancel");
+const deptFilterEl = document.getElementById("inv-dept-filter");
+const deptFilterWrapEl = document.getElementById("inv-dept-filter-wrap");
 const progressEl = document.getElementById("inv-progress");
 const searchEl = document.getElementById("inv-search");
 const itemsEl = document.getElementById("inv-items");
@@ -99,8 +114,42 @@ function setStatus(text, warnung = false) {
 // Übersicht der Zählungen
 // ---------------------------------------------------------------------
 
+// Abteilungsauswahl im Formular „Neue Zählung“. Eine Zählung hat kein
+// Bearbeiten-Formular; die Freigabe ändert die Eigentümer-Abteilung über
+// „Freigabe ändern“ am Eintrag (Chips + Speichern/Abbrechen).
+let deptPicker = null;
+let freigabeId = null;
+let freigabePicker = null;
+
+function renderDeptPicker(value = null) {
+  deptPicker = createDepartmentPicker({ moduleKey: "inventory", value });
+  newDeptEl.replaceChildren(deptPicker.element);
+}
+
+function oeffneNeuFormular() {
+  const heute = new Date();
+  newTitleEl.value = `${t("ui.inventur")} ${heute.toLocaleDateString(getLocale(), { month: "long", year: "numeric" })}`;
+  renderDeptPicker();
+  newFormEl.hidden = false;
+  newBtn.hidden = true;
+  newTitleEl.focus();
+  newTitleEl.select();
+}
+
+function schliesseNeuFormular() {
+  newFormEl.hidden = true;
+  newBtn.hidden = false;
+  newDeptEl.replaceChildren();
+  deptPicker = null;
+}
+
+function renderCurrentDept() {
+  currentDeptEl.replaceChildren(aktuelleZaehlung ? departmentBadge(aktuelleZaehlung) : "");
+}
+
 function renderCountList() {
-  const zaehlungen = loadInventoryCounts();
+  const filter = deptFilterEl.value;
+  const zaehlungen = loadInventoryCounts().filter((z) => matchesDepartment(z, filter));
   if (zaehlungen.length === 0) {
     listEl.innerHTML = `<p class="empty-state">${t("ui.noch_keine_zaehlung_angelegt")}</p>`;
     return;
@@ -114,13 +163,65 @@ function renderCountList() {
           <span class="prep-status">${z.status === "abgeschlossen" ? "abgeschlossen" : "offen"}</span>
         </div>
         <p class="prep-meta">${t("ui.zaehldatum")} ${formatDate(z.countedOn)}${z.note ? " · " + escapeHtml(z.note) : ""}</p>
+        ${departmentBadge(z).outerHTML}
+        <div class="dept-edit" hidden></div>
         <div class="actions">
           <button type="button" class="btn-secondary inv-open">${z.status === "abgeschlossen" ? t("ui.ansehen") : t("ui.weiterzaehlen")}</button>
+          ${canChangeVisibility(z) ? `<button type="button" class="btn-secondary inv-visibility">${t("ui.freigabe_aendern")}</button>` : ""}
           ${can("inventory.manage") ? `<button type="button" class="btn-secondary inv-delete">${t("ui.loeschen")}</button>` : ""}
         </div>
       </div>`
     )
     .join("");
+  renderFreigabe();
+}
+
+// Hängt die offene Freigabe-Auswahl wieder an ihren Eintrag (nach jedem
+// Neu-Rendern der Liste), mit der bis dahin getroffenen Auswahl.
+function renderFreigabe() {
+  if (!freigabeId) return;
+  const z = loadInventoryCounts().find((c) => c.id === freigabeId);
+  const karte = [...listEl.querySelectorAll(".inv-count-item")].find((el) => el.dataset.id === freigabeId);
+  if (!z || !karte || !canChangeVisibility(z)) {
+    freigabeId = null;
+    freigabePicker = null;
+    return;
+  }
+  const value = { ...z, visibleTo: freigabePicker ? freigabePicker.getValue() : z.visibleTo };
+  freigabePicker = createDepartmentPicker({ moduleKey: "inventory", value });
+  const speichern = document.createElement("button");
+  speichern.type = "button";
+  speichern.className = "btn-primary inv-visibility-save";
+  speichern.textContent = t("ui.speichern");
+  const abbrechen = document.createElement("button");
+  abbrechen.type = "button";
+  abbrechen.className = "btn-secondary inv-visibility-cancel";
+  abbrechen.textContent = t("ui.abbrechen");
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.append(speichern, abbrechen);
+  const box = karte.querySelector(".dept-edit");
+  box.replaceChildren(freigabePicker.element, actions);
+  box.hidden = false;
+  const knopf = karte.querySelector(".inv-visibility");
+  if (knopf) knopf.hidden = true;
+}
+
+function schliesseFreigabe() {
+  freigabeId = null;
+  freigabePicker = null;
+  renderCountList();
+}
+
+async function speichereFreigabe() {
+  const z = loadInventoryCounts().find((c) => c.id === freigabeId);
+  if (!z || !freigabePicker) return schliesseFreigabe();
+  try {
+    await saveInventoryCount({ ...z, visibleTo: freigabePicker.getValue() });
+    schliesseFreigabe();
+  } catch (error) {
+    alert(t("ui.speichern_fehlgeschlagen") + error.message);
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -234,6 +335,7 @@ async function openCount(zaehlung) {
   aktuelleZaehlung = zaehlung;
   titleEl.textContent = `${zaehlung.title || t("ui.inventur")} · ${formatDate(zaehlung.countedOn)}`;
   setStatus("");
+  renderCurrentDept();
 
   // Erst den lokalen Zwischenstand, dann den Server – so ist sofort etwas da
   // und eine unterbrochene Zählung geht nie verloren.
@@ -271,22 +373,20 @@ function backToOverview() {
   renderCountList();
 }
 
-async function handleNewCount() {
+async function handleNewCount(e) {
+  e.preventDefault();
   const heute = new Date();
-  const titel = prompt(
-    t("ui.bezeichnung_der_zaehlung"),
-    `${t("ui.inventur")} ${heute.toLocaleDateString(getLocale(), { month: "long", year: "numeric" })}`
-  );
-  if (titel === null) return;
   try {
     const neu = await saveInventoryCount({
       countedOn: new Date(heute.getTime() - heute.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0, 10),
-      title: titel.trim() || t("ui.inventur"),
+      title: newTitleEl.value.trim() || t("ui.inventur"),
       status: "offen",
       createdBy: getCurrentUser()?.id ?? null,
+      visibleTo: deptPicker ? deptPicker.getValue() : undefined,
     });
+    schliesseNeuFormular();
     await openCount(neu);
   } catch (error) {
     alert(t("ui.zaehlung_konnte_nicht_angelegt_werden") + error.message);
@@ -413,17 +513,27 @@ function exportBestellliste() {
 export function initInventory() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
     renderCountList();
+    if (!newFormEl.hidden) renderDeptPicker({ visibleTo: deptPicker.getValue() });
     if (aktuelleZaehlung) {
+      renderCurrentDept();
       renderProgress();
       renderItems();
     }
   });
 
+  fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
   renderCountList();
   onInventoryCountsChanged(() => {
     if (!aktuelleZaehlung) renderCountList();
   });
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    renderCountList();
+    if (!newFormEl.hidden) renderDeptPicker({ visibleTo: deptPicker.getValue() });
+  });
+  deptFilterEl.addEventListener("change", renderCountList);
   onProductsChanged(() => {
     if (aktuelleZaehlung) {
       renderProgress();
@@ -431,7 +541,9 @@ export function initInventory() {
     }
   });
 
-  newBtn.addEventListener("click", handleNewCount);
+  newBtn.addEventListener("click", oeffneNeuFormular);
+  newFormEl.addEventListener("submit", handleNewCount);
+  newCancelBtn.addEventListener("click", schliesseNeuFormular);
   backBtn.addEventListener("click", backToOverview);
   saveBtn.addEventListener("click", () => upload());
   closeBtn.addEventListener("click", handleCloseCount);
@@ -448,6 +560,12 @@ export function initInventory() {
     const zaehlung = loadInventoryCounts().find((z) => z.id === box.dataset.id);
     if (!zaehlung) return;
     if (e.target.closest(".inv-open")) await openCount(zaehlung);
+    else if (e.target.closest(".inv-visibility")) {
+      freigabeId = zaehlung.id;
+      freigabePicker = null;
+      renderFreigabe();
+    } else if (e.target.closest(".inv-visibility-save")) await speichereFreigabe();
+    else if (e.target.closest(".inv-visibility-cancel")) schliesseFreigabe();
     else if (e.target.closest(".inv-delete")) {
       if (!confirm(`${t("ui.zaehlung_abc8")}${zaehlung.title || t("ui.inventur")}${t("ui.mit_allen_positionen_loeschen")}`)) return;
       try {

@@ -1394,6 +1394,7 @@ export const en = {
   "ui.abteilung": "Department",
   "ui.abteilungen": "Departments",
   "ui.abteilung_anlegen": "Create department",
+  "ui.schwund_abteilung_eigentuemer": "Losses: department (owner)",
   "ui.alle_abteilungen": "All departments",
   "ui.sichtbar_fuer": "Visible to",
   "ui.checkliste_abteilungen_hinweis": "All departments with access fill in the same daily run.",
