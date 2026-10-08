@@ -197,6 +197,14 @@ const NICHT_IM_QUIZ_GRUPPEN = new Set([
   "Sonstiges",
 ]);
 
+// Beim Wein ist das Herkunftsland kaum eine Frage (fast alles Deutschland,
+// Italien, Frankreich); gefragt wird dort nach Region, Rebsorte, Körper.
+const WEIN_GRUPPEN = new Set(["Wein", "Schaumwein"]);
+
+// Höchstens so viele Zutatenfragen je Drink ("Was gehört in einen X?"): bei
+// fünf Alkoholika im Rezept wäre es sonst fünfmal dieselbe Frage.
+const ZUTATEN_PRO_REZEPT = 2;
+
 // Ab diesem Alkoholgehalt zählt eine Rezeptzutat als prägend (Spirituose,
 // Likör, Wermut, Wein, Schaumwein). Zitronensaft, Zuckersirup, Eiweiß, Soda
 // und Bitters sind Standard und werden nicht abgefragt.
@@ -209,8 +217,16 @@ function istKernProdukt(product) {
   return !angegeben || abv !== null;
 }
 
+// Zutaten ohne Produkttreffer ("Absinth", "Maraschino-Likör", "Curaçao" stehen
+// im Rezept generisch, im Sortiment unter Hausmarke) erkennt der Namens-
+// Fallback an typischen Spirituosen- und Likörwörtern. Alles mit Sirup, Saft,
+// Püree, Soda & Co. oder "0,0" im Namen bleibt draußen.
+const ALKOHOL_NAME =
+  /\b(gin|rum|vodka|whisk(?:e)?y|bourbon|rye|tequila|mezcal|cognac|brandy|calvados|pisco|cacha[cç]a|grappa|absinth|sambuca|amaretto|kümmel|aquavit|likör|liqueur|curaçao|curacao|crème de|creme de|chartreuse|bénédictine|benedictine|fernet|amaro|aperol|campari|cointreau|havana club|hennessy|bailey'?s|southern comfort|wermut|vermouth|martini|sherry|portwein|prosecco|secco|champagner|sekt|rotwein|weißwein|weisswein)\b/i;
+const KEIN_ALKOHOL_NAME = /sirup|saft|püree|puree|limonade|tonic|soda|ginger beer|bitter lemon|eistee|tee\b|0,0|alkoholfrei/i;
+
 // Prüft eine Rezeptzutat gegen die Produktliste (derselbe Teilstring-Vergleich
-// wie im Rest des Tools). Zutaten ohne Produkttreffer gelten als nicht prägend.
+// wie im Rest des Tools), danach gegen den Namens-Fallback.
 function baueZutatenFilter(produkte) {
   const nadeln = produkte
     .filter((p) => (abvZahl(p.abvValue) ?? 0) >= MIN_PRAEGEND_ABV)
@@ -219,7 +235,12 @@ function baueZutatenFilter(produkte) {
   const cache = new Map();
   return (name) => {
     const schluessel = normKey(name);
-    if (!cache.has(schluessel)) cache.set(schluessel, nadeln.some((nadel) => schluessel.includes(nadel)));
+    if (!cache.has(schluessel)) {
+      const treffer =
+        nadeln.some((nadel) => schluessel.includes(nadel)) ||
+        (ALKOHOL_NAME.test(name) && !KEIN_ALKOHOL_NAME.test(name));
+      cache.set(schluessel, treffer);
+    }
     return cache.get(schluessel);
   };
 }
@@ -687,7 +708,13 @@ function zutatenFragen(rezepte) {
           if (!eigeneAlle.some((eigen) => ueberschneidet(eigen, name))) kandidaten.push(name);
         });
       });
-    zutaten.forEach((richtig) => {
+    const sortiert = [...zutaten].sort((a, b) => a.localeCompare(b, getLocale()));
+    const start = streuIndex(recipe.name, sortiert.length);
+    const auswahl = Array.from(
+      { length: Math.min(ZUTATEN_PRO_REZEPT, sortiert.length) },
+      (_, i) => sortiert[(start + i) % sortiert.length]
+    );
+    auswahl.forEach((richtig) => {
       const frage = baueFrage({
         key: `gen:ingredient:${recipe.name}:${richtig}`,
         question: t("ui.quiz_frage_zutaten", { name: recipe.name }),
@@ -800,7 +827,7 @@ function umkehrFragen(rezepte) {
 // besteht eine Zehnerrunde schnell zur Hälfte aus "Wie viel … kommt in …?".
 // Welche Zutaten es werden, entscheidet `streuIndex` – stabil, aber nicht
 // überall die Basisspirituose.
-const MENGEN_PRO_REZEPT = 2;
+const MENGEN_PRO_REZEPT = 1;
 
 function mengenFragen(rezepte) {
   const fragen = [];
@@ -846,18 +873,6 @@ function glasFragen(rezepte) {
     keyPrefix: "glass",
     frage: (r) => t("ui.quiz_frage_glas", { name: r.name }),
     erklaerung: (r, wert) => t("ui.quiz_erklaerung_glas", { name: r.name, wert }),
-    difficulty: 2,
-  });
-}
-
-// 6b. Rezept → Garnitur
-function garniturFragen(rezepte) {
-  return rezeptFeldFragen({
-    rezepte,
-    feld: "garnish",
-    keyPrefix: "garnish",
-    frage: (r) => t("ui.quiz_frage_garnitur", { name: r.name }),
-    erklaerung: (r, wert) => t("ui.quiz_erklaerung_garnitur", { name: r.name, wert }),
     difficulty: 2,
   });
 }
@@ -913,10 +928,14 @@ function methodenFragen(rezepte) {
 // Kompletter Fragenpool aus dem aktuellen Katalog. Jede Frage steht für sich
 // (Text, Optionen, richtige Antwort, Erklärung, Thema, Sprungziel).
 export function generateQuestions() {
-  const alle = gepruefteProdukte();
-  const produkte = alle.filter(istKernProdukt);
+  // Der Pool für die Ablenker bleibt der ganze Katalog – nimmt man Alkoholfreies
+  // schon vorher raus, fehlen bei kleinen Gruppen (Gin-Verfahren, Bier) die
+  // Ablenker, und gute Fragen fallen mit weg. Gefiltert wird erst am Ende.
+  const produkte = gepruefteProdukte();
   const rezepte = rezepteMitKategorie();
-  istPraegendeZutat = baueZutatenFilter(alle.filter((p) => !NICHT_IM_QUIZ_GRUPPEN.has(txt(p.group))));
+  const imQuiz = new Set(produkte.filter(istKernProdukt).map((p) => p.name));
+  const wein = new Set(produkte.filter((p) => WEIN_GRUPPEN.has(txt(p.group))).map((p) => p.name));
+  istPraegendeZutat = baueZutatenFilter(produkte.filter((p) => !NICHT_IM_QUIZ_GRUPPEN.has(txt(p.group))));
   return [
     ...abvFragen(produkte),
     ...herkunftFragen(produkte),
@@ -936,13 +955,15 @@ export function generateQuestions() {
     ...abvVergleichFragen(produkte),
     ...zutatenFragen(rezepte),
     ...glasFragen(rezepte),
-    ...garniturFragen(rezepte),
     ...eisFragen(rezepte),
     ...methodenFragen(rezepte),
     ...negativFragen(rezepte),
     ...umkehrFragen(rezepte),
     ...mengenFragen(rezepte),
-  ];
+  ].filter((f) => {
+    if (f.refProduct && !imQuiz.has(f.refProduct)) return false;
+    return !(f.key.startsWith("gen:country:") && wein.has(f.refProduct));
+  });
 }
 
 // Themen (Produktgruppen und Rezeptkategorien), zu denen es überhaupt Fragen
