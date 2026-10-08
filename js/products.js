@@ -47,22 +47,13 @@ function groupSortIndex(group) {
 
 // Oberkategorien für die Kategorie-Navigation in der Sidebar unter
 // "Bibliothek → Produkte". Jede Gruppe aus GROUP_ORDER gehört genau einer
-// Oberkategorie an. "Wein" steht bewusst zuletzt und trägt die Weinarten
-// (WEINTYPEN) als verschachtelte Unterkategorien.
-const OBERKATEGORIEN = [
-  { name: "Spirituosen", groups: ["Gin", "Vodka", "Rum & Cachaça", "Whisky", "Tequila & Mezcal", "Brände", "Absinth"] },
-  { name: "Liköre & Bitters", groups: ["Liköre & Aperitifs", "Wermut & Aperitif-Wein", "Bitters"] },
-  { name: "Sirups & Frucht", groups: ["Sirup", "Fruchtpüree"] },
-  { name: "Softdrinks & Mixer", groups: ["Saft", "Mixer & Softdrink", "Tee & Kaffee"] },
-  { name: "Bier", groups: ["Bier"] },
-  { name: "Sonstiges", groups: ["Sonstiges"] },
-  { name: "Wein", groups: ["Wein", "Schaumwein"] },
-];
+// Oberkategorie an. "Spirituosen" und "Wein" tragen Unterkategorien (`subs`),
+// die in der Sidebar eingerückt darunter stehen. Ein Unterpunkt filtert auf
+// eine Gruppe und optional eine Untergruppe (subGroup null = ganze Gruppe).
+// `subTiles`: Klick auf die Oberkategorie zeigt zuerst Kacheln der
+// Unterkategorien statt sofort der Liste.
 
-let activeOberkategorie = null;
-
-// Untertypen innerhalb der Oberkategorie "Wein" – zweite Navigationsebene,
-// die nur eingeblendet wird, wenn "Wein" aktiv ist.
+// Untertypen innerhalb der Oberkategorie "Wein".
 const WEINTYPEN = [
   { name: "Weißwein", group: "Wein", subGroup: "Weißwein" },
   { name: "Roséwein", group: "Wein", subGroup: "Roséwein" },
@@ -70,7 +61,33 @@ const WEINTYPEN = [
   { name: "Schaumwein", group: "Schaumwein", subGroup: null },
 ];
 
-let activeWeinTyp = null;
+const SPIRITUOSEN_GROUPS = ["Gin", "Vodka", "Rum & Cachaça", "Whisky", "Tequila & Mezcal", "Brände", "Absinth"];
+
+const OBERKATEGORIEN = [
+  {
+    name: "Spirituosen",
+    groups: SPIRITUOSEN_GROUPS,
+    subs: SPIRITUOSEN_GROUPS.map((group) => ({ name: group, group, subGroup: null })),
+    subTiles: true,
+  },
+  { name: "Liköre & Bitters", groups: ["Liköre & Aperitifs", "Wermut & Aperitif-Wein", "Bitters"] },
+  { name: "Sirups & Frucht", groups: ["Sirup", "Fruchtpüree"] },
+  { name: "Softdrinks & Mixer", groups: ["Saft", "Mixer & Softdrink", "Tee & Kaffee"] },
+  { name: "Bier", groups: ["Bier"] },
+  { name: "Sonstiges", groups: ["Sonstiges"] },
+  { name: "Wein", groups: ["Wein", "Schaumwein"], subs: WEINTYPEN },
+];
+
+let activeOberkategorie = null;
+// Gewählte Unterkategorie (Eintrag aus `subs` der aktiven Oberkategorie).
+let activeSub = null;
+// Kachel "Alle <Oberkategorie>" in einer Unterkategorie-Übersicht: Liste der
+// ganzen Oberkategorie statt der Kacheln.
+let showAllInOberkategorie = false;
+
+function matchesSub(product, sub) {
+  return product.group === sub.group && (sub.subGroup === null || product.subGroup === sub.subGroup);
+}
 
 // Scotch Single Malt regions – kept together and above the other whisky styles
 // instead of falling wherever they land alphabetically (e.g. "Irish Whiskey"
@@ -422,21 +439,18 @@ function currentFilteredProducts() {
     const matchesQuery = p.name.toLowerCase().includes(query) || (p.category ?? "").toLowerCase().includes(query);
     const matchesGroup = !groupFilter || p.group === groupFilter;
     const matchesOberkategorie = !activeOberkategorie || activeOberkategorie.groups.includes(p.group);
-    const matchesWeinTyp =
-      !activeWeinTyp ||
-      (p.group === activeWeinTyp.group && (activeWeinTyp.subGroup === null || p.subGroup === activeWeinTyp.subGroup));
-    return matchesQuery && matchesGroup && matchesOberkategorie && matchesWeinTyp;
+    return matchesQuery && matchesGroup && matchesOberkategorie && (!activeSub || matchesSub(p, activeSub));
   });
 }
 
 // Kategorie-Baum in der Sidebar unter "Bibliothek → Produkte": Oberkategorien
-// als Hauptpunkte, die Weinarten als eingerückte Unterpunkte unter "Wein".
-// Ein Klick wechselt in den Produkte-Tab und setzt den Filter.
+// als Hauptpunkte, deren Unterkategorien (Spirituosenarten, Weinarten)
+// eingerückt darunter. Ein Klick wechselt in den Produkte-Tab und setzt den Filter.
 function renderSidebarCategoryTree() {
   categoryTreeEl.innerHTML = "";
 
-  const makeBtn = (label, { oberkategorie = null, weinTyp = null, nested = false } = {}) => {
-    const isActive = activeOberkategorie === oberkategorie && activeWeinTyp === weinTyp;
+  const makeBtn = (label, { oberkategorie = null, sub = null, nested = false } = {}) => {
+    const isActive = activeOberkategorie === oberkategorie && activeSub === sub;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "subnav-btn" + (nested ? " subnav-btn--nested" : "") + (isActive ? " active" : "");
@@ -449,7 +463,8 @@ function renderSidebarCategoryTree() {
       showListView();
       closeMobileNav();
       activeOberkategorie = oberkategorie;
-      activeWeinTyp = weinTyp;
+      activeSub = sub;
+      showAllInOberkategorie = false;
       groupFilterEl.value = "";
       updateGroupFilterVisibility();
       populateGroupFilter();
@@ -462,18 +477,52 @@ function renderSidebarCategoryTree() {
 
   OBERKATEGORIEN.forEach((ok) => {
     categoryTreeEl.appendChild(makeBtn(ok.name, { oberkategorie: ok }));
-    if (ok.name === "Wein") {
-      WEINTYPEN.forEach((typ) =>
-        categoryTreeEl.appendChild(makeBtn(typ.name, { oberkategorie: ok, weinTyp: typ, nested: true }))
-      );
-    }
+    ok.subs?.forEach((sub) =>
+      categoryTreeEl.appendChild(makeBtn(sub.name, { oberkategorie: ok, sub, nested: true }))
+    );
   });
 }
 
 function updateGroupFilterVisibility() {
-  // Innerhalb "Wein" übernehmen die Weinart-Unterpunkte in der Sidebar die
-  // Filterung, das generische Kategorie-Dropdown wäre dort redundant.
-  groupFilterEl.hidden = activeOberkategorie?.name === "Wein";
+  // Innerhalb "Wein" bzw. einer gewählten Unterkategorie übernehmen die
+  // Unterpunkte die Filterung, das generische Kategorie-Dropdown wäre redundant.
+  groupFilterEl.hidden = activeOberkategorie?.name === "Wein" || activeSub !== null;
+}
+
+// Unterkategorie-Übersicht: Oberkategorie mit `subTiles` gewählt, aber noch
+// keine Unterkategorie, kein "Alle", keine Suche und kein Dropdown-Filter.
+function isSubOverview() {
+  return (
+    !!activeOberkategorie?.subTiles &&
+    !activeSub &&
+    !showAllInOberkategorie &&
+    !searchEl.value.trim() &&
+    !groupFilterEl.value
+  );
+}
+
+function renderSubTopics() {
+  const ok = activeOberkategorie;
+  const all = getAllProducts().filter((p) => ok.groups.includes(p.group));
+  const tiles = ok.subs
+    .map((sub) => ({ key: sub.name, name: sub.name, n: all.filter((p) => matchesSub(p, sub)).length }))
+    .filter((tile) => tile.n > 0)
+    .map(({ key, name, n }) => ({ key, name, count: t("ui.produkte_n", { n }) }));
+  if (all.length > 0) {
+    tiles.push({ key: "", name: t("ui.alle_oberkategorie", { name: ok.name }), count: t("ui.produkte_n", { n: all.length }) });
+  }
+  renderTopicNav(navEl, ok.name, all.length, () => {
+    searchEl.value = "";
+    resetCategoryFilters();
+  });
+  renderTopicTiles(topicsEl, tiles, (key) => {
+    activeSub = ok.subs.find((sub) => sub.name === key) ?? null;
+    showAllInOberkategorie = key === "";
+    updateGroupFilterVisibility();
+    renderSidebarCategoryTree();
+    renderBrowseList();
+    if (navEl.getBoundingClientRect().top < 0) navEl.scrollIntoView?.({ block: "start" });
+  }, t("ui.keine_produkte_gefunden"));
 }
 
 // `product.region` ist Freitext nach dem Muster "<Ort>, <Anbaugebiet> (<Land>)"
@@ -750,7 +799,8 @@ function renderTopics() {
   renderTopicTiles(topicsEl, tiles, (key) => {
     showAll = key === "";
     activeOberkategorie = OBERKATEGORIEN.find((ok) => ok.name === key) ?? null;
-    activeWeinTyp = null;
+    activeSub = null;
+    showAllInOberkategorie = false;
     groupFilterEl.value = "";
     updateGroupFilterVisibility();
     populateGroupFilter();
@@ -762,23 +812,42 @@ function renderTopics() {
 
 function renderBrowseList() {
   const overview =
-    !searchEl.value.trim() && !activeOberkategorie && !activeWeinTyp && !groupFilterEl.value && !showAll;
-  topicsEl.hidden = !overview;
+    !searchEl.value.trim() && !activeOberkategorie && !activeSub && !groupFilterEl.value && !showAll;
+  const subOverview = !overview && isSubOverview();
+  topicsEl.hidden = !overview && !subOverview;
   navEl.hidden = overview;
-  listEl.hidden = overview;
-  if (overview) {
+  listEl.hidden = overview || subOverview;
+  if (overview || subOverview) {
     bar.end();
     groupFilterEl.hidden = true;
-    renderTopics();
+    if (overview) renderTopics();
+    else renderSubTopics();
     updateExportBar();
     return;
   }
   updateGroupFilterVisibility();
   const products = currentFilteredProducts();
-  renderTopicNav(navEl, activeWeinTyp?.name ?? activeOberkategorie?.name ?? t("ui.alle_kachel"), products.length, () => {
-    searchEl.value = "";
-    resetCategoryFilters();
-  });
+  // Aus einer Unterkategorie (bzw. "Alle <Oberkategorie>") einer Oberkategorie
+  // mit Kachelübersicht führt "Zurück" zu deren Kacheln, sonst zu allen Themen.
+  const backToSubTiles = !!activeOberkategorie?.subTiles && (activeSub || showAllInOberkategorie);
+  const title = activeSub?.name
+    ?? (showAllInOberkategorie ? t("ui.alle_oberkategorie", { name: activeOberkategorie.name }) : null)
+    ?? activeOberkategorie?.name
+    ?? t("ui.alle_kachel");
+  const onBack = backToSubTiles
+    ? () => {
+        searchEl.value = "";
+        activeSub = null;
+        showAllInOberkategorie = false;
+        groupFilterEl.value = "";
+        renderSidebarCategoryTree();
+        renderBrowseList();
+      }
+    : () => {
+        searchEl.value = "";
+        resetCategoryFilters();
+      };
+  renderTopicNav(navEl, title, products.length, onBack, backToSubTiles ? activeOberkategorie.name : undefined);
 
   if (products.length === 0) {
     listEl.innerHTML = `<p class="empty-note">${t("ui.keine_produkte_gefunden")}</p>`;
@@ -789,7 +858,7 @@ function renderBrowseList() {
 
   // Innerhalb eines gewählten Weintyps (Weiß/Rosé/Rot/Schaumwein) wird nach
   // Herkunftsland (Deutschland zuerst) und darunter nach Anbaugebiet sortiert.
-  if (activeWeinTyp) {
+  if (activeSub && activeOberkategorie?.name === "Wein") {
     groupWinesByOrigin(products).forEach(({ country, subregions }) => {
       const header = document.createElement("h3");
       header.className = "product-group-header";
@@ -896,13 +965,14 @@ function populatePairsWithOptions() {
   pairsWithOptionsEl.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
 }
 
-// Setzt die Kategorie-/Weinart-Filter zurück auf "Alle" – aufgerufen, wenn
+// Setzt die Kategorie-/Unterkategorie-Filter zurück auf "Alle" – aufgerufen, wenn
 // "Produkte" direkt angeklickt wird (Sidebar-Button oder Start-Kachel), statt
 // über einen Unterpunkt im Kategorie-Baum.
 function resetCategoryFilters() {
   showAll = false;
   activeOberkategorie = null;
-  activeWeinTyp = null;
+  activeSub = null;
+  showAllInOberkategorie = false;
   groupFilterEl.value = "";
   updateGroupFilterVisibility();
   populateGroupFilter();
@@ -925,7 +995,8 @@ export function focusProduct(name) {
   showListView();
   showAll = false;
   activeOberkategorie = null;
-  activeWeinTyp = null;
+  activeSub = null;
+  showAllInOberkategorie = false;
   groupFilterEl.value = "";
   updateGroupFilterVisibility();
   populateGroupFilter();

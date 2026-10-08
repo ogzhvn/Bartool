@@ -1372,6 +1372,7 @@ export const en = {
   "ui.kuratiert": "Curated",
   "ui.zuordnung": "References",
   "ui.alle_kachel": "All",
+  "ui.alle_oberkategorie": "All {name}",
   "ui.rezepte_n": "{n} recipes",
   "ui.produkte_n": "{n} products",
   "ui.alle_themen": "All topics",

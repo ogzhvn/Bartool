@@ -1373,6 +1373,7 @@ export const de = {
   "ui.kuratiert": "Kuratiert",
   "ui.zuordnung": "Zuordnung",
   "ui.alle_kachel": "Alle",
+  "ui.alle_oberkategorie": "Alle {name}",
   "ui.rezepte_n": "{n} Rezepte",
   "ui.produkte_n": "{n} Produkte",
   "ui.alle_themen": "Alle Themen",

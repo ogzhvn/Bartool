@@ -24,10 +24,10 @@ export function renderTopicTiles(container, tiles, onPick, emptyText) {
   if (tiles.length === 0 && emptyText) container.appendChild(el("p", "empty-note", emptyText));
 }
 
-// Kopf über der Liste: Zurück zu "Alle Themen" + Titel mit Trefferzahl.
-export function renderTopicNav(container, title, count, onBack) {
+// Kopf über der Liste: Zurück zu "Alle Themen" (oder `backLabel`) + Titel mit Trefferzahl.
+export function renderTopicNav(container, title, count, onBack, backLabel) {
   container.textContent = "";
-  const label = t("ui.alle_themen");
+  const label = backLabel ?? t("ui.alle_themen");
   const back = el("button", "knowledge-back-link");
   back.type = "button";
   back.setAttribute("aria-label", label);
