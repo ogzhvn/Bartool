@@ -3711,10 +3711,32 @@ gemeinsamen Auswahl-Baustein, und kein Konto sieht offline die Betriebsdaten ein
 4. Rendert bei `onLanguageChanged()` neu.
 
 **Abnahme**
-- [ ] Bar legt Übergabe nur für Bar an → `wgr` sieht sie nicht; mit „Bar + WGR" → `wgr` sieht sie,
+- [x] Bar legt Übergabe nur für Bar an → `wgr` sieht sie nicht; mit „Bar + WGR" → `wgr` sieht sie,
       kann offene Punkte abhaken, aber die Freigabe nicht ändern.
-- [ ] Dasselbe für einen Ansatz; „Heute anstehend" auf der Startseite zeigt nur Sichtbares.
-- [ ] Screenshots 390 px und 1366 px.
+- [x] Dasselbe für einen Ansatz; „Heute anstehend" auf der Startseite zeigt nur Sichtbares.
+- [x] Screenshots 390 px und 1366 px.
+
+**Umsetzung (08.10.2026) – Abweichungen und Ergebnisse**
+- `departmentPicker.js` um drei Helfer ergänzt: `canChangeVisibility(record)` (Eigentümer-Abteilung
+  oder `betrieb.alle_abteilungen`), `matchesDepartment(record, key)` (Filter: gehört der Abteilung
+  oder ist für sie freigegeben) und `fillDepartmentFilter(select, wrapper)` (blendet den Filter aus,
+  solange es nur eine Abteilung gibt).
+- Übergaben haben kein Bearbeiten-Formular. Die Freigabe ändert die Eigentümer-Abteilung deshalb
+  am Eintrag über „Freigabe ändern" (Chips + Speichern/Abbrechen, übersteht Neu-Rendern und
+  Realtime). Fremde Abteilungen sehen nur das Badge.
+- Mise en Place: beim Bearbeiten eines fremden Ansatzes steht statt der Chips das Badge, und
+  `visibleTo` wird nicht mitgeschickt. Ein `wgr`-Konto kann einen freigegebenen Bar-Ansatz
+  bearbeiten (Notiz); Eigentümer und Freigabe bleiben.
+- `moduleKey` für `department_defaults` ist die Tab-ID: `preparations`, `shift-log`.
+- Getestet per Playwright mit `claude-test` (1366 px) und `claude-test-wgr` (390 px). `wgr` hat die
+  Betriebsmodule in `department_modules` noch nicht freigeschaltet – im Test wurde das Panel
+  erzwungen; in der echten Oberfläche erst nach Paket 69 erreichbar.
+- **Befund, nicht behoben (Schema bzw. `storage.js`, außerhalb des Pakets):** `preparations` steht
+  nicht in der Publication `supabase_realtime` – Ansätze aktualisieren sich auf anderen Geräten
+  erst nach Neuladen (Übergaben schon). Folge im Test: ein veralteter Cache-Eintrag eines bereits
+  gelöschten Ansatzes wurde beim Speichern per `upsert` als neue Zeile wieder angelegt (Eigentümer
+  dann die Abteilung des Bearbeiters). Vorschlag: `preparations` in die Publication aufnehmen und
+  in `savePreparation` beim Bearbeiten `update` statt `upsert` verwenden.
 
 **Commit:** `Übergabe und Mise en Place: Sichtbarkeit je Abteilung`
 

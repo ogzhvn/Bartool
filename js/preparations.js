@@ -3,7 +3,15 @@ import {
   savePreparation,
   deletePreparation,
   onPreparationsChanged,
+  onDepartmentsChanged,
 } from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  canChangeVisibility,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { printLabels } from "./printView.js";
 import { escapeHtml, formatNumberLocal } from "./utils.js";
@@ -51,6 +59,33 @@ const expiresEl = document.getElementById("prep-expires");
 const notesEl = document.getElementById("prep-notes");
 const showDoneEl = document.getElementById("prep-show-done");
 const labelCountEl = document.getElementById("prep-label-count");
+const deptEl = document.getElementById("prep-departments");
+const deptFilterEl = document.getElementById("prep-dept-filter");
+const deptFilterWrapEl = document.getElementById("prep-dept-filter-wrap");
+
+// Abteilungsauswahl im Formular. Beim Bearbeiten eines fremden Ansatzes
+// (andere Eigentümer-Abteilung, ohne betrieb.alle_abteilungen) steht dort
+// nur das Badge, und die Freigabe wird nicht mitgeschickt.
+let deptPicker = null;
+let deptRecord = null;
+
+// value: wie record, beim Neuaufbau aber mit der aktuellen Auswahl.
+function renderDeptField(record = null, value = record) {
+  deptRecord = record;
+  if (record && !canChangeVisibility(record)) {
+    deptPicker = null;
+    deptEl.replaceChildren(departmentBadge(record));
+    return;
+  }
+  deptPicker = createDepartmentPicker({ moduleKey: "preparations", value });
+  deptEl.replaceChildren(deptPicker.element);
+}
+
+// Neu aufbauen (Sprache, Abteilungsliste), ohne die Auswahl zu verlieren.
+function refreshDeptField() {
+  const value = deptPicker ? { ...(deptRecord ?? {}), visibleTo: deptPicker.getValue() } : deptRecord;
+  renderDeptField(deptRecord, value);
+}
 
 // Datum für ein <input type="date"> (lokale Zeit, nicht UTC – sonst
 // verschiebt sich das Datum abends um einen Tag).
@@ -89,6 +124,7 @@ function resetForm() {
   madeAtEl.value = toDateInput();
   updateExpiryFromType();
   formEl.dataset.editId = "";
+  renderDeptField();
   document.getElementById("prep-submit").textContent = t("ui.ansatz_speichern");
   document.getElementById("prep-cancel").hidden = true;
 }
@@ -122,6 +158,7 @@ function eintragHtml(prep) {
       </div>
       <p class="prep-meta">${escapeHtml(typLabel(prep.prepType))} · ${escapeHtml(details.join(" · "))}</p>
       ${prep.notes ? `<p class="prep-meta">${escapeHtml(prep.notes)}</p>` : ""}
+      ${departmentBadge(prep).outerHTML}
       <div class="actions prep-actions">
         ${verbraucht
           ? `<button type="button" class="btn-secondary prep-reactivate">${t("ui.wieder_aktiv")}</button>`
@@ -142,7 +179,8 @@ function gruppeHtml(titel, eintraege, leerText) {
 }
 
 function render() {
-  const alle = loadPreparations();
+  const filter = deptFilterEl.value;
+  const alle = loadPreparations().filter((p) => matchesDepartment(p, filter));
   const aktiv = alle.filter((p) => p.status !== "verbraucht");
   const verbraucht = alle.filter((p) => p.status === "verbraucht");
 
@@ -186,6 +224,7 @@ async function handleSubmit(e) {
     status: "aktiv",
     madeBy: getCurrentUser()?.id ?? null,
   };
+  if (deptPicker) prep.visibleTo = deptPicker.getValue();
   try {
     await savePreparation(prep);
     resetForm();
@@ -204,6 +243,7 @@ function loadIntoForm(prep) {
   expiresEl.value = prep.expiresAt ? toDateInput(prep.expiresAt) : "";
   notesEl.value = prep.notes;
   formEl.dataset.editId = prep.id;
+  renderDeptField(prep);
   document.getElementById("prep-submit").textContent = t("ui.aenderung_speichern");
   document.getElementById("prep-cancel").hidden = false;
   formEl.scrollIntoView({ block: "start" });
@@ -231,16 +271,27 @@ export function prefillPreparation({ label, prepType, batchSizeMl, abv, recipeNa
 
 export function initPreparations() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
-  onLanguageChanged(render);
+  onLanguageChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    refreshDeptField();
+    render();
+  });
 
+  fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
   resetForm();
   render();
   onPreparationsChanged(render);
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    refreshDeptField();
+    render();
+  });
 
   formEl.addEventListener("submit", handleSubmit);
   typeEl.addEventListener("change", updateExpiryFromType);
   madeAtEl.addEventListener("change", updateExpiryFromType);
   showDoneEl.addEventListener("change", render);
+  deptFilterEl.addEventListener("change", render);
   document.getElementById("prep-cancel").addEventListener("click", resetForm);
 
   listEl.addEventListener("click", async (e) => {

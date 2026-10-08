@@ -1,4 +1,18 @@
-import { loadShiftLogs, saveShiftLog, deleteShiftLog, onShiftLogsChanged, loadPreparations } from "./storage.js";
+import {
+  loadShiftLogs,
+  saveShiftLog,
+  deleteShiftLog,
+  onShiftLogsChanged,
+  loadPreparations,
+  onDepartmentsChanged,
+} from "./storage.js";
+import {
+  createDepartmentPicker,
+  departmentBadge,
+  canChangeVisibility,
+  matchesDepartment,
+  fillDepartmentFilter,
+} from "./departmentPicker.js";
 import { typLabel } from "./preparations.js";
 import { can, getCurrentUser, getCurrentProfile } from "./auth.js";
 import { escapeHtml } from "./utils.js";
@@ -149,6 +163,22 @@ const itemsEl = document.getElementById("shift-log-items");
 const addItemBtn = document.getElementById("shift-log-add-item");
 const cancelBtn = document.getElementById("shift-log-cancel");
 const listEl = document.getElementById("shift-log-list");
+const deptEl = document.getElementById("shift-log-departments");
+const deptFilterEl = document.getElementById("shift-log-dept-filter");
+const deptFilterWrapEl = document.getElementById("shift-log-dept-filter-wrap");
+
+// Abteilungsauswahl im Formular „Neue Übergabe".
+let deptPicker = null;
+
+function renderDeptPicker(value = null) {
+  deptPicker = createDepartmentPicker({ moduleKey: "shift-log", value });
+  deptEl.replaceChildren(deptPicker.element);
+}
+
+// Übergaben haben kein Bearbeiten-Formular; die Freigabe ändert die
+// Eigentümer-Abteilung direkt am Eintrag. Offen ist höchstens einer.
+let freigabeId = null;
+let freigabePicker = null;
 
 function heuteInput(jetzt = new Date()) {
   const p = (n) => String(n).padStart(2, "0");
@@ -226,6 +256,7 @@ function oeffneFormular() {
   itemsEl.innerHTML = "";
   addItemRow();
   renderVorschlaege();
+  renderDeptPicker();
   dateEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -235,6 +266,8 @@ function schliesseFormular() {
   formEl.reset();
   itemsEl.innerHTML = "";
   suggestEl.innerHTML = "";
+  deptEl.replaceChildren();
+  deptPicker = null;
 }
 
 async function handleSubmit(e) {
@@ -251,6 +284,7 @@ async function handleSubmit(e) {
     summary: zusammenfassung,
     openItems: punkte.map((text) => ({ text, done: false, doneBy: null, doneAt: null })),
   };
+  if (deptPicker) log.visibleTo = deptPicker.getValue();
   const nutzer = getCurrentUser();
   if (nutzer) log.createdBy = nutzer.id;
   try {
@@ -287,6 +321,14 @@ function logHtml(log) {
   const kopf = `${formatDatum(log.shiftDate)} · ${escapeHtml(shiftLabel(log.shift))}`;
   const status = offen > 0 ? `${offen} ${t("ui.offen_klein")}` : t("ui.alles_erledigt");
   const punkte = (log.openItems ?? []).map((p, i) => punktHtml(log, i, p)).join("");
+  const aktionen = [
+    canChangeVisibility(log)
+      ? `<button type="button" class="btn-secondary shift-log-visibility">${t("ui.freigabe_aendern")}</button>`
+      : "",
+    can("shiftlog.manage")
+      ? `<button type="button" class="btn-secondary shift-log-delete">${t("ui.loeschen")}</button>`
+      : "",
+  ].join("");
 
   return `
     <div class="prep-item${offen > 0 ? " prep-expired" : ""}" data-id="${escapeHtml(log.id)}">
@@ -301,19 +343,68 @@ function logHtml(log) {
           : `<p class="prep-meta">${t("ui.keine_offenen_punkte_notiert")}</p>`
       }
       <p class="prep-meta">${t("ui.angelegt")} ${escapeHtml(formatZeitpunkt(log.createdAt)) || "–"}</p>
-      ${
-        can("shiftlog.manage")
-          ? `<div class="actions no-print"><button type="button" class="btn-secondary shift-log-delete">${t("ui.loeschen")}</button></div>`
-          : ""
-      }
+      ${departmentBadge(log).outerHTML}
+      <div class="dept-edit" hidden></div>
+      ${aktionen ? `<div class="actions no-print">${aktionen}</div>` : ""}
     </div>`;
 }
 
 function renderList() {
-  const logs = sichtbareLogs(loadShiftLogs());
+  const filter = deptFilterEl.value;
+  const logs = sichtbareLogs(loadShiftLogs()).filter((log) => matchesDepartment(log, filter));
   listEl.innerHTML = logs.length
     ? logs.map(logHtml).join("")
     : `<p class="empty-state">${t("ui.noch_keine_uebergabe_geschrieben")}</p>`;
+  renderFreigabe();
+}
+
+// Hängt die offene Freigabe-Auswahl wieder an ihren Eintrag (nach jedem
+// Neu-Rendern der Liste), mit der bis dahin getroffenen Auswahl.
+function renderFreigabe() {
+  if (!freigabeId) return;
+  const log = loadShiftLogs().find((l) => l.id === freigabeId);
+  const karte = [...listEl.querySelectorAll(".prep-item")].find((el) => el.dataset.id === freigabeId);
+  if (!log || !karte || !canChangeVisibility(log)) {
+    freigabeId = null;
+    freigabePicker = null;
+    return;
+  }
+  const value = { ...log, visibleTo: freigabePicker ? freigabePicker.getValue() : log.visibleTo };
+  freigabePicker = createDepartmentPicker({ moduleKey: "shift-log", value });
+  const speichern = document.createElement("button");
+  speichern.type = "button";
+  speichern.className = "btn-primary shift-log-visibility-save";
+  speichern.textContent = t("ui.speichern");
+  const abbrechen = document.createElement("button");
+  abbrechen.type = "button";
+  abbrechen.className = "btn-secondary shift-log-visibility-cancel";
+  abbrechen.textContent = t("ui.abbrechen");
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.append(speichern, abbrechen);
+  const box = karte.querySelector(".dept-edit");
+  box.replaceChildren(freigabePicker.element, actions);
+  box.hidden = false;
+  const knopf = karte.querySelector(".shift-log-visibility");
+  if (knopf) knopf.hidden = true;
+}
+
+function schliesseFreigabe() {
+  freigabeId = null;
+  freigabePicker = null;
+  renderList();
+}
+
+async function speichereFreigabe() {
+  const log = loadShiftLogs().find((l) => l.id === freigabeId);
+  if (!log || !freigabePicker) return schliesseFreigabe();
+  const visibleTo = freigabePicker.getValue();
+  try {
+    await saveShiftLog({ ...log, visibleTo });
+    schliesseFreigabe();
+  } catch (err) {
+    alert(t("ui.speichern_fehlgeschlagen") + err.message);
+  }
 }
 
 // Abhaken schreibt Name und Zeitpunkt mit – ohne die anderen Punkte
@@ -339,13 +430,24 @@ async function setzePunktStatus(logId, index, done) {
 export function initShiftLog() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
     renderList();
-    renderVorschlaege();
+    if (!formEl.hidden) {
+      renderVorschlaege();
+      renderDeptPicker(deptPicker ? { visibleTo: deptPicker.getValue() } : null);
+    }
   });
 
+  fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
   schliesseFormular();
   renderList();
   onShiftLogsChanged(renderList);
+  onDepartmentsChanged(() => {
+    fillDepartmentFilter(deptFilterEl, deptFilterWrapEl);
+    renderList();
+    if (!formEl.hidden) renderDeptPicker(deptPicker ? { visibleTo: deptPicker.getValue() } : null);
+  });
+  deptFilterEl.addEventListener("change", renderList);
 
   newBtn.addEventListener("click", oeffneFormular);
   cancelBtn.addEventListener("click", schliesseFormular);
@@ -366,6 +468,14 @@ export function initShiftLog() {
   });
 
   listEl.addEventListener("click", async (e) => {
+    if (e.target.closest(".shift-log-visibility")) {
+      freigabeId = e.target.closest(".prep-item")?.dataset.id ?? null;
+      freigabePicker = null;
+      renderFreigabe();
+      return;
+    }
+    if (e.target.closest(".shift-log-visibility-save")) return speichereFreigabe();
+    if (e.target.closest(".shift-log-visibility-cancel")) return schliesseFreigabe();
     if (!e.target.closest(".shift-log-delete")) return;
     const karte = e.target.closest(".prep-item");
     const log = loadShiftLogs().find((l) => l.id === karte?.dataset.id);

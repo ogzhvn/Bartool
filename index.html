@@ -580,6 +580,10 @@
             <input type="text" id="prep-notes" placeholder="optional, z. B. Charge 2, etwas säurebetont" data-i18n-placeholder="ui.optional_z_b_charge_2_etwas_saeurebetont" />
           </label>
         </div>
+        <div class="dept-field">
+          <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+          <div id="prep-departments"></div>
+        </div>
         <div class="actions">
           <button type="submit" id="prep-submit" class="btn-primary" data-i18n="ui.ansatz_speichern">Ansatz speichern</button>
           <button type="button" id="prep-cancel" class="btn-secondary" hidden data-i18n="ui.abbrechen">Abbrechen</button>
@@ -595,6 +599,10 @@
         <label class="prep-toggle">
           <span data-i18n="ui.etiketten_je_druck">Etiketten je Druck</span>
           <input type="number" id="prep-label-count" value="2" min="1" max="60" step="1" />
+        </label>
+        <label class="prep-toggle" id="prep-dept-filter-wrap" hidden>
+          <span data-i18n="ui.abteilung">Abteilung</span>
+          <select id="prep-dept-filter"></select>
         </label>
       </div>
       <div id="prep-list"></div>
@@ -713,6 +721,11 @@
           <button type="button" id="shift-log-add-item" class="btn-secondary" data-i18n="ui.punkt_hinzufuegen">Punkt hinzufügen</button>
         </div>
 
+        <div class="dept-field">
+          <span class="dept-field-label" data-i18n="ui.sichtbar_fuer">Sichtbar für</span>
+          <div id="shift-log-departments"></div>
+        </div>
+
         <div class="actions">
           <button type="submit" class="btn-primary" data-i18n="ui.uebergabe_speichern">Übergabe speichern</button>
           <button type="button" id="shift-log-cancel" class="btn-secondary" data-i18n="ui.abbrechen">Abbrechen</button>
@@ -720,6 +733,12 @@
       </form>
 
       <h3 data-i18n="ui.letzte_uebergaben">Letzte Übergaben</h3>
+      <div class="prep-options no-print" id="shift-log-dept-filter-wrap" hidden>
+        <label class="prep-toggle">
+          <span data-i18n="ui.abteilung">Abteilung</span>
+          <select id="shift-log-dept-filter"></select>
+        </label>
+      </div>
       <div id="shift-log-list"></div>
     </section>
 

@@ -1,5 +1,5 @@
 import { loadDepartments, loadDepartmentDefaults } from "./storage.js";
-import { myDepartments } from "./auth.js";
+import { myDepartments, seesAllDepartments } from "./auth.js";
 import { t } from "./i18n.js";
 
 // ---------------------------------------------------------------------
@@ -109,4 +109,40 @@ export function departmentBadge(record) {
   badge.textContent = keys.map(departmentLabel).join(" · ");
   badge.title = t("ui.sichtbar_fuer");
   return badge;
+}
+
+// Freigabe ändern darf nur die Eigentümer-Abteilung oder wer alle
+// Abteilungen sieht (betrieb.alle_abteilungen). Alle anderen sehen nur das
+// Badge – die Datenbank weist eine fremde Änderung ohnehin ab.
+export function canChangeVisibility(record) {
+  if (seesAllDepartments()) return true;
+  return Boolean(record?.department) && myDepartments().includes(record.department);
+}
+
+// Filter „Abteilung": leer = alles Sichtbare, sonst Einträge, die der
+// Abteilung gehören oder für sie freigegeben sind.
+export function matchesDepartment(record, key) {
+  if (!key) return true;
+  if (record?.department === key) return true;
+  return Array.isArray(record?.visibleTo) && record.visibleTo.includes(key);
+}
+
+// Füllt ein <select> mit „Alle Abteilungen" + Abteilungsliste, behält die
+// Auswahl und blendet wrapper aus, solange es nur eine Abteilung gibt.
+export function fillDepartmentFilter(select, wrapper = select) {
+  const vorher = select.value;
+  const abteilungen = loadDepartments();
+  select.replaceChildren();
+  const alle = document.createElement("option");
+  alle.value = "";
+  alle.textContent = t("ui.alle_abteilungen");
+  select.appendChild(alle);
+  abteilungen.forEach((d) => {
+    const option = document.createElement("option");
+    option.value = d.key;
+    option.textContent = d.label;
+    select.appendChild(option);
+  });
+  select.value = abteilungen.some((d) => d.key === vorher) ? vorher : "";
+  wrapper.hidden = abteilungen.length < 2;
 }

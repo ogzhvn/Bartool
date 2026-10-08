@@ -4277,6 +4277,27 @@ input[type="datetime-local"] {
   font-weight: 600;
 }
 
+/* Formularfeld „Sichtbar für" in Übergabe und Mise en Place (Paket 66). */
+.dept-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 1rem;
+}
+
+.dept-field-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.prep-item .dept-badge {
+  margin-top: 0.35rem;
+}
+
+.dept-edit {
+  margin-top: 0.5rem;
+}
+
 .dept-badge {
   display: inline-block;
   font-size: 0.75rem;
