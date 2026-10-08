@@ -3,6 +3,8 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { deleteDish, loadDepartments, loadDishes, onDepartmentsChanged, onDishesChanged } from "./storage.js";
 import { declarationLabel, missingSubtypes } from "./declarations.js";
 import { switchTab } from "./tabs.js";
+import { getAllProducts } from "./productLibrary.js";
+import { focusProduct } from "./products.js";
 import { confirmDiscardDishEditor, initDishEditor, isDishEditorOpen, openDishEditor } from "./dishEditor.js";
 import { initDishMatrix, renderMatrix } from "./dishMatrix.js";
 import { formatDate, getLocale, onLanguageChanged, t } from "./i18n.js";
@@ -287,6 +289,37 @@ async function fillCheckerName(id, line, date) {
   if (name && line.isConnected) line.textContent = t("ui.gerichte_geprueft_von", { name, date });
 }
 
+// Weinbegleitung (Paket 73): in der gewählten Reihenfolge. Ein Wein, den es im
+// Katalog nicht mehr gibt, bleibt als Hinweis stehen statt einen Fehler zu werfen.
+function wineSection(dish) {
+  const ul = el("ul", "dish-wines");
+  dish.winePairings.forEach((pairing) => {
+    const product = getAllProducts().find((p) => p.id === pairing?.product_id);
+    const li = el("li", "dish-wine");
+    if (!product) {
+      li.appendChild(el("span", "hint", t("ui.gerichte_wein_nicht_im_sortiment")));
+      ul.appendChild(li);
+      return;
+    }
+    const open = el("button", "knowledge-back-link dish-wine-name", product.name);
+    open.type = "button";
+    open.addEventListener("click", () => {
+      switchTab("products");
+      focusProduct(product.name);
+    });
+    li.appendChild(open);
+    if (pairing.note) li.appendChild(el("p", null, pairing.note));
+    if (product.quickPitch) li.appendChild(el("p", "hint", product.quickPitch));
+    const facts = [
+      product.originCountry && `${t("ui.gerichte_wein_herkunft")}: ${product.originCountry}`,
+      product.servingTemp && `${t("ui.gerichte_wein_serviertemp")}: ${product.servingTemp}`,
+    ].filter(Boolean);
+    if (facts.length > 0) li.appendChild(el("p", "hint", facts.join(" · ")));
+    ul.appendChild(li);
+  });
+  return section("ui.gerichte_weinbegleitung", ul);
+}
+
 function renderDetail() {
   const dish = loadDishes().find((d) => d.id === openDishId);
   if (!dish) {
@@ -345,6 +378,7 @@ function renderDetail() {
   if (dish.additives.length > 0) {
     detailEl.appendChild(section("ui.gerichte_zusatzstoffe", declarationChips(dish.additives, "additive")));
   }
+  if (dish.winePairings.length > 0) detailEl.appendChild(wineSection(dish));
   detailEl.appendChild(checkFooter(dish));
 }
 

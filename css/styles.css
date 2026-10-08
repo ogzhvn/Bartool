@@ -5580,6 +5580,82 @@ p.knowledge-nav-title {
   min-height: 44px;
 }
 
+/* Weinbegleitung (Paket 73) */
+.dish-ed-wines,
+.dish-ed-wine-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.dish-ed-wine {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+
+.dish-ed-wine-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dish-ed-wine-title {
+  flex: 1 1 10rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dish-ed-wine-head .btn-icon {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.dish-ed-wine-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dish-wines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dish-wine {
+  padding: 0.4rem 0;
+}
+
+.dish-wine p {
+  margin: 0.15rem 0;
+}
+
+.dish-wine-name {
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.wine-dishes .knowledge-back-link {
+  display: inline;
+  min-height: 44px;
+}
+
 .dish-ed-check .hint {
   margin: 0.2rem 0 0;
 }

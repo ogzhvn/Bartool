@@ -1,6 +1,7 @@
 import { can } from "./auth.js";
 import { loadDepartments, loadDishes, saveDish } from "./storage.js";
 import { ADDITIVES, ALLERGEN_GROUPS, allergenSubtypes, declarationLabel, missingSubtypes } from "./declarations.js";
+import { getAllProducts } from "./productLibrary.js";
 import { onLanguageChanged, t } from "./i18n.js";
 
 // Gerichte pflegen – Editor (Paket 71).
@@ -8,8 +9,9 @@ import { onLanguageChanged, t } from "./i18n.js";
 // Der Zustand liegt in `state`; Namen, Kategorie und Beschreibung schreiben
 // direkt hinein, die Chipgruppen und der Prüfschalter werden bei jeder
 // Änderung neu gezeichnet. Alles Nutzerseitige geht per value/textContent
-// hinein, nie als HTML (Regel 5). wine_pairings gehört nicht hierher
-// (Paket 73) und wird beim Speichern unverändert zurückgegeben.
+// hinein, nie als HTML (Regel 5). Die Weinbegleitung (Paket 73) wählt ein
+// Mensch aus dem Katalog (Gruppe Wein/Schaumwein) – es gibt keinen Vorschlag
+// aus food_pairing. Gespeichert wird die Produkt-ID, nicht der Name.
 //
 // Prüfvermerk: Die Zeit und das Konto setzt der Server (Trigger
 // private.dishes_guard). Der Editor meldet nur "jetzt geprüft" bzw. "Vermerk
@@ -52,7 +54,7 @@ function newState(dish) {
     additives: new Set(dish?.additives ?? []),
     active: dish ? dish.active !== false : true,
     sort: dish?.sort ?? 0,
-    winePairings: dish?.winePairings ?? [],
+    winePairings: (dish?.winePairings ?? []).map((w) => ({ product_id: w?.product_id ?? "", note: w?.note ?? "" })),
     checked: Boolean(dish?.allergensCheckedAt),
   };
 }
@@ -68,6 +70,7 @@ function snapshot() {
     traces: sortedKeys(state.traces),
     additives: sortedKeys(state.additives),
     active: state.active,
+    wine: state.winePairings,
     checked: state.checked,
   });
 }
@@ -277,6 +280,126 @@ function renderComponents(container) {
   });
 }
 
+// ---------------------------------------------------------------------
+// Weinbegleitung (Paket 73)
+// ---------------------------------------------------------------------
+
+const WINE_GROUPS = ["Wein", "Schaumwein"];
+const MAX_WINES = 3;
+let wineQuery = "";
+
+function wineFacts(product) {
+  return [product.sweetness, product.body, product.foodPairing].filter(Boolean).join(" · ");
+}
+
+function iconButton(iconName, label, onClick, disabled = false) {
+  const button = el("button", "btn-secondary btn-icon");
+  button.type = "button";
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.disabled = disabled;
+  const i = document.createElement("i");
+  i.className = `ph ${iconName}`;
+  i.setAttribute("aria-hidden", "true");
+  button.appendChild(i);
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function wineSection() {
+  const fieldset = el("fieldset", "knowledge-ed-group");
+  fieldset.appendChild(el("legend", null, t("ui.gerichte_ed_wein")));
+  const selectedEl = el("div", "dish-ed-wines");
+  const resultsEl = el("div", "dish-ed-wine-results");
+  const search = el("input");
+  search.type = "text";
+  search.autocomplete = "off";
+  search.maxLength = 80;
+  search.value = wineQuery;
+  search.placeholder = t("ui.gerichte_ed_wein_suche");
+  search.setAttribute("aria-label", t("ui.gerichte_ed_wein_suche"));
+
+  const renderResults = () => {
+    resultsEl.textContent = "";
+    if (state.winePairings.length >= MAX_WINES) {
+      resultsEl.appendChild(el("p", "hint", t("ui.gerichte_ed_wein_max", { n: MAX_WINES })));
+      return;
+    }
+    const term = wineQuery.trim().toLowerCase();
+    const taken = new Set(state.winePairings.map((w) => w.product_id));
+    const hits = getAllProducts()
+      .filter((p) => WINE_GROUPS.includes(p.group) && !taken.has(p.id))
+      .filter((p) => !term || [p.name, p.foodPairing, p.sweetness, p.body].some((v) => (v ?? "").toLowerCase().includes(term)))
+      .slice(0, 12);
+    if (hits.length === 0) {
+      resultsEl.appendChild(el("p", "hint", t("ui.gerichte_ed_wein_keine")));
+      return;
+    }
+    hits.forEach((p) => {
+      const button = el("button", "dish-ed-wine-hit");
+      button.type = "button";
+      button.appendChild(el("strong", null, p.name));
+      const facts = wineFacts(p);
+      if (facts) button.appendChild(el("span", "hint", facts));
+      button.addEventListener("click", () => {
+        state.winePairings.push({ product_id: p.id, note: "" });
+        renderSelected();
+        renderResults();
+      });
+      resultsEl.appendChild(button);
+    });
+  };
+
+  const renderSelected = () => {
+    selectedEl.textContent = "";
+    state.winePairings.forEach((pairing, index) => {
+      const product = getAllProducts().find((p) => p.id === pairing.product_id);
+      const row = el("div", "dish-ed-wine");
+      const head = el("div", "dish-ed-wine-head");
+      const title = el("div", "dish-ed-wine-title");
+      title.appendChild(el("strong", null, product ? product.name : t("ui.gerichte_wein_nicht_im_sortiment")));
+      if (product && wineFacts(product)) title.appendChild(el("span", "hint", wineFacts(product)));
+      head.appendChild(title);
+      head.append(
+        iconButton("ph-arrow-up", t("ui.nach_oben"), () => {
+          [state.winePairings[index - 1], state.winePairings[index]] = [state.winePairings[index], state.winePairings[index - 1]];
+          renderSelected();
+        }, index === 0),
+        iconButton("ph-arrow-down", t("ui.nach_unten"), () => {
+          [state.winePairings[index + 1], state.winePairings[index]] = [state.winePairings[index], state.winePairings[index + 1]];
+          renderSelected();
+        }, index === state.winePairings.length - 1),
+        iconButton("ph-trash", t("ui.entfernen"), () => {
+          state.winePairings.splice(index, 1);
+          renderSelected();
+          renderResults();
+        })
+      );
+      const note = el("input");
+      note.type = "text";
+      note.maxLength = 300;
+      note.autocomplete = "off";
+      note.value = pairing.note;
+      note.placeholder = t("ui.gerichte_ed_wein_notiz");
+      note.setAttribute("aria-label", t("ui.gerichte_ed_wein_notiz"));
+      note.addEventListener("input", () => {
+        pairing.note = note.value;
+      });
+      row.append(head, note);
+      selectedEl.appendChild(row);
+    });
+  };
+
+  search.addEventListener("input", () => {
+    wineQuery = search.value;
+    renderResults();
+  });
+  renderSelected();
+  renderResults();
+  fieldset.append(selectedEl, search, resultsEl);
+  return fieldset;
+}
+
 function buildForm() {
   formEl.textContent = "";
   formEl.appendChild(el("h3", null, state.id ? t("ui.gerichte_ed_bearbeiten") : t("ui.gerichte_ed_neu")));
@@ -319,6 +442,8 @@ function buildForm() {
   formEl.appendChild(group("ui.gerichte_ed_abteilungen", departmentsEl));
 
   formEl.appendChild(checkRow(t("ui.gerichte_ed_aktiv"), state.active, (v) => (state.active = v)));
+
+  formEl.appendChild(wineSection());
 
   declEl = el("div", "dish-ed-decl");
   checkEl = el("div", "dish-ed-check");
@@ -387,7 +512,10 @@ async function handleSubmit(event) {
     allergens: sortedKeys(state.allergens),
     traces: sortedKeys(state.traces),
     additives: sortedKeys(state.additives),
-    winePairings: state.winePairings,
+    winePairings: state.winePairings.map((w) => ({
+      product_id: w.product_id,
+      ...(w.note.trim() ? { note: w.note.trim() } : {}),
+    })),
     active: state.active,
     sort: state.sort,
     checkAllergens: state.checked && (changed || !hadCheck),
@@ -417,6 +545,7 @@ function close(saved) {
 export function openDishEditor(dish) {
   if (!can("dishes.write")) return;
   state = newState(dish);
+  wineQuery = "";
   original = {
     allergens: new Set(state.allergens),
     traces: new Set(state.traces),

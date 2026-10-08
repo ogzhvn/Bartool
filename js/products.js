@@ -7,7 +7,9 @@ import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
 import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
-import { can } from "./auth.js";
+import { can, canSee } from "./auth.js";
+import { loadDishes, onDishesChanged } from "./storage.js";
+import { focusDish } from "./dishes.js";
 import { priceHistoryFor } from "./priceHistory.js";
 import { submitChangeRequest } from "./changeRequests.js";
 import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
@@ -680,6 +682,11 @@ function renderProductItem(product) {
   ].filter(([, value]) => value);
 
   const usedIn = getRecipesUsingProduct(product.name);
+  // Gegenrichtung der Weinbegleitung (Paket 73): nur aktive Gerichte, nur mit Modulfreigabe.
+  const pairedDishes =
+    canSee("dishes") && product.id
+      ? loadDishes().filter((d) => d.active && d.winePairings.some((w) => w?.product_id === product.id))
+      : [];
 
   const item = document.createElement("details");
   // Ermöglicht der globalen Suche, direkt zu diesem Eintrag zu springen.
@@ -699,12 +706,25 @@ function renderProductItem(product) {
       ${metaRows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("")}
       ${renderPriceHistory(product)}
       ${usedIn.length > 0 ? `<p><strong>${t("ui.verwendet_in")}</strong> ${usedIn.map((r) => escapeHtml(r.name)).join(", ")}</p>` : ""}
+      ${pairedDishes.length > 0 ? `<p class="wine-dishes"><strong>${t("ui.gerichte_empfohlen_zu")}:</strong> </p>` : ""}
       <div class="actions">
         <button type="button" class="btn-secondary edit-btn">${can("products.write") ? t("ui.bearbeiten") : t("ui.aenderung_vorschlagen")}</button>
         ${isCustomProduct(product.name) ? `<button type="button" class="btn-secondary delete-btn">${can("products.write") ? t("ui.loeschen") : t("ui.loeschung_vorschlagen")}</button>` : ""}
       </div>
     </div>
   `;
+  const wineDishesEl = item.querySelector(".wine-dishes");
+  if (wineDishesEl) {
+    pairedDishes.forEach((dish, i) => {
+      if (i > 0) wineDishesEl.append(", ");
+      const link = document.createElement("button");
+      link.type = "button";
+      link.className = "knowledge-back-link";
+      link.textContent = dish.name;
+      link.addEventListener("click", () => focusDish(dish.id));
+      wineDishesEl.appendChild(link);
+    });
+  }
   const favBtn = item.querySelector(".fav-btn");
   favBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1093,6 +1113,8 @@ export function initProducts() {
     populatePairsWithOptions();
     renderBrowseList();
   });
+  // "Empfohlen zu" (Weinbegleitung, Paket 73) hängt an den Gerichten.
+  onDishesChanged(renderBrowseList);
   updateGroupFilterVisibility();
   populateGroupFilter();
   populateDatalists();

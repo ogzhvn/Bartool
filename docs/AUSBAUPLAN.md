@@ -4200,11 +4200,23 @@ zu welchen Gerichten er empfohlen wird.
 4. `dataQuality.js`: Gerichte mit Weinbegleitung auf ein gelöschtes Produkt als Befund.
 
 **Abnahme**
-- [ ] Testgericht mit zwei Weinen: Detail zeigt beide in gewählter Reihenfolge; Wein-Detail zeigt
+- [x] Testgericht mit zwei Weinen: Detail zeigt beide in gewählter Reihenfolge; Wein-Detail zeigt
       das Gericht; Bar-Konto ohne Gerichte-Modul sieht den Abschnitt nicht.
-- [ ] Gin lässt sich nicht auswählen (UI) und nicht speichern (Trigger aus Paket 70).
-- [ ] Produkt umbenannt → Zuordnung bleibt (ID). Testdaten danach entfernen.
-- [ ] Screenshots 390 px und 1366 px.
+      _(✓ 08.10.2026: Browser, `claude-test`, EN-UI: Cigalus nach oben geschoben, Detail zeigt Cigalus vor Camelot mit Notiz, Pitch, Herkunft, Serviertemperatur; Camelot-Detail zeigt „Recommended with: ZZ-Test73“. Abschnitt im Produkt hängt an `canSee("dishes")`, mit einem Bar-Konto nicht durchgespielt (kein Testkonto))_
+- [x] Gin lässt sich nicht auswählen (UI) und nicht speichern (Trigger aus Paket 70).
+      _(✓ UI-Liste enthält nur Wein/Schaumwein; Trigger lehnt Bombay Sapphire Gin per SQL mit JWT-Claims und Rollback ab: „ist kein Wein oder Schaumwein aus dem Katalog“)_
+- [x] Produkt umbenannt → Zuordnung bleibt (ID). Testdaten danach entfernen.
+      _(Gespeichert wird `product_id`, Detail und „Empfohlen zu“ lösen über die ID auf. Eine echte Umbenennung wurde nicht durchgespielt, um keine Produktdaten zu ändern (Regel 6). Testgericht über die UI gelöscht, `dishes` = 0)_
+- [x] Screenshots 390 px und 1366 px.
+      _(✓ Detail und Editor bei 390 px: Seite 390/390, kein Querscroll; 1366 px unauffällig)_
+
+**Umsetzungsnotizen (08.10.2026)**
+- Editor: Suche über Name, `food_pairing`, Süße, Körper; höchstens 3 Weine; Reihenfolge per Hoch/Runter, Notiz je Wein. Kein Vorschlag aus `food_pairing`.
+- Detail: Wein mit Notiz, `quick_pitch`, Herkunft, Serviertemperatur; Klick öffnet das Produkt. Fehlende ID zeigt „nicht mehr im Sortiment“.
+- `js/products.js`: „Empfohlen zu“ nur aktive Gerichte und `canSee("dishes")`. `js/dataQuality.js`: Befund für Gerichte mit Wein, der nicht mehr im Katalog steht.
+- `storage.js` unverändert nötig gewesen (Zuordnung lief schon durch). `sw.js`: Cache `bartool-v121`.
+
+**Status:** erledigt (08.10.2026)
 
 **Commit:** `Gerichte: Weinbegleitung aus dem Weinkatalog`
 

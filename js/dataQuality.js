@@ -2,7 +2,9 @@ import { getAllProducts } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { openProductForEdit } from "./products.js";
 import { openRecipeForEdit } from "./recipes.js";
-import { onProductsChanged, onRecipesChanged } from "./storage.js";
+import { loadDishes, onDishesChanged, onProductsChanged, onRecipesChanged } from "./storage.js";
+import { canSee } from "./auth.js";
+import { focusDish } from "./dishes.js";
 import { switchTab, setPendingEditReturn } from "./tabs.js";
 import { escapeHtml } from "./utils.js";
 import { t, onLanguageChanged } from "./i18n.js";
@@ -70,6 +72,40 @@ function renderMetricGroup(title, titleDative, tabId, items, metrics, openForEdi
   return wrapper;
 }
 
+// Weinbegleitung (Paket 73): Gerichte, deren Wein nicht mehr im Katalog steht.
+function renderDishWineGroup() {
+  const wrapper = document.createElement("div");
+  const heading = document.createElement("h4");
+  heading.textContent = t("ui.gerichte");
+  wrapper.appendChild(heading);
+  const ids = new Set(getAllProducts().map((p) => p.id));
+  const broken = loadDishes().filter((d) => d.winePairings.some((w) => !ids.has(w?.product_id)));
+  if (broken.length === 0) {
+    const ok = document.createElement("p");
+    ok.className = "empty-note";
+    ok.textContent = t("ui.qualitaet_wein_ok");
+    wrapper.appendChild(ok);
+    return wrapper;
+  }
+  const details = document.createElement("details");
+  details.className = "audit-entry";
+  const summary = document.createElement("summary");
+  summary.textContent = t("ui.qualitaet_wein_fehlt", { n: broken.length });
+  const list = document.createElement("div");
+  list.className = "quality-item-list";
+  broken.forEach((dish) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "quality-item-btn";
+    btn.textContent = dish.name;
+    btn.addEventListener("click", () => focusDish(dish.id));
+    list.appendChild(btn);
+  });
+  details.append(summary, list);
+  wrapper.appendChild(details);
+  return wrapper;
+}
+
 function render() {
   containerEl.innerHTML = "";
   containerEl.appendChild(
@@ -78,6 +114,7 @@ function render() {
   containerEl.appendChild(
     renderMetricGroup(t("ui.rezepte"), t("ui.rezepten"), "recipes", getAllRecipes(), RECIPE_METRICS, openRecipeForEdit)
   );
+  if (canSee("dishes")) containerEl.appendChild(renderDishWineGroup());
 }
 
 // Sammelstelle für Import und Export (Paket 38): die eigentlichen
@@ -111,6 +148,7 @@ export function initDataQuality() {
 
   onProductsChanged(render);
   onRecipesChanged(render);
+  onDishesChanged(render);
   render();
 
   initImportExport();
