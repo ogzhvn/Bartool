@@ -1373,6 +1373,7 @@ export const en = {
   "ui.zuordnung": "References",
   "ui.alle_kachel": "All",
   "ui.alle_oberkategorie": "All {name}",
+  "ui.alle_rezepte": "All recipes",
   "ui.rezepte_n": "{n} recipes",
   "ui.produkte_n": "{n} products",
   "ui.alle_themen": "All topics",

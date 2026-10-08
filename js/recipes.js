@@ -672,24 +672,29 @@ function renderSidebarCategoryTree() {
   const categories = sortedCategories();
   const active = categoryFilterEl.value;
 
-  categories.forEach((category) => {
+  // category "" = "Alle Rezepte": komplette Liste statt Kachelübersicht.
+  const makeBtn = (label, category, isActive) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "subnav-btn" + (category === active ? " active" : "");
-    btn.textContent = category;
+    btn.className = "subnav-btn" + (isActive ? " active" : "");
+    btn.textContent = label;
     btn.addEventListener("click", () => {
       switchTab("recipes");
       // Detail-/Bearbeiten-Ansicht verlassen und die mobile Navigation
       // schließen, sonst bleibt die Liste unter dem Menü verborgen.
       showListView();
       closeMobileNav();
+      showAll = category === "";
       categoryFilterEl.value = category;
       renderSidebarCategoryTree();
       renderBrowseList();
       window.scrollTo({ top: 0 });
     });
     categoryTreeEl.appendChild(btn);
-  });
+  };
+
+  makeBtn(t("ui.alle_rezepte"), "", showAll && !active);
+  categories.forEach((category) => makeBtn(category, category, category === active));
 }
 
 // Setzt den Kategorie-Filter zurück auf "Alle" – aufgerufen, wenn "Rezepte"
@@ -735,6 +740,7 @@ export function initRecipes() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(() => {
     populateCategoryFilter();
+    renderSidebarCategoryTree();
     renderBrowseList();
     renderSidebarList();
   });

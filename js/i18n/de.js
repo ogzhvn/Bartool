@@ -1374,6 +1374,7 @@ export const de = {
   "ui.zuordnung": "Zuordnung",
   "ui.alle_kachel": "Alle",
   "ui.alle_oberkategorie": "Alle {name}",
+  "ui.alle_rezepte": "Alle Rezepte",
   "ui.rezepte_n": "{n} Rezepte",
   "ui.produkte_n": "{n} Produkte",
   "ui.alle_themen": "Alle Themen",
