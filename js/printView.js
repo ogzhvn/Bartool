@@ -61,18 +61,40 @@ export function printProducts(products) {
   );
 }
 
+// Segmente aus parseInline() (js/knowledge.js) → escaped HTML mit <strong>/<em>.
+function inlineHtml(segments) {
+  return segments
+    .map((seg) => {
+      let html = escapeHtml(seg.text).replace(/\n/g, "<br>");
+      if (seg.italic) html = `<em>${html}</em>`;
+      if (seg.bold) html = `<strong>${html}</strong>`;
+      return html;
+    })
+    .join("");
+}
+
+function knowledgeBlockHtml(block) {
+  const items = (tag, attrs = "") =>
+    `<${tag}${attrs}>${block.items.map((item) => `<li>${inlineHtml(item)}</li>`).join("")}</${tag}>`;
+  if (block.type === "ul") return items("ul");
+  if (block.type === "ol") return items("ol", block.start !== 1 ? ` start="${Number(block.start)}"` : "");
+  if (block.type === "table") {
+    const row = (cells, tag) => `<tr>${cells.map((c) => `<${tag}>${inlineHtml(c)}</${tag}>`).join("")}</tr>`;
+    return (
+      `<table class="knowledge-table">` +
+      (block.header ? `<thead>${row(block.header, "th")}</thead>` : "") +
+      `<tbody>${block.rows.map((r) => row(r, "td")).join("")}</tbody></table>`
+    );
+  }
+  return `<p>${inlineHtml(block.inline)}</p>`;
+}
+
 // Wissensartikel (Paket 54). Der Text kommt aus Nutzereingaben und wird
 // deshalb vollständig escaped; die Blöcke stammen aus parseSectionText().
 export function printKnowledge(doc) {
   const sections = doc.sections
     .map((section) => {
-      const body = section.blocks
-        .map((block) =>
-          block.type === "ul"
-            ? `<ul>${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-            : `<p>${escapeHtml(block.text).replace(/\n/g, "<br>")}</p>`
-        )
-        .join("");
+      const body = section.blocks.map(knowledgeBlockHtml).join("");
       return `${section.heading ? `<h2>${escapeHtml(section.heading)}</h2>` : ""}${body}`;
     })
     .join("");

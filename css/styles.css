@@ -2043,6 +2043,24 @@ select {
     font-weight: bold;
     width: 30%;
   }
+  .print-area table.knowledge-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 6pt 0 10pt;
+    font-size: 10pt;
+  }
+  .print-area table.knowledge-table th,
+  .print-area table.knowledge-table td {
+    border: 1px solid #000;
+    padding: 3pt 5pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  .print-area table.knowledge-table th {
+    background: #e8e8e8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 
   /* Nichts mitten im Eintrag umbrechen */
   details,
@@ -3910,6 +3928,7 @@ input[type="datetime-local"] {
 }
 
 .knowledge-section ul,
+.knowledge-section ol,
 .knowledge-sources ul {
   padding-left: 1.3rem;
   margin: 0.4rem 0;
@@ -3918,6 +3937,41 @@ input[type="datetime-local"] {
 .knowledge-section li,
 .knowledge-sources li {
   margin-bottom: 0.3rem;
+}
+
+/* Markdown-Tabellen (js/knowledge.js renderTable): am Handy im Wrapper
+   horizontal scrollbar, die Seite selbst bleibt stehen. */
+.knowledge-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0.6rem 0 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.knowledge-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.knowledge-table th,
+.knowledge-table td {
+  padding: 0.5rem 0.75rem;
+  min-width: 7rem;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--border);
+}
+
+.knowledge-table thead th {
+  background: var(--bg-elevated-2);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.knowledge-table tbody tr:nth-child(even) {
+  background: var(--bg-elevated);
 }
 
 .knowledge-sources a {

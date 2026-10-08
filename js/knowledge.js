@@ -225,8 +225,60 @@ export function safeHttpUrl(value) {
   }
 }
 
-// Text eines Abschnitts: Leerzeile = Absatz, Zeilen mit "- " = Listenpunkte.
-// Gibt neutrale Blöcke zurück, damit Detailansicht und Druck dasselbe lesen.
+// Inline-Auszeichnung: **fett** und *kursiv*. Liefert Segmente
+// ({ text, bold?, italic? }) statt HTML, damit Detailansicht und Druck den
+// Text nie als Markup einsetzen. Öffnendes Zeichen direkt vor, schließendes
+// direkt nach Text (kein Leerzeichen) – "5 * 3" bleibt dadurch Text.
+const INLINE_RE = /\*\*(\S(?:[\s\S]*?\S)?)\*\*|\*([^\s*](?:[^*]*[^\s*])?)\*/g;
+
+export function parseInline(text) {
+  const source = String(text ?? "");
+  const segments = [];
+  let last = 0;
+  for (const m of source.matchAll(INLINE_RE)) {
+    if (m.index > last) segments.push({ text: source.slice(last, m.index) });
+    if (m[1] !== undefined) {
+      parseInline(m[1]).forEach((seg) => segments.push({ ...seg, bold: true }));
+    } else {
+      segments.push({ text: m[2], italic: true });
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < source.length) segments.push({ text: source.slice(last) });
+  return segments;
+}
+
+const OL_RE = /^(\d{1,3})\. +(.*)$/;
+
+function tableCells(line) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+const isSeparatorRow = (cells) => cells.length > 0 && cells.every((c) => /^:?-+:?$/.test(c));
+
+function buildTable(rawRows) {
+  const hasHeader = rawRows.length >= 2 && isSeparatorRow(rawRows[1]);
+  const header = hasHeader ? rawRows[0] : null;
+  const body = rawRows.slice(hasHeader ? 2 : 0).filter((cells) => !isSeparatorRow(cells));
+  const columns = Math.max(header?.length ?? 0, ...body.map((r) => r.length));
+  const toCells = (cells) =>
+    Array.from({ length: columns }, (_, i) => parseInline(cells[i] ?? ""));
+  return { type: "table", header: header && toCells(header), rows: body.map(toCells) };
+}
+
+// Text eines Abschnitts: Leerzeile = Absatz. Zeilen mit "- " = Listenpunkte,
+// "1. " = nummerierte Liste, Zeilen mit "|" am Anfang = Tabelle (Kopfzeile,
+// Trennzeile "|---|---|", Datenzeilen). Gibt neutrale Blöcke zurück, damit
+// Detailansicht und Druck dasselbe lesen; Inline-Text steht als Segmente
+// (siehe parseInline) in den Blöcken:
+//   { type: "p", inline } | { type: "ul", items } | { type: "ol", start, items }
+//   | { type: "table", header | null, rows }
+// Nicht unterstützt: Überschriften, Links, Code, verschachtelte Listen.
 export function parseSectionText(text) {
   const blocks = [];
   String(text ?? "")
@@ -235,19 +287,38 @@ export function parseSectionText(text) {
     .forEach((chunk) => {
       let paragraph = [];
       let items = [];
+      let ordered = [];
+      let orderedStart = 1;
+      let tableRows = [];
       const flush = () => {
-        if (paragraph.length) blocks.push({ type: "p", text: paragraph.join("\n") });
-        if (items.length) blocks.push({ type: "ul", items });
+        if (paragraph.length) blocks.push({ type: "p", inline: parseInline(paragraph.join("\n")) });
+        if (items.length) blocks.push({ type: "ul", items: items.map(parseInline) });
+        if (ordered.length) {
+          blocks.push({ type: "ol", start: orderedStart, items: ordered.map(parseInline) });
+        }
+        if (tableRows.length) blocks.push(buildTable(tableRows));
         paragraph = [];
         items = [];
+        ordered = [];
+        tableRows = [];
       };
       chunk.split("\n").forEach((line) => {
+        const numbered = OL_RE.exec(line);
         if (line.startsWith("- ")) {
-          if (paragraph.length) flush();
+          if (!items.length) flush();
           const item = line.slice(2).trim();
           if (item) items.push(item);
+        } else if (numbered) {
+          if (!ordered.length) {
+            flush();
+            orderedStart = Number(numbered[1]);
+          }
+          if (numbered[2].trim()) ordered.push(numbered[2].trim());
+        } else if (line.trim().startsWith("|")) {
+          if (!tableRows.length) flush();
+          tableRows.push(tableCells(line));
         } else if (line.trim()) {
-          if (items.length) flush();
+          if (!paragraph.length) flush();
           paragraph.push(line.trim());
         }
       });
@@ -380,16 +451,67 @@ function renderList() {
 // Detail
 // ---------------------------------------------------------------------
 
+// Segmente (parseInline) als Text-/<strong>-/<em>-Knoten – nie als HTML.
+function appendInline(node, segments) {
+  segments.forEach((seg) => {
+    let child = document.createTextNode(seg.text);
+    if (seg.italic) {
+      const em = document.createElement("em");
+      em.appendChild(child);
+      child = em;
+    }
+    if (seg.bold) {
+      const strong = document.createElement("strong");
+      strong.appendChild(child);
+      child = strong;
+    }
+    node.appendChild(child);
+  });
+}
+
+function inlineEl(tag, className, segments) {
+  const node = el(tag, className);
+  appendInline(node, segments);
+  return node;
+}
+
+function renderTable(block) {
+  const wrap = el("div", "knowledge-table-wrap");
+  wrap.tabIndex = 0;
+  const table = el("table", "knowledge-table");
+  if (block.header) {
+    const tr = el("tr");
+    block.header.forEach((cell) => {
+      const th = inlineEl("th", null, cell);
+      th.scope = "col";
+      tr.appendChild(th);
+    });
+    table.appendChild(el("thead")).appendChild(tr);
+  }
+  const tbody = el("tbody");
+  block.rows.forEach((row) => {
+    const tr = el("tr");
+    row.forEach((cell) => tr.appendChild(inlineEl("td", null, cell)));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  return wrap;
+}
+
 function renderSection(section) {
   const wrap = el("section", "knowledge-section");
   if (section?.heading) wrap.appendChild(el("h4", null, section.heading));
   parseSectionText(section?.text).forEach((block) => {
-    if (block.type === "ul") {
-      const ul = el("ul");
-      block.items.forEach((item) => ul.appendChild(el("li", null, item)));
-      wrap.appendChild(ul);
+    if (block.type === "ul" || block.type === "ol") {
+      const list = el(block.type);
+      if (block.type === "ol" && block.start !== 1) list.start = block.start;
+      block.items.forEach((item) => list.appendChild(inlineEl("li", null, item)));
+      wrap.appendChild(list);
+    } else if (block.type === "table") {
+      wrap.appendChild(renderTable(block));
     } else {
-      wrap.appendChild(el("p", "knowledge-text", block.text));
+      wrap.appendChild(inlineEl("p", "knowledge-text", block.inline));
     }
   });
   return wrap;
