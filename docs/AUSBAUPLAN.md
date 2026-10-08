@@ -3293,6 +3293,24 @@ gefunden). Gestrichen, weil nicht belegt: „häufigste Quelle“ (Kreuzkontamin
 „zu viel Mittel belastet Umwelt und Budget“. Abgleich per md5 des Abschnittstexts. Karten ohne Quelle:
 41 → 38. Offen: Gegenlesen und Prüfvermerk durch die Barleitung.
 
+**Lernkarten mit Quellen, Runde 2: Warenwirtschaft & Lager (08.10.2026):** Alle 8 Karten ohne Quelle
+(Warenannahme, MHD/Verbrauchsdatum, FIFO, Lagerarten, Leergut, Schädlinge, Mindest-/Melde-/Höchstbestand,
+Bestellvorgang) auf 7 Sätze gebracht, je ein Abschnitt „Kurz erklärt“, Kurzfassung = erster Satz, weiter
+Entwurf. Quellen: Merkblatt Eigenkontrollen Lübeck (07/2023), BfR Hygieneregeln (2024), LMIV Art. 24 und
+Anhang X, VO (EG) 852/2004 Anh. II Kap. IX, BVL-FAQ MHD, BZfE (MHD einfache Sprache 2019, Lebensmittel
+richtig lagern 2025), Lebensmittelklarheit (2021), UBA (Vorratsschädlinge, Mehrwegflaschen, beide 2026),
+DWI Weinlagerung, Bildungsserver Hessen Arbeitsblatt FiFo (2021), Gabler Wirtschaftslexikon (Beschaffung,
+Lieferantenbeurteilung, Sicherheits-/Meldebestand, Bestellpunktverfahren). EUR-Lex und
+gesetze-im-internet.de waren in der Recherche-Umgebung nicht erreichbar: LMIV- und 852/2004-Wortlaut über
+den Spiegel gesetze.legal gelesen und so in der `note` vermerkt, VerpackG nicht abgerufen (Pfand über UBA
+belegt). Gestrichen, weil nicht belegt: FEFO (nur Lagersoftware-Anbieter), Luftfeuchte, Zwiebeln/Fisch
+getrennt, Rohes unten, Spirituosen dunkel, erschütterungsfrei, Giftköder-Verbot, Mängel auf dem
+Lieferschein, Verpackungseinheiten/Mindestabnahme, Kapitalbindung, „prüfungsrelevant“, Transportgut
+(Paletten). „Unklar:“ Öffnungsdatum beschriften (FIFO), Leergut-Gutschrift/Rücknahme beschädigter Gebinde
+(Lieferantenvereinbarung). Hausstandard offen: Bestandswerte Bar/Lager. Abgleich per md5 des
+Abschnittstexts. Karten ohne Quelle: 38 → 30. Offen: Gegenlesen und Prüfvermerk durch die Barleitung,
+ggf. EUR-Lex-Wortlaut nachprüfen.
+
 **Schreibregeln (07.10.2026)**
 
 Vorgabe des Nutzers. Zielgruppe: alle Mitarbeitenden in Bar, WGR und Tellerwerk – auch Azubis und
