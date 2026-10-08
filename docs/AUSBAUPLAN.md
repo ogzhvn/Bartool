@@ -4291,6 +4291,9 @@ Ladezeiten, Handy-Bedienung, Druckqualität nach Augenschein.
 140 px über den Bildschirm; der Konto-Button (Passwort ändern, Abmelden) rutscht aus dem Sichtfeld.
 Gemessen bei 390 px: Rezepte +19 px, Zuckersirup +69 px, Verdünnung & ABV +70 px. Als eigene Aufgabe
 angelegt, Layout-Grundgerüst (Regel 4) nicht ohne Rückfrage ändern.
+_Nachmessung 08.10.2026 (Playwright, `claude-test`, DE und EN, 320/360/390 px, alle 30 `data-tab`): kein
+Überlauf mehr. Der Tab-Titel wird mit „…“ gekürzt, der Konto-Button endet 12 px vor dem Rand. Behoben durch
+Paket 57 (Querschnitt Header)._
 
 **Datenlücken** (stehen an den jeweiligen Zeilen): `Stork Smoky Rye`, `Chapeau Secco`, `Northman Calm Sea`,
 fünf Liköre ohne `abv_value`, drei Tee-Produkte `verified` ohne Herkunftsland, Rum ⌀ `story` unter 300.
