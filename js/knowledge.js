@@ -83,14 +83,23 @@ const departmentEl = document.getElementById("knowledge-department");
 const unreadEl = document.getElementById("knowledge-unread");
 const jahrEl = document.getElementById("knowledge-jahr");
 const levelEl = document.getElementById("knowledge-level");
-const chipsEl = document.getElementById("knowledge-categories");
+const filterToggleEl = document.getElementById("knowledge-filter-toggle");
+const filterCountEl = document.getElementById("knowledge-filter-count");
+const filterPanelEl = document.getElementById("knowledge-filter-panel");
+const filterResetEl = document.getElementById("knowledge-filter-reset");
+const navEl = document.getElementById("knowledge-nav");
+const topicsEl = document.getElementById("knowledge-topics");
 const listEl = document.getElementById("knowledge-list");
 const listViewEl = document.getElementById("knowledge-list-view");
 const detailEl = document.getElementById("knowledge-detail");
 const newBtn = document.getElementById("knowledge-new");
 
 let departments = [];
+// Ansicht (Paket 62): ohne Suche und Kategorie die Themenübersicht, mit
+// Kategorie deren Liste, mit Suchtext die Treffer aus allen Kategorien.
 let activeCategory = "";
+// Scrollposition der Liste beim Öffnen eines Artikels, für "Zurück".
+let listScrollTop = null;
 let departmentFilter = null;
 // "" = alle. Jahr als String, wie es aus dem <select> kommt.
 let jahrFilter = "";
@@ -172,17 +181,45 @@ function matchesSearch(article, query) {
   return parts.join("\n").toLowerCase().includes(query);
 }
 
+function searchQuery() {
+  return searchEl.value.trim().toLowerCase();
+}
+
+const isUnread = (article) => ["neu", "aktualisiert"].includes(readState(article));
+
+// Abteilung, Jahr, Level; Entwürfe nur mit knowledge.write (RLS liefert sie
+// ohnehin nur dann, das hier ist die zweite Sicherung).
+function filteredArticles() {
+  const drafts = can("knowledge.write");
+  return sortedArticles().filter(
+    (article) => (article.published || drafts) && matchesDepartment(article) && matchesMeta(article)
+  );
+}
+
+// Liste der aktuellen Ansicht: Suche über alle Kategorien, sonst die
+// gewählte Kategorie.
 function visibleArticles() {
-  const query = searchEl.value.trim().toLowerCase();
+  const query = searchQuery();
   const onlyUnread = unreadEl.checked;
-  return sortedArticles().filter((article) => {
-    if (activeCategory && article.category !== activeCategory) return false;
-    if (!matchesDepartment(article)) return false;
-    if (!matchesMeta(article)) return false;
+  return filteredArticles().filter((article) => {
+    if (!query && article.category !== activeCategory) return false;
     if (!matchesSearch(article, query)) return false;
-    if (onlyUnread && !["neu", "aktualisiert"].includes(readState(article))) return false;
+    if (onlyUnread && !isUnread(article)) return false;
     return true;
   });
+}
+
+function defaultDepartmentFilter() {
+  return myDepartment() ? FILTER_OWN : FILTER_ALL;
+}
+
+function activeFilterCount() {
+  return [
+    departmentFilter !== null && departmentFilter !== defaultDepartmentFilter(),
+    jahrFilter !== "",
+    levelFilter !== "",
+    unreadEl.checked,
+  ].filter(Boolean).length;
 }
 
 // ---------------------------------------------------------------------
@@ -334,15 +371,28 @@ function berufLabel(key) {
   return KNOWLEDGE_BERUFE.find((b) => b.key === key)?.label ?? key;
 }
 
-// "Für: <Berufe> · 1. Ausbildungsjahr · Basis" – leer ohne Lernkarten-Daten.
-function lernkarteText(article) {
-  const parts = [];
-  if (article.jahr) parts.push(t("ui.wissen_jahr_n", { n: article.jahr }));
-  if (article.level) parts.push(t(`ui.wissen_level_${article.level}`));
-  const berufe = article.berufe ?? [];
-  if (berufe.length === 0 && parts.length === 0) return "";
-  if (berufe.length > 0) parts.unshift(berufe.map(berufLabel).join(", "));
-  return t("ui.wissen_lernkarte_fuer", { list: parts.join(" · ") });
+function iconEl(name) {
+  const icon = el("i", `ph ${name}`);
+  icon.setAttribute("aria-hidden", "true");
+  return icon;
+}
+
+// Metadaten des Detailkopfs als kleine Tags: Abteilungen, Berufe, Jahr, Level.
+function metaTags(article) {
+  const list = el("ul", "knowledge-tags");
+  const add = (icon, text, title) => {
+    const tag = el("li", "knowledge-tag");
+    tag.append(iconEl(icon), document.createTextNode(text));
+    if (title) tag.title = title;
+    list.appendChild(tag);
+  };
+  const abteilung = t("ui.wissen_abteilung");
+  if (article.departments.length === 0) add("ph-buildings", t("ui.wissen_abt_alle"), abteilung);
+  else article.departments.forEach((key) => add("ph-buildings", departmentLabel(key), abteilung));
+  (article.berufe ?? []).forEach((key) => add("ph-student", berufLabel(key)));
+  if (article.jahr) add("ph-calendar-blank", t("ui.wissen_jahr_n", { n: article.jahr }));
+  if (article.level) add("ph-chart-bar", t(`ui.wissen_level_${article.level}`), t("ui.wissen_level"));
+  return list;
 }
 
 // Lernkarten wiederholen die Kurzfassung als ersten Satz des ersten
@@ -401,47 +451,169 @@ function renderMetaFilters() {
   );
 }
 
-function renderChips() {
-  const present = new Set(loadKnowledge().map((a) => a.category));
-  const categories = [
+// Kategorien mit Artikeln: feste Reihenfolge, unbekannte alphabetisch dahinter.
+function presentCategories(articles) {
+  const present = new Set(articles.map((a) => a.category).filter(Boolean));
+  return [
     ...KNOWLEDGE_CATEGORIES.filter((c) => present.has(c)),
-    ...[...present].filter((c) => c && !KNOWLEDGE_CATEGORIES.includes(c)).sort(),
+    ...[...present]
+      .filter((c) => !KNOWLEDGE_CATEGORIES.includes(c))
+      .sort((a, b) => a.localeCompare(b, "de", { sensitivity: "base" })),
   ];
-  if (activeCategory && !categories.includes(activeCategory)) activeCategory = "";
-  chipsEl.textContent = "";
-  chipsEl.hidden = categories.length === 0;
-  [["", t("ui.alle")], ...categories.map((c) => [c, c])].forEach(([value, label]) => {
-    const chip = el("button", "quiz-lb-chip", label);
-    chip.type = "button";
-    chip.dataset.category = value;
-    chip.classList.toggle("active", value === activeCategory);
-    chip.setAttribute("aria-pressed", String(value === activeCategory));
-    chipsEl.appendChild(chip);
-  });
 }
 
-function renderCard(article) {
-  const card = el("button", "knowledge-card");
-  card.type = "button";
-  card.dataset.id = article.id;
-  const head = el("div", "knowledge-card-head");
-  head.append(el("span", "knowledge-card-category", article.category), statusBadge(article));
-  card.append(head, el("h3", "knowledge-card-title", article.title));
-  if (article.summary) card.appendChild(el("p", "knowledge-card-summary", article.summary));
-  return card;
-}
-
-function renderList() {
+// Themenübersicht: eine Kachel je Kategorie mit Anzahl und Lesefortschritt.
+// Die Filter wirken mit; "Nur ungelesen" blendet fertig gelesene Themen aus.
+function renderTopics() {
   const all = loadKnowledge();
-  const shown = visibleArticles();
+  const articles = filteredArticles();
+  const onlyUnread = unreadEl.checked;
+  topicsEl.textContent = "";
+  presentCategories(articles).forEach((category) => {
+    const inCategory = articles.filter((a) => a.category === category);
+    const published = inCategory.filter((a) => a.published);
+    const read = published.filter((a) => readState(a) === "gelesen").length;
+    if (onlyUnread && !published.some(isUnread)) return;
+
+    const tile = el("button", "knowledge-topic");
+    tile.type = "button";
+    tile.dataset.category = category;
+    const count = [
+      inCategory.length === 1 ? t("ui.wissen_artikel_eins") : t("ui.wissen_artikel_n", { n: inCategory.length }),
+    ];
+    const drafts = inCategory.length - published.length;
+    if (drafts > 0) count.push(t("ui.wissen_entwuerfe_n", { n: drafts }));
+    tile.append(
+      el("span", "knowledge-topic-name", category),
+      el("span", "knowledge-topic-count", count.join(" · "))
+    );
+    if (published.length > 0) {
+      const bar = el("span", "knowledge-progress");
+      bar.setAttribute("aria-hidden", "true");
+      const fill = el("span", "knowledge-progress-fill");
+      fill.style.width = `${Math.round((read / published.length) * 100)}%`;
+      bar.appendChild(fill);
+      tile.append(
+        bar,
+        el("span", "knowledge-topic-progress", t("ui.wissen_gelesen_von", { read, total: published.length }))
+      );
+      tile.classList.toggle("done", read === published.length);
+    }
+    topicsEl.appendChild(tile);
+  });
+  if (!topicsEl.firstChild) {
+    topicsEl.appendChild(
+      el("p", "empty-note", all.length === 0 ? t("ui.wissen_leer") : t("ui.wissen_keine_treffer"))
+    );
+  }
+}
+
+function backButton(action, label, ariaLabel) {
+  const button = el("button", "knowledge-back-link");
+  button.type = "button";
+  button.dataset.action = action;
+  button.setAttribute("aria-label", ariaLabel);
+  button.append(iconEl("ph-arrow-left"), el("span", null, label));
+  return button;
+}
+
+// Kopf über der Liste: "Alle Themen" + Kategoriename bzw. Trefferzahl.
+function renderNav(mode, count) {
+  navEl.textContent = "";
+  navEl.hidden = mode === "overview";
+  if (mode === "search") {
+    const text = count === 1 ? t("ui.wissen_treffer_eins") : t("ui.wissen_treffer_n", { n: count });
+    navEl.appendChild(el("p", "knowledge-nav-title", text));
+    return;
+  }
+  if (mode !== "category") return;
+  const label = t("ui.wissen_alle_themen");
+  navEl.appendChild(backButton("overview", label, label));
+  const title = el("h3", "knowledge-nav-title", activeCategory);
+  title.appendChild(el("span", "knowledge-nav-count", ` · ${count}`));
+  navEl.appendChild(title);
+}
+
+function statusBadgeShort(article) {
+  const badge = statusBadge(article);
+  if (readState(article) === "aktualisiert") {
+    badge.title = badge.textContent;
+    badge.textContent = t("ui.wissen_status_aktualisiert_kurz");
+  }
+  return badge;
+}
+
+// Kompakte Zeile: Titel, Level (bei Suche auch Kategorie), Status,
+// Kurztext höchstens zwei Zeilen (am Handy ausgeblendet, CSS).
+function renderRow(article, withCategory) {
+  const row = el("button", "knowledge-row");
+  row.type = "button";
+  row.dataset.id = article.id;
+  const main = el("span", "knowledge-row-main");
+  main.appendChild(el("span", "knowledge-row-title", article.title));
+  const meta = [];
+  if (withCategory) meta.push(article.category);
+  if (article.level) meta.push(t(`ui.wissen_level_${article.level}`));
+  if (meta.length) main.appendChild(el("span", "knowledge-row-meta", meta.join(" · ")));
+  if (article.summary) main.appendChild(el("span", "knowledge-row-summary", article.summary));
+  row.append(main, statusBadgeShort(article), iconEl("ph-caret-right knowledge-row-caret"));
+  return row;
+}
+
+function renderFilterState() {
+  const count = activeFilterCount();
+  filterCountEl.hidden = count === 0;
+  filterCountEl.textContent = String(count);
+  filterToggleEl.classList.toggle("active", count > 0);
+  if (count > 0) filterToggleEl.setAttribute("aria-label", t("ui.wissen_filter_n", { n: count }));
+  else filterToggleEl.removeAttribute("aria-label");
+  filterResetEl.disabled = count === 0;
+}
+
+function currentMode() {
+  if (searchQuery()) return "search";
+  return activeCategory ? "category" : "overview";
+}
+
+function renderBrowse() {
+  // Kategorie verschwunden (gelöscht/umbenannt): zurück zur Übersicht.
+  if (activeCategory && !loadKnowledge().some((a) => a.category === activeCategory)) activeCategory = "";
+  const mode = currentMode();
+  renderFilterState();
+  topicsEl.hidden = mode !== "overview";
+  listEl.hidden = mode === "overview";
   listEl.textContent = "";
+  topicsEl.textContent = "";
+  if (mode === "overview") {
+    renderNav(mode, 0);
+    renderTopics();
+    return;
+  }
+  const shown = visibleArticles();
+  renderNav(mode, shown.length);
   if (shown.length === 0) {
     listEl.appendChild(
-      el("p", "empty-note", all.length === 0 ? t("ui.wissen_leer") : t("ui.wissen_keine_treffer"))
+      el("p", "empty-note", loadKnowledge().length === 0 ? t("ui.wissen_leer") : t("ui.wissen_keine_treffer"))
     );
     return;
   }
-  shown.forEach((article) => listEl.appendChild(renderCard(article)));
+  shown.forEach((article) => listEl.appendChild(renderRow(article, mode === "search")));
+}
+
+function resetFilters() {
+  departmentFilter = defaultDepartmentFilter();
+  departmentEl.value = departmentFilter;
+  jahrFilter = "";
+  levelFilter = "";
+  jahrEl.value = "";
+  levelEl.value = "";
+  unreadEl.checked = false;
+  renderBrowse();
+}
+
+function setFiltersOpen(open) {
+  filterPanelEl.hidden = !open;
+  filterToggleEl.setAttribute("aria-expanded", String(open));
 }
 
 // ---------------------------------------------------------------------
@@ -545,37 +717,70 @@ function readButtonLabel(article) {
   return state === "aktualisiert" ? t("ui.wissen_erneut_gelesen") : t("ui.wissen_als_gelesen");
 }
 
+function iconButton(action, icon, label) {
+  const button = el("button", "btn-secondary btn-icon");
+  button.type = "button";
+  button.dataset.action = action;
+  button.setAttribute("aria-label", label);
+  button.title = label;
+  button.appendChild(iconEl(icon));
+  return button;
+}
+
+// Wohin "Zurück" führt: Suchtreffer, Kategorie oder Übersicht.
+function backLabel() {
+  if (searchQuery()) return t("ui.wissen_suchergebnisse");
+  return activeCategory || t("ui.wissen_alle_themen");
+}
+
+// Kopfzeile: Zurück links, Drucken/Bearbeiten als Symbolknöpfe rechts,
+// Löschen nur im Überlaufmenü.
+function renderDetailBar() {
+  const bar = el("div", "knowledge-detail-bar");
+  const label = backLabel();
+  bar.appendChild(backButton("back", label, `${t("ui.wissen_zurueck")}: ${label}`));
+  const tools = el("div", "knowledge-detail-tools");
+  tools.appendChild(iconButton("print", "ph-printer", t("ui.drucken")));
+  if (can("knowledge.write")) {
+    const edit = iconButton("edit", "ph-pencil-simple", t("ui.bearbeiten"));
+    edit.dataset.perm = "knowledge.write";
+    const more = el("div", "knowledge-more");
+    more.dataset.perm = "knowledge.write";
+    const moreBtn = iconButton("more", "ph-dots-three-vertical", t("ui.wissen_weitere_aktionen"));
+    moreBtn.setAttribute("aria-haspopup", "true");
+    moreBtn.setAttribute("aria-expanded", "false");
+    moreBtn.setAttribute("aria-controls", "knowledge-more-menu");
+    const menu = el("div", "knowledge-more-menu");
+    menu.id = "knowledge-more-menu";
+    menu.hidden = true;
+    const remove = el("button", "knowledge-more-item knowledge-delete");
+    remove.type = "button";
+    remove.dataset.action = "delete";
+    remove.append(iconEl("ph-trash"), document.createTextNode(t("ui.loeschen")));
+    menu.appendChild(remove);
+    more.append(moreBtn, menu);
+    tools.append(edit, more);
+  }
+  bar.appendChild(tools);
+  return bar;
+}
+
+function setMoreMenuOpen(open) {
+  const menu = detailEl.querySelector(".knowledge-more-menu");
+  const button = detailEl.querySelector('button[data-action="more"]');
+  if (!menu || !button) return;
+  menu.hidden = !open;
+  button.setAttribute("aria-expanded", String(open));
+}
+
 function renderDetail(article) {
   const token = ++detailRenderToken;
   detailEl.textContent = "";
-
-  const toolbar = el("div", "knowledge-toolbar");
-  const back = el("button", "btn-secondary", t("ui.wissen_zurueck"));
-  back.type = "button";
-  back.dataset.action = "back";
-  const print = el("button", "btn-secondary", t("ui.drucken"));
-  print.type = "button";
-  print.dataset.action = "print";
-  toolbar.append(back, print);
-  if (can("knowledge.write")) {
-    const edit = el("button", "btn-secondary", t("ui.bearbeiten"));
-    edit.type = "button";
-    edit.dataset.action = "edit";
-    edit.dataset.perm = "knowledge.write";
-    const remove = el("button", "btn-secondary knowledge-delete", t("ui.loeschen"));
-    remove.type = "button";
-    remove.dataset.action = "delete";
-    remove.dataset.perm = "knowledge.write";
-    toolbar.append(edit, remove);
-  }
-  detailEl.appendChild(toolbar);
+  detailEl.appendChild(renderDetailBar());
 
   const meta = el("div", "knowledge-card-head");
   meta.append(el("span", "knowledge-card-category", article.category), statusBadge(article));
-  detailEl.append(meta, el("h3", "knowledge-detail-title", article.title));
-  detailEl.appendChild(el("p", "hint", departmentsText(article)));
-  const lernkarte = lernkarteText(article);
-  if (lernkarte) detailEl.appendChild(el("p", "hint", lernkarte));
+  detailEl.append(meta, el("h3", "knowledge-detail-title", article.title), metaTags(article));
 
   if (article.imagePath) {
     const img = el("img", "knowledge-cover");
@@ -623,12 +828,19 @@ function renderDetail(article) {
   detailEl.appendChild(status);
 }
 
+// Zurück in die Liste, aus der der Artikel geöffnet wurde, an dieselbe
+// Scrollposition.
 function showList() {
   openArticleId = null;
   statusMessage = "";
   detailRenderToken += 1;
   detailEl.hidden = true;
   listViewEl.hidden = false;
+  if (listScrollTop !== null) {
+    const top = listScrollTop;
+    requestAnimationFrame(() => window.scrollTo({ top }));
+  }
+  listScrollTop = null;
 }
 
 // Auf dem Weg in den Editor: Liste und Detail weg, offener Artikel bleibt
@@ -673,9 +885,19 @@ async function handleDelete() {
   render();
 }
 
-function openArticle(id) {
+// deepLink: Sprung von außen (globale Suche, gespeicherter Artikel). Dann
+// führt "Zurück" in die Kategorie des Artikels statt in eine alte Ansicht.
+function openArticle(id, { deepLink = false } = {}) {
   const article = loadKnowledge().find((a) => a.id === id);
   if (!article) return;
+  if (deepLink) {
+    activeCategory = article.category;
+    searchEl.value = "";
+    listScrollTop = null;
+    renderBrowse();
+  } else if (!openArticleId && !listViewEl.hidden) {
+    listScrollTop = window.scrollY;
+  }
   openArticleId = id;
   statusMessage = "";
   listViewEl.hidden = true;
@@ -692,31 +914,35 @@ export function focusKnowledge(id) {
     discardKnowledgeEditor();
   }
   switchTab("knowledge");
-  openArticle(id);
+  openArticle(id, { deepLink: true });
+}
+
+// Erneuter Klick auf "Wissen", während Wissen schon offen ist: zurück zur
+// Themenübersicht. Filter bleiben.
+function goToOverview() {
+  showList();
+  listScrollTop = null;
+  activeCategory = "";
+  searchEl.value = "";
+  renderBrowse();
 }
 
 // ---------------------------------------------------------------------
 // Zusammenspiel
 // ---------------------------------------------------------------------
 
+// Sprachwechsel: alles neu beschriften. Kategorie, Suche, Filter und offener
+// Artikel stehen in Modulvariablen bzw. Feldern und bleiben erhalten.
 function render() {
   renderDepartmentFilter();
   renderMetaFilters();
-  renderChips();
-  renderList();
-  // Offenes Formular nicht durch Realtime/Sprachwechsel anfassen.
-  if (openArticleId && !isKnowledgeEditorOpen()) {
-    const article = loadKnowledge().find((a) => a.id === openArticleId);
-    if (article) renderDetail(article);
-    else showList();
-  }
+  refresh();
 }
 
 // Daten- oder Statuswechsel (Realtime, Gelesen-Haken): nur neu zeichnen,
 // Filter und offenen Artikel behalten.
 function refresh() {
-  renderChips();
-  renderList();
+  renderBrowse();
   // Offenes Formular nicht durch Realtime/Sprachwechsel anfassen.
   if (openArticleId && !isKnowledgeEditorOpen()) {
     const article = loadKnowledge().find((a) => a.id === openArticleId);
@@ -737,63 +963,82 @@ async function handleMarkRead() {
   }
 }
 
+function handlePrint() {
+  const article = loadKnowledge().find((a) => a.id === openArticleId);
+  if (!article) return;
+  printKnowledge({
+    title: article.title,
+    category: article.category,
+    departmentsText: departmentsText(article),
+    summary: summaryRepeated(article) ? "" : article.summary,
+    sections: article.sections.map((s) => ({ heading: s?.heading ?? "", blocks: parseSectionText(s?.text) })),
+    stand:
+      article.reviewedAt && article.reviewedBy
+        ? t("ui.wissen_stand", { date: formatDate(article.reviewedAt), name: article.reviewedBy })
+        : "",
+    sourcesTitle: t("ui.wissen_quellen"),
+    sources: article.sources.map((src) => [src?.label, src?.url, src?.note].filter(Boolean).join(" – ")),
+  });
+}
+
 export function initKnowledge() {
   if (!listEl) return;
 
-  searchEl.addEventListener("input", renderList);
-  unreadEl.addEventListener("change", renderList);
+  searchEl.addEventListener("input", renderBrowse);
+  unreadEl.addEventListener("change", renderBrowse);
   departmentEl.addEventListener("change", () => {
     departmentFilter = departmentEl.value;
-    renderList();
+    renderBrowse();
   });
   jahrEl.addEventListener("change", () => {
     jahrFilter = jahrEl.value;
-    renderList();
+    renderBrowse();
   });
   levelEl.addEventListener("change", () => {
     levelFilter = levelEl.value;
-    renderList();
+    renderBrowse();
   });
-  chipsEl.addEventListener("click", (e) => {
-    const chip = e.target.closest(".quiz-lb-chip");
-    if (!chip) return;
-    activeCategory = chip.dataset.category;
-    renderChips();
-    renderList();
+  filterToggleEl.addEventListener("click", () => setFiltersOpen(filterPanelEl.hidden));
+  filterResetEl.addEventListener("click", resetFilters);
+  topicsEl.addEventListener("click", (e) => {
+    const tile = e.target.closest(".knowledge-topic");
+    if (!tile) return;
+    activeCategory = tile.dataset.category;
+    renderBrowse();
+    if (navEl.getBoundingClientRect().top < 0) navEl.scrollIntoView?.({ block: "start" });
+  });
+  navEl.addEventListener("click", (e) => {
+    if (!e.target.closest('button[data-action="overview"]')) return;
+    activeCategory = "";
+    renderBrowse();
   });
   listEl.addEventListener("click", (e) => {
-    const card = e.target.closest(".knowledge-card");
-    if (card) openArticle(card.dataset.id);
+    const row = e.target.closest(".knowledge-row");
+    if (row) openArticle(row.dataset.id);
   });
   detailEl.addEventListener("click", (e) => {
     const button = e.target.closest("button[data-action]");
     if (!button) return;
-    if (button.dataset.action === "back") showList();
-    else if (button.dataset.action === "read") handleMarkRead();
-    else if (button.dataset.action === "edit") {
+    const action = button.dataset.action;
+    if (action === "more") {
+      setMoreMenuOpen(button.getAttribute("aria-expanded") !== "true");
+      return;
+    }
+    setMoreMenuOpen(false);
+    if (action === "back") showList();
+    else if (action === "read") handleMarkRead();
+    else if (action === "edit") {
       const article = loadKnowledge().find((a) => a.id === openArticleId);
       if (article) startEditing(article);
-    } else if (button.dataset.action === "delete") handleDelete();
-    else if (button.dataset.action === "print") {
-      const article = loadKnowledge().find((a) => a.id === openArticleId);
-      if (article) {
-        printKnowledge({
-          title: article.title,
-          category: article.category,
-          departmentsText: departmentsText(article),
-          summary: summaryRepeated(article) ? "" : article.summary,
-          sections: article.sections.map((s) => ({ heading: s?.heading ?? "", blocks: parseSectionText(s?.text) })),
-          stand:
-            article.reviewedAt && article.reviewedBy
-              ? t("ui.wissen_stand", { date: formatDate(article.reviewedAt), name: article.reviewedBy })
-              : "",
-          sourcesTitle: t("ui.wissen_quellen"),
-          sources: article.sources.map((src) =>
-            [src?.label, src?.url, src?.note].filter(Boolean).join(" – ")
-          ),
-        });
-      }
-    }
+    } else if (action === "delete") handleDelete();
+    else if (action === "print") handlePrint();
+  });
+  // Überlaufmenü schließt bei Klick daneben und mit Escape.
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest?.(".knowledge-more")) setMoreMenuOpen(false);
+  });
+  detailEl.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setMoreMenuOpen(false);
   });
 
   newBtn.addEventListener("click", () => startEditing(null));
@@ -805,14 +1050,24 @@ export function initKnowledge() {
     onClose: handleEditorClosed,
   });
 
-  // "Wissen" direkt anklicken (Sidebar-Button, Start-Kachel) führt aus einem
-  // offenen Artikel zurück zur Liste. Der Editor bleibt unberührt, damit
+  // "Wissen" anklicken (Sidebar-Button, Start-Kachel): aus einem anderen Tab
+  // bleibt die Ansicht, wie sie war. Nur ein Klick, während Wissen schon
+  // offen ist, führt zur Themenübersicht. Der Capture-Listener sieht den
+  // Zustand vor dem Tabwechsel. Der Editor bleibt unberührt, damit
   // ungespeicherte Änderungen nicht verloren gehen.
+  const panelEl = document.getElementById("knowledge");
+  let wasActive = false;
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (e.target.closest?.('[data-tab="knowledge"]')) wasActive = panelEl?.classList.contains("active") ?? false;
+    },
+    true
+  );
   document.querySelectorAll('[data-tab="knowledge"]').forEach((el) => {
     el.addEventListener("click", () => {
-      if (isKnowledgeEditorOpen() || !openArticleId) return;
-      showList();
-      renderList();
+      if (!wasActive || isKnowledgeEditorOpen()) return;
+      goToOverview();
     });
   });
 
@@ -821,6 +1076,6 @@ export function initKnowledge() {
   render();
   loadDepartments().then(() => {
     renderDepartmentFilter();
-    renderList();
+    refresh();
   });
 }

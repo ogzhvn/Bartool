@@ -365,7 +365,7 @@ erfinden.
 | 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 61 | Wissen: Kategorien bereinigen (Daten) | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | offen | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
+| 62 | Wissen: Themenübersicht, kompakte Liste, Detailkopf | erledigt (08.10.2026) | Opus 5.5, hoher Denkaufwand (Umbau der Modul-Navigation, Grenzfall → teureres Modell) |
 | 63 | Verwaltung: Admin-Unterseiten | offen | Sonnet 5.5, mittlerer Denkaufwand |
 
 ---
@@ -3447,10 +3447,21 @@ Tool (`knowledge.write`) oder anders; danach „Sonstiges“ aus der Liste nehme
    Deep-Link-Verhalten aus Paket 54/55 nicht brechen.
 
 **Abnahme**
-- [ ] 390 px: erster Bildschirm zeigt Suche + mindestens 4 Themenkacheln.
-- [ ] Artikel in ≤ 2 Tipps erreichbar; Zurück führt in die richtige Liste.
-- [ ] Gelesen-Markieren, Entwürfe nur mit Recht, Drucken und Bearbeiten funktionieren wie vorher.
-- [ ] Keine Nutzereingabe per `innerHTML` (grep), i18n in beiden Sprachen.
+- [x] 390 px: erster Bildschirm zeigt Suche + mindestens 4 Themenkacheln (10 von 12 vollständig).
+- [x] Artikel in ≤ 2 Tipps erreichbar; Zurück führt in die richtige Liste (Kategorie bzw.
+  Suchtreffer, gleiche Scrollposition).
+- [x] Gelesen-Markieren, Entwürfe nur mit Recht, Drucken und Bearbeiten funktionieren wie vorher.
+- [x] Keine Nutzereingabe per `innerHTML` (grep), i18n in beiden Sprachen.
+
+**Umsetzung (08.10.2026):** Ansicht ergibt sich aus Suchtext und `activeCategory` (Übersicht /
+Kategorie / Treffer aus allen Kategorien). Kacheln zählen nach Abteilung/Jahr/Level gefiltert,
+Entwürfe zeigt die Kachel als „Entwürfe: n"; Fortschritt nur über veröffentlichte Artikel.
+Kurztext in der Zeile auf dem Desktop 2 Zeilen, am Handy weg. Deep-Link (`focusKnowledge`) setzt
+die Kategorie des Artikels und leert die Wissen-Suche, damit „Zurück" dorthin führt. Ein Klick auf
+„Wissen", während Wissen schon offen ist, führt zur Übersicht; aus einem anderen Tab bleibt der
+Zustand. Löschen steckt im Überlaufmenü (⋮) des Detailkopfs. Silbentrennung langer
+Kategorienamen (`hyphens: auto`) greift im Test-Chromium unter Linux nicht, auf Android/iOS schon.
+
 
 ---
 

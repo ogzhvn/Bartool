@@ -896,14 +896,17 @@
       <h2 data-i18n="ui.wissen">Wissen</h2>
 
       <div id="knowledge-list-view">
-        <p class="hint" data-i18n="ui.wissen_hinweis">Schulungen und Hintergrundwissen für alle Outlets: Produkte, Serviceabläufe, Standards. Artikel lesen und als gelesen markieren.</p>
+        <p class="hint knowledge-intro" data-i18n="ui.wissen_hinweis">Schulungen und Hintergrundwissen für alle Outlets: Produkte, Serviceabläufe, Standards. Artikel lesen und als gelesen markieren.</p>
 
-        <div class="actions knowledge-admin-actions">
-          <button type="button" id="knowledge-new" class="btn-primary" data-perm="knowledge.write" hidden data-i18n="ui.wissen_neuer_artikel">Neuer Artikel</button>
+        <div class="knowledge-searchbar">
+          <input type="text" id="knowledge-search" placeholder="Titel oder Text suchen…" data-i18n-placeholder="ui.wissen_suche_placeholder" data-i18n-aria-label="ui.wissen_suche_placeholder" aria-label="Titel oder Text suchen…" autocomplete="off" enterkeyhint="search" />
+          <button type="button" id="knowledge-filter-toggle" class="btn-secondary knowledge-filter-toggle" aria-expanded="false" aria-controls="knowledge-filter-panel">
+            <i class="ph ph-funnel" aria-hidden="true"></i><span data-i18n="ui.wissen_filter">Filter</span><span id="knowledge-filter-count" class="knowledge-filter-count" hidden></span>
+          </button>
+          <button type="button" id="knowledge-new" class="btn-primary btn-icon" data-perm="knowledge.write" hidden title="Neuer Artikel" aria-label="Neuer Artikel" data-i18n-title="ui.wissen_neuer_artikel" data-i18n-aria-label="ui.wissen_neuer_artikel"><i class="ph ph-plus" aria-hidden="true"></i></button>
         </div>
 
-        <div class="field-row knowledge-filters">
-          <input type="text" id="knowledge-search" placeholder="Titel oder Text suchen…" data-i18n-placeholder="ui.wissen_suche_placeholder" data-i18n-aria-label="ui.wissen_suche_placeholder" aria-label="Titel oder Text suchen…" autocomplete="off" />
+        <div id="knowledge-filter-panel" class="field-row knowledge-filters" hidden>
           <label data-i18n="ui.wissen_abteilung">
             Abteilung
             <select id="knowledge-department"></select>
@@ -920,9 +923,11 @@
             <input type="checkbox" id="knowledge-unread" />
             <span data-i18n="ui.wissen_nur_ungelesen">Nur ungelesen</span>
           </label>
+          <button type="button" id="knowledge-filter-reset" class="btn-secondary" data-i18n="ui.wissen_filter_zuruecksetzen">Filter zurücksetzen</button>
         </div>
 
-        <div id="knowledge-categories" class="quiz-lb-chips" role="group" data-i18n-aria-label="ui.wissen_kategorien" aria-label="Kategorien"></div>
+        <div id="knowledge-nav" class="knowledge-nav" hidden></div>
+        <div id="knowledge-topics" class="knowledge-topics" data-i18n-aria-label="ui.wissen_kategorien" aria-label="Kategorien"></div>
         <div id="knowledge-list" class="knowledge-list"></div>
       </div>
 
