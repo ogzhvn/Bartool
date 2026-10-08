@@ -4292,8 +4292,8 @@ Ladezeiten, Handy-Bedienung, Druckqualität nach Augenschein.
 Gemessen bei 390 px: Rezepte +19 px, Zuckersirup +69 px, Verdünnung & ABV +70 px. Als eigene Aufgabe
 angelegt, Layout-Grundgerüst (Regel 4) nicht ohne Rückfrage ändern.
 _Nachmessung 08.10.2026 (Playwright, `claude-test`, DE und EN, 320/360/390 px, alle 30 `data-tab`): kein
-Überlauf mehr. Der Tab-Titel wird mit „…“ gekürzt, der Konto-Button endet 12 px vor dem Rand. Behoben durch
-Paket 57 (Querschnitt Header)._
+Überlauf mehr. Der Tab-Titel wird mit „…“ gekürzt, der Konto-Button endet 12 px vor dem Rand. Vermutlich behoben durch
+Paket 57 (Querschnitt Header), nicht per Commit nachgeprüft._
 
 **Datenlücken** (stehen an den jeweiligen Zeilen): `Stork Smoky Rye`, `Chapeau Secco`, `Northman Calm Sea`,
 fünf Liköre ohne `abv_value`, drei Tee-Produkte `verified` ohne Herkunftsland, Rum ⌀ `story` unter 300.
