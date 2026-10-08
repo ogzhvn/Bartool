@@ -4263,6 +4263,10 @@ das die `insert`-Statements erzeugt (Regel 7: Massenänderung per Skript).
   Zuordnung je Gericht. Leer heißt „nicht erfasst“, nicht „allergenfrei“.
 - Legende → Schlüssel liegt vor (A Weizen → `gluten_weizen` …). Ohne Schlüssel in `js/declarations.js`:
   9 geschwefelt, 11 koffeinhaltig, 15 gentechnisch verändert, 16 chininhaltig. 10 Sulfite ist doppelt zu D.
+- **Weinbegleitung (Wunsch des Nutzers, 08.10.2026):** für die 11 Gerichte Hauptgang + Steak je 3 Weine in
+  `wine_pairings`, Auswahl durch Claude nach `food_pairing` im Katalog, Produkt-IDs per Namensmuster aufgelöst
+  (jedes Muster genau 1 Treffer). Das ist ein Vorschlag, keine Küchenvorgabe: Der Katalog ist nicht
+  zwingend die Weinkarte des Tellerwerks. Rindertatar ohne Katalogtreffer, nur nach Körper gewählt.
 - **Offen:** Allergenliste Tellerwerk (per `update`), Speisekarte und Allergenliste WGR (per `insert`).
   Abnahme „Anzahl je Abteilung = Listen“ gilt nur für Tellerwerk (33 = 33), WGR 0.
 
