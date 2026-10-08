@@ -211,6 +211,13 @@ umbauen statt drop+create; in Abnahme-Blöcken Löschrechte über den
 `USING`-Ausdruck der Policy prüfen statt mit echtem `delete`. `schema.sql`
 behält das Muster `drop … if exists` + `create` (läuft im SQL-Editor).
 
+Befund aus Paket 56 (08.10.2026): **Ein Semikolon innerhalb eines String-Literals**
+(z. B. `"note": "Stand: Juli 2023; abgerufen …"`) lässt `execute_sql` reproduzierbar 60 s
+hängen, auch bei einem UPDATE unter 200 Byte; ohne das Semikolon läuft dasselbe Statement
+sofort, ein Semikolon am Statement-Ende stört nicht. Workaround: im Literal einen Platzhalter
+setzen und `replace($q$…~~…$q$, '~~', chr(59))::jsonb` schreiben. Ob die älteren Hänger oben
+(große Texte, `drop`/`delete`) dieselbe Ursache hatten, ist nicht geprüft.
+
 ## Testaccount (Supabase Auth)
 Für Login-/Feature-Tests existieren zwei Testkonten in der Supabase-Instanz
 (Projekt `hwahjjihajgajcnzngwv`). Nicht in Produktionslisten/Bestellungen

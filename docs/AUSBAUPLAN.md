@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | offen | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (08.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1 (Hygiene) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3278,6 +3278,20 @@ veröffentlichbar); die Karten folgen nicht dem Aufbau der Schreibregeln oben (L
 deshalb filterten die Filter nichts. Einordnung (Einschätzung, nicht amtlich): Jahr 1 = Basis (43),
 Jahr 2 = Aufbau (21), Jahr 3 = Fortgeschritten (6) / Experte (1: Hotelsterne). Bei Jahr 3 entfällt
 `fg` in `berufe` (2-jährige Ausbildung). Offen: „ZZ-Paket55 Suchtest" ist ein Testartikel ohne Einordnung.
+
+**Lernkarten mit Quellen, Runde 1: Hygiene (08.10.2026):** Themenwahl vom Nutzer bestätigt (Prio 1 aus
+dem Vorschlag; Reihenfolge danach: Warenwirtschaft & Lager (8), Arbeitssicherheit (4), Gastraum +
+Gastgeberrolle (9 + 7), zuletzt die 30 Warenkunde-Artikel Wein/Spirituosen kürzen und Level/Jahr setzen).
+Vorgabe des Nutzers: Lernkarten auf **5–7 Sätze** ausbauen (ein Abschnitt „Kurz erklärt“, Kurzfassung =
+erster Satz); Aussagen ohne abrufbare Quelle als „Unklar:“ markieren statt streichen.
+Überarbeitet, mit Quellen, weiter Entwurf: „HACCP: sieben Grundsätze …“ (3 Quellen), „Kreuzkontamination
+vermeiden“ (4), „Reinigen, Desinfizieren, Dosieren …“ (6). Quellen: VO (EG) 852/2004, EU-Leitfaden
+2022/C 355/01, BfR „Hygieneregeln in der Gemeinschaftsgastronomie“ (2024), Merkblatt Eigenkontrollen der
+Lebensmittelüberwachung Lübeck (07/2023), GefStoffV § 8, BGN Report 2/2022, Kärcher (Hersteller),
+WKO Kärnten Hygieneinfo Eiswürfel (2017, österreichisch – deutsches Behördenpapier zur Eisentnahme nicht
+gefunden). Gestrichen, weil nicht belegt: „häufigste Quelle“ (Kreuzkontamination), „Rohes unten lagern“,
+„zu viel Mittel belastet Umwelt und Budget“. Abgleich per md5 des Abschnittstexts. Karten ohne Quelle:
+41 → 38. Offen: Gegenlesen und Prüfvermerk durch die Barleitung.
 
 **Schreibregeln (07.10.2026)**
 
