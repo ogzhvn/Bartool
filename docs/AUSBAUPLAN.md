@@ -360,7 +360,7 @@ erfinden.
 
 | # | Paket | Status | Modell |
 |---|---|---|---|
-| 57 | Querschnitt: Header, native Felder, Hover, Abstände | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 57 | Querschnitt: Header, native Felder, Hover, Abstände | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 58 | Rechner: Superjuice, Zuckersirup, Kalkulation, Karte | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 59 | Betrieb: Mise en Place, Events, Übergabe, Checklisten, Inventur, Schwund, „Was kann ich bauen?" | offen | Sonnet 5.5, mittlerer Denkaufwand |
 | 60 | Bibliothek: Rezepte, Produkte, Quiz | offen | Sonnet 5.5, mittlerer Denkaufwand |
@@ -3213,11 +3213,19 @@ Kolleg:innen, die nicht perfekt Deutsch sprechen. Die ersten Entwürfe waren zu 
 6. Einheitlicher Abstand zwischen aufeinanderfolgenden Labels/Feldern außerhalb von `.field-row`.
 
 **Abnahme**
-- [ ] Kein Header-Titel umbricht auf 390 px (alle Tabs durchgeklickt).
-- [ ] Datumsfelder sehen aus wie die übrigen Felder; Picker dunkel.
-- [ ] `grep -n ':hover' css/styles.css` zeigt nur noch Regeln innerhalb der Hover-Media-Query (oder
-      begründete Ausnahmen im Kommentar).
-- [ ] Vorher/nachher-Screenshots aller Tabs auf 390 px ohne neue Überläufe; Cache-Version erhöht.
+- [x] Kein Header-Titel umbricht auf 390 px (alle Tabs durchgeklickt). Lange Namen („Verdünnung & ABV“,
+      „Schwund & Bruch“, „Was kann ich bauen?“) enden mit Ellipsis; dafür Header-Gap/Padding, Titel-Schrift
+      (0,9 rem, Laufweite 0,06 em), Sprach-Knöpfe (34 px breit) und Konto-Caret auf ≤ 899 px verschlankt.
+- [x] Datumsfelder sehen aus wie die übrigen Felder (44 px, Rahmen, Hintergrund); `color-scheme: dark` auf `:root`.
+- [x] Alle `:hover`-Regeln stehen in `@media (hover: hover) and (pointer: fine)` (per Skript geprüft: 0 ungegatterte);
+      gemischte Selektorlisten (`:hover` + `:focus-visible`) aufgeteilt. `:active`-Block „Touch-Feedback“ am Dateiende.
+- [x] Vorher/nachher-Screenshots aller Tabs auf 390 px und 1366 px; Cache-Version `bartool-v88`.
+- [x] Checkboxen/Radios 22 px, Label-Trefferfläche ≥ 44 px (Playwright-Messung). Ausnahme: die Auswahl-Checkboxen
+      in den Rezept-/Produktzeilen (`.recipe-select-checkbox`) sind 22 px, die Zeile selbst ist die Trefferfläche
+      nur fürs Aufklappen → **auf Gerät prüfen**.
+- [x] Abstand Label/Feld außerhalb `.field-row` (`:where(.tab-panel, form) > label + …`); Zuckersirup und Schwund geprüft.
+- Offen / auf Gerät prüfen: iOS-Darstellung der Datumsfelder (Kapsel, `text-align: left`), :active-Feedback auf Touch,
+  Header bei 360 px. Vorbestehend, nicht Teil von 57: Quiz-Tab hat auf 390 px 1 px Horizontalüberlauf (`#quiz-topic`, Paket 60).
 
 ---
 

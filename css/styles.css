@@ -5,6 +5,7 @@
    ============================================================ */
 
 :root {
+  color-scheme: dark;
   --bg: #0c0c0e;
   --bg-elevated: #16161a;
   --bg-elevated-2: #1d1d22;
@@ -113,8 +114,10 @@ a {
   color: var(--accent);
 }
 
-a:hover {
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    color: var(--accent-300);
+  }
 }
 
 /* ── Kopfzeile ───────────────────────────────────────────── */
@@ -167,6 +170,7 @@ a:hover {
 }
 
 .app-header h1 {
+  min-width: 0;
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
@@ -183,6 +187,7 @@ a:hover {
 }
 
 .brand-mark {
+  flex: none;
   font-size: 1.15rem;
   color: var(--accent);
 }
@@ -220,9 +225,11 @@ a:hover {
   cursor: pointer;
 }
 
-.nav-toggle:hover {
-  border-color: var(--border);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .nav-toggle:hover {
+    border-color: var(--border);
+    color: var(--accent-300);
+  }
 }
 
 .nav-backdrop {
@@ -261,10 +268,16 @@ a:hover {
   cursor: pointer;
 }
 
-.user-menu-toggle:hover,
 .user-menu-toggle[aria-expanded="true"] {
   border-color: var(--border);
   color: var(--text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .user-menu-toggle:hover {
+    border-color: var(--border);
+    color: var(--text);
+  }
 }
 
 .user-menu-toggle > .ph-user-circle {
@@ -309,9 +322,11 @@ a:hover {
   cursor: pointer;
 }
 
-.user-menu-item:hover {
-  background: var(--accent-900);
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  .user-menu-item:hover {
+    background: var(--accent-900);
+    color: var(--text);
+  }
 }
 
 .user-menu-item i {
@@ -358,8 +373,10 @@ a:hover {
   cursor: pointer;
 }
 
-.lang-btn:hover {
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .lang-btn:hover {
+    color: var(--accent-300);
+  }
 }
 
 .lang-btn.active {
@@ -440,8 +457,10 @@ a:hover {
   border-radius: var(--radius);
 }
 
-.sidebar-group-toggle:hover {
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-group-toggle:hover {
+    color: var(--text);
+  }
 }
 
 .sidebar-group-caret {
@@ -480,9 +499,11 @@ a:hover {
   flex: none;
 }
 
-.tab-btn:hover {
-  background: var(--bg-elevated);
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  .tab-btn:hover {
+    background: var(--bg-elevated);
+    color: var(--text);
+  }
 }
 
 .tab-btn.active {
@@ -516,9 +537,11 @@ a:hover {
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
-.subnav-btn:hover {
-  background: var(--bg-elevated);
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  .subnav-btn:hover {
+    background: var(--bg-elevated);
+    color: var(--text);
+  }
 }
 
 .subnav-btn.active {
@@ -566,8 +589,40 @@ main:has(#products-edit-view.active) {
     display: none;
   }
 
+  /* Eine Zeile mit Ellipsis: lange Tab-Namen ("Verdünnung & ABV") laufen
+     sonst über den 56-px-Header hinaus. */
   .app-title-tab {
-    display: inline;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Platz im Header: Nav-Knopf, Sprachumschalter, Suche und Konto bleiben
+     in Touch-Größe, der Titel bekommt den Rest. */
+  .app-header {
+    gap: 0.4rem;
+    padding: 0 0.75rem;
+  }
+
+  .app-header h1 {
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    gap: 0.4rem;
+  }
+
+  .app-header .lang-btn {
+    min-width: 34px;
+    padding-inline: 0.35rem;
+  }
+
+  .app-header .header-user {
+    gap: 0.3rem;
+  }
+
+  .app-header .user-menu-caret {
+    display: none;
   }
 
   .app-layout {
@@ -723,14 +778,19 @@ label {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px;
   color: var(--text);
   font-size: 0.95rem;
+  cursor: pointer;
 }
 
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
 select,
 textarea {
   background: var(--bg-elevated);
@@ -754,6 +814,9 @@ input[type="number"] {
   input[type="email"]:hover,
   input[type="password"]:hover,
   input[type="number"]:hover,
+  input[type="date"]:hover,
+  input[type="time"]:hover,
+  input[type="datetime-local"]:hover,
   select:hover,
   textarea:hover {
     border-color: var(--border-strong);
@@ -775,6 +838,16 @@ select:disabled {
 input[type="radio"],
 input[type="checkbox"] {
   accent-color: var(--accent);
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex: none;
+  cursor: pointer;
+}
+
+input[type="radio"]:disabled,
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
 }
 
 textarea {
@@ -807,6 +880,15 @@ select {
 
 #product-group-filter {
   flex: 1 1 180px;
+}
+
+/* Label/Feld-Paare, die nicht in einer .field-row liegen, kleben sonst
+   aneinander (z. B. Zuckersirup "Wassermenge", Schwund "Produkt"). */
+:where(.tab-panel, form) > label:not(.seg-opt, .menu-pick, .radio-label, .prep-toggle, .knowledge-unread-toggle) + label,
+:where(.tab-panel, form) > label + .field-row,
+:where(.tab-panel, form) > label + datalist ~ .field-row,
+:where(.tab-panel, form) > .field-row + label {
+  margin-top: 1rem;
 }
 
 .field-row {
@@ -988,9 +1070,11 @@ select {
   font-family: inherit;
 }
 
-.remove-btn:hover {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .remove-btn:hover {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+  }
 }
 
 /* ── Rechner: Segmented Control, Stepper, Ergebnisleiste ── */
@@ -1026,8 +1110,10 @@ select {
   pointer-events: none;
 }
 
-.seg-opt:hover {
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .seg-opt:hover {
+    color: var(--accent-300);
+  }
 }
 
 .seg-opt:has(input:checked) {
@@ -1068,9 +1154,11 @@ select {
   cursor: pointer;
 }
 
-.stepper-btn:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .stepper-btn:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 .stepper-btn:active {
@@ -1689,9 +1777,11 @@ select {
   font-size: 0.9rem;
 }
 
-.recipe-name-btn:hover {
-  border-color: var(--border);
-  background: var(--bg);
+@media (hover: hover) and (pointer: fine) {
+  .recipe-name-btn:hover {
+    border-color: var(--border);
+    background: var(--bg);
+  }
 }
 
 .recipe-name-btn.active {
@@ -1713,8 +1803,10 @@ select {
   overflow: hidden;
 }
 
-.recipe-item:hover {
-  border-color: var(--border-strong);
+@media (hover: hover) and (pointer: fine) {
+  .recipe-item:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 .recipe-item summary {
@@ -1745,8 +1837,8 @@ select {
 
 .recipe-select-checkbox,
 .product-select-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   cursor: pointer;
   accent-color: var(--accent);
   flex-shrink: 0;
@@ -2040,9 +2132,11 @@ select {
   cursor: pointer;
 }
 
-.quality-item-btn:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .quality-item-btn:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 /* ── Fußzeile ───────────────────────────────────────────── */
@@ -2055,6 +2149,13 @@ select {
   text-transform: uppercase;
   padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border);
+}
+
+@media (max-width: 599px) {
+  .app-footer {
+    padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    font-size: 0.7rem;
+  }
 }
 
 /* Offline-Hinweis unter dem Header. Nutzt bewusst die vorhandenen
@@ -2355,10 +2456,16 @@ select {
   cursor: pointer;
 }
 
-.quick-search-item:hover,
 .quick-search-item.marked {
   background: var(--accent-900);
   color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quick-search-item:hover {
+    background: var(--accent-900);
+    color: var(--accent);
+  }
 }
 
 .quick-search-item-meta {
@@ -2437,13 +2544,14 @@ select {
   cursor: pointer;
 }
 
-.menu-pick:hover {
-  background: var(--bg-elevated);
+@media (hover: hover) and (pointer: fine) {
+  .menu-pick:hover {
+    background: var(--bg-elevated);
+  }
 }
 
 .menu-pick input[type="checkbox"] {
   flex: none;
-  width: auto;
   margin: 0;
 }
 
@@ -2562,18 +2670,20 @@ select {
   cursor: pointer;
 }
 
-.prep-toggle input {
-  width: auto;
+.prep-toggle input[type="checkbox"] {
   margin: 0;
 }
 
-/* Die nativen Datums- und Zeitfelder folgen nicht dem Seiten-CSS, sondern
-   dem Farbschema des Browsers. Ohne color-scheme stünden sie als weiße
-   Kästen im dunklen Layout. */
+/* Datums- und Zeitfelder: Picker, Spinner und Scrollbalken folgen über
+   :root { color-scheme: dark } dem dunklen Farbschema; Maße und Rahmen kommen
+   aus der gemeinsamen Eingabefeld-Regel. iOS stellt sie sonst als schmale,
+   zentrierte Kapsel dar. */
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
-  color-scheme: dark;
+  min-width: 0;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Etiketten für Ansätze (js/printView.js) ─────────────── */
@@ -2842,8 +2952,10 @@ input[type="datetime-local"] {
   border-radius: var(--radius);
 }
 
-.fav-btn:hover {
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .fav-btn:hover {
+    color: var(--accent-300);
+  }
 }
 
 .fav-btn.is-fav {
@@ -2872,9 +2984,11 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.shortcut-chip:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .shortcut-chip:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 .shortcut-chip i {
@@ -2957,9 +3071,11 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.quiz-option:hover:not(:disabled) {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .quiz-option:hover:not(:disabled) {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 .quiz-option:disabled {
@@ -3115,9 +3231,14 @@ input[type="datetime-local"] {
   min-height: 44px;
 }
 
-.quiz-quota-row.is-clickable:hover,
 .quiz-quota-row.is-clickable:focus-visible {
   border-color: var(--accent-700);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiz-quota-row.is-clickable:hover {
+    border-color: var(--accent-700);
+  }
 }
 
 .quiz-quota-head {
@@ -3241,9 +3362,11 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.loss-reason-btn:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .loss-reason-btn:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 .loss-reason-btn.active {
@@ -3274,8 +3397,10 @@ input[type="datetime-local"] {
   min-height: 40px;
 }
 
-.report-period-btn:hover {
-  border-color: var(--accent-700);
+@media (hover: hover) and (pointer: fine) {
+  .report-period-btn:hover {
+    border-color: var(--accent-700);
+  }
 }
 
 .report-period-btn.active {
@@ -3299,9 +3424,14 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.report-tile:hover,
 .report-tile:focus-visible {
   border-color: var(--accent-700);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .report-tile:hover {
+    border-color: var(--accent-700);
+  }
 }
 
 .report-tile-head h3 {
@@ -3489,9 +3619,6 @@ input[type="datetime-local"] {
 
 .role-perm input[type="checkbox"] {
   margin: 0.15rem 0 0;
-  width: 1.15rem;
-  height: 1.15rem;
-  flex: none;
   accent-color: var(--accent);
 }
 
@@ -3555,8 +3682,10 @@ input[type="datetime-local"] {
   min-height: 40px;
 }
 
-.quiz-lb-chip:hover {
-  border-color: var(--accent-700);
+@media (hover: hover) and (pointer: fine) {
+  .quiz-lb-chip:hover {
+    border-color: var(--accent-700);
+  }
 }
 
 .quiz-lb-chip.active {
@@ -3813,8 +3942,10 @@ input[type="datetime-local"] {
   background: rgba(255, 255, 255, 0.015);
 }
 
-.catalog-table tbody tr:hover td {
-  background: var(--bg-elevated-2);
+@media (hover: hover) and (pointer: fine) {
+  .catalog-table tbody tr:hover td {
+    background: var(--bg-elevated-2);
+  }
 }
 
 /* Namensspalte: bleibt links stehen, damit man beim Scrollen nach rechts
@@ -3832,8 +3963,10 @@ input[type="datetime-local"] {
   background: var(--bg-elevated-2);
 }
 
-.catalog-table tbody tr:hover .catalog-sticky-col {
-  background: var(--bg-elevated-2);
+@media (hover: hover) and (pointer: fine) {
+  .catalog-table tbody tr:hover .catalog-sticky-col {
+    background: var(--bg-elevated-2);
+  }
 }
 
 .catalog-sort-btn {
@@ -3848,8 +3981,10 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.catalog-sort-btn:hover {
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .catalog-sort-btn:hover {
+    color: var(--accent-300);
+  }
 }
 
 .catalog-name-btn {
@@ -3862,9 +3997,11 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.catalog-name-btn:hover {
-  color: var(--accent-hover);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .catalog-name-btn:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+  }
 }
 
 .catalog-table .catalog-cell-number {
@@ -3888,8 +4025,10 @@ input[type="datetime-local"] {
   cursor: text;
 }
 
-.catalog-table .catalog-cell-editable:hover {
-  box-shadow: inset 0 0 0 1px var(--border-strong);
+@media (hover: hover) and (pointer: fine) {
+  .catalog-table .catalog-cell-editable:hover {
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
 }
 
 /* Offene Zelle: das Eingabefeld füllt sie ganz aus, damit beim Tippen nichts
@@ -3981,11 +4120,6 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 
-.knowledge-unread-toggle input {
-  width: 22px;
-  height: 22px;
-}
-
 .knowledge-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -4008,9 +4142,11 @@ input[type="datetime-local"] {
   min-height: 118px;
 }
 
-.knowledge-card:hover {
-  border-color: var(--accent-700);
-  background: var(--bg-elevated-2);
+@media (hover: hover) and (pointer: fine) {
+  .knowledge-card:hover {
+    border-color: var(--accent-700);
+    background: var(--bg-elevated-2);
+  }
 }
 
 .knowledge-card-head {
@@ -4363,4 +4499,36 @@ input[type="datetime-local"] {
   .print-area p {
     margin: 0 0 6pt;
   }
+}
+
+/* ── Touch-Feedback ─────────────────────────────────────────
+   Gegenstück zu den Hover-Regeln, die nur noch mit Maus greifen: auf Touch
+   zeigt :active den Druck, ohne nach dem Tippen hängen zu bleiben. */
+.nav-toggle:active,
+.lang-btn:active,
+.tab-btn:active,
+.subnav-btn:active,
+.sidebar-group-toggle:active,
+.user-menu-toggle:active,
+.user-menu-item:active,
+.fav-btn:active,
+.remove-btn:active,
+.seg-opt:active,
+.shortcut-chip:active,
+.loss-reason-btn:active,
+.report-period-btn:active,
+.quiz-lb-chip:active,
+.catalog-sort-btn:active {
+  filter: brightness(1.3);
+}
+
+.recipe-item:active,
+.menu-pick:active,
+.quick-search-item:active,
+.quality-item-btn:active,
+.quiz-option:active:not(:disabled),
+.quiz-quota-row.is-clickable:active,
+.report-tile:active,
+.knowledge-card:active {
+  background: var(--bg-elevated-2);
 }
