@@ -14,8 +14,8 @@ import { switchTab, closeMobileNav, takePendingEditReturn } from "./tabs.js";
 import { getLocale, onLanguageChanged, t } from "./i18n.js";
 import { uploadProductPhoto, deleteProductPhoto, resolveImageUrl, openPhotoLightbox } from "./photos.js";
 
-// Wein/Schaumwein stehen bewusst am Ende – Wein ist eine eigene
-// Hauptkategorie unten in der Navigation, nicht zwischen den Spirituosen.
+// Reihenfolge entspricht der Navigation: Spirituosen (inkl. Liköre, Wermut,
+// Bitters), Bier, Wein, zuletzt Sonstiges (Sirups, Frucht, Säfte, Mixer …).
 // "Wein" vor "Schaumwein", damit beim Klick auf die Oberkategorie "Wein"
 // (ohne gewählte Weinart) Weißwein/Roséwein/Rotwein vor Schaumwein stehen.
 const GROUP_ORDER = [
@@ -25,19 +25,19 @@ const GROUP_ORDER = [
   "Whisky",
   "Tequila & Mezcal",
   "Brände",
+  "Absinth",
   "Liköre & Aperitifs",
   "Wermut & Aperitif-Wein",
   "Bitters",
-  "Absinth",
   "Bier",
+  "Wein",
+  "Schaumwein",
   "Sirup",
   "Fruchtpüree",
   "Saft",
   "Mixer & Softdrink",
   "Tee & Kaffee",
   "Sonstiges",
-  "Wein",
-  "Schaumwein",
 ];
 
 function groupSortIndex(group) {
@@ -47,7 +47,7 @@ function groupSortIndex(group) {
 
 // Oberkategorien für die Kategorie-Navigation in der Sidebar unter
 // "Bibliothek → Produkte". Jede Gruppe aus GROUP_ORDER gehört genau einer
-// Oberkategorie an. "Spirituosen" und "Wein" tragen Unterkategorien (`subs`),
+// Oberkategorie an. "Spirituosen", "Wein" und "Sonstiges" tragen Unterkategorien (`subs`),
 // die in der Sidebar eingerückt darunter stehen. Ein Unterpunkt filtert auf
 // eine Gruppe und optional eine Untergruppe (subGroup null = ganze Gruppe).
 // `subTiles`: Klick auf die Oberkategorie zeigt zuerst Kacheln der
@@ -61,21 +61,29 @@ const WEINTYPEN = [
   { name: "Schaumwein", group: "Schaumwein", subGroup: null },
 ];
 
-const SPIRITUOSEN_GROUPS = ["Gin", "Vodka", "Rum & Cachaça", "Whisky", "Tequila & Mezcal", "Brände", "Absinth"];
+const SPIRITUOSEN_GROUPS = [
+  "Gin",
+  "Vodka",
+  "Rum & Cachaça",
+  "Whisky",
+  "Tequila & Mezcal",
+  "Brände",
+  "Absinth",
+  "Liköre & Aperitifs",
+  "Wermut & Aperitif-Wein",
+  "Bitters",
+];
+
+const SONSTIGES_GROUPS = ["Sirup", "Fruchtpüree", "Saft", "Mixer & Softdrink", "Tee & Kaffee", "Sonstiges"];
+
+// Je Gruppe ein Unterpunkt, der die ganze Gruppe zeigt.
+const subsFromGroups = (groups) => groups.map((group) => ({ name: group, group, subGroup: null }));
 
 const OBERKATEGORIEN = [
-  {
-    name: "Spirituosen",
-    groups: SPIRITUOSEN_GROUPS,
-    subs: SPIRITUOSEN_GROUPS.map((group) => ({ name: group, group, subGroup: null })),
-    subTiles: true,
-  },
-  { name: "Liköre & Bitters", groups: ["Liköre & Aperitifs", "Wermut & Aperitif-Wein", "Bitters"] },
-  { name: "Sirups & Frucht", groups: ["Sirup", "Fruchtpüree"] },
-  { name: "Softdrinks & Mixer", groups: ["Saft", "Mixer & Softdrink", "Tee & Kaffee"] },
+  { name: "Spirituosen", groups: SPIRITUOSEN_GROUPS, subs: subsFromGroups(SPIRITUOSEN_GROUPS), subTiles: true },
   { name: "Bier", groups: ["Bier"] },
-  { name: "Sonstiges", groups: ["Sonstiges"] },
   { name: "Wein", groups: ["Wein", "Schaumwein"], subs: WEINTYPEN },
+  { name: "Sonstiges", groups: SONSTIGES_GROUPS, subs: subsFromGroups(SONSTIGES_GROUPS), subTiles: true },
 ];
 
 let activeOberkategorie = null;
