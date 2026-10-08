@@ -22,15 +22,64 @@
   --accent-900: #2b2313;
 
   --danger: #c0564a;
+  --success: #6fbf73;
 
   --radius: 8px;
   --radius-lg: 14px;
   --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.4);
   --shadow-pop: 0 18px 44px rgba(0, 0, 0, 0.7);
+
+  /* Bewegung: kurz und ease-out, damit Druck-Feedback sofort wirkt */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-press: 120ms;
+  --dur-hover: 180ms;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Handy-Grundlage: kein grauer Tap-Blitz, keine Schriftvergrößerung im
+   Querformat, kein versehentliches Pull-to-Refresh, das halb eingegebene
+   Rechner-Werte verwirft. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* Bedienelemente: Klick ohne 300-ms-Verzögerung, Long-Press markiert keine
+   Beschriftung. Inhalte (Text, Tabellen) bleiben markierbar. */
+a {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"],
+[role="tab"],
+summary {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* iOS zoomt in jedes Eingabefeld unter 16 px und zoomt nicht zurück. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* Sorgt dafür, dass das hidden-Attribut immer gewinnt, auch bei Elementen
@@ -335,6 +384,7 @@ a:hover {
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
   overflow-y: auto;
 }
 
@@ -634,10 +684,12 @@ main:has(#products-edit-view.active) {
 }
 
 h2 {
-  margin: 0 0 0.3rem;
+  margin: 0 0 0.4rem;
   font-size: 1.55rem;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 h3 {
@@ -689,15 +741,23 @@ textarea {
   font-family: inherit;
   font-size: 0.95rem;
   min-height: 44px;
+  transition: border-color var(--dur-hover) var(--ease-out);
 }
 
-input[type="text"]:hover,
-input[type="email"]:hover,
-input[type="password"]:hover,
-input[type="number"]:hover,
-select:hover,
-textarea:hover {
-  border-color: var(--border-strong);
+/* Mengen untereinander lesbar: alle Ziffern gleich breit */
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  input[type="text"]:hover,
+  input[type="email"]:hover,
+  input[type="password"]:hover,
+  input[type="number"]:hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 input:focus,
@@ -754,6 +814,25 @@ select {
   gap: 0.8rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+/* Rezept wählen + „Einfügen" in einer Zeile: der Knopf gehört zur Auswahl */
+.recipe-load-row {
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+
+.recipe-load-row label {
+  min-width: 0;
+}
+
+.recipe-load-row select {
+  width: 100%;
+}
+
+.recipe-load-row .btn-secondary {
+  flex: none;
 }
 
 /* ── Rezeptfotos (Aufbau/Garnitur) ─────────── */
@@ -839,6 +918,11 @@ select {
   font-family: inherit;
   font-size: 0.95rem;
   cursor: pointer;
+  transition:
+    background-color var(--dur-hover) var(--ease-out),
+    border-color var(--dur-hover) var(--ease-out),
+    color var(--dur-hover) var(--ease-out),
+    transform var(--dur-press) var(--ease-out);
 }
 
 .btn-primary {
@@ -847,25 +931,33 @@ select {
   color: var(--accent);
 }
 
-.btn-primary:hover {
-  background: var(--accent-900);
-  color: var(--accent-300);
-  border-color: var(--accent-300);
+/* Hover nur mit Maus: auf Touch bleibt :hover sonst nach dem Tippen hängen */
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: var(--accent-900);
+    color: var(--accent-300);
+    border-color: var(--accent-300);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
 }
 
 .btn-primary:active {
   background: var(--accent-800);
 }
 
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 .btn-secondary {
   background: var(--bg-elevated);
   color: var(--text);
   border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
 }
 
 .btn-secondary:active {
@@ -1049,6 +1141,8 @@ select {
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+  /* Schiebt die Knöpfe als Gruppe nach rechts statt sie zu verteilen */
+  margin-right: auto;
 }
 
 .result-bar-label {
@@ -1062,12 +1156,34 @@ select {
   font-size: 2rem;
   line-height: 1.1;
   font-weight: 500;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   color: var(--accent-300);
 }
 
 .result-bar-sub {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/* Handy: Ergebnis oben über die volle Breite, die Knöpfe teilen sich die
+   Zeile darunter – sonst bricht „900 ml" um und die Knöpfe werden gequetscht. */
+@media (max-width: 480px) {
+  .result-bar {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .result-bar-figure {
+    flex: 1 1 100%;
+  }
+
+  .result-bar .btn-primary,
+  .result-bar .btn-secondary {
+    flex: 1 1 0;
+    justify-content: center;
+  }
 }
 
 /* ── Zutatenzeilen ──────────────────────────────────────── */
@@ -1163,17 +1279,40 @@ select {
 }
 
 @media (max-width: 480px) {
+  /* Zwischen zwei Zutaten mehr Luft als innerhalb einer Zutat, sonst sind
+     Name und Menge auf dem Handy nicht als Paar erkennbar. */
+  .ingredient-list {
+    gap: 1rem;
+  }
+
+  /* Entfernen-Knopf neben Menge/Einheit statt in einer eigenen Zeile */
   .ingredient-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr auto;
     grid-template-areas:
-      "name name"
-      "amount unit"
-      "remove remove";
+      "name name name"
+      "amount unit remove";
   }
   .ingredient-row .ing-name { grid-area: name; }
   .ingredient-row .ing-amount { grid-area: amount; }
   .ingredient-row .ing-unit { grid-area: unit; }
+  .ingredient-row .ing-abv { grid-area: abv; }
   .ingredient-row .remove-btn { grid-area: remove; }
+
+  /* Verdünnung: ABV statt Einheit */
+  .dil-list .ingredient-row {
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-areas:
+      "name name name"
+      "amount abv remove";
+  }
+
+  /* Batching im Flaschen-Modus: ABV als zusätzliche Spalte */
+  #batch-ingredients.show-abv .ingredient-row {
+    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-areas:
+      "name name name name"
+      "amount unit abv remove";
+  }
 }
 
 /* ── Ergebnis ───────────────────────────────────────────── */
@@ -1346,6 +1485,9 @@ select {
   display: block;
   font-size: 1.7rem;
   font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   color: var(--accent-300);
 }
 
@@ -1383,11 +1525,21 @@ select {
   font-size: 0.92rem;
   text-align: left;
   cursor: pointer;
+  transition:
+    background-color var(--dur-hover) var(--ease-out),
+    border-color var(--dur-hover) var(--ease-out),
+    color var(--dur-hover) var(--ease-out);
 }
 
-.today-item:hover {
-  border-color: var(--accent-700);
-  color: var(--accent-300);
+@media (hover: hover) and (pointer: fine) {
+  .today-item:hover {
+    border-color: var(--accent-700);
+    color: var(--accent-300);
+  }
+}
+
+.today-item:active {
+  background: var(--bg-elevated-2);
 }
 
 .today-item i {
@@ -1426,11 +1578,50 @@ select {
   cursor: pointer;
   font: inherit;
   min-height: 118px;
+  transition:
+    background-color var(--dur-hover) var(--ease-out),
+    border-color var(--dur-hover) var(--ease-out),
+    transform var(--dur-press) var(--ease-out);
 }
 
-.tool-card:hover {
-  border-color: var(--accent-700);
+@media (hover: hover) and (pointer: fine) {
+  .tool-card:hover {
+    border-color: var(--accent-700);
+    background: var(--bg-elevated-2);
+  }
+}
+
+.tool-card:active {
   background: var(--bg-elevated-2);
+  transform: scale(0.98);
+}
+
+/* Handy: Werkzeuge als kompaktes 2er-Raster ohne Beschreibung – sonst
+   sind neun Karten untereinander fast vier Bildschirmhöhen Scrollweg. */
+@media (max-width: 599px) {
+  .tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .tool-card {
+    min-height: 0;
+    padding: 0.85rem;
+    gap: 0.15rem;
+  }
+
+  .tool-card-icon {
+    margin-bottom: 0.35rem;
+  }
+
+  .tool-card-title {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .tool-card-desc {
+    display: none;
+  }
 }
 
 .tool-card-icon {
@@ -1862,7 +2053,7 @@ select {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 2rem 1rem;
+  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border);
 }
 
@@ -2109,6 +2300,7 @@ select {
 .quick-search-box {
   width: min(560px, 100%);
   max-height: calc(100vh - 6rem);
+  max-height: calc(100dvh - 6rem);
   display: flex;
   flex-direction: column;
   background: var(--bg-elevated);
@@ -2181,6 +2373,7 @@ select {
 
   .quick-search-box {
     max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
   }
 }
 
@@ -2270,7 +2463,7 @@ select {
 }
 
 .menu-quote-ok {
-  color: #6fbf73;
+  color: var(--success);
 }
 
 .menu-quote-high {
@@ -3164,7 +3357,7 @@ input[type="datetime-local"] {
 }
 
 .report-bar-fill.is-ok {
-  background: #6fbf73;
+  background: var(--success);
 }
 
 .report-bar-fill.is-high {
@@ -3579,6 +3772,7 @@ input[type="datetime-local"] {
 .catalog-scroll {
   overflow: auto;
   max-height: calc(100vh - 260px);
+  max-height: calc(100dvh - 260px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-elevated);
@@ -3748,6 +3942,7 @@ input[type="datetime-local"] {
 @media (max-width: 700px) {
   .catalog-scroll {
     max-height: calc(100vh - 300px);
+    max-height: calc(100dvh - 300px);
   }
 
   .catalog-count {

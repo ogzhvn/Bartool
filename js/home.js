@@ -57,7 +57,9 @@ function renderStats() {
   ];
   // Die Übergabe ist nicht jeder Abteilung zugeordnet (Paket 51).
   if (canSee("shift-log")) {
-    stats.push([statValue(offeneAusLetzterSchicht(loadShiftLogs()).length), t("ui.offene_punkte_aus_der_letzten_schicht")]);
+    const offen = offeneAusLetzterSchicht(loadShiftLogs()).length;
+    const label = offen === 1 ? "ui.offener_punkt_aus_der_letzten_schicht" : "ui.offene_punkte_aus_der_letzten_schicht";
+    stats.push([statValue(offen), t(label)]);
   }
   statsEl.innerHTML = stats
     .map(
@@ -138,7 +140,9 @@ function schichtEintraege() {
       tab: "shift-log",
       icon: "ph-notebook",
       dringend: false,
-      text: t("ui.heute_offene_punkte_uebergabe", { anzahl: offen.length }),
+      text: offen.length === 1
+        ? t("ui.heute_offener_punkt_uebergabe")
+        : t("ui.heute_offene_punkte_uebergabe", { anzahl: offen.length }),
     },
   ];
 }
