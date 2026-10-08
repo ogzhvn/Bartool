@@ -370,6 +370,61 @@ erfinden.
 
 ---
 
+### Runde 10 – Datentrennung je Abteilung im Betrieb (geplant am 08.10.2026)
+
+Mise en Place, Übergabe, Checklisten, Inventur, Schwund und Events sollen auch für WGR und
+Tellerwerk nutzbar werden, ohne dass die Abteilungen einander in die Daten schreiben. Beim Anlegen
+wählt man, welche Abteilungen einen Eintrag sehen. Löst den Backlog-Punkt „Datentrennung je
+Abteilung" ab und hebt für diese Tabellen die Runde-8-Entscheidung „keine Datentrennung" auf.
+
+**Entscheidungen (08.10.2026, mit dem Nutzer abgestimmt)**
+- **Echter Zugriffsschutz per RLS**, nicht nur Ausblenden: nicht freigegebene Zeilen kommen gar
+  nicht beim Client an, also auch nicht in den Offline-Cache. Für Rezepte, Produkte, Quiz und Wissen
+  bleibt Lesen wie bisher für alle offen.
+- **Zwei Spalten je Eintrag:** `department text not null` (Eigentümer-Abteilung, beim Anlegen die
+  eigene; Grundlage für Filter und Auswertungen) und `visible_to text[] not null` (sichtbar für;
+  enthält immer `department`). Kein „leer = alle" wie bei Wissen: „alle" heißt alle Abteilungen
+  angehakt. Eine später neu angelegte Abteilung sieht ältere Einträge deshalb nicht – gewollt.
+- **Vererbung statt eigener Spalten:** `checklist_runs` über `checklist_templates`,
+  `inventory_items` über `inventory_counts` (RLS per `exists`). Eine für mehrere Abteilungen
+  freigegebene Vorlage ergibt pro Tag **einen** gemeinsamen Lauf (Unique-Index bleibt).
+- **Sehen = mitarbeiten** (offene Punkte abhaken, Checkliste ausfüllen, Inventur zählen, Ansatz als
+  verbraucht markieren). **Sichtbarkeit ändern und Löschen nur die Eigentümer-Abteilung** – Löschen
+  zusätzlich mit dem bestehenden `*.manage`-Recht bzw. beim Schwund als Ersteller wie bisher.
+- **Alle Abteilungen sieht nur, wer das neue Recht `betrieb.alle_abteilungen` hat** (Gruppe
+  `betrieb`). Startbelegung: nur `admin`. Barchef und stellv. Barchef sehen Bar + was für die Bar
+  freigegeben ist; weitere Rollen über die Rechte-Matrix.
+- **Vorbereitet für Mehrfachzugehörigkeit:** RLS prüft Array-Überlappung
+  (`visible_to && private.my_departments()`), heute mit genau einem Element. Springer-Konten selbst
+  sind nicht geplant.
+- **Bestand:** alle vorhandenen Zeilen → `department = 'bar'`, `visible_to = '{bar}'`. Für die Bar
+  ändert sich nichts.
+- **Offline-Cache wird beim Abmelden und beim Kontowechsel geleert** (Betriebs-Schlüssel in
+  `js/storage.js` und Inventur-Entwürfe aus `js/inventory.js`). Befund vom 08.10.2026: Die
+  Schlüssel sind heute nicht kontogebunden und bleiben nach `signOut()` stehen – auf einem
+  geteilten Tablet sähe das nächste Konto offline fremde Einträge.
+- **Standard-Freigaben** je Modul × Abteilung in neuer Tabelle `department_defaults`, im Admin
+  pflegbar (Paket 69). Ohne Zeile ist nur die eigene Abteilung vorausgewählt.
+- Zum Testen braucht es ein **zweites Testkonto ohne `betrieb.alle_abteilungen`** (Abteilung `wgr`,
+  Rolle `barkeeper`), weil der Admin-Testaccount alles sieht. Anlage in Paket 64, Passwort wie beim
+  ersten nur lokal in `.claude/local/testaccount.md`.
+- Die dazu vorgeschlagenen Zusatzfunktionen hat der Nutzer abgewählt (siehe „Bewusst nicht im
+  Scope").
+
+Reihenfolge: **64 → 65**, danach 66, 67, 68 beliebig, **69 zuletzt**. Betriebsmodule für `wgr`
+und `tellerwerk` in der Modul-Matrix erst nach Paket 69 einschalten, und nur nach Rückfrage.
+
+| # | Paket | Status | Modell |
+|---|---|---|---|
+| 64 | Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben | offen | Opus 5.5, hoher Denkaufwand |
+| 65 | Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren | offen | Opus 5.5, mittlerer Denkaufwand (sechs Datenarten + sicherheitsrelevanter Cache, Grenzfall → teureres Modell) |
+| 66 | Übergabe + Mise en Place | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 67 | Checklisten | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 68 | Inventur, Schwund, Events, „Was kann ich bauen?", Auswertung | offen | Sonnet 5.5, mittlerer Denkaufwand |
+| 69 | Admin: Standard-Freigaben, Module für WGR/Tellerwerk | offen | Sonnet 5.5, mittlerer Denkaufwand |
+
+---
+
 # Paket 1 – PWA installierbar + App-Shell offline
 
 **Abhängigkeit:** keine.
@@ -3494,6 +3549,204 @@ Kategorienamen (`hyphens: auto`) greift im Test-Chromium unter Linux nicht, auf 
 
 ---
 
+# Paket 64 – Datenmodell + RLS: `department`/`visible_to`, Recht, Standard-Freigaben
+
+**Abhängigkeit:** Runde 8 (Pakete 50–52) ist da.
+**Modell:** Opus 5.5, hoher Denkaufwand – RLS-Umbau auf sieben Betriebstabellen, Trigger, neues
+Recht. Eine falsche Policy sperrt den Betrieb aus oder legt Daten offen.
+
+**Ziel:** Die Datenbank trennt Betriebsdaten nach Abteilung. Oberfläche unverändert; die Bar sieht
+alles wie vorher, weil alle Bestandszeilen der Bar gehören.
+
+**Tabellen:** `preparations`, `events`, `shift_logs`, `checklist_templates`, `inventory_counts`,
+`losses` (eigene Spalten); `checklist_runs`, `inventory_items` (erben über den Elterneintrag).
+**Dateien:** `supabase/schema.sql`, `js/permissions.js`, `js/i18n/de.js`, `js/i18n/en.js`.
+**Migration: ja**, in drei kleinen Teilen (CLAUDE.md „Große Texte"): (a) Funktionen + Recht +
+`department_defaults`, (b) Spalten + Backfill + Trigger, (c) Policies. Nach einem Timeout zuerst per
+`execute_sql` prüfen, was angekommen ist.
+
+**Schritte**
+1. `private.my_departments() returns text[]` (stable, security definer, `search_path = ''`):
+   `array[department]` aus `public.profiles` für `auth.uid()`, sonst `'{}'`.
+   `private.sees_all_departments()` = `private.has_permission('betrieb.alle_abteilungen')`.
+   `private.dept_visible(p text[])` = `sees_all_departments() or p && my_departments()`.
+2. Recht `betrieb.alle_abteilungen` in `permissions` (Gruppe `betrieb`, Label-Key
+   `perm.betrieb.alle_abteilungen`), Zuordnung nur zu `admin`. Eintrag in `js/permissions.js` mit
+   `policy`-Hinweis, i18n-Schlüssel in beiden Sprachdateien.
+3. Auf den sechs Tabellen: `department text not null default 'bar' references
+   public.departments (key) on update cascade`, `visible_to text[] not null default '{bar}'`,
+   GIN-Index auf `visible_to`. Bestand bekommt dadurch `bar` / `{bar}`.
+4. Trigger `private.betrieb_dept_guard()` (before insert or update) auf den sechs Tabellen:
+   - Insert ohne `sees_all_departments()`: `department := (my_departments())[1]`.
+   - Immer: `visible_to` = eindeutige Vereinigung aus `visible_to` und `department`; jeder Key muss
+     in `departments` existieren (Arrays haben keinen FK), sonst `raise`.
+   - Update: Änderung an `department` nur mit `sees_all_departments()`; Änderung an `visible_to` nur,
+     wenn `old.department = any(my_departments())` oder `sees_all_departments()`, sonst `raise`.
+5. Policies: `select`/`insert`/`update` der sechs Tabellen zusätzlich `private.dept_visible(visible_to)`;
+   `delete` zusätzlich `sees_all_departments() or department = any(my_departments())` neben dem
+   bestehenden Recht. `checklist_runs` und `inventory_items`: alle Policies zusätzlich per `exists`
+   auf den Elterneintrag mit `dept_visible(...)`.
+6. Tabelle `department_defaults (module_key text, department_key text references departments (key)
+   on update cascade on delete cascade, visible_to text[] not null, primary key (module_key,
+   department_key))`; RLS: lesen alle angemeldeten, schreiben `roles.manage` (wie
+   `department_modules`).
+7. Zweites Testkonto `claude-test-wgr` (Rolle `barkeeper`, Abteilung `wgr`) über Admin → Konten
+   anlegen; Passwort nur in `.claude/local/testaccount.md`, CLAUDE.md-Abschnitt „Testaccount" um das
+   Konto ergänzen (ohne Passwort).
+8. `supabase/schema.sql` nachziehen, `get_advisors` (security) ohne neue Befunde.
+
+**Abnahme** (per `execute_sql` mit `set local role authenticated` +
+`set local request.jwt.claims` je Konto, danach `rollback`)
+- [ ] Konto `wgr`: sieht 0 Bestandszeilen in allen acht Tabellen; Konto `bar` und Admin sehen alle.
+- [ ] Insert durch `wgr` mit `department = 'bar'` landet als `wgr`, `visible_to` enthält `wgr`.
+- [ ] Bar-Zeile mit `visible_to = '{bar,wgr}'`: `wgr` sieht und ändert Inhalt, kann aber
+      `visible_to` nicht ändern und die Zeile nicht löschen.
+- [ ] Lauf zu einer nur für die Bar sichtbaren Checklistenvorlage ist für `wgr` unsichtbar und nicht
+      anlegbar; dasselbe für Inventurpositionen.
+- [ ] Unbekannter Abteilungs-Key in `visible_to` wird abgewiesen.
+- [ ] App als Bar-Konto durchgeklickt: Startseite „Heute anstehend", alle Betriebsmodule unverändert.
+
+**Commit:** `Abteilungen: Datentrennung im Betrieb per RLS (department, visible_to)`
+
+---
+
+# Paket 65 – Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren
+
+**Abhängigkeit:** Paket 64.
+**Modell:** Opus 5.5, mittlerer Denkaufwand – sechs Datenarten in `storage.js` und ein
+sicherheitsrelevanter Cache, Grenzfall → teureres Modell.
+
+**Ziel:** Die Module können `department`/`visibleTo` lesen und schreiben, es gibt einen
+gemeinsamen Auswahl-Baustein, und kein Konto sieht offline die Betriebsdaten eines anderen.
+
+**Dateien:** `js/storage.js`, neu `js/departmentPicker.js`, `js/auth.js`, `js/main.js`,
+`js/inventory.js` (Entwurfs-Schlüssel), `css/styles.css` (nur Chips/Badge), `sw.js`, i18n.
+
+**Schritte**
+1. `storage.js`: Zuordnung `department` ↔ `department`, `visible_to` ↔ `visibleTo` in
+   `load*`/`save*` der sechs Datenarten; beim Speichern ohne Angabe nichts mitsenden (Trigger setzt
+   die Abteilung). `loadDepartments()` / `loadDepartmentDefaults()` nach dem üblichen Muster.
+2. `js/auth.js`: `myDepartments()` (Array, heute ein Element), `seesAllDepartments()` über `can()`.
+3. `js/departmentPicker.js`: `createDepartmentPicker({ moduleKey, value, editable })` → Chips je
+   Abteilung (Labels aus der DB per `textContent`, unübersetzt), eigene Abteilung angehakt und
+   gesperrt, Vorbelegung aus `department_defaults`, `getValue()`. Touch-Ziele ≥ 44 px.
+   Dazu `departmentBadge(record)` für die Anzeige („Bar · WGR").
+4. Cache: Beim `signOut()` und wenn beim Start die angemeldete User-ID nicht zum gespeicherten
+   `bartool:cache-owner` passt, die Betriebs-Schlüssel (`preparations`, `events`, `shift-logs`,
+   `losses`, `checklist-templates`, `checklist-runs`) und die Inventur-Entwürfe löschen. Rezept-,
+   Produkt-, Quiz- und Wissens-Cache bleiben.
+5. Realtime prüfen: Ein `wgr`-Konto darf über `postgres_changes` keine Bar-Zeilen bekommen (nach
+   Erinnerung filtert Realtime nach RLS, DELETE-Ereignisse tragen nur den Schlüssel – nicht
+   nachgeschlagen, im Test belegen).
+6. Service-Worker-Cache hochzählen.
+
+**Abnahme**
+- [ ] Bar-Konto: alle Betriebsmodule laden und speichern wie vorher.
+- [ ] Abmelden, als `claude-test-wgr` anmelden, Netz aus (Playwright offline): keine Bar-Einträge
+      im Cache bzw. in der Oberfläche.
+- [ ] Realtime: Bar legt eine Übergabe an, das parallel angemeldete `wgr`-Konto bekommt sie nicht.
+
+**Commit:** `Abteilungen: Datenschicht, Abteilungsauswahl, Cache beim Abmelden leeren`
+
+---
+
+# Paket 66 – Übergabe + Mise en Place
+
+**Abhängigkeit:** Paket 65.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/shiftLog.js`, `js/preparations.js`, `index.html` (nur die Formular-Stellen per
+`grep`), `css/styles.css` (nur falls nötig), i18n, `sw.js`.
+
+**Schritte**
+1. Formular „Neue Übergabe" und „Neuer Ansatz": Abteilungsauswahl aus `departmentPicker.js`.
+2. Beim Bearbeiten ist die Auswahl nur für die Eigentümer-Abteilung (bzw. mit
+   `betrieb.alle_abteilungen`) aktiv, sonst nur das Badge.
+3. Badge an jedem Eintrag, Filter „Abteilung" (Standard: alles Sichtbare).
+4. Rendert bei `onLanguageChanged()` neu.
+
+**Abnahme**
+- [ ] Bar legt Übergabe nur für Bar an → `wgr` sieht sie nicht; mit „Bar + WGR" → `wgr` sieht sie,
+      kann offene Punkte abhaken, aber die Freigabe nicht ändern.
+- [ ] Dasselbe für einen Ansatz; „Heute anstehend" auf der Startseite zeigt nur Sichtbares.
+- [ ] Screenshots 390 px und 1366 px.
+
+**Commit:** `Übergabe und Mise en Place: Sichtbarkeit je Abteilung`
+
+---
+
+# Paket 67 – Checklisten
+
+**Abhängigkeit:** Paket 65.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/checklists.js`, `js/home.js` (nur prüfen), `index.html` (nur Vorlagenformular),
+i18n, `sw.js`.
+
+**Schritte**
+1. Vorlagenpflege (`checklists.manage`): Abteilungsauswahl; Badge in der Vorlagenliste.
+2. Läufe erben die Sichtbarkeit der Vorlage; Hinweis im Vorlagenformular, dass mehrere Abteilungen
+   denselben Tageslauf teilen.
+3. Filter „Abteilung" in der Vorlagen- und Laufübersicht.
+
+**Abnahme**
+- [ ] Bar-Vorlage ist für `wgr` weder sichtbar noch ausfüllbar; nach Freigabe für WGR füllen beide
+      denselben Tageslauf aus.
+- [ ] „Heute anstehend" zeigt nur sichtbare Checklisten.
+- [ ] Screenshots 390 px und 1366 px.
+
+**Commit:** `Checklisten: Sichtbarkeit je Abteilung`
+
+---
+
+# Paket 68 – Inventur, Schwund, Events, „Was kann ich bauen?", Auswertung
+
+**Abhängigkeit:** Paket 65.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/inventory.js`, `js/losses.js`, `js/events.js`, `js/buildable.js`,
+`js/adminReports.js`, `index.html` (nur Formular-Stellen), i18n, `sw.js`.
+
+**Schritte**
+1. Neue Inventur-Zählung, neuer Schwund-Eintrag, neues Event: Abteilungsauswahl; Badge und Filter
+   in den Listen.
+2. „Was kann ich bauen?": Zählungsauswahl zeigt die Abteilung im Eintrag (RLS filtert bereits).
+3. Schwund-Auswertung im Admin: Filter nach `department` (Eigentümer), damit freigegebene Einträge
+   nicht doppelt zählen.
+
+**Abnahme**
+- [ ] Bar-Inventur für `wgr` unsichtbar; nach Freigabe sieht und zählt `wgr` mit.
+- [ ] Schwund-Eintrag von `wgr` erscheint für die Bar nur, wenn freigegeben; Auswertung je Abteilung
+      stimmt mit `select department, sum(...) from losses group by 1` überein.
+- [ ] Screenshots 390 px und 1366 px.
+
+**Commit:** `Inventur, Schwund und Events: Sichtbarkeit je Abteilung`
+
+---
+
+# Paket 69 – Admin: Standard-Freigaben, Module für WGR/Tellerwerk
+
+**Abhängigkeit:** Pakete 66–68.
+**Modell:** Sonnet 5.5, mittlerer Denkaufwand.
+
+**Dateien:** `js/adminDepartments.js`, `index.html` (nur Admin-Abschnitt Abteilungen), i18n, `sw.js`.
+
+**Schritte**
+1. In jeder Abteilungskarte Abschnitt „Standard-Freigabe": je Betriebsmodul Chips der übrigen
+   Abteilungen; speichert in `department_defaults`.
+2. Mit dem Nutzer abstimmen, welche Betriebsmodule für `wgr` und `tellerwerk` in der Modul-Matrix
+   eingeschaltet werden – erst nach Bestätigung schalten.
+3. Runde 10 im Ausbauplan auf „erledigt" setzen.
+
+**Abnahme**
+- [ ] Standard „Übergabe: Bar → auch WGR" gesetzt → neues Übergabeformular der Bar hat WGR
+      vorausgewählt, abwählbar.
+- [ ] Ohne `roles.manage` kein Schreiben in `department_defaults` (RLS).
+
+**Commit:** `Admin: Standard-Freigaben je Abteilung`
+
+---
+
 ## Nachprüfung der offenen Abnahmepunkte (03.10.2026)
 
 Geprüft wurde lesend: SQL gegen die Datenbank, Code, `schema.sql`, `sw.js` und ein Browserdurchlauf
@@ -3528,9 +3781,7 @@ Reihenfolge offen, erst nach Runde 4 entscheiden:
 - **Produktkatalog auf Englisch** – die 176 Produkttexte. Bewusst aus Paket 33 herausgehalten:
   eigene Runde oder gar nicht, aber nicht nebenbei.
 - **Bildfragen im Quiz** als eigenes Thema, sobald genug Rezepte ein Bild haben (aus Paket 31).
-- **Datentrennung je Abteilung** – Übergaben, Checklisten, Inventur, Schwund, Events und Ansätze
-  mit Spalte `department` und RLS über `private.my_department()`. Am 02.10.2026 bewusst verschoben
-  („erst mal gemeinsam"); Voraussetzung, um Betriebsmodule für WGR/Tellerwerk freizuschalten.
+- ~~Datentrennung je Abteilung~~ → eingeplant als Runde 10 (Pakete 64–69, 08.10.2026).
 - **Funktionen für WGR und Tellerwerk** – Anforderungen stehen aus. Kandidaten aus der Planung
   (Annahmen, keine Vorgaben): Allergen-/Deklarationsmatrix für Gerichte, Temperatur-/HACCP-Protokoll,
   Buffet-Mengenplanung, 86-Liste, Weinbegleitung. Gerichte passen vermutlich nicht in `recipes`
@@ -3569,3 +3820,9 @@ mitentschieden: `admin` und `barchef` sind zwei getrennte Rollen, `admin` steht 
 **Ebenfalls am 04.09.2026 gestrichen** (waren als Paket 21 bzw. im Backlog geplant, vom Nutzer
 ausdrücklich abgewählt): Export des Bestellvorschlags als Druck-/Mailtext und Barcode-Scan bei
 der Inventur. Nicht wieder vorschlagen, ohne dass der Nutzer von sich aus danach fragt.
+
+**Am 08.10.2026 abgewählt** (bei der Planung von Runde 10 vorgeschlagen, vom Nutzer als für den
+Betrieb nicht nützlich bewertet): Sortiment je Abteilung, Warenausleihe zwischen Abteilungen,
+Übergabe an eine Abteilung adressieren + Lesebestätigung, Springer-Konten mit mehreren Abteilungen,
+Leitungsansicht/Kennzahlen je Abteilung, HACCP-/Temperatur-Checklisten für WGR/Tellerwerk. Nicht
+wieder vorschlagen, ohne dass der Nutzer von sich aus danach fragt.
