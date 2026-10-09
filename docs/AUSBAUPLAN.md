@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–5 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–6 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3371,6 +3371,29 @@ Barrierefrei-Tipps aus österreichischen Ministeriumsleitfäden (kein deutsches 
 Handwerks-Fachpresse belegt. Kein „Unklar:“ nötig. Abgleich per md5 des Abschnittstexts. Karten ohne Quelle: 17 → 10. Offen:
 Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Dienstkleidung/Schmuck/Namensschild, Begrüßung und Platzierung,
 Beschwerdeweg und Entgegenkommen, Assistenzhund im Haus, Empfehlungs-/Zusatzverkaufsvorgaben).
+
+**Lernkarten mit Quellen, Runde 6: Serviceablauf & Servierarten (09.10.2026):** Kategorie heißt in der DB
+„Serviceablauf & Servierarten“ (5 Karten, 4 ohne Quelle, „Serviceregeln“ war schon belegt und blieb unangetastet). Alle 4 auf
+je 7 Sätze gebracht, ein Abschnitt „Kurz erklärt“, Kurzfassung = erster Satz, weiter Entwurf: Ausheben (6 Quellen),
+Bestellaufnahme (4), Tellerservice (6), Tragetechnik (5). Titel geändert (Slug unverändert): „Bestellaufnahme: Bonierfolge,
+Tischnummerierung, Gastzählung“ → „Bestellaufnahme: Tischnummer, Sitzplan, Bonieren“ (Quelle spricht von Tischnummer und Sitzplan,
+Bonierfolge/Gastzählung nicht belegt), „Tellerservice: Ablauf und typische Fehler“ → „Tellerservice: Ablauf und Grundregeln“
+(typische Fehler nicht belegt). Quellen: GastroAusbV Anlage 1 (Abschn. A Nr. 5 d–e, B Nr. 2 e, g) und Anlage 2 (Abschn. A Nr. 11 d,
+12 a), Lehrplanrichtlinien Bayern (ISB, 08/2022, LF 5, S. 18), ibw-Ausbildungsleitfaden Restaurantfachmann/-frau (Österreich,
+09/2019, S. 78, 106, 120–123, über WKO-Seite gefunden – Kernquelle für Servierregeln, Tragen und Bonieren, kein deutsches
+Gegenstück gefunden), BfR Hygieneregeln (2024, S. 3–4), DGUV Regel 110-001 (04/2007, S. 24), Wefers „Service-Richtlinien“ der GAD
+(1. Aufl. 2014, Leseprobe S. 1–20, Kap. 5 Servieren/Ausheben nicht enthalten), Herrmann „Restaurantfachleute“ 4. Aufl. 2016
+(Leseprobe S. 17), DWI (Weinglas), ZWILLING (Dessertbesteck), Klett-Arbeitsblatt AB 25 (Hauswirtschaft 2013, nur Zweitbeleg).
+Gestrichen, weil nicht belegt: Besteck parallel als Fertig-Signal, Gläser stehen lassen, nicht vor dem Gast stapeln, Krümel
+entfernen, Gastzählung im Uhrzeigersinn ab festem Platz, gangweise Bonierfolge, Hauptkomponente zum Gast (nur Forum/PR-Lexikon),
+heiße Teller ankündigen, Teller nicht über den Gast reichen, Speisen zu spät holen, Tablett unter dem Schwerpunkt/Schweres mittig,
+„Vorsicht, hinter Ihnen“. „Unklar:“ Ausführung von Ober- und Untergriff (in keiner abgerufenen Quelle beschrieben). Grenzfälle:
+BfR-Regeln für die Küche geschrieben (Geschirrrücknahme als „Auslegung:“), Rechts/links-Regeln nur aus österreichischem Leitfaden
+und Hauswirtschafts-Arbeitsblatt, 20-kg-Tableau ist eine Praxisstimme im Leitfaden. Nicht erreichbar: Probeseiten Handwerk und
+Technik 7307/4993 (liefern HTML), IHK-Arnsberg-Checkliste (HTML statt PDF). Abgleich per md5 des Abschnittstexts. Karten ohne
+Quelle: 10 → 6. Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Servierseite und -reihenfolge, Sitzplatz-
+nummerierung im Kassensystem, Allergen-/Sonderwunschvermerk auf dem Bon, Abräumzeitpunkt an Bar und Restaurant, Tragegrenzen/
+Tablettgrößen).
 
 **Schreibregeln (07.10.2026)**
 
