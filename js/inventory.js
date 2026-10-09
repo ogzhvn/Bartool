@@ -376,6 +376,7 @@ function backToOverview() {
 async function handleNewCount(e) {
   e.preventDefault();
   const heute = new Date();
+  if (deptPicker && !deptPicker.validate()) return;
   try {
     const neu = await saveInventoryCount({
       countedOn: new Date(heute.getTime() - heute.getTimezoneOffset() * 60000)
@@ -385,6 +386,7 @@ async function handleNewCount(e) {
       status: "offen",
       createdBy: getCurrentUser()?.id ?? null,
       visibleTo: deptPicker ? deptPicker.getValue() : undefined,
+      department: deptPicker?.getDepartment(),
     });
     schliesseNeuFormular();
     await openCount(neu);

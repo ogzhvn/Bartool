@@ -533,9 +533,13 @@ async function handleSubmit(e) {
     alert(t("ui.bitte_einen_namen_fuer_die_veranstaltung_6146"));
     return;
   }
+  if (deptPicker && !deptPicker.validate()) return;
   const nutzer = getCurrentUser();
   if (nutzer && !ev.id) ev.createdBy = nutzer.id;
-  if (deptPicker) ev.visibleTo = deptPicker.getValue();
+  if (deptPicker) {
+    ev.visibleTo = deptPicker.getValue();
+    ev.department = deptPicker.getDepartment();
+  }
   try {
     await saveEvent(ev);
     resetForm();

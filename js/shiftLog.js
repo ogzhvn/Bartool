@@ -278,13 +278,17 @@ async function handleSubmit(e) {
     alert(t("ui.bitte_eine_notiz_schreiben_oder_mindestens_dd28"));
     return;
   }
+  if (deptPicker && !deptPicker.validate()) return;
   const log = {
     shiftDate: dateEl.value || heuteInput(),
     shift: shiftEl.value,
     summary: zusammenfassung,
     openItems: punkte.map((text) => ({ text, done: false, doneBy: null, doneAt: null })),
   };
-  if (deptPicker) log.visibleTo = deptPicker.getValue();
+  if (deptPicker) {
+    log.visibleTo = deptPicker.getValue();
+    log.department = deptPicker.getDepartment();
+  }
   const nutzer = getCurrentUser();
   if (nutzer) log.createdBy = nutzer.id;
   try {

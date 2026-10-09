@@ -1399,6 +1399,7 @@ export const de = {
   "ui.schwund_abteilung_eigentuemer": "Schwund: Abteilung (Eigentümer)",
   "ui.alle_abteilungen": "Alle Abteilungen",
   "ui.sichtbar_fuer": "Sichtbar für",
+  "ui.bitte_mindestens_eine_abteilung_waehlen": "Bitte mindestens eine Abteilung wählen.",
   "ui.checkliste_abteilungen_hinweis": "Alle Abteilungen mit Freigabe füllen denselben Tageslauf aus.",
   "ui.freigabe_aendern": "Freigabe ändern",
   "ui.je_abteilung_festlegen_welche_module_sichtbar_sind": "Je Abteilung festlegen, welche Module sichtbar sind",

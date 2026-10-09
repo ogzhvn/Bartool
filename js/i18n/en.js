@@ -1398,6 +1398,7 @@ export const en = {
   "ui.schwund_abteilung_eigentuemer": "Losses: department (owner)",
   "ui.alle_abteilungen": "All departments",
   "ui.sichtbar_fuer": "Visible to",
+  "ui.bitte_mindestens_eine_abteilung_waehlen": "Please select at least one department.",
   "ui.checkliste_abteilungen_hinweis": "All departments with access fill in the same daily run.",
   "ui.freigabe_aendern": "Change visibility",
   "ui.je_abteilung_festlegen_welche_module_sichtbar_sind": "Set which modules each department sees",

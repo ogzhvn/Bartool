@@ -290,6 +290,7 @@ async function handleSubmit(e) {
     return;
   }
   const { amount, amountUnit } = entwurf();
+  if (deptPicker && !deptPicker.validate()) return;
   try {
     await saveLoss({
       productName: name,
@@ -299,6 +300,7 @@ async function handleSubmit(e) {
       note: noteEl.value.trim(),
       recordedBy: nutzer.id,
       visibleTo: deptPicker ? deptPicker.getValue() : undefined,
+      department: deptPicker?.getDepartment(),
       occurredAt: zeitpunktAusDatum(dateEl.value),
     });
     // Grund und Datum bleiben stehen: nach einem Bruch kommt oft der nächste.

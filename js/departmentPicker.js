@@ -11,6 +11,11 @@ import { t } from "./i18n.js";
 // ergänzt sie ohnehin (private.betrieb_dept_guard). Ohne Zeile in
 // department_defaults ist beim Anlegen nur die eigene Abteilung gewählt.
 //
+// Wer betrieb.alle_abteilungen hat, wählt beim Anlegen frei: nichts ist
+// vorbelegt oder gesperrt, mindestens eine Abteilung ist Pflicht, und die
+// erste gewählte (in Reihenfolge der Abteilungsliste) wird Eigentümer
+// (getDepartment()). Bestehende Einträge behalten ihren Eigentümer.
+//
 // Labels kommen unübersetzt aus der Tabelle "departments" und werden nur
 // per textContent gesetzt. Das Element hat keine übersetzten Texte außer
 // dem aria-label; wer es auf Dauer zeigt, baut es bei onLanguageChanged()
@@ -34,11 +39,16 @@ function defaultVisibleTo(moduleKey, owner) {
 // value: bestehender Eintrag ({ department, visibleTo }) oder leer beim
 // Anlegen. editable: false zeigt die Chips nur an.
 export function createDepartmentPicker({ moduleKey, value = null, editable = true } = {}) {
-  const owner = value?.department || myDepartments()[0] || null;
+  const frei = editable && !value?.department && seesAllDepartments();
+  const owner = frei ? null : value?.department || myDepartments()[0] || null;
   const selected = new Set(
-    value && Array.isArray(value.visibleTo) && value.visibleTo.length
-      ? value.visibleTo
-      : defaultVisibleTo(moduleKey, owner)
+    frei
+      ? Array.isArray(value?.visibleTo)
+        ? value.visibleTo
+        : []
+      : value && Array.isArray(value.visibleTo) && value.visibleTo.length
+        ? value.visibleTo
+        : defaultVisibleTo(moduleKey, owner)
   );
   if (owner) selected.add(owner);
 
@@ -83,6 +93,18 @@ export function createDepartmentPicker({ moduleKey, value = null, editable = tru
     element,
     getValue() {
       return [...selected].sort();
+    },
+    // Nur im freien Modus gesetzt; sonst bestimmt die Datenbank den Eigentümer.
+    getDepartment() {
+      return frei ? keys.find((key) => selected.has(key)) : undefined;
+    },
+    // Im freien Modus ist mindestens eine Abteilung Pflicht.
+    validate() {
+      if (frei && selected.size === 0) {
+        alert(t("ui.bitte_mindestens_eine_abteilung_waehlen"));
+        return false;
+      }
+      return true;
     },
   };
 }

@@ -766,6 +766,7 @@ async function speichereVorlage(e) {
     alert(t("ui.bitte_mindestens_einen_punkt_mit_3679"));
     return;
   }
+  if (deptPicker && !deptPicker.validate()) return;
   const template = {
     id: bearbeiteteVorlage?.id,
     name,
@@ -774,7 +775,10 @@ async function speichereVorlage(e) {
     items,
     active: templateActiveEl.checked,
   };
-  if (deptPicker) template.visibleTo = deptPicker.getValue();
+  if (deptPicker) {
+    template.visibleTo = deptPicker.getValue();
+    template.department = deptPicker.getDepartment();
+  }
   try {
     await saveChecklistTemplate(template);
     schliesseVorlagenFormular();

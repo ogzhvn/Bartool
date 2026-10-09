@@ -672,8 +672,13 @@ grant execute on function private.my_departments() to authenticated;
 grant execute on function private.sees_all_departments() to authenticated;
 grant execute on function private.dept_visible(text[]) to authenticated;
 
+-- Abteilungsleitung (Barchef, Restaurantleiter:in) seit 09.10.2026: wählt die
+-- Abteilungen beim Anlegen frei (js/departmentPicker.js). F&B-Leitung hat das
+-- Recht über die Startbelegung oben.
 insert into public.role_permissions (role_key, permission_key)
-values ('admin', 'betrieb.alle_abteilungen')
+values ('admin', 'betrieb.alle_abteilungen'),
+       ('barchef', 'betrieb.alle_abteilungen'),
+       ('restaurantleiter', 'betrieb.alle_abteilungen')
 on conflict do nothing;
 
 -- Standard-Freigaben je Modul × Abteilung (gepflegt in Paket 69). Ohne Zeile

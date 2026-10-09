@@ -211,6 +211,7 @@ async function handleSubmit(e) {
     alert(t("ui.bitte_einen_namen_fuer_den_ansatz_eintragen"));
     return;
   }
+  if (deptPicker && !deptPicker.validate()) return;
   const prep = {
     id: formEl.dataset.editId || undefined,
     label,
@@ -224,7 +225,10 @@ async function handleSubmit(e) {
     status: "aktiv",
     madeBy: getCurrentUser()?.id ?? null,
   };
-  if (deptPicker) prep.visibleTo = deptPicker.getValue();
+  if (deptPicker) {
+    prep.visibleTo = deptPicker.getValue();
+    prep.department = deptPicker.getDepartment();
+  }
   try {
     await savePreparation(prep);
     resetForm();
