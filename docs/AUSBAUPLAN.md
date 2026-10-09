@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (08.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1 (Hygiene) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (08.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–3 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3310,6 +3310,26 @@ Lieferschein, Verpackungseinheiten/Mindestabnahme, Kapitalbindung, „prüfungsr
 (Lieferantenvereinbarung). Hausstandard offen: Bestandswerte Bar/Lager. Abgleich per md5 des
 Abschnittstexts. Karten ohne Quelle: 38 → 30. Offen: Gegenlesen und Prüfvermerk durch die Barleitung,
 ggf. EUR-Lex-Wortlaut nachprüfen.
+
+**Lernkarten mit Quellen, Runde 3: Arbeitssicherheit (08./09.10.2026):** Kategorie heißt in der DB
+„Arbeitssicherheit, Gesundheit & Nachhaltigkeit“ (8 Karten, 4 ohne Quelle). Überarbeitet auf je 7 Sätze, ein
+Abschnitt „Kurz erklärt“, Kurzfassung = erster Satz, weiter Entwurf: „Typische Gefährdungen in Service und Küche“
+(5 Quellen), „Ergonomisch arbeiten: Heben, Tragen, Stehen“ (4), „Abfallvermeidung und -trennung im Gastgewerbe“
+(5), „Nachhaltigkeit: ökologisch, ökonomisch, sozial“ (4). Quellen: ArbSchG §§ 4, 5, LasthandhabV § 2, KrWG § 6,
+GewAbfV § 3 (gesetze-im-internet.de war diesmal direkt erreichbar), DGUV Regel 110-001 (04/2007), DGUV Grundsatz
+311-003 (03/2020), TRGS 500 Abschn. 5.1 (STOP, nur in der Note), BGN Report 1/2023, BGN ASI 7.10, BGN
+Beurteilungshilfe Körperliche Belastungen Gastgewerbe (9/2021), BGN Ergonomie konkret Steharbeit (9/2021),
+BG ETEM Muster-Betriebsanweisung B049 (keine BGN-Fassung gefunden), LfU Bayern Speisefette (02/2025),
+Verbraucherzentrale (Dialogforum Außer-Haus-Verpflegung, Original nicht abgerufen), UBA (Mehrweg, Kühlschrank),
+bpb (Pufé 2014), Stadt Aachen BNE-Material, DEHOGA Sachsen (Umweltcheck 2024). Gestrichen, weil nicht belegt:
+heiße Teller ankündigen, Kisten/Fässer in Hüfthöhe bewegen, Schuhe mit guter Dämpfung, Leichtverpackungen als
+eigene Fraktion, Fettabscheider belasten, Mehrweg statt Einweg (Einwegverpackung), saisonale Karten,
+faire/planbare Arbeitszeiten, Beispiel „Bio teurer“ als Zielkonflikt. Grenzfälle: STOP wörtlich nur in TRGS 500
+(Gefahrstoffe), allgemeine Rangfolge über § 4 ArbSchG und DGUV 311-003 belegt; Fettabscheider-Pflicht über
+bayerische Behörde belegt, Lübecker Abwassersatzung nicht geprüft; UBA-Kühlschranktipp für Haushalte geschrieben.
+Kein „Unklar:“ nötig. Zwei UPDATEs je Karte (Text, dann Quellen), weil ein Statement mit Quellen über 4 KB lag.
+Abgleich per md5 des Abschnittstexts. Karten ohne Quelle: 30 → 26. Offen: Gegenlesen und Prüfvermerk durch die
+Barleitung, Hausstandard Abfalltrennung (welche Tonnen im Haus) erfragen.
 
 **Schreibregeln (07.10.2026)**
 
