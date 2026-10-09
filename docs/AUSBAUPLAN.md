@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (08.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–3 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–4 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3330,6 +3330,27 @@ bayerische Behörde belegt, Lübecker Abwassersatzung nicht geprüft; UBA-Kühls
 Kein „Unklar:“ nötig. Zwei UPDATEs je Karte (Text, dann Quellen), weil ein Statement mit Quellen über 4 KB lag.
 Abgleich per md5 des Abschnittstexts. Karten ohne Quelle: 30 → 26. Offen: Gegenlesen und Prüfvermerk durch die
 Barleitung, Hausstandard Abfalltrennung (welche Tonnen im Haus) erfragen.
+
+**Lernkarten mit Quellen, Runde 4: Gastraum, Mise en place & Eindecken (09.10.2026):** Alle 9 Karten ohne Quelle
+(Atmosphäre, Basisgedeck, Besteckkunde, Gläserkunde, Gläserpflege, Mise en place, Reinigen/Desinfizieren/Pflegen,
+Serviettenformen, Tischwäsche) auf 6–7 Sätze gebracht, je ein Abschnitt „Kurz erklärt“, Kurzfassung = erster Satz, weiter
+Entwurf. Quellen: GastroAusbV Anlage 1 (Ausbildungsrahmenplan, Abschn. A Nr. 4–6, B Nr. 1–2, gesetze-im-internet.de
+direkt erreichbar), österr. Wirtschaftsministerium (Berufsbild Restaurantfachkraft, Kompetenzbereich Mise en place),
+BfR Hygieneregeln (2024), LRA Kelheim Merkblatt Eigenkontrollen, BGN Report 2/2022, IHK Schwarzwald-Baar-Heuberg (GEMA),
+DWI (Weinglas, Seminarhandbuch S. 113/131), Hersteller ZWILLING (Eindecken, Besteckkunde, Besteckpflege), WMF,
+Robbe & Berking, Miele Spüllexikon (06/2023), Krombacher Hygiene-Tipps, Kärcher, Rausch (Servietten), Hohenstein
+(RAL-GZ 992/1), Lehrbuch Herrmann „Restaurantfachleute“ 4. Aufl. 2016 (Leseprobe), Lehrmaterial hubbs.schule
+„Restaurantwäsche“ (2024), Merriam-Webster (Etymologie Mise en place). Korrigiert: Schaumwein „in der Flöte“ → Sekttulpe
+(DWI). Gestrichen, weil nicht belegt: Licht nach Tageszeit, Musik übertönt Gespräch, Temperatur aus Gastsicht,
+Rundgang vom Gästeplatz, Serviette und Glas als Bestandteile des Basisgedecks, Besteck „gleicher Abstand zur Tischkante“,
+Bier-/Cocktailgläser, Glas am Stiel beim Polieren nicht verdrehen, Polieren über Wasserdampf, Kontaktflächen häufiger
+reinigen, Wirkzeit Desinfektionsmittel, Serviettenformen Dreieck/Rolle/Bischofsmütze, hygienisch falten, Mittelfalte und
+Überhang des Tischtuchs, Wäsche nicht zum Putzen, Flecken sofort behandeln, Schmutzwäsche sortieren, versilbertes Besteck
+empfindlicher. „Unklar:“ Werte für Licht/Lautstärke/Temperatur, Abgrenzung Grund-/erweitertes Gedeck, Bedeutung der
+Gramm-Angabe bei versilberter Ware, Reinigungsintervalle Gastraum, Hygiene bei aufwendigen Faltungen. Nicht erreichbar:
+DBB-Leitfaden Gläserreinigung (05/2020, Proxy), Lehrbuch-Probeseite Handwerk und Technik 4802 (404), Duden. Abgleich per
+md5 des Abschnittstexts. Karten ohne Quelle: 26 → 17. Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards
+(Eindeckschema, Gläser je Getränk, Mise-en-place-Checkliste, Reinigungsplan Gastraum, Wäscherei, Musik/GEMA-Lizenz).
 
 **Schreibregeln (07.10.2026)**
 
