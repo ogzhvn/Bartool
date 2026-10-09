@@ -41,12 +41,20 @@ create table if not exists public.role_permissions (
   primary key (role_key, permission_key)
 );
 
+-- rank ist eindeutig (roles_rank_key): zwei Rollen auf gleicher Stufe gibt
+-- es nicht, deshalb Restaurantleiter:in 75 unter Barchef 80 und Service 35
+-- unter Barkeeper 40. F&B- und Service-Rollen seit 09.10.2026.
 insert into public.roles (key, label, rank, is_system, sort) values
-  ('admin',          'Administrator',    100, true,  10),
-  ('barchef',        'Barchef',           80, false, 20),
-  ('stellv_barchef', 'Stellv. Barchef',   60, false, 30),
-  ('barkeeper',      'Barkeeper',         40, true,  40),
-  ('azubi',          'Auszubildende:r',   20, false, 50)
+  ('admin',            'Administrator',          100, true,   10),
+  ('fbmanager',        'F&B Managerin',           90, false,  20),
+  ('stellv_fbmanager', 'Stellv. F&B Manager:in',  85, false,  30),
+  ('barchef',          'Barchef',                 80, false,  40),
+  ('restaurantleiter', 'Restaurantleiter:in',     75, false,  50),
+  ('stellv_barchef',   'Stellv. Barchef',         60, false,  60),
+  ('chef_de_rang',     'Chef de Rang',            50, false,  70),
+  ('barkeeper',        'Barkeeper',               40, true,   80),
+  ('service',          'Service-Mitarbeiter:in',  35, false,  90),
+  ('azubi',            'Auszubildende:r',         20, false, 100)
 on conflict (key) do update
   set label = excluded.label,
       rank = excluded.rank,
@@ -98,6 +106,25 @@ where key in ('recipes.write', 'products.write', 'requests.review',
               'knowledge.write', 'inventory.manage', 'preparations.manage', 'events.manage',
               'checklists.manage', 'shiftlog.manage', 'losses.manage',
               'reports.view', 'audit.view', 'feedback.review')
+on conflict do nothing;
+
+-- F&B-Leitung: alles außer Rollenverwaltung, auch Betriebsdaten aller
+-- Abteilungen. Restaurantleitung wie Barchef, Chef de Rang pflegt
+-- Checklisten und Übergabe. Service-Mitarbeiter:in wie Barkeeper (keine Zeile).
+insert into public.role_permissions (role_key, permission_key)
+select r.key, p.key from public.permissions p
+  cross join (values ('fbmanager'), ('stellv_fbmanager')) as r (key)
+ where p.key <> 'roles.manage'
+on conflict do nothing;
+
+insert into public.role_permissions (role_key, permission_key)
+select 'restaurantleiter', key from public.permissions
+ where key not in ('roles.manage', 'betrieb.alle_abteilungen')
+on conflict do nothing;
+
+insert into public.role_permissions (role_key, permission_key)
+select 'chef_de_rang', key from public.permissions
+ where key in ('checklists.manage', 'shiftlog.manage')
 on conflict do nothing;
 
 create table if not exists public.profiles (
@@ -459,7 +486,8 @@ create table if not exists public.departments (
 insert into public.departments (key, label, sort) values
   ('bar', 'Bar', 10),
   ('wgr', 'Wintergartenrestaurant', 20),
-  ('tellerwerk', 'Das Tellerwerk', 30)
+  ('tellerwerk', 'Das Tellerwerk', 30),
+  ('fb_management', 'F&B Management', 40)
 on conflict (key) do nothing;
 
 -- Ein fehlender Eintrag heißt: Modul für diese Abteilung nicht sichtbar.
@@ -691,6 +719,28 @@ drop trigger if exists department_defaults_guard on public.department_defaults;
 create trigger department_defaults_guard
   before insert or update on public.department_defaults
   for each row execute function private.department_defaults_guard();
+
+-- Abteilung F&B Management (09.10.2026): alle Module, Betriebseinträge
+-- sind standardmäßig für alle Abteilungen freigegeben. Nur solange die
+-- Abteilung noch keine Module hat (Muster Paket 53), sonst schaltet ein
+-- erneuter Lauf im Admin abgewählte Module wieder ein.
+insert into public.department_modules (department_key, module_key)
+select 'fb_management', m.key
+  from (values
+    ('batching'), ('superjuice'), ('syrup'), ('dilution'), ('calculation'),
+    ('menu-costing'), ('preparations'), ('events'), ('shift-log'),
+    ('checklists'), ('inventory'), ('losses'), ('buildable'),
+    ('recipes'), ('dishes'), ('products'), ('quiz'), ('knowledge')
+  ) as m (key)
+ where not exists (select 1 from public.department_modules dm where dm.department_key = 'fb_management')
+on conflict do nothing;
+
+insert into public.department_defaults (module_key, department_key, visible_to)
+select m.key, 'fb_management', array['bar', 'wgr', 'tellerwerk', 'fb_management']
+  from (values
+    ('preparations'), ('events'), ('shift-log'), ('checklists'), ('inventory'), ('losses')
+  ) as m (key)
+on conflict do nothing;
 
 -- ---------------------------------------------------------------------
 -- Hilfsfunktion: updated_at automatisch setzen

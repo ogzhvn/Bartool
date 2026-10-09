@@ -2,7 +2,8 @@ import { getSupabaseClient } from "./supabaseClient.js";
 import { getCurrentUser, myRank } from "./auth.js";
 import { escapeHtml, functionErrorMessage } from "./utils.js";
 import { formatDateTime, onLanguageChanged, t } from "./i18n.js";
-import { loadRoles, getRolesSync, roleRank } from "./roles.js";
+import { loadRoles, getRolesSync, roleRank, onRolesChanged } from "./roles.js";
+import { loadDepartments, onDepartmentsChanged } from "./storage.js";
 
 // Kontenverwaltung im Adminbereich (Sub-Tab "admin-users").
 // Aus js/adminPanel.js herausgelöst (Paket 34) – der Inhalt ist unverändert,
@@ -21,21 +22,13 @@ const statusFilterSelect = document.getElementById("admin-users-status-filter");
 // ändern daran nichts.
 let employeesCache = [];
 
-// Abteilungen aus der DB-Tabelle "departments" (Paket 50/52). Die Abteilung
-// steuert nur die Navigation, nicht den Zugriff; geändert wird sie per Update
-// auf profiles wie die Rolle (Policy: users.manage).
-let departments = [];
-
-async function loadDepartments() {
-  const { data } = await getSupabaseClient()
-    .from("departments")
-    .select("key, label")
-    .order("sort", { ascending: true });
-  departments = data ?? [];
-}
-
+// Abteilungen aus der DB-Tabelle "departments" (Paket 50/52), über den
+// Cache in storage.js – der hält sich per Realtime aktuell, so taucht eine
+// neu angelegte Abteilung ohne Neuladen in der Auswahl auf. Die Abteilung
+// steuert nur die Navigation, nicht den Zugriff; geändert wird sie per
+// Update auf profiles wie die Rolle (Policy: users.manage).
 function departmentOptions(selectedKey) {
-  return departments
+  return loadDepartments()
     .map(
       (d) =>
         `<option value="${escapeHtml(d.key)}"${d.key === selectedKey ? " selected" : ""}>${escapeHtml(d.label)}</option>`
@@ -128,7 +121,8 @@ function applyFilters(profiles) {
 }
 
 async function loadEmployees() {
-  await Promise.all([loadRoles(), loadDepartments()]);
+  // force: Rollen können seit dem Start im Sub-Tab "Rollen" dazugekommen sein.
+  await loadRoles({ force: true });
   fillCreateRoleSelect();
   fillRoleFilterSelect();
   fillDepartmentSelects();
@@ -338,6 +332,17 @@ async function handleCreate(e) {
 export function initAdminUsers() {
   // Sprachwechsel: neu rendern, damit kein Neuladen nötig ist.
   onLanguageChanged(loadEmployees);
+
+  // Neue Rolle oder Abteilung: Auswahlfelder und Tabelle neu füllen, ohne
+  // die Konten erneut zu laden.
+  const auswahlNeuFuellen = () => {
+    fillCreateRoleSelect();
+    fillRoleFilterSelect();
+    fillDepartmentSelects();
+    if (employeesCache.length) renderEmployees(applyFilters(employeesCache));
+  };
+  onRolesChanged(auswahlNeuFuellen);
+  onDepartmentsChanged(auswahlNeuFuellen);
 
   createForm.addEventListener("submit", handleCreate);
   // Filter ändern nur die Anzeige, kein erneutes Laden nötig.

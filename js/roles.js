@@ -11,6 +11,11 @@ import { getSupabaseClient } from "./supabaseClient.js";
 let rolesCache = null;
 let pendingLoad = null;
 
+// Nach jedem erfolgreichen Laden – auch nach dem Anlegen einer Rolle im
+// Sub-Tab "Rollen" (loadRoles({ force: true })). Die Kontenverwaltung füllt
+// darüber ihre Rollenauswahl neu, ihr init läuft nur beim ersten Öffnen.
+const ROLES_UPDATED_EVENT = "bartool:roles-updated";
+
 export async function loadRoles({ force = false } = {}) {
   if (rolesCache && !force) return rolesCache;
   if (pendingLoad && !force) return pendingLoad;
@@ -28,6 +33,7 @@ export async function loadRoles({ force = false } = {}) {
       rolesCache = rolesCache ?? [];
     } else {
       rolesCache = data ?? [];
+      window.dispatchEvent(new CustomEvent(ROLES_UPDATED_EVENT));
     }
     pendingLoad = null;
     return rolesCache;
@@ -47,4 +53,8 @@ export function roleLabel(key) {
 
 export function roleRank(key) {
   return getRolesSync().find((r) => r.key === key)?.rank ?? 0;
+}
+
+export function onRolesChanged(callback) {
+  window.addEventListener(ROLES_UPDATED_EVENT, callback);
 }

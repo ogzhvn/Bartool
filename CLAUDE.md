@@ -215,7 +215,12 @@ Befund aus Paket 56 (08.10.2026): **Ein Semikolon innerhalb eines String-Literal
 (z. B. `"note": "Stand: Juli 2023; abgerufen …"`) lässt `execute_sql` reproduzierbar 60 s
 hängen, auch bei einem UPDATE unter 200 Byte; ohne das Semikolon läuft dasselbe Statement
 sofort, ein Semikolon am Statement-Ende stört nicht. Workaround: im Literal einen Platzhalter
-setzen und `replace($q$…~~…$q$, '~~', chr(59))::jsonb` schreiben. Ob die älteren Hänger oben
+setzen und `replace($q$…~~…$q$, '~~', chr(59))::jsonb` schreiben.
+
+Befund vom 09.10.2026: Ein `update … set sort = case key when … then … end`
+hing ebenfalls 60 s ohne Wirkung; dasselbe als
+`update … from (values (…), …) as v(k, s) where …` lief sofort. Bei
+Mehrfach-Updates deshalb die `values`-Form nehmen. Ob die älteren Hänger oben
 (große Texte, `drop`/`delete`) dieselbe Ursache hatten, ist nicht geprüft.
 
 ## Testaccount (Supabase Auth)
