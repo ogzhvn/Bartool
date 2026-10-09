@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–7 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf, Recht & Betriebsorganisation) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–8 abgeschlossen (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf, Recht & Betriebsorganisation, Ernährungsformen + Speisenkunde), keine Lernkarte mehr ohne Quelle | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3416,6 +3416,28 @@ Abgleich per md5 von Abschnittstext, Kurzfassung und Quellen. Karten ohne Quelle
 Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Einordnung als mehrschichtiger Betrieb und spätestes Dienstende
 Jugendlicher, Tarifvertrag mit Abweichungen nach § 21a JArbSchG, Organigramm A-ROSA Travemünde mit Zuständigkeiten Bar/WGR/Tellerwerk,
 Ansprechpartner Ausbildung im Haus).
+
+**Lernkarten mit Quellen, Runde 8: Ernährungsformen und Beilagen (09.10.2026):** Die letzten 2 Karten ohne Quelle, je eine aus
+„Ernährungsformen, Allergene & Kennzeichnung“ und „Speisen- & Menükunde“. Beide auf je 7 Sätze gebracht, ein Abschnitt „Kurz erklärt“,
+Kurzfassung = erster Satz, weiter Entwurf, Titel unverändert (passen zur Quelle): „Vegetarisch, vegan, pescetarisch, flexitarisch“
+(6 Quellen), „Sättigungs- und Gemüsebeilagen“ (7). Quellen: Leitsätze für vegane und vegetarische Lebensmittel (DLMBK, Neufassung
+10.09.2024, Nr. 1.1.1–1.1.3), DGE „Flexitarier“ (DGEinfo 10/2013, Tabelle 1 Formen des Vegetarismus), Verbraucherzentrale (Vegetarisch,
+vegan oder flexitarisch, und Vegetarische und vegane Lebensmittel erkennen, beide Stand 06.03.2026), Lebensmittelklarheit (Vegan-Kennzeichnung
+auf der Speisekarte, Stand 18.11.2025, Tierische Gelatine, Stand 05.12.2024), Lehrplanrichtlinien Bayern (ISB, 08/2022, S. 16, LF 3),
+KochAusbV Anlage 1 Abschn. A Nr. 7 c–g (gesetze-im-internet.de direkt, nach Verbindungsabbrüchen), IHK Frankfurt am Main (Prüfungsmenü
+Koch, 2016), DGE-Qualitätsstandard Betriebe/Behörden/Hochschulen (6. Aufl. 2023, S. 31, 58), Leitsätze für Teigwaren (Neufassung 2022,
+geändert 15.09.2025, Nr. 1.1.1, 2.1.1), LMIV Anhang II Nr. 1, 3 (Spiegel gesetze.legal), Arbeitsblatt Forum Wirtschaftsdeutsch (2020, nur
+Zweitbeleg für Sättigungsbeilage/Knödel/Spätzle). Ergänzt: Honig ist vegetarisch erlaubt, vegan nicht, „vegan/vegetarisch“ ist nicht
+„eifrei/milchfrei“ (Spuren erlaubt), Karmin (E 120) aus Schildläusen in roten Getränken, Speisekarten-Kennzeichnung muss stimmen
+(Täuschungsverbot), Teigwaren und Ei/Gluten als Allergene. Gestrichen, weil nicht belegt: Schmalz, Fleisch-/Fischbrühe und Fischsauce als
+versteckte Zutaten, „Gäste fragen aus Überzeugung, nicht aus Geschmack“, Gemüse „gebraten/glasiert“ (belegt nur geschmort/gedünstet),
+Getreide als eigene Sättigungsbeilage (ersetzt durch Couscous/Bulgur laut Arbeitsblatt), Kroketten als Allergenbeispiel. Kein „Unklar:“
+nötig. „Auslegung:“ je ein Satz (im Zweifel in der Küche nachfragen). Grenzfälle: Gerichtsaufbau Hauptbestandteil/Sauce/Gemüse/
+Sättigungsbeilage nur am Beispiel der Koch-Abschlussprüfung belegt, Austausch von Komponenten über den DGE-Standard für
+Gemeinschaftsverpflegung (Übertragung aufs Restaurant als „Auslegung:“), Leitsätze sind keine Rechtsvorschrift. Abgleich per md5 von
+Abschnittstext, Kurzfassung und Quellen. Karten ohne Quelle: 2 → 0. Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards
+(Kennzeichnung vegan/vegetarisch auf den Karten von Bar, WGR und Tellerwerk, wo die Bar nachsieht, welche Weine/Säfte/Liköre vegan sind,
+Beilagen-Austausch: was ist erlaubt und wer entscheidet, Verfahren bei Allergen- und Zutatenfragen zwischen Service und Küche).
 
 **Schreibregeln (07.10.2026)**
 
