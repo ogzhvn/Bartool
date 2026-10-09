@@ -2552,6 +2552,14 @@ create table if not exists public.knowledge_articles_archive (
 alter table public.knowledge_articles_archive enable row level security;
 revoke all on public.knowledge_articles_archive from anon, authenticated;
 
+-- Hilfsfunktion für die Schulungs-Zusammenführung (09.10.2026): Lernkarten (je
+-- ein Abschnitt) werden Abschnitte eines bestehenden Artikels (nach p_after bzw.
+-- vor „Hausstandard“/„Quellen“) oder einer neuen Schulung (p_new_category).
+-- Texte werden unverändert kopiert, Quellen nach URL vereinigt, Karten vorher
+-- ins Archiv gesichert. Die Karten selbst löscht der Aufrufer danach. Nur per
+-- SQL aufrufbar.
+-- Volltext: Migration knowledge_merge_cards (supabase_migrations).
+
 -- Modul "Wissen" für alle drei Abteilungen. Bewusst ein eigener Seed und
 -- nicht Teil der "nur wenn Abteilung leer"-Startbelegung oben: dort sind die
 -- Abteilungen längst belegt, "Wissen" käme nie an. Live ist er einmalig per
