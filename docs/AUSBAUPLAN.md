@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–4 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–5 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3351,6 +3351,26 @@ Gramm-Angabe bei versilberter Ware, Reinigungsintervalle Gastraum, Hygiene bei a
 DBB-Leitfaden Gläserreinigung (05/2020, Proxy), Lehrbuch-Probeseite Handwerk und Technik 4802 (404), Duden. Abgleich per
 md5 des Abschnittstexts. Karten ohne Quelle: 26 → 17. Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards
 (Eindeckschema, Gläser je Getränk, Mise-en-place-Checkliste, Reinigungsplan Gastraum, Wäscherei, Musik/GEMA-Lizenz).
+
+**Lernkarten mit Quellen, Runde 5: Gastgeberrolle & Kommunikation (09.10.2026):** Kategorie heißt in der DB
+„Gastgeberrolle & Kommunikation“ (7 Karten, alle ohne Quelle). Alle 7 auf je 7 Sätze gebracht, ein Abschnitt „Kurz erklärt“,
+Kurzfassung = erster Satz, weiter Entwurf: Erscheinungsbild (5 Quellen), Gästetypen (3), Gastgeberrolle (4), Reklamation (3),
+Sender-Empfänger/vier Seiten (3), Gäste mit Behinderung (4), Verkaufsgespräch (4). Titel „Reklamation: Ablauf in fünf
+Schritten“ → „Reklamation: Ablauf Schritt für Schritt“, weil die Quelle acht Schritte nennt (Slug unverändert). Quellen:
+GastroAusbV Anlage 1 (Abschn. A Nr. 1 a–j, B Nr. 2 d–f) und Anlage 2 (Abschn. A Nr. 8 a–e), BGG § 12e (Assistenzhunde),
+VO (EG) 852/2004 Anh. II Kap. VIII (Spiegel gesetze.legal), BfR Hygieneregeln (2024), Lehrplanrichtlinien Bayern (ISB, 08/2022,
+auf Basis KMK-Rahmenlehrplan 17.12.2021 – KMK-PDF selbst über IHK-Link 404), österr. Wirtschaftsministerium: „Vom Umgang mit
+Gästewünschen, Anregungen und Beschwerden“ (BMAW, 3. Aufl. 01/2024) und „Tourismus für Alle“ (BMWFW/WKO, 2. Aufl. 2015),
+Schulz von Thun Institut (Kommunikationsquadrat), wirtepatent.ch (Schweizer Fernschule, Gästetypen, 06/2023), Deutsche Handwerks
+Zeitung (offene/geschlossene Fragen, 2011), Flyer Blindenführhund (Download Stadt Plettenberg). Gestrichen, weil nicht belegt:
+Hände nicht in den Taschen/nicht verschränkt, „Ärger bleibt hinter der Anrichte“, Geschäftsreisende als Gästetyp, Jubiläumsgesellschaft,
+„Ich bin gleich bei Ihnen“, leeres Glas/suchender Blick erkennen, Fall intern festhalten, verschlüsseln/entschlüsseln (Codierung),
+höchstens zwei Alternativen anbieten, Bestellung wiederholen (sichert Menge/Allergene), Nutzen für den Gast nennen. Grenzfälle:
+BfR-Regeln gelten für die Küche (Bar als „Auslegung:“), Kopfbedeckung bewusst weggelassen; Verhaltens-, Beschwerde- und
+Barrierefrei-Tipps aus österreichischen Ministeriumsleitfäden (kein deutsches Gegenstück gefunden); Fragetechnik nur über
+Handwerks-Fachpresse belegt. Kein „Unklar:“ nötig. Abgleich per md5 des Abschnittstexts. Karten ohne Quelle: 17 → 10. Offen:
+Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Dienstkleidung/Schmuck/Namensschild, Begrüßung und Platzierung,
+Beschwerdeweg und Entgegenkommen, Assistenzhund im Haus, Empfehlungs-/Zusatzverkaufsvorgaben).
 
 **Schreibregeln (07.10.2026)**
 
