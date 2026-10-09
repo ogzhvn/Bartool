@@ -321,7 +321,7 @@ Tellerwerk), nicht nur für die Bar.
 | 53 | Datenmodell Wissen, Recht, Modul-Registrierung | erledigt | Opus 5.5, hoher Denkaufwand |
 | 54 | Modul Wissen: Liste, Filter, Detail, Gelesen-Status | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
-| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–6 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
+| 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–7 (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf, Recht & Betriebsorganisation) | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
@@ -3394,6 +3394,28 @@ Technik 7307/4993 (liefern HTML), IHK-Arnsberg-Checkliste (HTML statt PDF). Abgl
 Quelle: 10 → 6. Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Servierseite und -reihenfolge, Sitzplatz-
 nummerierung im Kassensystem, Allergen-/Sonderwunschvermerk auf dem Bon, Abräumzeitpunkt an Bar und Restaurant, Tragegrenzen/
 Tablettgrößen).
+
+**Lernkarten mit Quellen, Runde 7: Recht & Betriebsorganisation (09.10.2026):** Kategorie heißt in der DB
+„Recht & Betriebsorganisation“ (6 Karten, 4 ohne Quelle, „Ausbildungsvertrag“ und „Kaufvertrag“ waren schon belegt und blieben
+unangetastet). Alle 4 auf je 7 Sätze gebracht, ein Abschnitt „Kurz erklärt“, Kurzfassung = erster Satz, weiter Entwurf, Titel
+unverändert (passen zur Quelle): Jugendarbeitsschutzgesetz (1 Quelle), Duale Ausbildung (4), Betriebsarten (3), Aufbau- und
+Ablauforganisation (5). Quellen: JArbSchG §§ 2, 8, 11–18 (Fassung 23.10.2024), BBiG §§ 2, 5, 13–15, 34, 39, 71, 76 (Fassung
+28.10.2025), GastroAusbV § 8, Anlage 1 Abschn. D Nr. 1 a–b, Anlage 2 Abschn. B Nr. 1 a–b, HotelAusbV § 5 Abs. 2, § 7, Anlage 1
+Abschn. A Nr. 16 d, e, h und Abschn. B Nr. 1 a–b (alle gesetze-im-internet.de direkt), DEHOGA Bundesverband „Definitionen der
+Betriebsarten“ (Stand 25.11.2022), DEHOGA Rheinland-Pfalz (Gastronomie-Betriebsarten mit Vermerk „Quelle: Statistisches
+Bundesamt“, Gasthof), Lehrplanrichtlinien Bayern (ISB, 08/2022, S. 2, 4, 19, 25), Gabler Wirtschaftslexikon (Aufbau-, Ablauforganisation,
+Organigramm, Rev. 14.02.2018). Korrigiert: zwei freie Samstage im Monat „sollen“, nicht „müssen“ (§ 16), 23 Uhr gilt für
+„mehrschichtige Betriebe“, nicht ausdrücklich für Hotels (§ 14), „Apartmenthaus“ → Aparthotel (DEHOGA). Ergänzt: Feiertagsruhe
+(§ 18, u. a. 24./31.12. ab 14 Uhr frei). Gestrichen, weil nicht belegt: Zielgruppe/Preisniveau als Unterscheidungsmerkmal,
+„Gemeinschaftsverpflegung“ (ersetzt durch Kantine laut Statistik), „Berichtsheft“ (Gesetz: Ausbildungsnachweis), „Probleme zuerst im
+Betrieb besprechen“, „Dienstweg einhalten“, „gute Organisation ist unsichtbar“, Abteilungsliste Direktion/Verwaltung. „Unklar:“ ob ein
+Hotel als mehrschichtiger Betrieb gilt. „Auslegung:“ IHK als zuständige Stelle über § 71 Abs. 2 BBiG (nichthandwerkliche Gewerbeberufe).
+Grenzfälle: Berufsschul-Fächer nur am bayerischen Beispiel belegt (Schleswig-Holstein nicht geprüft), Statistik-Definitionen über die
+DEHOGA-RLP-Seite gelesen (Original beim Statistischen Bundesamt nicht abgerufen). Nicht erreichbar: IHK-Merkblätter Beherbergung (404).
+Abgleich per md5 von Abschnittstext, Kurzfassung und Quellen. Karten ohne Quelle: 6 → 2 (Ernährungsformen, Speisen- & Menükunde).
+Offen: Gegenlesen und Prüfvermerk durch die Barleitung, Hausstandards (Einordnung als mehrschichtiger Betrieb und spätestes Dienstende
+Jugendlicher, Tarifvertrag mit Abweichungen nach § 21a JArbSchG, Organigramm A-ROSA Travemünde mit Zuständigkeiten Bar/WGR/Tellerwerk,
+Ansprechpartner Ausbildung im Haus).
 
 **Schreibregeln (07.10.2026)**
 
