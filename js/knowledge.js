@@ -42,15 +42,15 @@ import { formatDate, onLanguageChanged, t } from "./i18n.js";
 // Themenliste) plus ein paar noch leere Fachkategorien. Die älteren
 // Startkategorien („Service & Abläufe“, „Hygiene & Sicherheit“, „Haus &
 // Outlets“) sowie die Dubletten „Wein & Schaumwein“, „Spirituosen“,
-// „Getränkekunde“ und „Produktwissen“ sind entfernt. „Sonstiges“ bleibt, bis
-// der Testartikel daraus gelöscht ist. Kategorien, die nur in den Daten
-// vorkommen, hängen hinten an.
+// „Getränkekunde“ und „Produktwissen“ sind entfernt. Am 09.10.2026 wurden
+// „Speisen- & Menükunde“ und „Ernährungsformen, Allergene & Kennzeichnung“
+// zusammengelegt und „Sonstiges“ mit dem Testartikel entfernt. Kategorien, die
+// nur in den Daten vorkommen, hängen hinten an.
 export const KNOWLEDGE_CATEGORIES = [
   "Gastgeberrolle & Kommunikation",
   "Serviceablauf & Servierarten",
   "Gastraum, Mise en place & Eindecken",
-  "Speisen- & Menükunde",
-  "Ernährungsformen, Allergene & Kennzeichnung",
+  "Speisen, Ernährung & Allergene",
   "Alkoholfreie Getränke",
   "Kaffee & Tee",
   "Bier",
@@ -64,7 +64,6 @@ export const KNOWLEDGE_CATEGORIES = [
   "Recht & Betriebsorganisation",
   "Veranstaltungen & Bankett",
   "Team, Führung & Ausbildung",
-  "Sonstiges",
 ];
 
 // Ausbildungsberufe der Lernkarten (Spalte berufe). Amtliche Bezeichnungen,

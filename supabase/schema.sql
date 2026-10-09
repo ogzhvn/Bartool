@@ -2539,6 +2539,19 @@ exception
   when duplicate_object then null;
 end $$;
 
+-- Sicherung gelöschter bzw. zu Schulungen zusammengeführter Artikel
+-- (09.10.2026). Bewusst ohne Policy: RLS sperrt die App komplett aus, gelesen
+-- und zurückgespielt wird nur per SQL. Kein Unique auf title/id, damit
+-- mehrere Stände derselben Zeile nebeneinander liegen können.
+create table if not exists public.knowledge_articles_archive (
+  archive_id bigint generated always as identity primary key,
+  archived_at timestamptz not null default now(),
+  archive_reason text not null,
+  like public.knowledge_articles
+);
+alter table public.knowledge_articles_archive enable row level security;
+revoke all on public.knowledge_articles_archive from anon, authenticated;
+
 -- Modul "Wissen" für alle drei Abteilungen. Bewusst ein eigener Seed und
 -- nicht Teil der "nur wenn Abteilung leer"-Startbelegung oben: dort sind die
 -- Abteilungen längst belegt, "Wissen" käme nie an. Live ist er einmalig per
