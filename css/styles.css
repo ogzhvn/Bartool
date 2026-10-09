@@ -5180,6 +5180,65 @@ p.knowledge-nav-title {
   color: var(--accent);
 }
 
+/* Inhaltsverzeichnis langer Artikel (js/knowledge.js renderToc) */
+.knowledge-toc {
+  margin: 1rem 0 0.4rem;
+  padding: 0.4rem 0.9rem 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.knowledge-toc h4 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.knowledge-toc ol {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.knowledge-toc li::marker {
+  color: var(--text-muted);
+}
+
+.knowledge-toc-link {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.35rem 0;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .knowledge-toc-link {
+    min-height: 0;
+    padding: 0.2rem 0;
+  }
+
+  .knowledge-toc-link:hover {
+    color: var(--accent);
+  }
+}
+
+.knowledge-toc-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.knowledge-section {
+  scroll-margin-top: 5rem;
+}
+
 .knowledge-text {
   white-space: pre-line;
   text-wrap: pretty;

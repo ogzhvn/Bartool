@@ -1129,6 +1129,7 @@ export const en = {
   "ui.wissen_gelesen_am": "Read on {date}",
   "ui.wissen_stand": "As of: {date} · reviewed by {name}",
   "ui.wissen_nicht_geprueft": "Draft – not reviewed yet",
+  "ui.wissen_inhalt": "Contents",
   "ui.wissen_quellen": "Sources",
   "ui.wissen_gilt_fuer": "Applies to: {list}",
   "ui.wissen_gilt_fuer_alle": "Applies to: all departments",

@@ -736,6 +736,35 @@ function renderSection(section) {
   return wrap;
 }
 
+// Inhaltsverzeichnis für lange Artikel (Schulungen aus mehreren Lernkarten,
+// 09.10.2026): Tippen springt zum Abschnitt. Buttons statt Anker, damit die
+// Tab-Navigation über den Hash unberührt bleibt.
+const TOC_MIN_SECTIONS = 4;
+
+function renderToc(sections, sectionEls) {
+  const entries = sections
+    .map((section, i) => [String(section?.heading ?? "").trim(), sectionEls[i]])
+    .filter(([heading]) => heading);
+  if (entries.length < TOC_MIN_SECTIONS) return null;
+  const nav = el("nav", "knowledge-toc");
+  nav.setAttribute("aria-label", t("ui.wissen_inhalt"));
+  nav.appendChild(el("h4", null, t("ui.wissen_inhalt")));
+  const list = el("ol");
+  entries.forEach(([heading, target]) => {
+    const btn = el("button", "knowledge-toc-link", heading);
+    btn.type = "button";
+    btn.addEventListener("click", () => {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView?.({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+    const li = el("li");
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+  nav.appendChild(list);
+  return nav;
+}
+
 function renderSources(article) {
   const wrap = el("div", "knowledge-sources");
   wrap.appendChild(el("h4", null, t("ui.wissen_quellen")));
@@ -850,7 +879,10 @@ function renderDetail(article) {
   if (article.summary && !summaryRepeated(article)) {
     detailEl.appendChild(el("p", "knowledge-summary", article.summary));
   }
-  article.sections.forEach((section) => detailEl.appendChild(renderSection(section)));
+  const sectionEls = article.sections.map(renderSection);
+  const toc = renderToc(article.sections, sectionEls);
+  if (toc) detailEl.appendChild(toc);
+  sectionEls.forEach((sectionEl) => detailEl.appendChild(sectionEl));
 
   const footer = el("div", "knowledge-footer");
   footer.appendChild(

@@ -323,6 +323,16 @@ Tellerwerk), nicht nur für die Bar.
 | 55 | Wissen pflegen: Editor, Titelbild, Verlauf, Suche | erledigt | Sonnet 5.5, mittlerer Denkaufwand |
 | 56 | Inhalte erarbeiten: Themenkatalog, Recherche, Entwürfe | in Arbeit (09.10.2026): Katalogthemen als Entwurf, Lernkarten-Quellen Runde 1–8 abgeschlossen (Hygiene, Warenwirtschaft & Lager, Arbeitssicherheit, Gastraum, Gastgeberrolle, Serviceablauf, Recht & Betriebsorganisation, Ernährungsformen + Speisenkunde), keine Lernkarte mehr ohne Quelle | Opus 5.5, hoher Denkaufwand (Recherche und Fachgenauigkeit, Grenzfall → teureres Modell) |
 
+**Schulungen statt Einzelkarten (09.10.2026, mit dem Nutzer abgestimmt):** Die 55 Lernkarten (je ein
+Abschnitt) sind zu Schulungen zusammengeführt – als Abschnitte bestehender Artikel oder neuer
+Sammelartikel (z. B. „HACCP und sicherer Umgang mit Lebensmitteln“, „Lagerung“, „Servier-Grundlagen“).
+101 → 56 Artikel, Texte unverändert, Überschneidungen im Stand-Vermerk markiert (beim Prüfen straffen).
+Kategorien „Speisen- & Menükunde“ + „Ernährungsformen, Allergene & Kennzeichnung“ →
+„Speisen, Ernährung & Allergene“, Testartikel und „Sonstiges“ entfernt. Sicherung aller Zeilen in
+`knowledge_articles_archive` (nur per SQL), Hilfsfunktion `private.knowledge_merge_cards`. Neue
+Inhalte deshalb **als Abschnitt in die passende Schulung**, nicht als neue Einzelkarte. Detailansicht
+zeigt ab 4 Abschnitten ein Inhaltsverzeichnis.
+
 ### Runde 10 – UI-Politur im Dark Theme (geplant am 08.10.2026)
 
 Bestandsaufnahme per Screenshot (Chromium, 390 px Handy und 1366 px Desktop, Testaccount) über alle
