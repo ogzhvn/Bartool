@@ -303,6 +303,22 @@ function renderEmployees(profiles) {
   });
 }
 
+// Mindestens ein Punkt in der Domain, keine Leerzeichen, genau ein "@".
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
+function createFormError(email, password) {
+  const emailField = document.getElementById("admin-new-email");
+  const usernameField = document.getElementById("admin-new-username");
+  const passwordField = document.getElementById("admin-new-password");
+  if (!email) return { field: emailField, text: t("ui.bitte_alle_pflichtfelder_ausfuellen") };
+  if (!EMAIL_PATTERN.test(email)) return { field: emailField, text: t("ui.bitte_eine_gueltige_e_mail_adresse_eingeben") };
+  if (!usernameField.value.trim()) return { field: usernameField, text: t("ui.bitte_alle_pflichtfelder_ausfuellen") };
+  // Wie im Edge-Function-Check; Großbuchstaben werden beim Senden ohnehin klein.
+  if (!/^[a-z0-9._-]{3,32}$/.test(usernameField.value.trim().toLowerCase())) return { field: usernameField, text: t("ui.nur_kleinbuchstaben_zahlen_punkt_70d6") };
+  if (password.length < 8) return { field: passwordField, text: t("ui.das_passwort_muss_mindestens_8_zeichen_haben") };
+  return null;
+}
+
 async function handleCreate(e) {
   e.preventDefault();
   createError.hidden = true;
@@ -313,6 +329,16 @@ async function handleCreate(e) {
   const displayName = document.getElementById("admin-new-name").value.trim();
   const role = newRoleSelect.value;
   const department = newDepartmentSelect?.value || "bar";
+
+  // Das Formular hat `novalidate`: die Browser-Blase erscheint auf dem Handy
+  // oft gar nicht, und "abc@x" hielte sie ohnehin für gültig.
+  const fehler = createFormError(email, password);
+  if (fehler) {
+    createError.hidden = false;
+    createError.textContent = fehler.text;
+    fehler.field.focus();
+    return;
+  }
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke("admin-users", {

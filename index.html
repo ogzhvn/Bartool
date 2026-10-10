@@ -74,7 +74,7 @@
       <p class="hint" data-i18n="ui.dein_konto_wurde_mit_einem_temporaeren_1230">Dein Konto wurde mit einem temporären Passwort angelegt. Bitte wähle jetzt einen eigenen Benutzernamen und ein eigenes Passwort, bevor es weitergeht.</p>
       <label data-i18n="ui.benutzername">
         Benutzername
-        <input type="text" id="forced-password-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
+        <input type="text" id="forced-password-username" pattern="[a-z0-9._\-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
       </label>
       <label data-i18n="ui.neues_passwort">
         Neues Passwort
@@ -2102,7 +2102,7 @@
       <p class="hint" data-i18n="ui.mitarbeiterkonten_anlegen_und_verwalten_e412">Mitarbeiterkonten anlegen und verwalten. Rezepte und Produkte bearbeitest du in den jeweiligen Tabs.</p>
 
       <h3 data-i18n="ui.konto_anlegen">Konto anlegen</h3>
-      <form id="admin-create-form">
+      <form id="admin-create-form" novalidate>
         <div class="field-row">
           <label data-i18n="ui.e_mail">
             E-Mail
@@ -2110,7 +2110,7 @@
           </label>
           <label data-i18n="ui.benutzername">
             Benutzername
-            <input type="text" id="admin-new-username" pattern="[a-z0-9._-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
+            <input type="text" id="admin-new-username" pattern="[a-z0-9._\-]{3,32}" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich und Bindestrich (3–32 Zeichen)" required data-i18n-title="ui.nur_kleinbuchstaben_zahlen_punkt_70d6" />
           </label>
         </div>
         <div class="field-row">
