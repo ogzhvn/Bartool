@@ -6,7 +6,7 @@ import {
   matchesDepartment,
   fillDepartmentFilter,
 } from "./departmentPicker.js";
-import { getAllProducts, getProduct } from "./productLibrary.js";
+import { getAllProducts, getProductExact } from "./productLibrary.js";
 import { onProductsChanged } from "./storage.js";
 import { ingredientCost } from "./costing.js";
 import { can, getCurrentUser } from "./auth.js";
@@ -227,7 +227,7 @@ function renderProduktListe() {
 function gewaehltesProdukt() {
   const name = productEl.value.trim();
   if (!name) return null;
-  return getProduct(name);
+  return getProductExact(name);
 }
 
 function entwurf() {

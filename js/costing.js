@@ -1,5 +1,5 @@
 import { UNIT_TO_ML } from "./units.js";
-import { getAllProducts } from "./productLibrary.js";
+import { getProduct } from "./productLibrary.js";
 import { t } from "./i18n.js";
 
 const VOLUME_UNITS = new Set(Object.keys(UNIT_TO_ML));
@@ -16,35 +16,10 @@ export function ingredientCost(amount, unit, price) {
   return amount * price;
 }
 
-// Ordnet einen Zutatennamen einem Produkt aus dem Katalog zu – die eine
-// Stelle im Tool, an der dieses Matching stattfindet. Erst exakt, dann als
-// Teilstring: im Rezeptbuch heißt die Zutat oft "Bombay Sapphire Gin 47 %",
-// das Produkt aber nur "Bombay Sapphire Gin". Bei mehreren Treffern gewinnt
-// der längste Produktname, damit ein generisches "Gin" nicht die Hausmarke
-// verdrängt.
-//
-// products kann eine schon geladene Produktliste sein. Wer viele Zutaten
-// hintereinander auflöst (Bestandsabgleich, Auswertungen), gibt sie mit,
-// statt den Katalog je Zutat neu zu sortieren.
+// Ordnet einen Zutatennamen einem Produkt aus dem Katalog zu. Die Logik
+// (exakt, dann längster Teilstring) steht in productLibrary.getProduct().
 export function productForIngredient(ingredientName, products) {
-  const name = String(ingredientName ?? "").trim();
-  if (!name) return null;
-  const liste = products ?? getAllProducts();
-  const exakt = liste.find((p) => p.name === name);
-  if (exakt) return exakt;
-
-  const zutat = name.toLowerCase();
-  let treffer = null;
-  let trefferLaenge = 0;
-  liste.forEach((p) => {
-    const kandidat = String(p.name ?? "").trim().toLowerCase();
-    if (!kandidat || !zutat.includes(kandidat)) return;
-    if (kandidat.length > trefferLaenge) {
-      treffer = p;
-      trefferLaenge = kandidat.length;
-    }
-  });
-  return treffer;
+  return getProduct(ingredientName, products);
 }
 
 // Looks up the stored purchase price for an ingredient by matching it against

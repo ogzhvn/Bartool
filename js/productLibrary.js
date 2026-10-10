@@ -14,7 +14,41 @@ export function getAllProducts() {
   return [...loadProducts()].sort((a, b) => a.name.localeCompare(b.name, getLocale()));
 }
 
-export function getProduct(name) {
+// Ordnet einen Namen (meist eine Rezeptzutat) einem Produkt aus dem Katalog
+// zu – die eine Stelle im Tool, an der dieses Matching stattfindet. Erst
+// exakt, dann als Teilstring: im Rezeptbuch heißt die Zutat oft
+// "Bombay Sapphire Gin 47 %", das Produkt aber nur "Bombay Sapphire Gin".
+// Bei mehreren Treffern gewinnt der längste Produktname, damit ein
+// generisches "Gin" nicht die Hausmarke verdrängt.
+//
+// products kann eine schon geladene Produktliste sein. Wer viele Zutaten
+// hintereinander auflöst, gibt sie mit, statt den Katalog je Zutat neu zu
+// sortieren.
+export function getProduct(name, products) {
+  const gesucht = String(name ?? "").trim();
+  if (!gesucht) return null;
+  const liste = products ?? getAllProducts();
+  const exakt = liste.find((p) => p.name === gesucht);
+  if (exakt) return exakt;
+
+  const zutat = gesucht.toLowerCase();
+  let treffer = null;
+  let trefferLaenge = 0;
+  liste.forEach((p) => {
+    const kandidat = String(p.name ?? "").trim().toLowerCase();
+    if (!kandidat || !zutat.includes(kandidat)) return;
+    if (kandidat.length > trefferLaenge) {
+      treffer = p;
+      trefferLaenge = kandidat.length;
+    }
+  });
+  return treffer;
+}
+
+// Nur der exakte Name – für Stellen, an denen ein bestimmtes Produkt gemeint
+// ist (Bearbeiten-Formular, Schwundbuchung) und ein Teilstring-Treffer ein
+// falsches Produkt erwischen würde.
+export function getProductExact(name) {
   return getAllProducts().find((p) => p.name === name) ?? null;
 }
 

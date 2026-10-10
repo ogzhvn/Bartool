@@ -4,7 +4,7 @@ import { exportProductsToExcel, exportProductsToWord } from "./productExport.js"
 import { printProducts } from "./printView.js";
 import { renderTopicTiles, renderTopicNav, createBulkBar } from "./topicTiles.js";
 import { isFavorite, toggleFavorite, pushRecent } from "./favorites.js";
-import { getAllProducts, getProduct, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
+import { getAllProducts, getProductExact, isCustomProduct, getRecipesUsingProduct } from "./productLibrary.js";
 import { getAllRecipes } from "./recipeLibrary.js";
 import { onRecipesChanged } from "./storage.js";
 import { can, canSee } from "./auth.js";
@@ -1011,7 +1011,7 @@ function resetCategoryFilters() {
 // Springt vom Datenqualität-Dashboard im Admin-Tab direkt ins Bearbeiten-
 // Formular eines Produkts (Aufrufer wechselt vorher per switchTab("products")).
 export function openProductForEdit(name) {
-  const product = getProduct(name);
+  const product = getProductExact(name);
   if (!product) return;
   loadIntoForm(product);
   showEditView();
