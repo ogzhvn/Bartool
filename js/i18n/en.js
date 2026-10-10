@@ -317,6 +317,7 @@ export const en = {
   "ui.drinks_pro_gast_und_eis_pro_drink_sind_09c9": "Drinks per guest and ice per drink are rules of thumb – please adjust them to your own operation. Preset: 2 drinks in the first hour and 1 for each further hour, 0.35 kg of ice per drink. If you edit \"Drinks per guest\" by hand, your value stays.",
   "ui.drucken": "Print",
   "ui.e_mail": "Email",
+  "ui.e_mail_optional": "Email (optional)",
   "ui.eigene_auswahl": "Custom selection",
   "ui.eigene_fragen_pflegen_und_das_team_4d19": "Maintain your own questions and review the team",
   "ui.eigenes_verhaeltnis": "Custom ratio",

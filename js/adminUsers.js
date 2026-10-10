@@ -161,8 +161,8 @@ function renderEmployees(profiles) {
             const aktiv = p.is_active !== false;
             return `
           <tr data-id="${p.id}">
-            <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._-]{3,32}" ${disabled} /></td>
-            <td>${escapeHtml(p.email)}</td>
+            <td><input type="text" class="username-input" value="${escapeHtml(p.username ?? "")}" pattern="[a-z0-9._\-]{3,32}" ${disabled} /></td>
+            <td>${isPlaceholderEmail(p.email) ? "–" : escapeHtml(p.email)}</td>
             <td>${escapeHtml(p.display_name ?? "")}</td>
             <td>
               <select class="role-select" ${disabled}>
@@ -303,6 +303,15 @@ function renderEmployees(profiles) {
   });
 }
 
+// Konten ohne Mailadresse: Supabase Auth braucht trotzdem eine. Angemeldet
+// wird per Benutzername (login-with-username schlägt die Adresse im Profil
+// nach), die Platzhalteradresse wird nie angeschrieben.
+const PLACEHOLDER_EMAIL_DOMAIN = "@bartool.local";
+
+function isPlaceholderEmail(email) {
+  return String(email ?? "").toLowerCase().endsWith(PLACEHOLDER_EMAIL_DOMAIN);
+}
+
 // Mindestens ein Punkt in der Domain, keine Leerzeichen, genau ein "@".
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
@@ -310,8 +319,7 @@ function createFormError(email, password) {
   const emailField = document.getElementById("admin-new-email");
   const usernameField = document.getElementById("admin-new-username");
   const passwordField = document.getElementById("admin-new-password");
-  if (!email) return { field: emailField, text: t("ui.bitte_alle_pflichtfelder_ausfuellen") };
-  if (!EMAIL_PATTERN.test(email)) return { field: emailField, text: t("ui.bitte_eine_gueltige_e_mail_adresse_eingeben") };
+  if (email && !EMAIL_PATTERN.test(email)) return { field: emailField, text: t("ui.bitte_eine_gueltige_e_mail_adresse_eingeben") };
   if (!usernameField.value.trim()) return { field: usernameField, text: t("ui.bitte_alle_pflichtfelder_ausfuellen") };
   // Wie im Edge-Function-Check; Großbuchstaben werden beim Senden ohnehin klein.
   if (!/^[a-z0-9._-]{3,32}$/.test(usernameField.value.trim().toLowerCase())) return { field: usernameField, text: t("ui.nur_kleinbuchstaben_zahlen_punkt_70d6") };
@@ -342,7 +350,7 @@ async function handleCreate(e) {
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke("admin-users", {
-    body: { action: "create", email, username, password, displayName, role, department },
+    body: { action: "create", email: email || username + PLACEHOLDER_EMAIL_DOMAIN, username, password, displayName, role, department },
   });
 
   if (error || data?.error) {

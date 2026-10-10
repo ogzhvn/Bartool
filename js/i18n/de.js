@@ -318,6 +318,7 @@ export const de = {
   "ui.drinks_pro_gast_und_eis_pro_drink_sind_09c9": "Drinks pro Gast und Eis pro Drink sind Faustwerte – bitte an euren Betrieb anpassen. Vorbelegt: 2 Drinks in der ersten Stunde und 1 je weiterer Stunde, 0,35 kg Eis pro Drink. Wird „Drinks pro Gast“ von Hand geändert, bleibt der Wert stehen.",
   "ui.drucken": "Drucken",
   "ui.e_mail": "E-Mail",
+  "ui.e_mail_optional": "E-Mail (optional)",
   "ui.eigene_auswahl": "Eigene Auswahl",
   "ui.eigene_fragen_pflegen_und_das_team_4d19": "Eigene Fragen pflegen und das Team auswerten",
   "ui.eigenes_verhaeltnis": "Eigenes Verhältnis",
