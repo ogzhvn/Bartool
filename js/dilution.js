@@ -57,9 +57,11 @@ function getIngredients() {
     .map((row) => ({
       name: row.querySelector(".ing-name").value.trim() || t("ui.zutat"),
       amount: parseFloat(row.querySelector(".ing-amount").value),
-      abv: parseFloat(row.querySelector(".ing-abv").value),
+      // Leeres ABV-Feld zählt als 0 % (Saft, Sirup) – sonst fiele die Menge
+      // still aus dem Volumen. Der Hinweis beim Rezept-Laden nennt diese Zeilen.
+      abv: parseFloat(row.querySelector(".ing-abv").value) || 0,
     }))
-    .filter((i) => !Number.isNaN(i.amount) && i.amount > 0 && !Number.isNaN(i.abv));
+    .filter((i) => !Number.isNaN(i.amount) && i.amount > 0);
 }
 
 function currentMode() {
