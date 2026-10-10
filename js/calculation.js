@@ -75,12 +75,17 @@ function calculate() {
   const rows = [...ingredientsEl.querySelectorAll(".calc-ingredient-row")];
   let total = 0;
   const lines = [];
+  // Wie calculateRecipeCost in costing.js: Zeilen ohne Preis gehen mit 0 € in
+  // die Summe, werden aber unter dem Ergebnis genannt.
+  const ohnePreis = [];
   rows.forEach((row) => {
     const name = row.querySelector(".calc-ing-name").value.trim();
     const amount = parseFloat(row.querySelector(".calc-ing-amount").value) || 0;
     const unit = row.querySelector(".calc-ing-unit").value;
-    const price = parseFloat(row.querySelector(".calc-ing-price").value) || 0;
+    const priceRaw = parseFloat(row.querySelector(".calc-ing-price").value);
+    const price = Number.isNaN(priceRaw) ? 0 : priceRaw;
     if (!name || amount <= 0) return;
+    if (Number.isNaN(priceRaw)) ohnePreis.push(name);
     const cost = ingredientCost(amount, unit, price);
     total += cost;
     lines.push({ name, amount, unit, cost });
@@ -107,10 +112,16 @@ function calculate() {
       </tbody>
     </table>
   `;
+  const warningHtml =
+    ohnePreis.length > 0
+      ? `<p style="color: var(--danger)">${t("ui.ohne_preis_und_deshalb_mit_0_eur_gerechnet")} ${escapeHtml(
+          ohnePreis.join(", ")
+        )}. ${t("ui.der_wareneinsatz_ist_damit_zu_niedrig")}</p>`
+      : "";
 
   const targetQuote = parseFloat(targetQuoteEl.value) || 0;
   if (targetQuote <= 0) {
-    resultEl.innerHTML = tableHtml;
+    resultEl.innerHTML = tableHtml + warningHtml;
     totalEl.hidden = false;
     totalValueEl.textContent = formatEuro(total);
     totalSubEl.textContent = t("ui.wareneinsatz_gesamt_ohne_ziel_quote_kein_cdf4");
@@ -129,6 +140,7 @@ function calculate() {
       ${t("ui.verkaufspreis_netto")} ${formatEuro(priceNet)}<br />
       ${t("ui.rohertrag_marge")} ${formatEuro(margin)}
     </p>
+    ${warningHtml}
   `;
 
   totalEl.hidden = false;

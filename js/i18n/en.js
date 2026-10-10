@@ -702,6 +702,7 @@ export const en = {
   "ui.ohne_angabe": "not specified",
   "ui.ohne_berechenbaren_wert": "× without a calculable value)",
   "ui.ohne_datum": "no date",
+  "ui.ohne_preis_und_deshalb_mit_0_eur_gerechnet": "No price, therefore counted as € 0:",
   "ui.ohne_einkaufspreis_im_katalog_und_deshalb_5804": "Without a purchase price in the catalogue and therefore counted as € 0 in the total:",
   "ui.ohne_fruehere_zaehlung_gibt_es_keinen_9c3a": "Without an earlier count there is no period the booked losses could be assigned to.",
   "ui.ohne_hinterlegten_einkaufspreis_und_7e9c": "Without a purchase price on file and therefore calculated as € 0:",

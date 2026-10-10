@@ -703,6 +703,7 @@ export const de = {
   "ui.ohne_angabe": "ohne Angabe",
   "ui.ohne_berechenbaren_wert": "× ohne berechenbaren Wert)",
   "ui.ohne_datum": "ohne Datum",
+  "ui.ohne_preis_und_deshalb_mit_0_eur_gerechnet": "Ohne Preis und deshalb mit 0 € gerechnet:",
   "ui.ohne_einkaufspreis_im_katalog_und_deshalb_5804": "Ohne Einkaufspreis im Katalog und deshalb mit 0 € in der Summe:",
   "ui.ohne_fruehere_zaehlung_gibt_es_keinen_9c3a": "Ohne frühere Zählung gibt es keinen Zeitraum, für den gebuchte Verluste zugeordnet werden könnten.",
   "ui.ohne_hinterlegten_einkaufspreis_und_7e9c": "Ohne hinterlegten Einkaufspreis und deshalb mit 0 € gerechnet:",
