@@ -117,7 +117,7 @@ function calculate() {
       <thead><tr><th>${t("ui.zutat")}</th><th>${t("ui.menge")}</th><th>ABV</th></tr></thead>
       <tbody>
         ${ingredients
-          .map((i) => `<tr><td>${i.name}</td><td>${formatNumber(i.amount)} ml</td><td>${formatNumber(i.abv)} %</td></tr>`)
+          .map((i) => `<tr><td>${escapeHtml(i.name)}</td><td>${formatNumber(i.amount)} ml</td><td>${formatNumber(i.abv)} %</td></tr>`)
           .join("")}
       </tbody>
     </table>
