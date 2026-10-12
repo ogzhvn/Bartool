@@ -7,7 +7,7 @@
 //
 // Diese Versionsnummer bei JEDER Änderung an Frontend-Dateien hochzählen,
 // sonst liefert der Cache alte Stände aus.
-const CACHE = "bartool-v133";
+const CACHE = "bartool-v134";
 
 // Der App-Shell: alles, was die Oberfläche zum Starten braucht.
 const PRECACHE = [
@@ -54,6 +54,7 @@ const PRECACHE = [
   "js/i18n/de.js",
   "js/i18n/en.js",
   "js/ingredientEditor.js",
+  "js/idbCache.js",
   "js/inventory.js",
   "js/localSpace.js",
   "js/knowledge.js",

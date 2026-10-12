@@ -6,15 +6,13 @@
 // Ablegen der Sitzung – der Server hatte angemeldet, die App blieb trotzdem
 // auf dem Anmeldeformular stehen, ohne Fehlermeldung.
 //
-// Deshalb: Wird es eng, weichen Puffer – sie sind jederzeit neu ladbar.
+// Der Fragenkatalog liegt seitdem in IndexedDB (js/idbCache.js). Bleibt als
+// Sicherung: Wird es eng, weichen Puffer – sie sind jederzeit neu ladbar.
 // Unangetastet bleibt, was nur hier liegt: Inventur-Entwürfe (ungespeicherte
 // Zählungen) und der Eigentümer-Vermerk der Betriebspuffer.
 
 const PUFFER_PREFIX = "bartool:";
 const NIE_RAEUMEN_PREFIXE = ["bartool:inventory-draft:", "bartool:cache-owner"];
-
-// Der Fragenkatalog ist der größte und am ehesten verzichtbare Puffer.
-export const QUIZ_PUFFER = "bartool:quiz-questions";
 
 function istPlatzFehler(error) {
   return (

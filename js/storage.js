@@ -1,4 +1,4 @@
-import { schreibeMitPlatz, QUIZ_PUFFER } from "./localSpace.js";
+import { idbLesen, idbSchreiben } from "./idbCache.js";
 import { getSupabaseClient } from "./supabaseClient.js";
 import { recordPriceChange } from "./priceHistory.js";
 import { t } from "./i18n.js";
@@ -57,7 +57,9 @@ const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
 const LOSSES_CACHE_KEY = "bartool:losses";
 const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
-const QUIZ_QUESTIONS_CACHE_KEY = QUIZ_PUFFER;
+// Liegt in IndexedDB (js/idbCache.js), nicht im localStorage – dort belegte
+// der Fragenkatalog zwei Drittel des Platzes und sperrte in Safari den Login.
+const QUIZ_QUESTIONS_CACHE_KEY = "bartool:quiz-questions";
 const KNOWLEDGE_CACHE_KEY = "bartool:knowledge";
 const DISHES_CACHE_KEY = "bartool:dishes";
 
@@ -71,12 +73,11 @@ function readCache(key) {
   }
 }
 
-// Wird es eng, weicht zuerst der Fragenkatalog (js/localSpace.js). Passt ein
-// Puffer trotzdem nicht, fliegt sein alter Stand raus: der ist älter als das,
-// was der Server gerade geliefert hat, und belegt nur Platz.
+// Passt ein Puffer nicht, fliegt sein alter Stand raus: der ist älter als
+// das, was der Server gerade geliefert hat, und belegt nur Platz.
 function writeCache(key, data) {
   try {
-    schreibeMitPlatz(key, JSON.stringify(data), [QUIZ_PUFFER]);
+    localStorage.setItem(key, JSON.stringify(data));
   } catch {
     try {
       localStorage.removeItem(key);
@@ -1404,23 +1405,38 @@ async function fetchAllQuizQuestions() {
   }
 }
 
+// Wahr, sobald einmal frisch vom Server geladen wurde – dann darf ein spät
+// ankommender Puffer den neueren Stand nicht mehr überschreiben.
+let quizFrischGeladen = false;
+
 async function refreshQuizQuestions() {
   try {
     quizQuestionsCache = (await fetchAllQuizQuestions()).map(fromQuizQuestionRow);
-    writeCache(QUIZ_QUESTIONS_CACHE_KEY, quizQuestionsCache);
+    quizFrischGeladen = true;
+    // Nicht abwarten: das Schreiben soll die Anzeige nicht aufhalten.
+    idbSchreiben(QUIZ_QUESTIONS_CACHE_KEY, quizQuestionsCache);
   } catch {
-    const buffered = readCache(QUIZ_QUESTIONS_CACHE_KEY);
-    if (buffered) quizQuestionsCache = buffered;
+    if (!quizQuestionsCache.length) {
+      const buffered = await idbLesen(QUIZ_QUESTIONS_CACHE_KEY);
+      if (Array.isArray(buffered)) quizQuestionsCache = buffered;
+    }
   }
   window.dispatchEvent(new CustomEvent(QUIZ_QUESTIONS_UPDATED_EVENT));
 }
 
 export async function initQuizQuestionSync() {
-  const buffered = readCache(QUIZ_QUESTIONS_CACHE_KEY);
-  if (buffered) {
+  // Der alte Puffer im localStorage (bis 12.10.2026) wird nicht mehr gelesen,
+  // nur noch weggeräumt – er war der Grund für den vollen Speicher.
+  try {
+    localStorage.removeItem(QUIZ_QUESTIONS_CACHE_KEY);
+  } catch {
+    // Kein Zugriff: dann liegt dort auch nichts.
+  }
+  idbLesen(QUIZ_QUESTIONS_CACHE_KEY).then((buffered) => {
+    if (quizFrischGeladen || !Array.isArray(buffered)) return;
     quizQuestionsCache = buffered;
     window.dispatchEvent(new CustomEvent(QUIZ_QUESTIONS_UPDATED_EVENT));
-  }
+  });
   await refreshQuizQuestions();
   const supabase = getSupabaseClient();
   if (quizQuestionsChannel) supabase.removeChannel(quizQuestionsChannel);

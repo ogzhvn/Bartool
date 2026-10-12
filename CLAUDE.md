@@ -19,6 +19,7 @@ responsives Layout, schnelle Ladezeit, robust gegen Fehleingaben.
 | Styling, Theme-Variablen | `css/styles.css` |
 | DB-Zugriff **aller** Datenarten, Offline-Cache | `js/storage.js` |
 | Platz im localStorage (Puffer räumen, Sitzung hat Vorrang) | `js/localSpace.js` |
+| Große Offline-Puffer in IndexedDB (aktuell: Quizfragen) | `js/idbCache.js` |
 | Supabase-Client + Keys | `js/supabaseClient.js`, `js/supabaseConfig.js` |
 | Login, Session, `can()` / `canAny()` | `js/auth.js` |
 | Rollen, Rechtekatalog | `js/roles.js`, `js/permissions.js` |
