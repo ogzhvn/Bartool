@@ -1,3 +1,4 @@
+import { alleRaeumbarenPuffer, schreibeMitPlatz } from "./localSpace.js";
 import {
   loadInventoryCounts,
   saveInventoryCount,
@@ -90,7 +91,8 @@ function readDraft(id) {
 
 function writeDraft(id) {
   try {
-    localStorage.setItem(draftKey(id), JSON.stringify({ stand, offen: [...offen] }));
+    // Ein Entwurf ist ungespeicherte Arbeit – dafür weichen Puffer.
+    schreibeMitPlatz(draftKey(id), JSON.stringify({ stand, offen: [...offen] }), alleRaeumbarenPuffer());
   } catch {
     // Zwischenspeicher voll: der Upload bleibt der eigentliche Weg.
   }

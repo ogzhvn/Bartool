@@ -1,3 +1,4 @@
+import { schreibeMitPlatz, QUIZ_PUFFER } from "./localSpace.js";
 import { getSupabaseClient } from "./supabaseClient.js";
 import { recordPriceChange } from "./priceHistory.js";
 import { t } from "./i18n.js";
@@ -56,7 +57,7 @@ const SHIFT_LOGS_CACHE_KEY = "bartool:shift-logs";
 const LOSSES_CACHE_KEY = "bartool:losses";
 const CHECKLIST_TEMPLATES_CACHE_KEY = "bartool:checklist-templates";
 const CHECKLIST_RUNS_CACHE_KEY = "bartool:checklist-runs";
-const QUIZ_QUESTIONS_CACHE_KEY = "bartool:quiz-questions";
+const QUIZ_QUESTIONS_CACHE_KEY = QUIZ_PUFFER;
 const KNOWLEDGE_CACHE_KEY = "bartool:knowledge";
 const DISHES_CACHE_KEY = "bartool:dishes";
 
@@ -70,11 +71,18 @@ function readCache(key) {
   }
 }
 
+// Wird es eng, weicht zuerst der Fragenkatalog (js/localSpace.js). Passt ein
+// Puffer trotzdem nicht, fliegt sein alter Stand raus: der ist älter als das,
+// was der Server gerade geliefert hat, und belegt nur Platz.
 function writeCache(key, data) {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    schreibeMitPlatz(key, JSON.stringify(data), [QUIZ_PUFFER]);
   } catch {
-    // Kein Platz oder kein Zugriff: der Puffer ist Komfort, kein Muss.
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Kein Zugriff auf localStorage: dann gibt es eben keinen Puffer.
+    }
   }
 }
 

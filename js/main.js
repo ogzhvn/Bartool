@@ -310,7 +310,15 @@ loginForm.addEventListener("submit", async (e) => {
   loginError.hidden = true;
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value;
-  const { error } = await signIn(username, password);
+  // setSession() wirft statt { error } zurückzugeben, wenn die Sitzung nicht
+  // gespeichert werden kann – ohne catch blieb der Login dann kommentarlos
+  // stehen.
+  let error = null;
+  try {
+    ({ error } = await signIn(username, password));
+  } catch (fehler) {
+    error = fehler;
+  }
   if (error) {
     loginError.hidden = false;
     loginError.textContent = t("ui.login_fehlgeschlagen") + error.message;
