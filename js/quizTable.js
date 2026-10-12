@@ -981,13 +981,23 @@ export function render() {
   fuelleSpaltenAuswahl();
   aktualisiereHinweis();
 
-  tableEl.textContent = "";
-  setzeTabellenBreite(spalten);
-  tableEl.appendChild(baueKopf(spalten, trefferIds));
+  // Kopf und Körper werden fertig gebaut und in einem Schritt getauscht: eine
+  // kurz leere Tabelle schrumpft den Scrollbereich, und Safari/Firefox setzen
+  // die Liste dann nach jedem angeklickten Kästchen wieder nach oben.
+  const scroller = tableEl.parentElement;
+  const scrollTop = scroller?.scrollTop ?? 0;
+  const scrollLeft = scroller?.scrollLeft ?? 0;
+
+  const thead = baueKopf(spalten, trefferIds);
   const { tbody, gedeckelt } = baueKoerper(gruppen, spalten);
-  tableEl.appendChild(tbody);
+  setzeTabellenBreite(spalten);
+  tableEl.replaceChildren(thead, tbody);
   zeichneFehlerNeu(tableEl);
   aktualisiereSammelleiste();
+  if (scroller) {
+    scroller.scrollTop = scrollTop;
+    scroller.scrollLeft = scrollLeft;
+  }
 
   if (countEl) {
     const gesamt = loadQuizQuestions().length;
