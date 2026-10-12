@@ -4555,6 +4555,7 @@ input[type="datetime-local"] {
 
 .catalog-column-option {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 6px 4px;
@@ -6079,4 +6080,72 @@ p.knowledge-nav-title {
 .quiz-columns-reset {
   width: 100%;
   margin-top: 6px;
+}
+
+/* Fragentabelle: Spalten umsortieren (js/quizTable.js) */
+@media (hover: hover) and (pointer: fine) {
+  .catalog-sort-btn.quiz-col-movable {
+    cursor: grab;
+  }
+}
+
+.quiz-table-reordering,
+.quiz-table-reordering * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.catalog-table thead th.quiz-col-dragging {
+  opacity: 0.55;
+}
+
+.catalog-table thead th.quiz-col-drop-before {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.catalog-table thead th.quiz-col-drop-after {
+  box-shadow: inset -3px 0 0 var(--accent);
+}
+
+.quiz-column-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.quiz-column-row .catalog-column-option {
+  flex: 1;
+  min-width: 0;
+}
+
+.quiz-column-move {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.quiz-column-move:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiz-column-move:not(:disabled):hover {
+    border-color: var(--border-strong);
+    color: var(--accent-hover);
+  }
+}
+
+#quiz-table-columns-pop {
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  max-height: 440px;
 }

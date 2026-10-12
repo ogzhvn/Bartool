@@ -39,8 +39,10 @@ import {
 // klappt außerdem ihre Details auf (alle Antworten, Erklärung). Über die
 // Kästchen lassen sich viele Fragen auf einmal abschalten oder löschen.
 //
-// Spaltenbreiten zieht man am rechten Rand des Spaltenkopfs; sie bleiben pro
-// Gerät gespeichert. Die Tabelle läuft dafür mit table-layout: fixed – sonst
+// Spaltenbreiten zieht man am rechten Rand des Spaltenkopfs, die Reihenfolge
+// per Ziehen am Spaltennamen (Maus) oder mit den Pfeilen unter "Spalten"
+// (Finger – dort würde Ziehen mit dem Scrollen der Tabelle kollidieren).
+// Beides bleibt pro Gerät gespeichert. Die Tabelle läuft dafür mit table-layout: fixed – sonst
 // richtet der Browser die Spalten nach dem Inhalt aus und ignoriert die
 // gezogene Breite.
 
@@ -83,6 +85,9 @@ const state = {
   // Von Hand gezogene Spaltenbreiten in px, nach Feld. Ohne Eintrag gilt
   // die Breite aus js/quizColumns.js.
   breiten: {},
+  // Von Hand gesetzte Spaltenreihenfolge (Feldnamen). null = Standard aus
+  // js/quizColumns.js.
+  reihenfolge: null,
 };
 
 // Auf- und zugeklappt: nur was jemand von Hand umgeschaltet hat. Ohne Eintrag
@@ -103,6 +108,7 @@ function leseEinstellungen() {
     if (typeof gespeichert.set === "string") state.set = gespeichert.set;
     if (Array.isArray(gespeichert.custom)) state.custom = gespeichert.custom;
     if (typeof gespeichert.status === "string") state.status = gespeichert.status;
+    if (Array.isArray(gespeichert.reihenfolge)) state.reihenfolge = gespeichert.reihenfolge;
     if (gespeichert.breiten && typeof gespeichert.breiten === "object") {
       Object.entries(gespeichert.breiten).forEach(([feld, breite]) => {
         if (Number.isFinite(breite)) state.breiten[feld] = begrenzeBreite(breite);
@@ -122,6 +128,7 @@ function schreibeEinstellungen() {
         custom: state.custom,
         status: state.status,
         breiten: state.breiten,
+        reihenfolge: state.reihenfolge,
       })
     );
   } catch {
@@ -182,6 +189,68 @@ function starteZiehen(event, th, spalte, spalten) {
   griff.addEventListener("pointercancel", ende);
 }
 
+// Klick nach einem Ziehen am Spaltennamen soll nicht auch noch sortieren.
+let klickUnterdruecken = false;
+
+// Umsortieren per Maus: erst ab ein paar Pixeln Weg gilt es als Ziehen,
+// darunter bleibt es ein Klick (= sortieren). Finger nehmen die Pfeile unter
+// "Spalten", siehe oben.
+function starteUmsortieren(event, th, spalte) {
+  klickUnterdruecken = false;
+  if (spalte.field === "question" || event.pointerType === "touch" || event.button !== 0) return;
+  const knopf = event.currentTarget;
+  knopf.setPointerCapture?.(event.pointerId);
+  const startX = event.clientX;
+  let zieht = false;
+  let ziel = null;
+
+  const markierungWeg = () => {
+    tableEl
+      .querySelectorAll(".quiz-col-drop-before, .quiz-col-drop-after")
+      .forEach((kopf) => kopf.classList.remove("quiz-col-drop-before", "quiz-col-drop-after"));
+  };
+
+  const bewege = (e) => {
+    if (!zieht) {
+      if (Math.abs(e.clientX - startX) < 8) return;
+      zieht = true;
+      ziehtGerade = true;
+      tableEl.classList.add("quiz-table-reordering");
+      th.classList.add("quiz-col-dragging");
+    }
+    markierungWeg();
+    ziel = null;
+    const treffer = [...tableEl.querySelectorAll("thead th")].find((kopf) => {
+      const rahmen = kopf.getBoundingClientRect();
+      return e.clientX >= rahmen.left && e.clientX < rahmen.right;
+    });
+    if (!treffer || treffer === th) return;
+    const rahmen = treffer.getBoundingClientRect();
+    // Über der Fragespalte heißt: so weit nach vorn wie möglich.
+    const dahinter = treffer.dataset.field === "question" || e.clientX > rahmen.left + rahmen.width / 2;
+    ziel = { feld: treffer.dataset.field, dahinter };
+    treffer.classList.add(dahinter ? "quiz-col-drop-after" : "quiz-col-drop-before");
+  };
+
+  const ende = () => {
+    knopf.removeEventListener("pointermove", bewege);
+    knopf.removeEventListener("pointerup", ende);
+    knopf.removeEventListener("pointercancel", ende);
+    if (!zieht) return;
+    klickUnterdruecken = true;
+    ziehtGerade = false;
+    markierungWeg();
+    tableEl.classList.remove("quiz-table-reordering");
+    th.classList.remove("quiz-col-dragging");
+    if (ziel) verschiebeSpalte(spalte.field, ziel.feld, ziel.dahinter);
+    nachzuholen = false;
+    render();
+  };
+  knopf.addEventListener("pointermove", bewege);
+  knopf.addEventListener("pointerup", ende);
+  knopf.addEventListener("pointercancel", ende);
+}
+
 function baueGriff(th, spalte, spalten) {
   const griff = document.createElement("span");
   griff.className = "quiz-col-resizer";
@@ -208,6 +277,49 @@ function aktivesSetKey() {
   return istSchmal() ? QUIZ_NARROW_SET : QUIZ_SETS[0].key;
 }
 
+// Alle Spalten in der aktuellen Reihenfolge. Felder, die in einer
+// gespeicherten Reihenfolge fehlen (neue Spalte seit dem Speichern), hängen
+// hinten an; unbekannte fallen weg. Die Frage steht immer vorn – sie ist die
+// stehende Spalte und trägt die Kästchen.
+function geordneteSpalten() {
+  const felder = (state.reihenfolge ?? []).filter(
+    (feld, index, liste) => quizColumnByField(feld) && liste.indexOf(feld) === index && feld !== "question"
+  );
+  QUIZ_COLUMNS.forEach((spalte) => {
+    if (spalte.field !== "question" && !felder.includes(spalte.field)) felder.push(spalte.field);
+  });
+  return ["question", ...felder].map(quizColumnByField);
+}
+
+function istStandardReihenfolge() {
+  return geordneteSpalten().every((spalte, index) => spalte === QUIZ_COLUMNS[index]);
+}
+
+// Schiebt `feld` vor bzw. hinter `zielFeld`. Hinter die Frage geht es nie.
+function verschiebeSpalte(feld, zielFeld, dahinter) {
+  if (feld === "question" || feld === zielFeld) return;
+  const felder = geordneteSpalten().map((spalte) => spalte.field).filter((f) => f !== feld);
+  let index = felder.indexOf(zielFeld);
+  if (index < 0) return;
+  if (dahinter) index += 1;
+  felder.splice(Math.max(1, index), 0, feld);
+  state.reihenfolge = felder;
+  schreibeEinstellungen();
+}
+
+// Ein Schritt nach vorn oder hinten in der Gesamtliste (auch über
+// ausgeblendete Spalten hinweg – sonst bliebe man an ihnen hängen, ohne es
+// zu sehen).
+function rueckeSpalte(feld, richtung) {
+  const felder = geordneteSpalten().map((spalte) => spalte.field);
+  const von = felder.indexOf(feld);
+  const nach = von + richtung;
+  if (von < 1 || nach < 1 || nach >= felder.length) return;
+  [felder[von], felder[nach]] = [felder[nach], felder[von]];
+  state.reihenfolge = felder;
+  schreibeEinstellungen();
+}
+
 function sichtbareSpalten() {
   const key = aktivesSetKey();
   const felder =
@@ -216,7 +328,7 @@ function sichtbareSpalten() {
       : (QUIZ_SETS.find((s) => s.key === key) ?? QUIZ_SETS[0]).fields;
   const ausgewaehlt = new Set(felder);
   ausgewaehlt.add("question");
-  return QUIZ_COLUMNS.filter((spalte) => ausgewaehlt.has(spalte.field));
+  return geordneteSpalten().filter((spalte) => ausgewaehlt.has(spalte.field));
 }
 
 // Anzeigetext einer Zelle. Immer ein String – gesetzt wird er per
@@ -387,6 +499,7 @@ function baueKopf(spalten, trefferIds) {
   spalten.forEach((spalte) => {
     const th = document.createElement("th");
     th.style.width = `${spaltenBreite(spalte)}px`;
+    th.dataset.field = spalte.field;
     if (spalte.field === "question") {
       th.className = "catalog-sticky-col";
       if (darfAuswaehlen()) th.appendChild(auswahlBox(trefferIds, t("ui.alle_treffer_auswaehlen")));
@@ -403,7 +516,16 @@ function baueKopf(spalten, trefferIds) {
       btn.appendChild(pfeil);
       th.setAttribute("aria-sort", state.sort.dir === "asc" ? "ascending" : "descending");
     }
+    if (spalte.field !== "question") {
+      btn.classList.add("quiz-col-movable");
+      btn.title = t("ui.spalte_ziehen_zum_verschieben");
+    }
+    btn.addEventListener("pointerdown", (event) => starteUmsortieren(event, th, spalte));
     btn.addEventListener("click", () => {
+      if (klickUnterdruecken) {
+        klickUnterdruecken = false;
+        return;
+      }
       if (state.sort.field === spalte.field) {
         state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
       } else {
@@ -744,8 +866,15 @@ function fuelleSets() {
 function fuelleSpaltenAuswahl() {
   if (!columnsPopEl) return;
   const sichtbar = new Set(sichtbareSpalten().map((spalte) => spalte.field));
+  // Neu gezeichnet wird auch beim Rücken mit den Pfeilen – ohne das hier
+  // spränge die Liste dabei jedes Mal nach oben.
+  const scrollPos = columnsPopEl.scrollTop;
   columnsPopEl.textContent = "";
-  QUIZ_COLUMNS.forEach((spalte) => {
+  const geordnet = geordneteSpalten();
+  geordnet.forEach((spalte, index) => {
+    const reihe = document.createElement("div");
+    reihe.className = "quiz-column-row";
+
     const label = document.createElement("label");
     label.className = "catalog-column-option";
 
@@ -758,7 +887,7 @@ function fuelleSpaltenAuswahl() {
       const felder = new Set(sichtbareSpalten().map((s) => s.field));
       if (box.checked) felder.add(spalte.field);
       else felder.delete(spalte.field);
-      state.custom = QUIZ_COLUMNS.map((s) => s.field).filter((feld) => felder.has(feld));
+      state.custom = geordneteSpalten().map((s) => s.field).filter((feld) => felder.has(feld));
       state.set = "eigene";
       schreibeEinstellungen();
       render();
@@ -768,8 +897,53 @@ function fuelleSpaltenAuswahl() {
     text.textContent = t(spalte.labelKey);
 
     label.append(box, text);
-    columnsPopEl.appendChild(label);
+    reihe.appendChild(label);
+
+    // Pfeile: der Weg zum Umsortieren auf dem Handy und per Tastatur.
+    [
+      { richtung: -1, icon: "ph-arrow-up", labelKey: "ui.spalte_nach_vorne" },
+      { richtung: 1, icon: "ph-arrow-down", labelKey: "ui.spalte_nach_hinten" },
+    ].forEach(({ richtung, icon, labelKey }) => {
+      const pfeil = document.createElement("button");
+      pfeil.type = "button";
+      pfeil.className = "quiz-column-move";
+      pfeil.dataset.field = spalte.field;
+      pfeil.dataset.richtung = String(richtung);
+      pfeil.setAttribute("aria-label", `${t(spalte.labelKey)}: ${t(labelKey)}`);
+      pfeil.title = t(labelKey);
+      const ziel = index + richtung;
+      pfeil.disabled = spalte.field === "question" || ziel < 1 || ziel >= geordnet.length;
+      const symbol = document.createElement("i");
+      symbol.className = `ph ${icon}`;
+      symbol.setAttribute("aria-hidden", "true");
+      pfeil.appendChild(symbol);
+      pfeil.addEventListener("click", () => {
+        rueckeSpalte(spalte.field, richtung);
+        render();
+        // Der Knopf ist nach dem Neuzeichnen ein neuer – Fokus mitnehmen,
+        // damit man mit der Tastatur mehrmals hintereinander rücken kann.
+        const neu = columnsPopEl.querySelector(
+          `.quiz-column-move[data-field="${CSS.escape(spalte.field)}"][data-richtung="${richtung}"]`
+        );
+        if (neu && !neu.disabled) neu.focus();
+      });
+      reihe.appendChild(pfeil);
+    });
+
+    columnsPopEl.appendChild(reihe);
   });
+
+  const reihenfolgeZurueck = document.createElement("button");
+  reihenfolgeZurueck.type = "button";
+  reihenfolgeZurueck.className = "btn-secondary quiz-columns-reset";
+  reihenfolgeZurueck.textContent = t("ui.spaltenreihenfolge_zuruecksetzen");
+  reihenfolgeZurueck.disabled = istStandardReihenfolge();
+  reihenfolgeZurueck.addEventListener("click", () => {
+    state.reihenfolge = null;
+    schreibeEinstellungen();
+    render();
+  });
+  columnsPopEl.appendChild(reihenfolgeZurueck);
 
   const zuruecksetzen = document.createElement("button");
   zuruecksetzen.type = "button";
@@ -782,6 +956,7 @@ function fuelleSpaltenAuswahl() {
     render();
   });
   columnsPopEl.appendChild(zuruecksetzen);
+  columnsPopEl.scrollTop = scrollPos;
 }
 
 export function render() {
@@ -910,7 +1085,10 @@ export function initQuizTable(onOpen) {
   });
   document.addEventListener("click", (event) => {
     if (!columnsPopEl || columnsPopEl.hidden) return;
-    if (columnsPopEl.contains(event.target) || columnsBtnEl?.contains(event.target)) return;
+    // composedPath statt contains: ein Klick auf die Pfeile zeichnet das Menü
+    // neu, und der geklickte Knopf hängt danach nicht mehr im Dokument.
+    const pfad = event.composedPath();
+    if (pfad.includes(columnsPopEl) || (columnsBtnEl && pfad.includes(columnsBtnEl))) return;
     columnsPopEl.hidden = true;
     columnsBtnEl?.setAttribute("aria-expanded", "false");
   });

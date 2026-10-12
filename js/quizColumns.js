@@ -10,14 +10,23 @@ import { t } from "./i18n.js";
 // `wert` ist optional und liefert einen abgeleiteten Text – die richtige
 // Antwort steht nicht in einem eigenen Feld, sondern ist options[correctIndex].
 //
+// Die Reihenfolge hier ist die Standardanordnung der Tabelle: Frage, richtige
+// Antwort, Schwierigkeit, dann der Rest. Wer umsortiert, überschreibt sie nur
+// auf seinem Gerät (js/quizTable.js).
+//
 // `editierbar: false` sperrt eine Spalte, die zwar einen bearbeitbaren Typ
 // hat, aber nicht von Hand gesetzt werden soll: "bearbeitet" setzt
 // saveQuizQuestion() selbst, sobald jemand eine Frage anfasst.
 
 export const QUIZ_COLUMNS = [
   { field: "question", labelKey: "ui.frage", type: "readonly", width: 360 },
-  { field: "topic", labelKey: "ui.thema", type: "text", width: 160, suggest: true },
-  { field: "parentTopic", labelKey: "ui.oberthema", type: "text", width: 150, suggest: true },
+  {
+    field: "correct",
+    labelKey: "ui.richtige_antwort",
+    type: "readonly",
+    width: 200,
+    wert: (frage) => frage.options?.[frage.correctIndex] ?? "",
+  },
   {
     field: "difficulty",
     labelKey: "ui.schwierigkeit",
@@ -29,13 +38,8 @@ export const QUIZ_COLUMNS = [
       { value: 3, label: t("ui.schwer") },
     ],
   },
-  {
-    field: "correct",
-    labelKey: "ui.richtige_antwort",
-    type: "readonly",
-    width: 200,
-    wert: (frage) => frage.options?.[frage.correctIndex] ?? "",
-  },
+  { field: "topic", labelKey: "ui.thema", type: "text", width: 160, suggest: true },
+  { field: "parentTopic", labelKey: "ui.oberthema", type: "text", width: 150, suggest: true },
   {
     field: "options",
     labelKey: "ui.antworten",
@@ -67,7 +71,7 @@ export const QUIZ_SETS = [
   {
     key: "kern",
     labelKey: "ui.kernfelder",
-    fields: ["question", "topic", "difficulty", "correct", "active"],
+    fields: ["question", "correct", "difficulty", "topic", "active"],
   },
   {
     key: "texte",
