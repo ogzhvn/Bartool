@@ -1469,15 +1469,37 @@ export async function upsertQuizQuestions(zeilen) {
   if (error) throw error;
 }
 
-export async function setQuizQuestionsActive(ids, active) {
+// `vonHand`: aus der Fragentabelle geschaltet, nicht vom Katalog-Abgleich.
+// Dann zählt die Zeile als bearbeitet, und der nächste Abgleich lässt ihren
+// Schalter in Ruhe (js/quizSync.js). Neu geladen wird nur von Hand – der
+// Abgleich lädt einmal am Ende selbst.
+export async function setQuizQuestionsActive(ids, active, { vonHand = false } = {}) {
   if (!ids.length) return;
   if (isOffline()) throw offlineWriteError();
   const supabase = getSupabaseClient();
+  const aenderung = vonHand ? { active, edited: true } : { active };
   // Die IDs stehen in der URL (`id=in.(…)`): ab ein paar Hundert reißt die
   // Längengrenze, deshalb in Blöcken.
   for (let i = 0; i < ids.length; i += 100) {
-    const { error } = await supabase.from("quiz_questions").update({ active }).in("id", ids.slice(i, i + 100));
+    const { error } = await supabase.from("quiz_questions").update(aenderung).in("id", ids.slice(i, i + 100));
     if (error) throw error;
+  }
+  if (vonHand) await refreshQuizQuestions();
+}
+
+// Mehrfachauswahl in der Fragentabelle. Blöcke wie oben, wegen der URL-Länge.
+export async function deleteQuizQuestions(ids) {
+  if (!ids.length) return;
+  if (isOffline()) throw offlineWriteError();
+  const supabase = getSupabaseClient();
+  try {
+    for (let i = 0; i < ids.length; i += 100) {
+      const { error } = await supabase.from("quiz_questions").delete().in("id", ids.slice(i, i + 100));
+      if (error) throw error;
+    }
+  } finally {
+    // Auch nach einem Fehler mittendrin: die schon gelöschten Blöcke sind weg.
+    await refreshQuizQuestions();
   }
 }
 

@@ -5854,3 +5854,128 @@ p.knowledge-nav-title {
     display: table-header-group;
   }
 }
+
+/* Fragentabelle: Gruppen, aufklappbare Details, Mehrfachauswahl (js/quizTable.js) */
+.quiz-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  margin-right: 2px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.quiz-select input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.quiz-toggle,
+.quiz-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.quiz-group-toggle {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiz-toggle:hover,
+  .quiz-group-toggle:hover {
+    color: var(--accent-hover);
+  }
+}
+
+.quiz-group-count {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.catalog-table tbody tr.quiz-group-row td {
+  background: var(--bg-elevated-2);
+  border-bottom-color: var(--border-strong);
+}
+
+.catalog-table tbody tr.quiz-group-level-2 td.catalog-sticky-col {
+  padding-left: 26px;
+}
+
+.catalog-table tbody tr.quiz-group-level-2 .quiz-group-toggle {
+  font-weight: 500;
+}
+
+.catalog-table td.quiz-detail-cell {
+  padding: 0;
+  max-width: none;
+  white-space: normal;
+}
+
+/* Klebt links wie die Fragespalte, damit die Details beim Scrollen nach
+   rechts nicht aus dem Blick laufen. */
+.quiz-detail {
+  position: sticky;
+  left: 0;
+  box-sizing: border-box;
+  width: min(760px, calc(100vw - 48px));
+  padding: 8px 14px 12px 44px;
+  line-height: 1.45;
+}
+
+.quiz-detail p {
+  margin: 4px 0;
+}
+
+.quiz-detail-question {
+  font-weight: 600;
+}
+
+.quiz-detail-options {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+}
+
+.quiz-detail-correct {
+  color: var(--accent-300);
+  font-weight: 600;
+}
+
+.quiz-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elevated-2);
+}
+
+.quiz-bulk-bar[hidden] {
+  display: none;
+}
+
+.quiz-bulk-count {
+  font-weight: 600;
+  margin-right: 4px;
+}

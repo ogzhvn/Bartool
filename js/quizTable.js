@@ -1,4 +1,11 @@
-import { loadQuizQuestions, onQuizQuestionsChanged, saveQuizQuestion, isOffline } from "./storage.js";
+import {
+  loadQuizQuestions,
+  onQuizQuestionsChanged,
+  saveQuizQuestion,
+  setQuizQuestionsActive,
+  deleteQuizQuestions,
+  isOffline,
+} from "./storage.js";
 import { formatDate, onLanguageChanged, t } from "./i18n.js";
 import { QUIZ_COLUMNS, QUIZ_SETS, QUIZ_NARROW_SET, quizColumnByField } from "./quizColumns.js";
 import { getAllProducts } from "./productLibrary.js";
@@ -26,6 +33,11 @@ import {
 // Unterschied zur Katalogtabelle: hier stehen ein paar tausend Zeilen statt
 // ein paar hundert. Deshalb der Render-Deckel unten – der Browser soll die
 // Tabelle zeichnen, nicht daran ersticken.
+//
+// Die Fragen stehen in Gruppen nach Oberthema und Thema, die sich auf- und
+// zuklappen lassen; ohne Suche und Themenfilter sind alle zu. Jede Fragezeile
+// klappt außerdem ihre Details auf (alle Antworten, Erklärung). Über die
+// Kästchen lassen sich viele Fragen auf einmal abschalten oder löschen.
 
 const searchEl = document.getElementById("quiz-table-search");
 const topicEl = document.getElementById("quiz-table-topic");
@@ -37,6 +49,15 @@ const columnsPopEl = document.getElementById("quiz-table-columns-pop");
 const countEl = document.getElementById("quiz-table-count");
 const noteEl = document.getElementById("quiz-table-note");
 const tableEl = document.getElementById("quiz-table");
+const expandAllEl = document.getElementById("quiz-table-expand-all");
+const collapseAllEl = document.getElementById("quiz-table-collapse-all");
+const bulkEl = document.getElementById("quiz-table-bulk");
+const bulkCountEl = document.getElementById("quiz-table-bulk-count");
+const bulkDeactivateEl = document.getElementById("quiz-table-bulk-deactivate");
+const bulkActivateEl = document.getElementById("quiz-table-bulk-activate");
+const bulkDeleteEl = document.getElementById("quiz-table-bulk-delete");
+const bulkClearEl = document.getElementById("quiz-table-bulk-clear");
+const bulkNoteEl = document.getElementById("quiz-table-bulk-note");
 
 const STORAGE_KEY = "bartool.quizTable";
 const NARROW_QUERY = "(max-width: 700px)";
@@ -53,6 +74,16 @@ const state = {
   query: "",
   sort: { field: "question", dir: "asc" },
 };
+
+// Auf- und zugeklappt: nur was jemand von Hand umgeschaltet hat. Ohne Eintrag
+// gilt gruppeStandardOffen(). Wird bei jedem Filterwechsel geleert.
+const geklappt = new Map();
+// IDs (als String) der Fragen mit aufgeklappten Details bzw. im Kästchen.
+const offeneDetails = new Set();
+const auswahl = new Set();
+// Gruppenschlüssel des letzten Zeichnens – für "Alle auf/zu".
+let gruppenSchluessel = [];
+let sammelLaeuft = false;
 
 let oeffneImFormular = () => {};
 
@@ -154,6 +185,50 @@ function gefiltert(spalten) {
     .filter((frage) => passtZurSuche(frage, spalten, state.query));
 }
 
+// Ohne Suche und Themenfilter wären alle offen ein paar tausend Zeilen – dann
+// erst einmal nur die Gruppen. Mit Suche will man die Treffer sehen.
+function gruppeStandardOffen() {
+  return Boolean(state.query || state.topic);
+}
+
+function istOffen(schluessel) {
+  return geklappt.has(schluessel) ? geklappt.get(schluessel) : gruppeStandardOffen();
+}
+
+function filterGeaendert() {
+  geklappt.clear();
+}
+
+// Oberthema → Thema → Fragen. Die Fragen kommen schon sortiert herein und
+// behalten ihre Reihenfolge; die Gruppen stehen alphabetisch.
+function gruppiere(fragen) {
+  const gruppen = new Map();
+  fragen.forEach((frage) => {
+    const ober = frage.parentTopic || frage.topic || "–";
+    const thema = frage.topic || ober;
+    if (!gruppen.has(ober)) gruppen.set(ober, new Map());
+    const themen = gruppen.get(ober);
+    if (!themen.has(thema)) themen.set(thema, []);
+    themen.get(thema).push(frage);
+  });
+  const alphabetisch = ([a], [b]) => a.localeCompare(b, "de");
+  return [...gruppen.entries()].sort(alphabetisch).map(([ober, themen]) => {
+    const unter = [...themen.entries()].sort(alphabetisch).map(([thema, liste]) => ({
+      schluessel: `t:${ober}\u0001${thema}`,
+      label: thema,
+      fragen: liste,
+    }));
+    return {
+      schluessel: `o:${ober}`,
+      label: ober,
+      fragen: unter.flatMap((u) => u.fragen),
+      // Produktfragen haben ein einziges Thema gleich dem Oberthema – eine
+      // zweite Kopfzeile mit demselben Namen wäre nur Rauschen.
+      unter: unter.length > 1 || unter[0].label !== ober ? unter : null,
+    };
+  });
+}
+
 // Geschrieben wird nur online und nur mit dem Recht, Fragen zu pflegen.
 function darfSchreiben() {
   return !isOffline() && can("quiz.manage");
@@ -191,13 +266,41 @@ async function speichereZelle(id, spalte, wert) {
   await saveQuizQuestion({ ...aktuell, [spalte.field]: wert });
 }
 
-function baueKopf(spalten) {
+// Kästchen für eine Zeile oder eine ganze Gruppe. Halb gesetzt, wenn nur ein
+// Teil der Gruppe ausgewählt ist.
+function auswahlBox(ids, ariaLabel) {
+  const wrap = document.createElement("label");
+  wrap.className = "quiz-select";
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  const gewaehlt = ids.filter((id) => auswahl.has(id)).length;
+  box.checked = ids.length > 0 && gewaehlt === ids.length;
+  box.indeterminate = gewaehlt > 0 && gewaehlt < ids.length;
+  box.disabled = ids.length === 0;
+  box.setAttribute("aria-label", ariaLabel);
+  box.addEventListener("change", () => {
+    if (box.checked) ids.forEach((id) => auswahl.add(id));
+    else ids.forEach((id) => auswahl.delete(id));
+    render();
+  });
+  wrap.appendChild(box);
+  return wrap;
+}
+
+function darfAuswaehlen() {
+  return can("quiz.manage");
+}
+
+function baueKopf(spalten, trefferIds) {
   const thead = document.createElement("thead");
   const zeile = document.createElement("tr");
   spalten.forEach((spalte) => {
     const th = document.createElement("th");
     th.style.minWidth = `${spalte.width}px`;
-    if (spalte.field === "question") th.className = "catalog-sticky-col";
+    if (spalte.field === "question") {
+      th.className = "catalog-sticky-col";
+      if (darfAuswaehlen()) th.appendChild(auswahlBox(trefferIds, t("ui.alle_treffer_auswaehlen")));
+    }
 
     const btn = document.createElement("button");
     btn.type = "button";
@@ -235,6 +338,27 @@ function baueZelle(frage, spalte) {
 
   if (spalte.field === "question") {
     td.classList.add("catalog-sticky-col");
+    const id = String(frage.id);
+    if (darfAuswaehlen()) td.appendChild(auswahlBox([id], t("ui.auswaehlen")));
+
+    const offen = offeneDetails.has(id);
+    const klapp = document.createElement("button");
+    klapp.type = "button";
+    klapp.className = "quiz-toggle";
+    klapp.setAttribute("aria-expanded", String(offen));
+    klapp.setAttribute("aria-label", t(offen ? "ui.details_verbergen" : "ui.details_zeigen"));
+    klapp.title = klapp.getAttribute("aria-label");
+    const pfeil = document.createElement("i");
+    pfeil.className = `ph ${offen ? "ph-caret-down" : "ph-caret-right"}`;
+    pfeil.setAttribute("aria-hidden", "true");
+    klapp.appendChild(pfeil);
+    klapp.addEventListener("click", () => {
+      if (offen) offeneDetails.delete(id);
+      else offeneDetails.add(id);
+      render();
+    });
+    td.appendChild(klapp);
+
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "catalog-name-btn";
@@ -254,18 +378,197 @@ function baueZelle(frage, spalte) {
   return td;
 }
 
-function baueKoerper(fragen, spalten) {
+function baueFragezeile(frage, spalten) {
+  const zeile = document.createElement("tr");
+  zeile.dataset.id = frage.id;
+  if (frage.active === false) zeile.classList.add("quiz-row-inactive");
+  spalten.forEach((spalte) => zeile.appendChild(baueZelle(frage, spalte)));
+  return zeile;
+}
+
+// Alles zur Frage auf einen Blick, auch was in keiner sichtbaren Spalte
+// steht. Nur Text – Fragen und Antworten sind Nutzereingaben.
+function baueDetailzeile(frage, spalten) {
+  const zeile = document.createElement("tr");
+  zeile.className = "quiz-detail-row";
+  if (frage.active === false) zeile.classList.add("quiz-row-inactive");
+  const td = document.createElement("td");
+  td.className = "quiz-detail-cell";
+  td.colSpan = spalten.length;
+  const box = document.createElement("div");
+  box.className = "quiz-detail";
+
+  const titel = document.createElement("p");
+  titel.className = "quiz-detail-question";
+  titel.textContent = frage.question;
+  box.appendChild(titel);
+
+  const liste = document.createElement("ol");
+  liste.className = "quiz-detail-options";
+  (frage.options ?? []).forEach((antwort, index) => {
+    const li = document.createElement("li");
+    li.textContent = antwort;
+    if (index === frage.correctIndex) {
+      li.classList.add("quiz-detail-correct");
+      li.title = t("ui.richtige_antwort");
+      const haken = document.createElement("i");
+      haken.className = "ph ph-check";
+      haken.setAttribute("aria-label", t("ui.richtige_antwort"));
+      li.prepend(haken, " ");
+    }
+    liste.appendChild(li);
+  });
+  box.appendChild(liste);
+
+  const angaben = [
+    ["ui.erklaerung", frage.explanation],
+    ["ui.thema", [frage.parentTopic, frage.topic].filter(Boolean).filter((w, i, a) => a.indexOf(w) === i).join(" › ")],
+    ["ui.produkt", frage.refProduct],
+    ["ui.rezept", frage.refRecipe],
+    ["ui.quelle", frage.source === "generator" ? t("ui.generiert") : t("ui.kuratiert")],
+  ];
+  angaben.forEach(([labelKey, wert]) => {
+    if (!wert) return;
+    const p = document.createElement("p");
+    const label = document.createElement("strong");
+    label.textContent = `${t(labelKey)}: `;
+    p.append(label, String(wert));
+    box.appendChild(p);
+  });
+
+  td.appendChild(box);
+  zeile.appendChild(td);
+  return zeile;
+}
+
+function baueGruppenzeile(gruppe, ebene, spalten) {
+  const zeile = document.createElement("tr");
+  zeile.className = `quiz-group-row quiz-group-level-${ebene}`;
+  const td = document.createElement("td");
+  td.className = "catalog-sticky-col";
+
+  if (darfAuswaehlen()) {
+    td.appendChild(auswahlBox(gruppe.fragen.map((frage) => String(frage.id)), t("ui.gruppe_auswaehlen", { name: gruppe.label })));
+  }
+
+  const offen = istOffen(gruppe.schluessel);
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "quiz-group-toggle";
+  btn.setAttribute("aria-expanded", String(offen));
+  const pfeil = document.createElement("i");
+  pfeil.className = `ph ${offen ? "ph-caret-down" : "ph-caret-right"}`;
+  pfeil.setAttribute("aria-hidden", "true");
+  const name = document.createElement("span");
+  name.textContent = gruppe.label;
+  const anzahl = document.createElement("span");
+  anzahl.className = "quiz-group-count";
+  anzahl.textContent = String(gruppe.fragen.length);
+  btn.append(pfeil, name, anzahl);
+  btn.addEventListener("click", () => {
+    geklappt.set(gruppe.schluessel, !offen);
+    render();
+  });
+  td.appendChild(btn);
+  zeile.appendChild(td);
+
+  if (spalten.length > 1) {
+    const rest = document.createElement("td");
+    rest.colSpan = spalten.length - 1;
+    zeile.appendChild(rest);
+  }
+  return zeile;
+}
+
+function baueKoerper(gruppen, spalten) {
   const tbody = document.createElement("tbody");
   const fragment = document.createDocumentFragment();
-  fragen.forEach((frage) => {
-    const zeile = document.createElement("tr");
-    zeile.dataset.id = frage.id;
-    if (frage.active === false) zeile.classList.add("quiz-row-inactive");
-    spalten.forEach((spalte) => zeile.appendChild(baueZelle(frage, spalte)));
-    fragment.appendChild(zeile);
+  let gezeichnet = 0;
+  let gedeckelt = false;
+
+  const zeichneFragen = (fragen) => {
+    for (const frage of fragen) {
+      if (gezeichnet >= MAX_ZEILEN) {
+        gedeckelt = true;
+        return;
+      }
+      fragment.appendChild(baueFragezeile(frage, spalten));
+      if (offeneDetails.has(String(frage.id))) fragment.appendChild(baueDetailzeile(frage, spalten));
+      gezeichnet += 1;
+    }
+  };
+
+  gruppen.forEach((gruppe) => {
+    fragment.appendChild(baueGruppenzeile(gruppe, 1, spalten));
+    if (!istOffen(gruppe.schluessel)) return;
+    if (!gruppe.unter) {
+      zeichneFragen(gruppe.fragen);
+      return;
+    }
+    gruppe.unter.forEach((thema) => {
+      fragment.appendChild(baueGruppenzeile(thema, 2, spalten));
+      if (istOffen(thema.schluessel)) zeichneFragen(thema.fragen);
+    });
   });
+
   tbody.appendChild(fragment);
-  return tbody;
+  return { tbody, gedeckelt };
+}
+
+// Leiste über der Tabelle, sobald etwas ausgewählt ist.
+function aktualisiereSammelleiste() {
+  if (!bulkEl) return;
+  bulkEl.hidden = auswahl.size === 0 || !darfAuswaehlen();
+  if (bulkCountEl) bulkCountEl.textContent = t("ui.n_ausgewaehlt", { n: auswahl.size });
+  const gesperrt = sammelLaeuft || !darfSchreiben();
+  [bulkDeactivateEl, bulkActivateEl, bulkDeleteEl].forEach((btn) => {
+    if (btn) btn.disabled = gesperrt;
+  });
+}
+
+function zeigeSammelHinweis(text, fehler = false) {
+  if (!bulkNoteEl) return;
+  bulkNoteEl.textContent = text;
+  bulkNoteEl.className = fehler ? "error-note" : "hint";
+  bulkNoteEl.hidden = !text;
+}
+
+async function sammelAktion(aktion) {
+  if (sammelLaeuft || !auswahl.size || !darfSchreiben()) return;
+  sammelLaeuft = true;
+  // Nach dem Schreiben werden alle Fragen neu geladen – das dauert ein paar
+  // Sekunden, und so lange soll niemand glauben, der Knopf hätte nichts getan.
+  zeigeSammelHinweis(t("ui.wird_gespeichert"));
+  aktualisiereSammelleiste();
+  try {
+    const meldung = await aktion([...auswahl]);
+    auswahl.clear();
+    zeigeSammelHinweis(meldung);
+  } catch (error) {
+    zeigeSammelHinweis(t("ui.quiz_sammelaktion_fehlgeschlagen") + (error?.message ?? ""), true);
+  } finally {
+    sammelLaeuft = false;
+    render();
+  }
+}
+
+function bestaetigeLoeschen() {
+  const generiert = loadQuizQuestions().filter(
+    (frage) => auswahl.has(String(frage.id)) && frage.source === "generator"
+  ).length;
+  let frage = t("ui.quiz_n_fragen_loeschen", { n: auswahl.size });
+  if (generiert) frage += `\n\n${t("ui.quiz_generierte_kommen_wieder", { n: generiert })}`;
+  return confirm(frage);
+}
+
+async function loescheAuswahl(ids) {
+  await deleteQuizQuestions(ids);
+  return t("ui.quiz_n_geloescht", { n: ids.length });
+}
+
+async function schalteAuswahl(ids, aktiv) {
+  await setQuizQuestionsActive(ids, aktiv, { vonHand: true });
+  return t(aktiv ? "ui.quiz_n_eingeschaltet" : "ui.quiz_n_abgeschaltet", { n: ids.length });
 }
 
 function fuelleAuswahl(el, werte, alleLabel, aktuell) {
@@ -376,7 +679,15 @@ export function render() {
     state.sort = { field: "question", dir: "asc" };
   }
   const treffer = sortiere(gefiltert(spalten), spalten);
-  const sichtbar = treffer.slice(0, MAX_ZEILEN);
+  const trefferIds = treffer.map((frage) => String(frage.id));
+  // Ausgewählt bleibt nur, was gerade zu sehen ist (Filter, Suche) – sonst
+  // träfe "Löschen" Fragen, die niemand mehr vor Augen hat.
+  const sichtbarIds = new Set(trefferIds);
+  [...auswahl].forEach((id) => {
+    if (!sichtbarIds.has(id)) auswahl.delete(id);
+  });
+  const gruppen = gruppiere(treffer);
+  gruppenSchluessel = gruppen.flatMap((g) => [g.schluessel, ...(g.unter ?? []).map((u) => u.schluessel)]);
 
   fuelleSets();
   fuelleFilter();
@@ -384,16 +695,17 @@ export function render() {
   aktualisiereHinweis();
 
   tableEl.textContent = "";
-  tableEl.appendChild(baueKopf(spalten));
-  tableEl.appendChild(baueKoerper(sichtbar, spalten));
+  tableEl.appendChild(baueKopf(spalten, trefferIds));
+  const { tbody, gedeckelt } = baueKoerper(gruppen, spalten);
+  tableEl.appendChild(tbody);
   zeichneFehlerNeu(tableEl);
+  aktualisiereSammelleiste();
 
   if (countEl) {
     const gesamt = loadQuizQuestions().length;
-    countEl.textContent =
-      treffer.length > sichtbar.length
-        ? `${sichtbar.length} ${t("ui.von")} ${treffer.length} – ${t("ui.bitte_weiter_einschraenken")}`
-        : `${treffer.length} ${t("ui.von")} ${gesamt}`;
+    countEl.textContent = gedeckelt
+      ? `${treffer.length} ${t("ui.von")} ${gesamt} – ${t("ui.quiz_erste_n_zeilen", { n: MAX_ZEILEN })}`
+      : `${treffer.length} ${t("ui.von")} ${gesamt}`;
   }
   if (searchEl) searchEl.placeholder = t("ui.in_sichtbaren_spalten_suchen");
 }
@@ -432,26 +744,49 @@ export function initQuizTable(onOpen) {
     clearTimeout(suchTimer);
     suchTimer = setTimeout(() => {
       state.query = searchEl.value.trim();
+      filterGeaendert();
       render();
     }, 150);
   });
 
   topicEl?.addEventListener("change", () => {
     state.topic = topicEl.value;
+    filterGeaendert();
     render();
   });
   sourceEl?.addEventListener("change", () => {
     state.source = sourceEl.value;
+    filterGeaendert();
     render();
   });
   statusEl?.addEventListener("change", () => {
     state.status = statusEl.value;
+    filterGeaendert();
     schreibeEinstellungen();
     render();
   });
   setEl?.addEventListener("change", () => {
     state.set = setEl.value;
     schreibeEinstellungen();
+    render();
+  });
+
+  const klappeAlle = (offen) => {
+    gruppenSchluessel.forEach((schluessel) => geklappt.set(schluessel, offen));
+    render();
+  };
+  expandAllEl?.addEventListener("click", () => klappeAlle(true));
+  collapseAllEl?.addEventListener("click", () => klappeAlle(false));
+
+  bulkDeactivateEl?.addEventListener("click", () => sammelAktion((ids) => schalteAuswahl(ids, false)));
+  bulkActivateEl?.addEventListener("click", () => sammelAktion((ids) => schalteAuswahl(ids, true)));
+  bulkDeleteEl?.addEventListener("click", () => {
+    if (sammelLaeuft || !auswahl.size || !bestaetigeLoeschen()) return;
+    sammelAktion(loescheAuswahl);
+  });
+  bulkClearEl?.addEventListener("click", () => {
+    auswahl.clear();
+    zeigeSammelHinweis("");
     render();
   });
 

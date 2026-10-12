@@ -92,9 +92,11 @@ export async function syncGeneratedQuestions() {
     }
     if (zeile.edited) {
       uebersprungen += 1;
-      // Eine von Hand bearbeitete Frage, die wieder im Katalog steht, darf
-      // trotzdem zurück ins Quiz – nur ihr Text bleibt, wie er ist.
-      if (!zeile.active) wiederbeleben.push(zeile.id);
+      // Von Hand bearbeitet heißt auch: von Hand an- oder abgeschaltet. Eine
+      // in der Fragentabelle abgeschaltete Frage bleibt deshalb aus – auch
+      // eine, die der Abgleich selbst stillgelegt hatte und deren Produkt
+      // wieder im Katalog steht. Die schaltet man unter "nur abgeschaltete"
+      // wieder ein.
       return;
     }
     if (inhaltGleich(zeile, frage)) {
