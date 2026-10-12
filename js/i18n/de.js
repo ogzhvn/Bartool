@@ -1407,6 +1407,8 @@ export const de = {
   "ui.quiz_n_eingeschaltet": "{n} Fragen eingeschaltet.",
   "ui.quiz_sammelaktion_fehlgeschlagen": "Das hat nicht geklappt: ",
   "ui.quiz_erste_n_zeilen": "nur die ersten {n} Zeilen gezeigt, bitte weiter einschränken",
+  "ui.spaltenbreite_ziehen": "Ziehen ändert die Breite, Doppelklick setzt sie zurück",
+  "ui.spaltenbreiten_zuruecksetzen": "Spaltenbreiten zurücksetzen",
   "ui.abgleich_laeuft": "Abgleich läuft – das kann einen Moment dauern.",
   "ui.abgleich_fertig": "Abgleich fertig:",
   "ui.neu_klein": "neu",

@@ -1406,6 +1406,8 @@ export const en = {
   "ui.quiz_n_eingeschaltet": "{n} questions activated.",
   "ui.quiz_sammelaktion_fehlgeschlagen": "That didn't work: ",
   "ui.quiz_erste_n_zeilen": "only the first {n} rows shown, please narrow down",
+  "ui.spaltenbreite_ziehen": "Drag to resize, double-click to reset",
+  "ui.spaltenbreiten_zuruecksetzen": "Reset column widths",
   "ui.abgleich_laeuft": "Sync running – this may take a moment.",
   "ui.abgleich_fertig": "Sync finished:",
   "ui.neu_klein": "new",

@@ -5937,6 +5937,8 @@ p.knowledge-nav-title {
   left: 0;
   box-sizing: border-box;
   width: min(760px, calc(100vw - 48px));
+  /* So breit wie der sichtbare Tabellenausschnitt, nicht wie das Fenster. */
+  width: min(760px, 100cqw);
   padding: 8px 14px 12px 44px;
   line-height: 1.45;
 }
@@ -5978,4 +5980,103 @@ p.knowledge-nav-title {
 .quiz-bulk-count {
   font-weight: 600;
   margin-right: 4px;
+}
+
+/* Fragentabelle: Spaltenbreite per Ziehen am Kopfrand (js/quizTable.js).
+   Feste Tabellenaufteilung, damit die gezogene Breite auch gilt; die
+   420-px-Kappe der Katalogtabelle entfällt hier. */
+.catalog-table.quiz-table-fixed {
+  table-layout: fixed;
+  min-width: 0;
+}
+
+.catalog-scroll:has(> .quiz-table-fixed) {
+  container-type: inline-size;
+}
+
+/* Inhalt der Fragespalte: Kästchen und Pfeil behalten ihre Größe, der Text
+   wird mit "…" gekürzt, wenn die Spalte schmal gezogen ist. */
+.quiz-cell-flex {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* flex ausdrücklich setzen: die allgemeine label-Regel lässt das Kästchen
+   sonst in die Breite wachsen. */
+.quiz-cell-flex > * {
+  flex: 0 0 auto;
+}
+
+.quiz-cell-flex .catalog-name-btn,
+.quiz-cell-flex .quiz-group-toggle {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.quiz-cell-flex .catalog-name-btn,
+.quiz-group-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-table.quiz-table-fixed th,
+.catalog-table.quiz-table-fixed td {
+  max-width: none;
+}
+
+.quiz-col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 4;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.quiz-col-resizer::after {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  right: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border-strong);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiz-col-resizer:hover::after {
+    background: var(--accent);
+  }
+}
+
+.quiz-table-resizing,
+.quiz-table-resizing * {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.quiz-table-resizing .quiz-col-resizer::after {
+  background: var(--accent);
+}
+
+/* Finger brauchen mehr Fläche als ein Mauszeiger. */
+@media (pointer: coarse) {
+  .quiz-col-resizer {
+    width: 22px;
+  }
+
+  .quiz-col-resizer::after {
+    right: 4px;
+  }
+}
+
+.quiz-columns-reset {
+  width: 100%;
+  margin-top: 6px;
 }

@@ -38,6 +38,11 @@ import {
 // zuklappen lassen; ohne Suche und Themenfilter sind alle zu. Jede Fragezeile
 // klappt außerdem ihre Details auf (alle Antworten, Erklärung). Über die
 // Kästchen lassen sich viele Fragen auf einmal abschalten oder löschen.
+//
+// Spaltenbreiten zieht man am rechten Rand des Spaltenkopfs; sie bleiben pro
+// Gerät gespeichert. Die Tabelle läuft dafür mit table-layout: fixed – sonst
+// richtet der Browser die Spalten nach dem Inhalt aus und ignoriert die
+// gezogene Breite.
 
 const searchEl = document.getElementById("quiz-table-search");
 const topicEl = document.getElementById("quiz-table-topic");
@@ -64,6 +69,8 @@ const NARROW_QUERY = "(max-width: 700px)";
 // Mehr Zeilen zeichnet niemand mehr durch; wer eine bestimmte Frage sucht,
 // sucht sie über Suchfeld und Filter, nicht durch Scrollen.
 const MAX_ZEILEN = 300;
+const MIN_BREITE = 60;
+const MAX_BREITE = 1200;
 
 const state = {
   set: null,
@@ -73,6 +80,9 @@ const state = {
   status: "aktiv",
   query: "",
   sort: { field: "question", dir: "asc" },
+  // Von Hand gezogene Spaltenbreiten in px, nach Feld. Ohne Eintrag gilt
+  // die Breite aus js/quizColumns.js.
+  breiten: {},
 };
 
 // Auf- und zugeklappt: nur was jemand von Hand umgeschaltet hat. Ohne Eintrag
@@ -93,6 +103,11 @@ function leseEinstellungen() {
     if (typeof gespeichert.set === "string") state.set = gespeichert.set;
     if (Array.isArray(gespeichert.custom)) state.custom = gespeichert.custom;
     if (typeof gespeichert.status === "string") state.status = gespeichert.status;
+    if (gespeichert.breiten && typeof gespeichert.breiten === "object") {
+      Object.entries(gespeichert.breiten).forEach(([feld, breite]) => {
+        if (Number.isFinite(breite)) state.breiten[feld] = begrenzeBreite(breite);
+      });
+    }
   } catch {
     // Kaputter oder gesperrter localStorage: dann eben die Voreinstellung.
   }
@@ -102,11 +117,86 @@ function schreibeEinstellungen() {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ set: state.set, custom: state.custom, status: state.status })
+      JSON.stringify({
+        set: state.set,
+        custom: state.custom,
+        status: state.status,
+        breiten: state.breiten,
+      })
     );
   } catch {
     // Speichern ist Komfort, kein Muss.
   }
+}
+
+function begrenzeBreite(breite) {
+  return Math.round(Math.min(MAX_BREITE, Math.max(MIN_BREITE, breite)));
+}
+
+function spaltenBreite(spalte) {
+  return state.breiten[spalte.field] ?? spalte.width;
+}
+
+// Bei table-layout: fixed braucht die Tabelle eine feste Gesamtbreite, sonst
+// verteilt der Browser den Rest des Containers wieder auf alle Spalten.
+function setzeTabellenBreite(spalten) {
+  const summe = spalten.reduce((gesamt, spalte) => gesamt + spaltenBreite(spalte), 0);
+  tableEl.style.width = `${summe}px`;
+}
+
+// Läuft gerade ein Ziehen? Dann wird nicht neu gezeichnet – das würde den
+// Spaltenkopf unter dem Finger wegräumen.
+let ziehtGerade = false;
+
+function starteZiehen(event, th, spalte, spalten) {
+  if (event.button !== undefined && event.button !== 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const griff = event.currentTarget;
+  griff.setPointerCapture?.(event.pointerId);
+  const startX = event.clientX;
+  const startBreite = spaltenBreite(spalte);
+  ziehtGerade = true;
+  tableEl.classList.add("quiz-table-resizing");
+
+  const bewege = (e) => {
+    const breite = begrenzeBreite(startBreite + e.clientX - startX);
+    state.breiten[spalte.field] = breite;
+    th.style.width = `${breite}px`;
+    setzeTabellenBreite(spalten);
+  };
+  const ende = () => {
+    griff.removeEventListener("pointermove", bewege);
+    griff.removeEventListener("pointerup", ende);
+    griff.removeEventListener("pointercancel", ende);
+    ziehtGerade = false;
+    tableEl.classList.remove("quiz-table-resizing");
+    schreibeEinstellungen();
+    if (nachzuholen) {
+      nachzuholen = false;
+      render();
+    }
+  };
+  griff.addEventListener("pointermove", bewege);
+  griff.addEventListener("pointerup", ende);
+  griff.addEventListener("pointercancel", ende);
+}
+
+function baueGriff(th, spalte, spalten) {
+  const griff = document.createElement("span");
+  griff.className = "quiz-col-resizer";
+  griff.title = t("ui.spaltenbreite_ziehen");
+  griff.setAttribute("aria-hidden", "true");
+  griff.addEventListener("pointerdown", (event) => starteZiehen(event, th, spalte, spalten));
+  // Klick auf den Rand soll nicht sortieren und kein Kästchen umschalten.
+  griff.addEventListener("click", (event) => event.stopPropagation());
+  griff.addEventListener("dblclick", (event) => {
+    event.stopPropagation();
+    delete state.breiten[spalte.field];
+    schreibeEinstellungen();
+    render();
+  });
+  return griff;
 }
 
 function istSchmal() {
@@ -296,7 +386,7 @@ function baueKopf(spalten, trefferIds) {
   const zeile = document.createElement("tr");
   spalten.forEach((spalte) => {
     const th = document.createElement("th");
-    th.style.minWidth = `${spalte.width}px`;
+    th.style.width = `${spaltenBreite(spalte)}px`;
     if (spalte.field === "question") {
       th.className = "catalog-sticky-col";
       if (darfAuswaehlen()) th.appendChild(auswahlBox(trefferIds, t("ui.alle_treffer_auswaehlen")));
@@ -323,6 +413,7 @@ function baueKopf(spalten, trefferIds) {
     });
 
     th.appendChild(btn);
+    th.appendChild(baueGriff(th, spalte, spalten));
     zeile.appendChild(th);
   });
   thead.appendChild(zeile);
@@ -339,7 +430,12 @@ function baueZelle(frage, spalte) {
   if (spalte.field === "question") {
     td.classList.add("catalog-sticky-col");
     const id = String(frage.id);
-    if (darfAuswaehlen()) td.appendChild(auswahlBox([id], t("ui.auswaehlen")));
+    // Eigener Flex-Container: nur so kürzt eine schmal gezogene Spalte den
+    // Fragetext mit "…" statt den ganzen Knopf wegzuschneiden.
+    const inhalt = document.createElement("div");
+    inhalt.className = "quiz-cell-flex";
+    td.appendChild(inhalt);
+    if (darfAuswaehlen()) inhalt.appendChild(auswahlBox([id], t("ui.auswaehlen")));
 
     const offen = offeneDetails.has(id);
     const klapp = document.createElement("button");
@@ -357,7 +453,7 @@ function baueZelle(frage, spalte) {
       else offeneDetails.add(id);
       render();
     });
-    td.appendChild(klapp);
+    inhalt.appendChild(klapp);
 
     const btn = document.createElement("button");
     btn.type = "button";
@@ -365,7 +461,7 @@ function baueZelle(frage, spalte) {
     btn.textContent = frage.question;
     btn.title = t("ui.im_formular_oeffnen");
     btn.addEventListener("click", () => oeffneImFormular(frage));
-    td.appendChild(btn);
+    inhalt.appendChild(btn);
     return td;
   }
 
@@ -446,9 +542,12 @@ function baueGruppenzeile(gruppe, ebene, spalten) {
   zeile.className = `quiz-group-row quiz-group-level-${ebene}`;
   const td = document.createElement("td");
   td.className = "catalog-sticky-col";
+  const inhalt = document.createElement("div");
+  inhalt.className = "quiz-cell-flex";
+  td.appendChild(inhalt);
 
   if (darfAuswaehlen()) {
-    td.appendChild(auswahlBox(gruppe.fragen.map((frage) => String(frage.id)), t("ui.gruppe_auswaehlen", { name: gruppe.label })));
+    inhalt.appendChild(auswahlBox(gruppe.fragen.map((frage) => String(frage.id)), t("ui.gruppe_auswaehlen", { name: gruppe.label })));
   }
 
   const offen = istOffen(gruppe.schluessel);
@@ -460,6 +559,7 @@ function baueGruppenzeile(gruppe, ebene, spalten) {
   pfeil.className = `ph ${offen ? "ph-caret-down" : "ph-caret-right"}`;
   pfeil.setAttribute("aria-hidden", "true");
   const name = document.createElement("span");
+  name.className = "quiz-group-name";
   name.textContent = gruppe.label;
   const anzahl = document.createElement("span");
   anzahl.className = "quiz-group-count";
@@ -469,7 +569,7 @@ function baueGruppenzeile(gruppe, ebene, spalten) {
     geklappt.set(gruppe.schluessel, !offen);
     render();
   });
-  td.appendChild(btn);
+  inhalt.appendChild(btn);
   zeile.appendChild(td);
 
   if (spalten.length > 1) {
@@ -670,6 +770,18 @@ function fuelleSpaltenAuswahl() {
     label.append(box, text);
     columnsPopEl.appendChild(label);
   });
+
+  const zuruecksetzen = document.createElement("button");
+  zuruecksetzen.type = "button";
+  zuruecksetzen.className = "btn-secondary quiz-columns-reset";
+  zuruecksetzen.textContent = t("ui.spaltenbreiten_zuruecksetzen");
+  zuruecksetzen.disabled = Object.keys(state.breiten).length === 0;
+  zuruecksetzen.addEventListener("click", () => {
+    state.breiten = {};
+    schreibeEinstellungen();
+    render();
+  });
+  columnsPopEl.appendChild(zuruecksetzen);
 }
 
 export function render() {
@@ -695,6 +807,7 @@ export function render() {
   aktualisiereHinweis();
 
   tableEl.textContent = "";
+  setzeTabellenBreite(spalten);
   tableEl.appendChild(baueKopf(spalten, trefferIds));
   const { tbody, gedeckelt } = baueKoerper(gruppen, spalten);
   tableEl.appendChild(tbody);
@@ -714,7 +827,7 @@ export function render() {
 let nachzuholen = false;
 
 function renderWennFrei() {
-  if (istBearbeitungOffen()) {
+  if (istBearbeitungOffen() || ziehtGerade) {
     nachzuholen = true;
     return;
   }
