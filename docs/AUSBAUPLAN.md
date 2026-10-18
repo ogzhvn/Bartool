@@ -504,7 +504,7 @@ Reihenfolge: **70 → 71 → 72 → 73**. **74** sobald die Küchenlisten vorlie
 | 71 | Modul Gerichte: Liste, Filter, Detail, Editor, Prüfvermerk | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 72 | Allergenmatrix: Matrixansicht, Gast-Filter, Druck | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
 | 73 | Weinbegleitung: Auswahl, Anzeige, Gegenrichtung im Produkt | erledigt (08.10.2026) | Sonnet 5.5, mittlerer Denkaufwand |
-| 74 | Gerichte erfassen: Import aus den Küchenlisten | teilweise (08.10.2026): Tellerwerk-Karte importiert, Allergene und WGR offen | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
+| 74 | Gerichte erfassen: Import aus den Küchenlisten | teilweise (18.10.2026): Tellerwerk-Karte (33) und WGR-Buffetraster (152) importiert, Tellerwerk-Allergene und alle Prüfvermerke offen | Opus 5.5, hoher Denkaufwand (Datenimport, haftungsrelevante Allergenangaben) |
 
 ---
 
@@ -4439,6 +4439,23 @@ das die `insert`-Statements erzeugt (Regel 7: Massenänderung per Skript).
   zwingend die Weinkarte des Tellerwerks. Rindertatar ohne Katalogtreffer, nur nach Körper gewählt.
 - **Offen:** Allergenliste Tellerwerk (per `update`), Speisekarte und Allergenliste WGR (per `insert`).
   Abnahme „Anzahl je Abteilung = Listen“ gilt nur für Tellerwerk (33 = 33), WGR 0.
+
+**Umsetzungsnotizen Teil 2 (18.10.2026, WGR-Buffetraster)**
+- Quelle: Excel „Raster ab 05.10.26“, eine Wochenrotation Mo–So, laut Nutzer wöchentlich wiederholt bis März 2027 (die
+  Überschrift „April bis Oktober 2026“ in der Datei ist falsch). `dishes` hat kein Wochentagsfeld: Tag und Rotation
+  stehen im `description`.
+- Importiert: **152 Gerichte** mit `departments = {wgr}` (11 tägliche Basisgerichte „Buffet Basis“, 140 Tagesgerichte aus
+  20 Zeilen × 7 Tage, 1 Sonderaktion). Ein Eintrag je Tag und Gericht, Name = Menüzeile ohne Kürzel, `components` =
+  MEP-Zeile (Kürzel je Zeile im `note`). Skript: Scratchpad `gen_wgr.py`, `insert … on conflict (name) do nothing`.
+- Allergene laut Legende der Datei übernommen (a Getreide, b Krebstiere … n Weichtiere; Zahlen = Zusatzstoffe), nur aus der
+  Menüzeile, nicht aus dem MEP. Kürzel ohne Schlüssel (alk, all, 5, 8) und unsichere Zuordnungen stehen im `description`.
+  34 Gerichte ohne Kürzel im Raster: leer heißt „nicht erfasst“.
+- **Prüfvermerk bleibt leer** (0 von 152). Er lässt sich per SQL nicht setzen (Trigger verlangt `auth.uid()`), und er soll
+  eine Person bestätigen, die die Angaben geprüft hat.
+- Befunde im Raster, nicht still korrigiert: Garnelen, Shrimps und Prawns tragen `n` (Weichtiere) statt `b` (Krebstiere);
+  `h(S)` für Sesam (Legende: k); `h(Ma)` als Mandel gelesen (Macadamia möglich); `h(E)` ohne Auflösung; `h(Mn)` unbekannt;
+  Pasta mit Graved Lachs und Pasta mit Brokkoli ohne Kürzel, obwohl das MEP Fisch bzw. Weizen und Milch nennt; bei 7
+  Gerichten nennt das MEP Kürzel, die der Menüzeile fehlen (Vermerk im `description`).
 
 ---
 
