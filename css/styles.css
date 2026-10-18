@@ -6149,3 +6149,99 @@ p.knowledge-nav-title {
   max-width: calc(100vw - 32px);
   max-height: 440px;
 }
+
+/* ---------------------------------------------------------------------
+   Startseite: Buffet heute (Paket 74, nur WGR)
+   --------------------------------------------------------------------- */
+.buffet-today {
+  margin-bottom: 2rem;
+}
+
+.buffet-today > .hint {
+  margin: -0.4rem 0 0.8rem;
+}
+
+.buffet-group,
+.buffet-basis {
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.buffet-group h4 {
+  margin: 0 0 0.3rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.buffet-basis summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.buffet-dishes,
+.buffet-wines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.buffet-dish {
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.buffet-dish:first-child {
+  border-top: 0;
+}
+
+.buffet-dish-name,
+.buffet-wine-name {
+  min-height: 44px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.buffet-dish-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.buffet-wine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.4rem;
+}
+
+.buffet-wine > .ph {
+  flex: none;
+  color: var(--accent);
+}
+
+.buffet-wine-name {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.buffet-wine > .knowledge-badge {
+  flex: none;
+}
+
+.buffet-wine > .hint {
+  flex-basis: 100%;
+  margin: 0 0 0.2rem 1.4rem;
+}
+
+.buffet-dish > .hint,
+.buffet-no-wine {
+  margin: 0.15rem 0;
+}

@@ -228,6 +228,13 @@
         <div id="home-today" class="today-list"></div>
       </div>
 
+      <!-- Buffet heute (Paket 74): nur Abteilung WGR, Inhalt aus js/home.js. -->
+      <div id="home-buffet-wrap" class="buffet-today" hidden>
+        <h3 data-i18n="ui.buffet_heute">Buffet heute</h3>
+        <p id="home-buffet-day" class="hint"></p>
+        <div id="home-buffet"></div>
+      </div>
+
       <div id="my-change-requests-wrapper" hidden>
         <h3 data-i18n="ui.meine_vorschlaege">Meine Vorschläge</h3>
         <div id="my-change-requests-list"></div>
@@ -1640,6 +1647,12 @@
 
             <div id="product-wine-fields">
             <h3 data-i18n="ui.wein_details">Wein-Details</h3>
+            <!-- Offener Wein (Paket 74): Grundlage der Weinempfehlung auf der
+                 Startseiten-Karte „Buffet heute“. Nur mit products.write. -->
+            <label class="radio-label" data-perm="products.write" hidden>
+              <input type="checkbox" id="product-open-wine" />
+              <span data-i18n="ui.offener_wein_glasweise">Offener Wein (glasweise im Ausschank)</span>
+            </label>
             <div class="field-row">
               <label data-i18n="ui.region">
                 Region

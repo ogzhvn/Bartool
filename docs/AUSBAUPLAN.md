@@ -4457,6 +4457,20 @@ das die `insert`-Statements erzeugt (Regel 7: Massenänderung per Skript).
   Pasta mit Graved Lachs und Pasta mit Brokkoli ohne Kürzel, obwohl das MEP Fisch bzw. Weizen und Milch nennt; bei 7
   Gerichten nennt das MEP Kürzel, die der Menüzeile fehlen (Vermerk im `description`).
 
+**Umsetzungsnotizen Teil 3 (18.10.2026, Startseiten-Karte „Buffet heute“)**
+- `js/home.js`: Karte nur bei `myDepartment() = 'wgr'` und Modulfreigabe `dishes` (kein neues Recht). Tag = Systemdatum
+  Europe/Berlin, gelesen aus dem Ende von `description` („…, Montag.“); „Buffet Basis“ täglich, eingeklappt. Pro Gericht
+  Allergene und „ungeprüft“ ohne Prüfvermerk. Tageswechsel bei offenem Tab per Minutentakt.
+- Neue Spalte `products.open_wine boolean not null default false` (Migration `products_open_wine`, `schema.sql`
+  nachgezogen). Checkbox im Produkteditor unter „Wein-Details“, nur mit `products.write`; gespeichert wird sie nur bei
+  Wein/Schaumwein. Import und Tabellenpflege schicken das Feld nicht mit und setzen es deshalb nicht zurück.
+- Wein nur zu Fisch, Fleisch, Vegan / Plant based, Pasta, Aus dem Ofen und nur aus offenen Weinen: zuerst
+  `wine_pairings` des Gerichts, sonst bis zu zwei „Vorschlag“-Weine per Stichwortabgleich Gericht ↔ `food_pairing`
+  (Wortanfang; bei Fisch/Fleisch/Vegan muss der Katalogtext die Hauptsache nennen). Stand 18.10.: **0 offene Weine** →
+  Karte zeigt „Offene Weine noch nicht festgelegt“. Abgleich mit simuliert offenen Weinen im Browser geprüft, nicht in
+  der DB gesetzt.
+- Getestet: `claude-test-wgr`, 1280 und 400 px, DE/EN, kein Überlauf; Admin (`bar`) sieht die Karte nicht. Cache v136.
+
 ---
 
 ## Nachprüfung der offenen Abnahmepunkte (03.10.2026)

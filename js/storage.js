@@ -483,6 +483,9 @@ function toProductRecord(product) {
     body: product.body || null,
     verified: Boolean(product.verified),
     verified_at: product.verifiedAt || null,
+    // Nur mitschicken, wenn bekannt: Import und Tabellenpflege kennen das Feld
+    // nicht und sollen einen gesetzten Haken nicht still zurücksetzen.
+    ...(typeof product.openWine === "boolean" ? { open_wine: product.openWine } : {}),
     par_level: product.parLevel === "" || product.parLevel == null ? null : Number(product.parLevel),
     supplier: product.supplier || null,
     order_unit: product.orderUnit || null,
@@ -530,6 +533,7 @@ export function fromProductRow(row) {
     body: row.body ?? "",
     verified: row.verified ?? false,
     verifiedAt: row.verified_at ?? "",
+    openWine: row.open_wine === true,
     parLevel: row.par_level ?? "",
     supplier: row.supplier ?? "",
     orderUnit: row.order_unit ?? "",

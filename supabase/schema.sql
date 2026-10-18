@@ -944,6 +944,9 @@ alter table public.products add column if not exists serving_temp text;
 alter table public.products add column if not exists body text;
 alter table public.products add column if not exists verified boolean not null default false;
 alter table public.products add column if not exists verified_at timestamptz;
+-- Offener Wein (glasweise im Ausschank), nur bei Wein/Schaumwein sinnvoll.
+-- Grundlage der Weinempfehlung auf der Startseiten-Karte „Buffet heute“ (Paket 74).
+alter table public.products add column if not exists open_wine boolean not null default false;
 -- Pfad im privaten Storage-Bucket "bilder", Schema "produkte/<uuid>.jpg".
 -- Bewusst nie der Produktname im Pfad, sonst bricht jede Umbenennung das Bild.
 alter table public.products add column if not exists image_path text;

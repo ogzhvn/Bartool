@@ -138,6 +138,7 @@ const productionMethodEl = document.getElementById("product-production-method");
 const ageStatementEl = document.getElementById("product-age-statement");
 const flavorTagsEl = document.getElementById("product-flavor-tags");
 const verifiedEl = document.getElementById("product-verified");
+const openWineEl = document.getElementById("product-open-wine");
 const wineFieldsEl = document.getElementById("product-wine-fields");
 const regionEl = document.getElementById("product-region");
 const grapeVarietyEl = document.getElementById("product-grape-variety");
@@ -216,6 +217,7 @@ let editingOriginalName = null;
 // Zeitpunkt der letzten Prüfung des geladenen Produkts – bleibt erhalten,
 // solange der Haken „Angaben geprüft" gesetzt bleibt.
 let editingVerifiedAt = "";
+let editingOpenWine = false;
 // image_path des geladenen Produkts. Ein Upload/Löschen wirkt sofort im
 // Storage, landet aber wie alle anderen Felder erst mit "Speichern" in der DB.
 let editingImagePath = "";
@@ -329,6 +331,8 @@ function resetForm() {
   abvMaxEl.value = "";
   flavorTagsEl.value = "";
   verifiedEl.checked = false;
+  openWineEl.checked = false;
+  editingOpenWine = false;
   editingVerifiedAt = "";
   editingOriginalName = null;
   editingImagePath = "";
@@ -347,6 +351,8 @@ function loadIntoForm(product) {
   abvMaxEl.value = product.abvMax ?? "";
   flavorTagsEl.value = (product.flavorTags ?? []).join(", ");
   verifiedEl.checked = Boolean(product.verified);
+  openWineEl.checked = product.openWine === true;
+  editingOpenWine = product.openWine === true;
   editingVerifiedAt = product.verifiedAt ?? "";
   editingOriginalName = product.name;
   editingImagePath = product.imagePath ?? "";
@@ -371,6 +377,9 @@ async function handleSave() {
   product.abvMax = abvMaxEl.value === "" ? "" : parseFloat(abvMaxEl.value);
   product.flavorTags = parsePairsWith(flavorTagsEl.value);
   product.verified = verifiedEl.checked;
+  // Offener Wein nur bei Wein/Schaumwein; den Haken setzt nur, wer
+  // products.write hat. Ein Vorschlag trägt den bisherigen Stand weiter.
+  product.openWine = WINE_GROUPS.includes(product.group) && (can("products.write") ? openWineEl.checked : editingOpenWine);
   // Prüfdatum nur setzen, wenn der Haken frisch gesetzt wurde; beim Entfernen
   // fällt es weg.
   product.verifiedAt = verifiedEl.checked ? editingVerifiedAt || new Date().toISOString() : "";
@@ -669,6 +678,7 @@ function renderProductItem(product) {
     [t("ui.koerper"), product.body],
     // Leer statt "nein": nur der gesetzte Prüfvermerk ist eine Aussage.
     [t("ui.geprueft"), product.verified ? "ja" : ""],
+    [t("ui.offener_wein"), product.openWine ? t("ui.ja") : ""],
     [t("ui.tasting_notes"), product.tastingNotes],
     [t("ui.speiseempfehlung"), product.foodPairing],
     [t("ui.serviervorschlag"), product.service],
